@@ -50,7 +50,7 @@ Lua が io.open で書く先はエミュレータの作業ディレクトリ (�
 (相対パスで `controller.lua` と `guardCancel.lua` をソースごと読むため)。
 
 ```bash
-cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts && for t in test_editor_rows test_editor_ops test_runner_compile test_seq_hold test_gc_frequency test_gc_leftover test_random_sources test_menu_gate test_menu_children test_menu_layout test_menu_switches test_pb_counter test_release_defaults test_throw_tech test_hs_countdown; do lua5.1 ../analysis/$t.lua > /dev/null && echo "$t ok" || echo "$t NG"; done
+cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts && for t in test_editor_rows test_editor_ops test_runner_compile test_seq_hold test_gc_frequency test_gc_leftover test_random_sources test_menu_gate test_menu_children test_menu_layout test_menu_switches test_pb_counter test_input_releases test_input_tick_columns test_release_defaults test_throw_tech test_hs_countdown; do lua5.1 ../analysis/$t.lua > /dev/null && echo "$t ok" || echo "$t NG"; done
 ```
 
 下記はパッケージのルートから走らせる (Tick Data は `scripts/tickData` を require

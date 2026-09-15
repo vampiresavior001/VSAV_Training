@@ -76,6 +76,7 @@ local PROBES = {
 	"analysis/selectProbe.lua",
 	"analysis/keyboardProbe.lua",
 	"analysis/pbFlagProbe.lua",
+	"analysis/gcSuccessProbe.lua",
 }
 
 for _, path in ipairs(PROBES) do

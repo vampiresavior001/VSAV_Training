@@ -6,6 +6,38 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.2
+
+### The input bar now runs on the game's ticks
+
+It could only add **one column per displayed frame**, which left the one-tick input
+that completes a command nowhere to go. Measured over 19 guard cancels, the press or
+release that completed it was drawn **3 times**. The other 16 were lost, and 10 of
+those had no input column at all. **The cancels themselves came out every time - only
+the drawing lost them.**
+
+**The GC Trainer's (`Show GC Trainer`) `SUCCESS` now lands on the tick the cancel came
+out on.** Finish with a press and it is the next tick; finish with a release and it is
+the same column. The press case is the game's own doing: nothing has started yet on the
+tick the button goes down.
+
+**The number under each column is now Ticks**, not displayed frames - about 1.33x the
+old figure at turbo 3.
+
+### Button releases have their own switch
+
+**`Show Button Releases`** is new (on by default). `Hide Negative Edge Inputs` used to
+double as the on/off for the release markers, so tidying the bar cost you the markers.
+**They are independent now: Hide leaves the release columns alone.**
+
+**`Hide Negative Edge Inputs` now ships on.** All it can remove is a column carrying
+nothing new.
+
+**Changed defaults only apply to a fresh install.** An existing
+`training_settings.json` keeps its saved values.
+
+---
+
 ## v11.7.1
 
 ### The menu has been reorganised

@@ -111,7 +111,15 @@ local default_training_settings = {
   show_curse_timer = false,
   lilith_gps = 0,
   min_pb_inputs = 1,
-  skip_nedge_displays = false,
+  -- ON since the release marker got its own switch. All this can remove now
+  -- is a column carrying nothing new - a direction change, a new press, a
+  -- release and anything holding a GC or PB event are all kept - and with
+  -- columns per tick there are more of those leftovers to clear.
+  skip_nedge_displays = true,
+  -- ON, so the input bar looks the way it already did. A settings file written
+  -- before this key existed keeps this value: load_training_data() lays the
+  -- saved JSON OVER these defaults rather than replacing them.
+  show_button_releases = true,
   -- Both of these were read but never declared here, so a fresh install had
   -- them as nil - off, but nowhere written down. Stated at the value the
   -- tool has always shipped with.

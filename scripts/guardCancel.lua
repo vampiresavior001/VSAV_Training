@@ -3202,8 +3202,99 @@ end
 -- Last ($125,$122) pair pushed to the input history, so held states are not
 -- pushed again on every tick.
 local tick_input_last = -1
+-- Same, for P1's bar along the bottom.
+local p1_tick_input_last = -1
+-- The guard cancel window state, carried across ticks so the transitions
+-- can be spotted. Mirrors handle_gc_event() in inputHistory.lua.
+local p1_gc_state = "p1_gc_none"
 memory.registerexec(0x0221CC, function()
-	if memory.getregister("m68000.a6") ~= 0xFF8800 then return end
+	local _who = memory.getregister("m68000.a6")
+
+	-- P1'S BAR, ALSO PER TICK.
+	--
+	-- The bar was built once per DISPLAYED frame, and the input that completes
+	-- a command is a one-tick event: measured over 19 guard cancels, the frame
+	-- sampler saw the qualifying press or release 3 times and missed it 16,
+	-- with 10 of those drawing SUCCESS against no input column at all. The
+	-- cancel itself was fine every time - only the drawing lost it
+	-- (analysis/gc_success_probe_20260915b.log).
+	--
+	-- $125, NOT $123, which is the opposite of the choice made for the dummy
+	-- below. The note there explains why $123 suits a dummy: it is the current
+	-- tick's direction and the dummy holds nothing, so the flicker between the
+	-- two horizontal bits cannot bite. A human holds directions constantly and
+	-- it would. $125 is the previous tick's direction and is what the bar has
+	-- always drawn from; checked against 248 lever changes in the probe logs,
+	-- it turns over cleanly at tick resolution - one A->B->A inside two ticks
+	-- in the whole set.
+	--
+	-- Pairing this tick's buttons with last tick's direction is also the right
+	-- way round for a motion: in 6 2 3 + button the button lands a tick after
+	-- the 3, so $125 still reads 3 when the button arrives.
+	if _who == 0xFF8400 then
+		-- Monotonic, unlike $FF8081, which is a byte and wraps. inputHistory
+		-- uses this as its clock so it can tell two ticks inside one displayed
+		-- frame apart - without it the history appends at most one column per
+		-- frame however many inputs happened.
+		globals.p1_tick_seq = (globals.p1_tick_seq or 0) + 1
+		local _btn = memory.readbyte(0xFF8522)
+		local _dir = memory.readbyte(0xFF8525)
+		local _v = _dir * 256 + _btn
+
+		-- THE GUARD CANCEL STATE, ON THE SAME CLOCK AS THE COLUMNS.
+		--
+		-- inputHistory.lua worked this out once per DISPLAYED frame and stamped
+		-- the answer onto every column built that frame. While a frame produced
+		-- at most one column that was invisible; now that a frame can produce
+		-- three or four, SUCCESS lands on whichever of them came first and the
+		-- input that actually completed the cancel can be several columns away.
+		--
+		-- Same test as handle_gc_event(): the window is the block clock $158,
+		-- and the cancel came out if $06 is a special (0x0E), an ES (0x10) or an
+		-- EX (0x12) on the tick it reaches zero. Checked against 35 attempts
+		-- logged both ways - tick side and frame side agreed on every one, so
+		-- moving it here changes WHERE the label lands, not WHAT it says
+		-- (analysis/gc_success_probe_20260915b.log).
+		local _clock = memory.readbyte(0xFF8558)
+		local _gc = p1_gc_state
+		if _clock == 0 and p1_gc_state == "p1_gc_in_progress" then
+			local _act = memory.readbyte(0xFF8406)
+			if _act == 0x0E or _act == 0x10 or _act == 0x12 then
+				_gc = "p1_gc_success"
+			else
+				_gc = "p1_gc_ended"
+			end
+		elseif p1_gc_state == "p1_gc_none" and _clock > 0 then
+			_gc = "p1_gc_begin"
+		elseif _clock > 0 then
+			_gc = "p1_gc_in_progress"
+		elseif p1_gc_state == "p1_gc_ended" or p1_gc_state == "p1_gc_success" then
+			_gc = "p1_gc_none"
+		end
+		local _gc_changed = _gc ~= p1_gc_state
+		p1_gc_state = _gc
+
+		-- A tick earns a column when the input changed OR the window did. The
+		-- second half is what puts SUCCESS on the tick it happened rather than
+		-- on the first tick of the frame that noticed.
+		if _v ~= p1_tick_input_last or _gc_changed then
+			p1_tick_input_last = _v
+			-- Nothing drains it while the menu is up, so do not fill it there:
+			-- a queue held across the menu would flush stale columns the moment
+			-- it closed.
+			if globals.show_menu ~= true then
+				local _q = globals.p1_tick_inputs
+				if _q == nil then _q = {}; globals.p1_tick_inputs = _q end
+				if #_q < 64 then
+					table.insert(_q, { dir = _dir, btn = _btn,
+						seq = globals.p1_tick_seq, gc = _gc })
+				end
+			end
+		end
+		return
+	end
+
+	if _who ~= 0xFF8800 then return end
 
 	-- THE DUMMY'S SCROLLING INPUT, SAMPLED PER TICK (v135).
 	--

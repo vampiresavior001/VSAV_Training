@@ -1,0 +1,323 @@
+--- attempt 1  OPEN t=161  $158=0E
+  [f=4115 t=161] F OPEN                 $158=0E $06=00
+    t=173  lever   5        $125=5 $158=02 $06=02
+    t=175  lever   4        $125=4 $158=00 $06=02
+    t=175  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=4125 t=175] F CLOSE no cancel      $158=00 $06=02
+  [f=4127 t=177] F OPEN                 $158=0E $06=00
+--- attempt 2  OPEN t=178  $158=0E
+    t=179  lever   1        $125=1 $158=0D $06=00
+    t=181  lever   2        $125=2 $158=0B $06=00
+    t=182  lever   3        $125=3 $158=0A $06=00
+    t=184  PRESS   MP HP    $125=3 $158=08 $06=00
+  [f=4132 t=184] F PRESS   MP HP        $158=08 $06=00
+    t=185  lever   2        $125=2 $158=07 $06=00
+    t=186  lever   1        $125=1 $158=06 $06=00
+    t=188  RELEASE MP HP    $125=1 $158=04 $06=00
+  [f=4135 t=188] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=189  CLOSE  SUCCESS Special $06=0E   last edge: release MP HP (+1 tick)
+--- attempt 3  OPEN t=178  $158=0E
+    t=179  lever   6        $125=6 $158=0D $06=00
+  [f=4320 t=179] F OPEN                 $158=0C $06=00
+    t=181  lever   5        $125=5 $158=0B $06=00
+    t=185  lever   4        $125=4 $158=07 $06=00
+    t=189  lever   2        $125=2 $158=03 $06=02
+    t=191  lever   3        $125=3 $158=01 $06=02
+  [f=4329 t=191] F CLOSE no cancel      $158=00 $06=02
+    t=192  PRESS   LP MP HP $125=3 $158=00 $06=02
+    t=192  CLOSE  no cancel      $06=02   last edge: press LP MP HP (+0 tick)
+--- attempt 4  OPEN t=195  $158=0E
+    t=195  lever   1        $125=1 $158=0E $06=00
+  [f=4332 t=195] F OPEN                 $158=0E $06=00
+    t=196  RELEASE MP HP    $125=1 $158=0D $06=00
+  [f=4333 t=196] F RELEASE MP HP        $158=0D $06=00
+    t=197  CLOSE  SUCCESS Special $06=0E   last edge: release MP HP (+1 tick)
+  [f=4334 t=197] F CLOSE SUCCESS Special $158=00 $06=0E
+  [f=4523 t=193] F OPEN                 $158=0E $06=00
+--- attempt 5  OPEN t=194  $158=0E
+    t=202  lever   6        $125=6 $158=06 $06=00
+    t=203  lever   5        $125=5 $158=05 $06=00
+    t=206  lever   4        $125=4 $158=02 $06=02
+    t=208  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=4534 t=208] F CLOSE no cancel      $158=00 $06=02
+--- attempt 6  OPEN t=211  $158=0E
+    t=211  lever   2        $125=2 $158=0E $06=00
+  [f=4536 t=211] F OPEN                 $158=0D $06=00
+    t=213  lever   3        $125=3 $158=0C $06=00
+    t=216  PRESS   MP HP    $125=3 $158=09 $06=00
+  [f=4540 t=216] F PRESS   MP HP        $158=08 $06=00
+    t=217  RELEASE MP       $125=2 $158=08 $06=00
+  [f=4541 t=217] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=218  lever   1        $125=1 $158=00 $06=0E
+    t=218  CLOSE  SUCCESS Special $06=0E   last edge: release MP (+1 tick)
+  [f=4723 t=204] F OPEN                 $158=0E $06=00
+--- attempt 7  OPEN t=205  $158=0E
+    t=209  lever   6        $125=6 $158=0A $06=00
+    t=210  lever   5        $125=5 $158=09 $06=00
+    t=213  lever   4        $125=4 $158=06 $06=00
+    t=215  lever   5        $125=5 $158=04 $06=00
+    t=217  lever   3        $125=3 $158=02 $06=02
+    t=219  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=4734 t=219] F CLOSE no cancel      $158=00 $06=02
+  [f=4736 t=221] F OPEN                 $158=0E $06=00
+--- attempt 8  OPEN t=222  $158=0E
+    t=222  RELEASE MP MK HK $125=1 $158=0E $06=00
+  [f=4737 t=223] F RELEASE MP MK HK     $158=0C $06=00
+    t=224  RELEASE HP       $125=1 $158=0C $06=00
+  [f=4738 t=224] F RELEASE HP           $158=0B $06=00
+    t=225  lever   4        $125=4 $158=0B $06=00
+    t=227  lever   5        $125=5 $158=09 $06=00
+  [f=4746 t=235] F CLOSE no cancel      $158=00 $06=02
+    t=236  CLOSE  no cancel      $06=02   last edge: release HP (+12 tick)
+--- attempt 9  OPEN t=201  $158=0E
+  [f=4913 t=201] F OPEN                 $158=0E $06=00
+    t=209  lever   5        $125=5 $158=06 $06=00
+    t=211  lever   4        $125=4 $158=04 $06=00
+    t=215  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=4923 t=215] F CLOSE no cancel      $158=00 $06=02
+--- attempt 10  OPEN t=218  $158=0E
+    t=218  PRESS   LK MK HK $125=3 $158=0E $06=00
+  [f=4926 t=219] F OPEN                 $158=0C $06=00
+    t=220  RELEASE HP       $125=3 $158=0C $06=00
+  [f=4927 t=220] F RELEASE HP           $158=0C $06=00
+    t=221  PRESS   HP       $125=2 $158=0B $06=00
+  [f=4928 t=221] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=222  RELEASE HK       $125=1 $158=00 $06=0E
+    t=222  CLOSE  SUCCESS Special $06=0E   last edge: release HK (+0 tick)
+--- attempt 11  OPEN t=222  $158=0E
+    t=222  lever   5        $125=5 $158=0E $06=00
+  [f=5121 t=223] F OPEN                 $158=0C $06=00
+    t=225  lever   4        $125=4 $158=0B $06=00
+    t=229  lever   5        $125=5 $158=07 $06=00
+    t=230  lever   3        $125=3 $158=06 $06=00
+    t=234  lever   2        $125=2 $158=02 $06=00
+    t=235  lever   1        $125=1 $158=0E $06=00
+    t=237  PRESS   LP MP HP $125=1 $158=0C $06=00
+  [f=5132 t=237] F PRESS   LP MP HP     $158=0C $06=00
+    t=238  RELEASE LP MP    $125=4 $158=00 $06=0E
+    t=238  CLOSE  SUCCESS Special $06=0E   last edge: release LP MP (+0 tick)
+  [f=5133 t=239] F CLOSE SUCCESS Special $158=00 $06=0E
+  [f=5548 t= 24] F OPEN                 $158=0E $06=00
+--- attempt 12  OPEN t=25  $158=0E
+    t= 26  lever   4        $125=4 $158=0D $06=00
+    t= 30  lever   2        $125=2 $158=09 $06=00
+    t= 31  lever   3        $125=3 $158=08 $06=00
+    t= 35  lever   2        $125=2 $158=04 $06=00
+    t= 37  PRESS   MP       $125=1 $158=02 $06=02
+  [f=5558 t= 37] F CLOSE SUCCESS Special $158=00 $06=0E
+    t= 38  PRESS   LP HP    $125=1 $158=00 $06=0E
+    t= 38  CLOSE  SUCCESS Special $06=0E   last edge: press LP HP (+0 tick)
+--- attempt 13  OPEN t=7  $158=0E
+    t=  7  lever   5        $125=5 $158=0E $06=00
+  [f=5727 t=  7] F OPEN                 $158=0E $06=00
+    t= 11  lever   4        $125=4 $158=0A $06=00
+    t= 14  lever   2        $125=2 $158=07 $06=00
+    t= 17  lever   3        $125=3 $158=04 $06=00
+    t= 21  lever   2        $125=2 $158=0D $06=00
+    t= 22  lever   1        $125=1 $158=0C $06=00
+    t= 25  PRESS   LP MP HP $125=1 $158=09 $06=00
+  [f=5741 t= 25] F CLOSE SUCCESS ES     $158=00 $06=10
+    t= 26  RELEASE LP       $125=4 $158=00 $06=10
+    t= 26  CLOSE  SUCCESS ES      $06=10   last edge: release LP (+0 tick)
+  [f=5935 t= 28] F OPEN                 $158=0E $06=00
+--- attempt 14  OPEN t=29  $158=0E
+    t= 29  lever   6        $125=6 $158=0E $06=00
+    t= 30  lever   5        $125=5 $158=0D $06=00
+    t= 34  lever   4        $125=4 $158=09 $06=00
+    t= 38  lever   2        $125=2 $158=05 $06=00
+    t= 39  lever   3        $125=3 $158=04 $06=00
+    t= 43  lever   2        $125=2 $158=00 $06=02
+    t= 43  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=5946 t= 43] F CLOSE no cancel      $158=00 $06=02
+--- attempt 15  OPEN t=46  $158=0E
+    t= 46  RELEASE LP HK    $125=1 $158=0E $06=00
+    t= 47  lever   4        $125=4 $158=0D $06=00
+  [f=5949 t= 47] F OPEN                 $158=0D $06=00
+    t= 48  RELEASE MP HP MK $125=4 $158=0C $06=00
+  [f=5950 t= 48] F RELEASE MP HP MK     $158=0C $06=00
+    t= 51  lever   5        $125=5 $158=09 $06=00
+    t= 56  PRESS   MP HP    $125=5 $158=04 $06=00
+  [f=5956 t= 56] F PRESS   MP HP        $158=03 $06=02
+    t= 57  RELEASE MP HP    $125=5 $158=03 $06=02
+  [f=5957 t= 57] F RELEASE MP HP        $158=02 $06=02
+  [f=5958 t= 59] F CLOSE no cancel      $158=00 $06=02
+    t= 60  CLOSE  no cancel      $06=02   last edge: release MP HP (+3 tick)
+  [f=6100 t=248] F OPEN                 $158=0E $06=00
+--- attempt 16  OPEN t=249  $158=0E
+    t=251  lever   6        $125=6 $158=0C $06=00
+    t=253  lever   5        $125=5 $158=0A $06=00
+    t=  1  lever   4        $125=4 $158=06 $06=00
+    t=  5  lever   2        $125=2 $158=02 $06=02
+    t=  6  lever   3        $125=3 $158=01 $06=02
+  [f=6111 t=  7] F CLOSE no cancel      $158=00 $06=02
+    t=  7  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=6113 t=  9] F OPEN                 $158=0E $06=00
+--- attempt 17  OPEN t=10  $158=0E
+    t= 10  PRESS   MP HP    $125=2 $158=0E $06=00
+  [f=6114 t= 11] F PRESS   MP HP        $158=0C $06=00
+    t= 12  PRESS   LP       $125=2 $158=0C $06=00
+  [f=6115 t= 12] F PRESS   LP           $158=0C $06=00
+    t= 13  RELEASE LP       $125=1 $158=00 $06=0E
+    t= 13  CLOSE  SUCCESS Special $06=0E   last edge: release LP (+0 tick)
+  [f=6116 t= 13] F CLOSE SUCCESS Special $158=00 $06=0E
+  [f=6334 t= 48] F OPEN                 $158=0E $06=00
+--- attempt 18  OPEN t=49  $158=0E
+    t= 55  lever   6        $125=6 $158=08 $06=00
+    t= 57  lever   5        $125=5 $158=06 $06=00
+    t= 59  lever   4        $125=4 $158=04 $06=00
+    t= 63  lever   2        $125=2 $158=00 $06=02
+    t= 63  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=6345 t= 63] F CLOSE no cancel      $158=00 $06=02
+--- attempt 19  OPEN t=66  $158=0E
+    t= 66  lever   3        $125=3 $158=0E $06=00
+  [f=6348 t= 67] F OPEN                 $158=0C $06=00
+    t= 68  PRESS   HP       $125=3 $158=0C $06=00
+  [f=6349 t= 68] F PRESS   HP           $158=0C $06=00
+    t= 69  PRESS   MP       $125=2 $158=0B $06=00
+  [f=6350 t= 69] F CLOSE SUCCESS Special $158=00 $06=0E
+    t= 70  lever   1        $125=1 $158=00 $06=0E
+    t= 70  CLOSE  SUCCESS Special $06=0E   last edge: press MP (+1 tick)
+--- attempt 20  OPEN t=132  $158=0E
+  [f=6589 t=132] F OPEN                 $158=0E $06=00
+    t=145  lever   6        $125=6 $158=01 $06=00
+    t=146  lever   5        $125=5 $158=0E $06=00
+    t=149  lever   4        $125=4 $158=0B $06=00
+    t=153  lever   2        $125=2 $158=07 $06=00
+    t=154  lever   3        $125=3 $158=06 $06=00
+    t=157  lever   2        $125=2 $158=03 $06=02
+    t=159  lever   1        $125=1 $158=01 $06=00
+    t=165  lever   2        $125=2 $158=09 $06=00
+    t=166  PRESS   MP HP    $125=2 $158=08 $06=00
+  [f=6615 t=167] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=167  lever   3        $125=3 $158=00 $06=0E
+    t=167  CLOSE  SUCCESS Special $06=0E   last edge: press MP HP (+1 tick)
+--- attempt 21  OPEN t=189  $158=0E
+  [f=7016 t=189] F OPEN                 $158=0E $06=00
+    t=195  lever   6        $125=6 $158=08 $06=00
+    t=197  lever   5        $125=5 $158=06 $06=00
+    t=199  lever   4        $125=4 $158=04 $06=00
+    t=203  lever   2        $125=2 $158=00 $06=02
+    t=203  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=7026 t=203] F CLOSE no cancel      $158=00 $06=02
+--- attempt 22  OPEN t=206  $158=0E
+    t=206  PRESS   HP       $125=3 $158=0E $06=00
+  [f=7029 t=207] F OPEN                 $158=0C $06=00
+    t=208  PRESS   MP       $125=3 $158=0C $06=00
+  [f=7030 t=208] F PRESS   MP           $158=0B $06=00
+    t=209  RELEASE MP       $125=2 $158=0B $06=00
+  [f=7031 t=209] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=210  lever   1        $125=1 $158=00 $06=0E
+    t=210  CLOSE  SUCCESS Special $06=0E   last edge: release MP (+1 tick)
+  [f=7197 t=175] F OPEN                 $158=0E $06=00
+--- attempt 23  OPEN t=176  $158=0E
+    t=178  lever   6        $125=6 $158=0C $06=00
+    t=179  lever   5        $125=5 $158=0B $06=00
+    t=185  lever   4        $125=4 $158=05 $06=00
+    t=187  lever   2        $125=2 $158=03 $06=02
+    t=189  lever   3        $125=3 $158=01 $06=02
+    t=190  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=7209 t=191] F CLOSE no cancel      $158=00 $06=02
+--- attempt 24  OPEN t=193  $158=0E
+    t=193  lever   2        $125=2 $158=0E $06=00
+    t=194  PRESS   MP HP    $125=1 $158=0D $06=00
+    t=195  CLOSE  SUCCESS ES      $06=10   last edge: press MP HP (+1 tick)
+  [f=7212 t=195] F CLOSE SUCCESS ES     $158=00 $06=10
+  [f=7384 t=168] F OPEN                 $158=0E $06=00
+--- attempt 25  OPEN t=169  $158=0E
+    t=174  lever   6        $125=6 $158=09 $06=00
+    t=175  lever   5        $125=5 $158=08 $06=00
+    t=179  lever   4        $125=4 $158=04 $06=00
+    t=182  lever   5        $125=5 $158=01 $06=02
+    t=183  lever   2        $125=2 $158=00 $06=02
+    t=183  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=7395 t=183] F CLOSE no cancel      $158=00 $06=02
+  [f=7397 t=185] F OPEN                 $158=0E $06=00
+--- attempt 26  OPEN t=186  $158=0E
+    t=187  lever   2        $125=2 $158=0D $06=00
+    t=188  PRESS   HP       $125=2 $158=0C $06=00
+  [f=7399 t=188] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=189  PRESS   MP       $125=1 $158=00 $06=0E
+    t=189  CLOSE  SUCCESS Special $06=0E   last edge: press MP (+0 tick)
+  [f=7572 t=163] F OPEN                 $158=0E $06=00
+--- attempt 27  OPEN t=163  $158=0E
+    t=166  lever   4        $125=4 $158=0B $06=00
+    t=169  lever   5        $125=5 $158=08 $06=00
+    t=170  lever   2        $125=2 $158=07 $06=00
+    t=171  lever   3        $125=3 $158=06 $06=00
+    t=175  lever   2        $125=2 $158=02 $06=02
+    t=177  lever   1        $125=1 $158=0E $06=00
+    t=179  lever   4        $125=4 $158=0C $06=00
+    t=180  PRESS   MP HP    $125=4 $158=0B $06=00
+  [f=7585 t=180] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=181  CLOSE  SUCCESS Special $06=0E   last edge: press MP HP (+1 tick)
+  [f=7755 t=151] F OPEN                 $158=0E $06=00
+--- attempt 28  OPEN t=152  $158=0E
+    t=153  lever   5        $125=5 $158=0D $06=00
+    t=157  lever   4        $125=4 $158=09 $06=00
+    t=161  lever   5        $125=5 $158=05 $06=00
+    t=162  lever   2        $125=2 $158=04 $06=00
+    t=163  lever   3        $125=3 $158=03 $06=02
+    t=166  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=7767 t=167] F CLOSE no cancel      $158=00 $06=02
+--- attempt 29  OPEN t=169  $158=0E
+    t=169  PRESS   HP       $125=1 $158=0E $06=00
+  [f=7769 t=169] F PRESS   HP           $158=0E $06=00
+    t=170  PRESS   MP       $125=1 $158=00 $06=0E
+    t=170  CLOSE  SUCCESS Special $06=0E   last edge: press MP (+0 tick)
+  [f=7770 t=171] F CLOSE SUCCESS Special $158=00 $06=0E
+--- attempt 30  OPEN t=158  $158=0E
+  [f=8337 t=159] F OPEN                 $158=0C $06=00
+    t=167  lever   6        $125=6 $158=05 $06=00
+    t=169  lever   5        $125=5 $158=03 $06=02
+    t=171  lever   4        $125=4 $158=01 $06=02
+  [f=8346 t=171] F CLOSE no cancel      $158=00 $06=02
+    t=172  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+--- attempt 31  OPEN t=175  $158=0E
+    t=175  lever   1        $125=1 $158=0E $06=00
+  [f=8349 t=175] F OPEN                 $158=0D $06=00
+    t=177  lever   2        $125=2 $158=0C $06=00
+    t=178  lever   3        $125=3 $158=0B $06=00
+    t=182  PRESS   HP       $125=2 $158=07 $06=00
+  [f=8355 t=183] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=183  lever   1        $125=1 $158=00 $06=0E
+    t=183  CLOSE  SUCCESS Special $06=0E   last edge: press HP (+1 tick)
+  [f=8525 t=153] F OPEN                 $158=0E $06=00
+--- attempt 32  OPEN t=154  $158=0E
+    t=154  lever   5        $125=5 $158=0E $06=00
+    t=157  lever   4        $125=4 $158=0B $06=00
+    t=162  lever   2        $125=2 $158=06 $06=00
+    t=163  lever   3        $125=3 $158=05 $06=00
+    t=167  lever   2        $125=2 $158=0E $06=00
+    t=169  lever   1        $125=1 $158=0C $06=00
+    t=170  PRESS   MP       $125=1 $158=0B $06=00
+  [f=8538 t=171] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=171  lever   4        $125=4 $158=00 $06=0E
+    t=171  CLOSE  SUCCESS Special $06=0E   last edge: press MP (+1 tick)
+--- attempt 33  OPEN t=186  $158=0E
+  [f=8742 t=187] F OPEN                 $158=0D $06=00
+    t=189  lever   6        $125=6 $158=0B $06=00
+    t=190  lever   5        $125=5 $158=0A $06=00
+    t=195  lever   4        $125=4 $158=05 $06=00
+    t=198  lever   5        $125=5 $158=02 $06=02
+    t=199  lever   2        $125=2 $158=01 $06=02
+    t=200  CLOSE  no cancel      $06=02   last edge: none (+n/a tick)
+  [f=8752 t=200] F CLOSE no cancel      $158=00 $06=02
+--- attempt 34  OPEN t=203  $158=0E
+  [f=8754 t=203] F OPEN                 $158=0E $06=00
+    t=205  lever   2        $125=2 $158=0C $06=00
+    t=206  PRESS   HP       $125=1 $158=0B $06=00
+  [f=8757 t=207] F CLOSE SUCCESS Special $158=00 $06=0E
+    t=207  lever   4        $125=4 $158=00 $06=0E
+    t=207  CLOSE  SUCCESS Special $06=0E   last edge: press HP (+1 tick)
+--- attempt 35  OPEN t=185  $158=0E
+    t=185  lever   5        $125=5 $158=0E $06=00
+  [f=8933 t=185] F OPEN                 $158=0E $06=00
+    t=189  lever   4        $125=4 $158=0A $06=00
+    t=193  lever   5        $125=5 $158=06 $06=00
+    t=194  lever   2        $125=2 $158=05 $06=00
+    t=195  lever   3        $125=3 $158=04 $06=00
+    t=199  lever   2        $125=2 $158=0E $06=00
+    t=201  lever   1        $125=1 $158=0C $06=00
+    t=202  PRESS   HP       $125=1 $158=0B $06=00
+    t=203  CLOSE  SUCCESS Special $06=0E   last edge: press HP (+1 tick)
+  [f=8946 t=203] F CLOSE SUCCESS Special $158=00 $06=0E

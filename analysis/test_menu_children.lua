@@ -60,6 +60,7 @@ local PARENTS = {
 local CHILDREN = {
 	{ "Display Pushbox X Center",  "display_hitbox_default" },
 	{ "Scrolling Input History",    "show_scrolling_input" },
+	{ "Show Button Releases",       "show_scrolling_input" },
 	{ "Hide Negative Edge Inputs", "show_scrolling_input"   },
 	{ "Show GC Trainer",           "show_scrolling_input"   },
 }
