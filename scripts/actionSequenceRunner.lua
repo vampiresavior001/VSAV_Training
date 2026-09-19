@@ -185,6 +185,16 @@ local MEASURED_STEP_FLOORS = {
 	[0x0D] = { name = "Lei-Lei",   f =  0, b =  4, fc =  0, bc =  0 },
 	[0x0E] = { name = "Lilith",    f =  4, b =  4, fc =  4, bc =  4 },
 	[0x0F] = { name = "Jedah",     f = 10, b = 10, fc = 10, bc = 10 },
+	-- Dark Gallon gets Gallon's values, the same judgement KD_END_1A7 in
+	-- guardCancel.lua already made: vsavscriptv2.lua's own check says he
+	-- "is exactly the same as regular Gallon". Confirmed by the user,
+	-- 2026-09-19.
+	--
+	-- He is also the only one of the three characters that had no row here
+	-- who can actually be picked (Zabel 2 and Oboro cannot), so with this
+	-- the step path never answers Not Measured after a ground dash for
+	-- anyone reachable.
+	[0x12] = { name = "Dark Gallon", f =  7, b =  2, fc = 15, bc = 10 },
 }
 
 -- AUTO AFTER A GROUND DASH IS THE MEASURED VALUE, AS IS.

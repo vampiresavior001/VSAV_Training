@@ -192,6 +192,41 @@ rows_eq("Dash の次の Attack",{
   "   Remove This Step  >",
   "   Back"})
 
+print("[2b] Wait の選択画面 - 選ぶ前に、選んだ結果が読める")
+-- 行は Auto (11) と出るのに、選択肢は After としか出ていなかった。ダッシュの
+-- 後の攻撃はダッシュの「最中」に出る技で、終わってから出るのではないので、
+-- After という語が場面と合っていない (本人、2026-09-19)。
+--
+-- 実測値が出る場面だけ Fastest (N) に差し替える。攻撃の後は After のままで
+-- 正しい - そこは本当に「ダミーが終わるまで待つ」だから。
+open(0x05,{{action="dash.f",wait=-1},{action="atk",lever="none",button="LK",wait=-1}})
+tap("down") tap("LP")            -- STEP 2 へ
+goto_row("Wait") tap("LP")       -- Wait 画面
+rows_eq("ダッシュの後は解決値が出る",{
+  ">  Fastest (11)",
+  "   Landing",
+  "   Chain",
+  "   Cancel",
+  "   Late Cancel",
+  "   Fixed Ticks",
+  "   Back"})
+tap("left")
+
+-- 攻撃の後は After のまま。ここを巻き込むと、正しい語まで失われる。
+open(0x05,{{action="atk",lever="none",button="LP",wait=-1},{action="atk",lever="none",button="LK",wait=-1}})
+tap("down") tap("LP")
+goto_row("Wait") tap("LP")
+rows_eq("攻撃の後は After のまま",{
+  ">  After",
+  "   Landing",
+  "   Rapid",
+  "   Chain",
+  "   Cancel",
+  "   Late Cancel",
+  "   Fixed Ticks",
+  "   Back"})
+tap("left")
+
 print("[3] 見出しは経路 - 押した行の名前がそのまま伸びる")
 open(0x05,{{action="atk",lever="none",button="LP",wait=-1},{action="neutral",wait=-1}})
 title_eq("root",     HEAD)

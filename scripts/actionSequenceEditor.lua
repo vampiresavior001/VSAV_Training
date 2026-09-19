@@ -1278,6 +1278,26 @@ local function build(s)
 			for _, c in ipairs(wait_choices_for(draft.steps[s.index],
 			                                    draft.steps[s.index - 1])) do
 				local label = c.label
+				-- SAY WHAT PICKING IT WILL DO.
+				--
+				-- The row this writes reads Auto (10) after a dash, because the
+				-- earliest an attack can come out of one is a measured number -
+				-- the attack lands INSIDE the dash, it does not follow it. The
+				-- choice still said After, so the word on the menu and the word
+				-- on the row disagreed and neither told you the tick.
+				--
+				-- Only where a dash makes After wrong. After an attack it is
+				-- exactly right - the step waits for the dummy to finish - so
+				-- that case keeps the word it has always had.
+				if c.timing == nil and not c.fixed then
+					local _n = auto_ticks(draft.steps[s.index], s.index)
+					if _n ~= nil then
+						label = "Fastest (" .. _n .. ")"
+					elseif seq_auto_needs_number ~= nil
+					       and seq_auto_needs_number(draft.steps[s.index - 1]) then
+						label = "Fastest (Not Measured)"
+					end
+				end
 				if c.fixed and draft.steps[s.index].timing == nil
 				   and draft.steps[s.index].wait ~= WAIT_AUTO then
 					label = label .. " : " .. tostring(draft.steps[s.index].wait)

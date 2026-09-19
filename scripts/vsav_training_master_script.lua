@@ -510,7 +510,28 @@ emu.registerbefore(function()
 					_inp["P2 Weak Kick"] = _inp["P1 Weak Kick"] or _inp["P2 Weak Kick"]
 					_inp["P2 Medium Kick"] = _inp["P1 Medium Kick"] or _inp["P2 Medium Kick"]
 					_inp["P2 Strong Kick"] = _inp["P1 Strong Kick"] or _inp["P2 Strong Kick"]
-					-- Start/Coin not mirrored (would instantly confirm / change stage)
+					-- START IS MIRRORED. COIN IS NOT.
+					--
+					-- Both were held back for fear of confirming the pick or jumping
+					-- the stage. Neither applies on this screen (user, 2026-09-19):
+					-- the mirror does not start until the wait above has run, so
+					-- nothing is standing on Start when control arrives, and stage
+					-- select is on Coin (stage-select.lua), which stays on P1.
+					--
+					-- Holding it is how the secret characters are picked - Start plus
+					-- two punches or two kicks - so without this Dark Gallon cannot be
+					-- chosen for P2 at all.
+					--
+					-- THE NAME IS NOT FIXED. FBNeo spells it differently per driver;
+					-- macro.lua already probes the same three. The P2 spelling is the
+					-- P1 one with its single 1 turned into a 2.
+					for _, _s in ipairs({ "1 Player Start", "P1 Start", "Start 1" }) do
+						if _inp[_s] ~= nil then
+							local _p2 = _s:gsub("1", "2", 1)
+							_inp[_p2] = _inp[_s] or _inp[_p2]
+							break
+						end
+					end
 					joypad.set(_inp)
 				end
 			else

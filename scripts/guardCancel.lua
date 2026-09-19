@@ -2697,6 +2697,15 @@ local DASH_AUTO_TICKS = {
 	[0x0D] = { name = "Lei-Lei",   f =  1, b =  5, fc =  1, bc =  1 },
 	[0x0E] = { name = "Lilith",    f =  5, b =  5, fc =  3, bc =  3 },
 	[0x0F] = { name = "Jedah",     f = 10, b = 10, fc =  9, bc =  9 },
+	-- Dark Gallon gets Gallon's values, the same judgement KD_END_1A7 above
+	-- already made: vsavscriptv2.lua's own check says he "is exactly the
+	-- same as regular Gallon". Confirmed by the user, 2026-09-19.
+	--
+	-- BOTH TABLES OR NEITHER: this one drives the arm and
+	-- MEASURED_STEP_FLOORS drives the step. A character present in one but
+	-- not the other has the two paths saying different things about him -
+	-- the trap the Demitri row was written to avoid.
+	[0x12] = { name = "Dark Gallon", f =  8, b =  3, fc =  6, bc =  1 },
 	-- DEMITRI (0x01) HAS NO ROW, AND SHOULD NOT GET ONE FOR THE CANCELS.
 	--
 	-- The attack wiki's Demitri page, basic actions: both dashes are

@@ -6,6 +6,48 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.4
+
+### A fresh install came up with the diagnostic overlays on
+
+Unzipping over a deleted `scripts` folder put four lines in the top left
+
+```
+P1 Last Got Hit By       : ...
+P2 Last Got Hit By       : ...
+P1 Push Back Timer Value : ...
+P2 Push Back Timer Value : ...
+```
+
+and a `Projectile Allocation Value` near the top of the screen.
+
+**Seven rows on the Analysis tab shipped switched on.** Saving your settings once
+cleared it, so it only ever happened to people without a settings file - which is
+to say, on a first install.
+
+### The `Wait` screen now shows what picking it will do
+
+An attack after a dash comes out **inside** the dash, not after it. The row said
+`Auto (11)` - the measured tick - while the menu you picked from still said
+`After`, so the two disagreed and neither told you the number.
+
+**It now reads `Fastest (11)`.** Combinations nobody has measured read
+`Fastest (Not Measured)`. After an attack it still says `After`, because there the
+step really does wait for the dummy to finish and the word is right.
+
+### Dark Gallon can be chosen for P2
+
+The secret characters are picked by holding Start and pressing two punches or two
+kicks. The mirror that lets one stick choose P2 did not pass Start, so **Dark
+Gallon could not be chosen at all.**
+
+Start is mirrored now. Coin still stays on P1, so stage select is unchanged.
+
+His dash attack timings are in as well - his dash is the same as regular Gallon's,
+so he uses Gallon's values.
+
+---
+
 ## v11.7.3
 
 ### `Loop Wait` now offers `Auto (Landing)`

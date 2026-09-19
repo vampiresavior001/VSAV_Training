@@ -59,13 +59,22 @@ local default_training_settings = {
   pb_type_rec = 1,   -- 1 is None; 0 was out of range for the list
   anak_projectile = 1,
   lei_lei_stun_item = 0,
-  show_move_strength = 0,
-  show_pb_pushback_timer = 0,
-  show_pb_timer = 0,
-  show_throw_invuln_timer = 0,
-  show_mash_timer = 0,
+  -- THESE SHIP false, NOT 0.
+  --
+  -- Every one of them is read as `if globals.options.X then`, and IN LUA ZERO IS
+  -- TRUE. Shipping 0 turned the whole Analysis tab on for anyone who unzipped a
+  -- build without carrying a settings file over - which is the fresh install,
+  -- and exactly the case nobody tests. Reported 2026-09-19 as "why do these
+  -- lines appear after deleting scripts and setting up again".
+  --
+  -- The menu rows already declare false; only this table said 0.
+  show_move_strength = false,
+  show_pb_pushback_timer = false,
+  show_pb_timer = false,
+  show_throw_invuln_timer = false,
+  show_mash_timer = false,
   show_pursuit_indicator = false,
-  show_invuln_timer = 0,
+  show_invuln_timer = false,
   display_airdash_trainer = 0,
   show_x_distance = 1,
   display_dash_interval_trainer = false,
@@ -74,7 +83,7 @@ local default_training_settings = {
   display_dash_attack_cancel_trainer = false,
   display_attack_dash_gap_trainer = false,
   display_frame_trap_trainer = false,
-  show_projectile_count_limiter = 0,
+  show_projectile_count_limiter = false,
   display_bishamon_ubk_trainer = false,
   use_recording_savestate = false,
   -- Per-trigger action sequences, keyed "guard"/"counter"/"reversal". Written

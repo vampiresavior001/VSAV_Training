@@ -66,7 +66,17 @@ for _, e in ipairs(analysis_tab.entries) do
 		seen = seen + 1
 		local v = shipped[e.property_name]
 		-- nil reads as off everywhere in the tool, so an absent key passes.
-		if v ~= nil and v ~= false and v ~= 0 then
+		--
+		-- ZERO DOES NOT. This used to accept it, and seven rows shipped as
+		-- 0 in config.lua while every one of them is read as
+		-- `if globals.options.X then` - which in Lua is TRUE for zero. The
+		-- whole Analysis tab came up on for anyone who unzipped a build
+		-- without an existing settings file, and this test passed the
+		-- entire time because it agreed with the wrong assumption
+		-- (reported 2026-09-19).
+		--
+		-- A checkbox ships false or it does not ship.
+		if v ~= nil and v ~= false then
 			bad(("Analysis toggle %q ships as %s, must be off"):format(e.name, tostring(v)))
 		end
 	end

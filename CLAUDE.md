@@ -67,13 +67,28 @@ gui.text は ASCII のみ。日本語は空白になる (2026-09-16 実測)。�
 - 終了コードは `$?`、捨てるなら `> $null`
 - **bat はフルパスと `&` で呼ぶのが一番堅い** (cwd に依存しない。2026-09-19 に
   `cd ... ; .\path.bat` `& "フルパス"` `./path.bat` の 3 形式とも動作確認)
+- **git は `--no-pager` を付けて出す** - 出力が長いとページャ (less) が開き、
+  プロンプトが返らない。利用者が次に打ったコマンドはページャへの入力として
+  食われ、**実行されないまま古い画面が残る。** 2026-09-19 に `git diff --stat`
+  でこれが起き、push が済んだように見える画面のまま 2 往復した。パスの `/` が
+  less の検索と解釈されて「Pattern not found」になるのも同じ原因。
+  **迷ったらリモートを直接見る** - `git ls-remote origin refs/heads/fc2-v11` と
+  `git rev-parse fc2-v11` を突き合わせれば、画面に何が出ていようと確実。
+
+**実機での確認を頼むときも、起動コマンドを Run ボタンで出す。** プローブと
+オフラインテストだけの話ではない。2026-09-19 に「完全再起動して試してください」
+とだけ書いて指摘された。
+
+```bash
+cd C:/fightcaVSAV-Debug/emulator/fbneo; .cadefbneo.exe vsavj savestatessavj_fbneo.fs "$PWD\scriptssav_training_master_script.lua"
+```
 
 `analysis/run_*_probe.bat` は 9 本あり、**プローブ名以外は中身が同一**で取り違え
 やすい (本人、2026-09-19)。どれを走らせるかは依頼する側が決めて、その 1 本だけを
 Run ボタンで出す。
 
 ```bash
-& "C:ightcaVSAV-Debug\emulatorbneonalysisun_select_probe.bat"
+& "C:\fightcaVSAV-Debug\emulator\fbneo\analysis\run_select_probe.bat"
 ```
 
 オフラインテストの一括実行も同じ形で出す。
@@ -103,6 +118,8 @@ cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_probe_smoke.lua
 cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_position_hotkey.lua
 cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_char_chosen.lua
 cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 scripts/tests/actionRoute_test.lua
+cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_dash_auto_coverage.lua
+cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_mirror_start.lua
 ```
 
 **`io.open` の相対パスは「その Lua スクリプト自身のフォルダ」に解決される。**
@@ -155,7 +172,7 @@ LF になり 1293 行のノイズ差分が出たことがある)。
 `analysis/` のテスト、ルートの `.md` は**元から LF**。`hud.lua` のように CRLF の
 ものもある。**「CRLF であること」ではなく「変えていないこと」を見る。**
 
-**`grep -c $'' file` で確認してはいけない。** Bash ツール経由では `$''` が
+**`grep -c $'\r' file` で確認してはいけない。** Bash ツール経由では `$'\r'` が
 展開されず**空パターンとして全行に一致**するため、**常に行数と同じ値が返り、
 何を調べても「維持」に見える** (2026-09-19、数回にわたって無意味な確認を報告した)。
 確認は Python で数える。
