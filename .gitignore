@@ -93,6 +93,16 @@ training_settings*.json
 # intent is stated and not just an accident of the whitelist.
 VSAV_Training_*.zip
 scripts/action_pattern_trace.log
+
+# The dated copies of the same thing. The port was abandoned and is being
+# redesigned from the UI instead (design_action_pattern_library.md), so these
+# sixteen files - one of them 49,912 lines, every name a dead end like
+# eleventh_hook_dead - say nothing to anyone reading the published tree, which
+# they reached on 2026-09-19.
+#
+# Dated probe logs that led somewhere stay tracked on purpose: the
+# landing_predict ones are the evidence behind Auto (Landing).
+analysis/action_pattern_trace_*.log
 analysis/landing_predict_probe.log
 # Measurement output, not authored here. Probe logs and the landing trace are
 # produced by running the tool, run to hundreds of KB, and must never reach a

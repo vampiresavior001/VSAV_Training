@@ -1,2 +1,0 @@
-    2329  begin_opportunity which=reversal key=1 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
-    2991  begin_opportunity which=reversal key=2 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil

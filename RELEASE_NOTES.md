@@ -6,6 +6,66 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.3
+
+### `Loop Wait` now offers `Auto (Landing)`
+
+`Auto (After)` **starts the input once the dummy can act.** Anything that takes more
+than one input - a dash, say - is then late by its own run-up (3 ticks for a dash).
+Fine for a blocking drill, but not the fastest.
+
+**`Auto (Landing)` predicts the touchdown and buffers the command ahead of it**, so the
+final input lands on the tick the dummy first becomes actionable. That is what lets a
+landing action loop at full speed.
+
+A step could already be set to `Auto (Landing)`; **the loop restart could not.** That
+gap is closed.
+
+### Jedah's infinite reproduces as-is
+
+The infinite on Demitri and Bishamon comes out **without tuning `Loop Wait` to a
+number.**
+
+```
+Player tab
+  Guard Action Type      : Reversal - Action Steps
+  Guard Action Frequency : 100%
+  P2 Random Guard %      : 100%
+  Guard                  : Stand Block
+  Loop Steps             : yes
+  Loop Wait              : Auto (Landing)
+
+Reversal Action Steps : Jedah : 2 steps
+  1  Auto (Fastest)  Dash   : Forward
+  2  Auto (10)       Attack : Forward + HP
+```
+
+### Fixed
+
+**Going from a dash attack into a landing dash, the command did not come out for some
+moves.** The slower the move (dash HP or HK, say) the more likely it was; light attacks
+were fine. 
+
+Hit stop overlapping the input delivery was the cause, and **it broke in a different
+way depending on where the overlap fell.** All three are fixed.
+
+- Ticks spent in hit stop were counted as delivered. The game does not take a press
+  made during hit stop, so **an input that never arrived was treated as done** and the
+  schedule moved on.
+- The wait was also applied to neutral - the gap where the stick is released. There is
+  nothing there for the game to take, so **waiting gained nothing and spent the command
+  window.**
+- A long hit stop cannot be waited out at all: the window closes first. **The command
+  is now entered again from the top** instead.
+
+### Known, not fixed
+
+**Gallon and Felicia cannot cancel their landing motion with a dash**, so the setup
+above is not the fastest for them either. That is the game's own behaviour - **a human
+playing them hits the same wall.**
+
+---
+
 ## v11.7.2
 
 ### The input bar now runs on the game's ticks
