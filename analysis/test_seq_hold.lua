@@ -77,6 +77,7 @@ local function set_stun() ram[P2 + 0x05] = 2 ; ram[P2 + 0x06] = 0x0A ; ram[P2 + 
 -- (buttonless entries take two ticks); the hold picked up when a segment runs
 -- off its end; and dropped once the schedule is empty.
 local held_lever = nil
+local reentered = false
 local defender = {}
 local log = {}
 local function tick()
@@ -87,14 +88,42 @@ local function tick()
 		if s == nil or s.sequence == nil then break end
 		held_lever = nil
 		local i = s.current_frame or 1
+		-- 窓が切れたら、凍結明けに頭から入れ直す (実装と同じ規則)
+		if s.restart_pending then
+			if (ram[P2 + 0x5C] or 0) ~= 0 then
+				wrote = { lev = 0, btn = 0, src = "wait" }
+				break
+			end
+			s.restart_pending = nil
+			s.current_frame = 1 ; s.tick_held = 0 ; s.entry_ticks = 0
+			i = 1
+			reentered = true
+		end
 		if i <= #s.sequence then
 			local lev, btn = to_bits(s.sequence[i])
-			wrote = { lev = lev, btn = btn, src = "step" }
+			s.entry_ticks = (s.entry_ticks or 0) + 1
+			if (lev ~= 0 or btn ~= 0) and (ram[P2 + 0x5C] or 0) ~= 0
+			   and s.entry_ticks > (R.DASH_GRACE_TICKS or 10) then
+				s.restart_pending = true
+				wrote = { lev = 0, btn = 0, src = "wait" }
+				break
+			end
+			wrote = { lev = lev, btn = btn,
+			          src = (reentered and "reenter" or "step") }
+			reentered = false
 			local hold = (btn == 0 and lev ~= 0) and 2 or 1
-			s.tick_held = (s.tick_held or 0) + 1
+			-- 凍結中のティックはゲームが処理しないので数えない。
+			-- 何かを押しているエントリだけ。ニュートラルは登録される押しが無いので
+			-- 待っても得が無く、猶予だけ食う。
+			if (lev ~= 0 or btn ~= 0) and (ram[P2 + 0x5C] or 0) ~= 0 then
+				-- 出してはいるが、ゲームは見ていない
+			else
+				s.tick_held = (s.tick_held or 0) + 1
+			end
 			if s.tick_held >= hold then
 				s.current_frame = i + 1
 				s.tick_held = 0
+				s.entry_ticks = 0
 			end
 			break
 		end
@@ -321,6 +350,105 @@ do
 	R.cancel()
 	if R.rev_lever_now(52) ~= nil then fail("cancel 後", "残っている", "nil") end
 	if fails == 0 then print("  ok 1 歩目の rev は預けられ、一度だけ受け取り、cancel で消える") end
+end
+
+print("[9] 凍結中のティックは配送に数えない")
+-- ボタンを伴わない入力は 2 ティック必要 (v158)。ところがヒットストップ中の押しは
+-- ゲームが捨てる ($126 は 1 ティックの押しエッジ)。凍結中のティックも数えていた
+-- ため、ゲームが一度も見ていない入力を「出した」ことにして次へ進んでいた。
+--
+-- 実機トレース 2026-09-19、ジェダ 10 回。成功した 5 回は凍結ティックゼロ、
+-- 失敗した 5 回はちょうど 1 つ、いずれも 1 回目の前入力の 2 ティック目。
+-- そのタップが成立せず、2 回目の前だけが入ってダッシュにならなかった
+-- ($06 は 5 回とも 0x14 に届かない)。
+do
+	local function dash_ticks(freeze_at)
+		install({
+			{ action = "atk",    lever = "none", button = "LP", wait = 0 },
+			{ action = "dash.f", wait = -1 },
+		})
+		start()
+		set_free()
+		local n = 0
+		for i = 1, 20 do
+			ram[P2 + 0x5C] = (i == freeze_at) and 5 or 0
+			local e = tick()
+			if e.src == "step" then n = n + 1 end
+		end
+		ram[P2 + 0x5C] = 0
+		return n
+	end
+	local plain = dash_ticks(nil)
+	-- 方向を出しているティックで凍らせる。ニュートラルで凍らせても
+	-- 伸びないのが正しい挙動なので、試したことにならない。
+	local dir_at = nil
+	for k, e in ipairs(log) do
+		if e.src == "step" and e.lev ~= 0 then dir_at = k break end
+	end
+	if dir_at == nil then fail("方向を出すティックが見つからない", "nil", "数値") end
+	local frozen = dash_ticks(dir_at)
+	if plain < 5 then fail("凍結なしの配送ティック", plain, ">= 5") end
+	-- 凍った 1 ティックは数に入らないので、その分だけ出し続ける。
+	if frozen ~= plain + 1 then fail("凍結 1 ティック分だけ伸びる", frozen, plain + 1) end
+	-- 上は代役の歩進を見ている。実装そのものは読んで固定する。
+	-- (これが無いと、実装から条件を外しても上は通ってしまう)
+	local gsrc = io.open("guardCancel.lua"):read("*a")
+	local g = gsrc:find("and memory.readbyte(0xFF885C) ~= 0 then", 1, true)
+	local i = g and gsrc:find("_s0.tick_held = (_s0.tick_held or 0) + 1", g, true)
+	if g == nil or i == nil or (i - g) > 1200 then
+		fail("実装が凍結中のティックを数えない", "守られていない", "$5C の分岐の内側")
+	end
+	if gsrc:find("if (_pl ~= 0 or _pb ~= 0)", 1, true) == nil then
+		fail("ニュートラルは待たない", "限定が無い", "_pl/_pb のどちらかが非ゼロのときだけ")
+	end
+	if fails == 0 then print("  ok 凍った 1 ティックは配送に数えず、その分だけ出し続ける") end
+end
+
+print("[10] 窓が切れるほど長い凍結なら、待たずに頭から入れ直す")
+-- 凍結中のティックを数えないのは、短い凍結を跨ぐため。長い凍結は救えない。
+--
+-- 実機トレース 2026-09-19:
+--   ジェダ      凍結 3   前入力を 5 ティック保持  → ダッシュ出る
+--   サスカッチ  凍結 11  前入力を 13 ティック保持 → 出ない
+-- ダッシュの 1 回目のレバー方向は 10 フレームしか継続できない (資料)。
+-- 超えた先は死んだモーションに餌をやっているだけなので、凍結が明けてから
+-- 窓ごと作り直す。
+do
+	local function run_with_freeze(freeze_len)
+		install({
+			{ action = "atk",    lever = "none", button = "LP", wait = 0 },
+			{ action = "dash.f", wait = -1 },
+		})
+		start()
+		set_free()
+		local dir_at, reenter = nil, 0
+		for i = 1, 40 do
+			local hs = 0
+			if dir_at ~= nil and i > dir_at and i <= dir_at + freeze_len then hs = 1 end
+			ram[P2 + 0x5C] = hs
+			local e = tick()
+			if e.src == "step" and e.lev ~= 0 and dir_at == nil then dir_at = i end
+			if e.src == "reenter" then reenter = reenter + 1 end
+		end
+		ram[P2 + 0x5C] = 0
+		return reenter
+	end
+	-- 短い凍結は跨げるので入れ直さない。
+	if run_with_freeze(2) ~= 0 then fail("短い凍結で入れ直した", "した", "しない") end
+	-- 猶予を超える凍結は入れ直す。
+	if run_with_freeze(20) == 0 then fail("長い凍結で入れ直さない", "しない", "する") end
+	-- 実装そのものを固定する (上は代役の歩進を見ているため)。
+	local gsrc = io.open("guardCancel.lua"):read("*a")
+	if gsrc:find("_s0.restart_pending = true", 1, true) == nil then
+		fail("窓切れの印", "無い", "restart_pending")
+	end
+	if gsrc:find("> (actionSequenceRunnerModule.DASH_GRACE_TICKS or 10) then", 1, true) == nil then
+		fail("判定に使う猶予", "資料値でない", "DASH_GRACE_TICKS")
+	end
+	if gsrc:find("if memory.readbyte(0xFF885C) ~= 0 then return end", 1, true) == nil then
+		fail("凍結が明けてから入れ直す", "明ける前に入れ直す", "$5C が 0 になるまで待つ")
+	end
+	if fails == 0 then print("  ok 短い凍結は跨ぎ、長い凍結は凍結明けに入れ直す") end
 end
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))

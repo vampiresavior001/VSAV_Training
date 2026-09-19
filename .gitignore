@@ -20,6 +20,11 @@
 # reads. Whitelisted by pattern so the next one does not have to remember
 # to add itself - the last one was only tracked because someone noticed.
 !/handoff_*.md
+# Design notes, same reasoning and the same trap: design_action_pattern_library.md
+# was written, committed with `git add -A`, and silently left untracked by the
+# /* rule above. The commit message said it was in; git ls-files said otherwise.
+# Whitelisted by pattern so the next one cannot repeat it.
+!/design_*.md
 !/run_vsav_training_flatpak.sh
 !/vsav_training_flatpak.desktop
 # Same story, found the hard way: these two are shipped in every zip but were
@@ -54,11 +59,15 @@ __pycache__/
 
 # ツールが実行のたびに書き出す。設定そのものは履歴に残っているが、
 # 以後の差分は追わない(2026-08-14 の指示)。
-/scripts/training_settings.json
-
+#
 # Per-user state, not source. A used copy of this leaked into a release once,
 # carrying a debugging configuration and the knockdown logger switched on.
-training_settings.json
+#
+# MATCH THE FAMILY, NOT ONE SPELLING. This listed the exact name, and a
+# hand-made backup called training_settings_pre_action_patterns.json walked
+# straight past it into the repo - 329 lines of the author's own configuration,
+# found on the way to a release (2026-09-19).
+training_settings*.json
 
 # gen_max_steps.py parks the real settings here while a load test is loaded in
 # their place. Same reason as above, and it must not be mistaken for source.
@@ -83,3 +92,10 @@ training_settings.json
 # Builds live outside the repo now (../../dist); this line is here so the
 # intent is stated and not just an accident of the whitelist.
 VSAV_Training_*.zip
+scripts/action_pattern_trace.log
+analysis/landing_predict_probe.log
+# Measurement output, not authored here. Probe logs and the landing trace are
+# produced by running the tool, run to hundreds of KB, and must never reach a
+# release zip. Kept on disk so a past measurement can be re-read.
+/analysis/archive/
+/scripts/land_trace.log

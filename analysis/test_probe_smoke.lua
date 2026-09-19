@@ -26,7 +26,8 @@ local function want(what, got, w)
 	end
 end
 
--- Every probe writes its log next to the exe, so the stub swallows the write
+-- Every probe writes its log beside its own .lua (FBNeo resolves a relative
+-- io.open against the script's folder), so the stub swallows the write
 -- rather than leaving files behind.
 local function sandbox()
 	local ram = {}
@@ -56,17 +57,54 @@ local function sandbox()
 	local real_open = io.open
 	io.open = function(name, mode)
 		if mode == "a" or mode == "w" then return nil end
+		-- The reply a stubbed PowerShell would have left behind.
+		--
+		-- dialogProbe and namingProbe both hand their work to an external
+		-- process and then PARSE what it wrote: three lines of status, text and
+		-- count. With io.popen stubbed that file never appears, so every one of
+		-- those probes bailed out early and the parsing - the part that moves
+		-- into the product - was reached by nothing. A mutation that replaced
+		-- the non-ASCII check with a call to a nil was caught by no assertion
+		-- at all until this existed.
+		if type(name) == "string" and name:find("_out%.txt$") then
+			local body = "OK\nname\n4"
+			local served = false
+			return {
+				read = function()
+					if served then return nil end
+					served = true
+					return body
+				end,
+				close = function() end,
+			}
+		end
 		return real_open(name, mode)
 	end
+	-- io.popen MUST be stubbed, unlike io.open. dialogProbe.lua spawns
+	-- PowerShell and waits for a file dialog, so the real thing would open a
+	-- window on the grader's screen and block this test until someone clicked
+	-- it. The empty read is also the cancel path, which is worth exercising.
+	local popen_calls = {}
+	local real_popen = io.popen
+	io.popen = function(cmd)
+		popen_calls[#popen_calls + 1] = cmd
+		return { read = function() return "" end, close = function() end }
+	end
+	local real_remove = os.remove
+	os.remove = function() return true end
 	return {
-		ram = ram, hotkeys = hotkeys, execs = execs,
+		ram = ram, hotkeys = hotkeys, execs = execs, popen_calls = popen_calls,
 		frame = function() if before then before() end end,
 		drawn = function() if draw then draw() end end,
 		quit = function() if exit then exit() end end,
 		-- P1, P2, and an object that is neither - the third is the early
 		-- return every one of these handlers starts with.
 		as = function(v) a6 = v end,
-		restore = function() io.open = real_open end,
+		restore = function()
+			io.open = real_open
+			io.popen = real_popen
+			os.remove = real_remove
+		end,
 	}
 end
 
@@ -77,6 +115,9 @@ local PROBES = {
 	"analysis/keyboardProbe.lua",
 	"analysis/pbFlagProbe.lua",
 	"analysis/gcSuccessProbe.lua",
+	"analysis/landingPredictProbe.lua",
+	"analysis/dialogProbe.lua",
+	"analysis/namingProbe.lua",
 }
 
 for _, path in ipairs(PROBES) do
@@ -102,15 +143,30 @@ for _, path in ipairs(PROBES) do
 		if not ok3 then print("      " .. tostring(e3)) end
 		-- Hotkeys are the path that broke: nothing calls them until a human
 		-- presses the key, so a nil in there survives every other check.
+		--
+		-- A FRAME AFTER EACH ONE, not after all of them. A hotkey that only
+		-- sets a flag for the frame callback to act on - which is how
+		-- dialogProbe defers its blocking work - shares that one flag with
+		-- every other hotkey. Draining once at the end ran whichever key pairs()
+		-- happened to yield last and never looked at the other two.
+		--
+		-- AND probe_error, for a probe that wraps its own work in pcall. That
+		-- pcall is right - a broken job should not end a measuring session -
+		-- but it swallows the runtime nil this whole file exists to find, so
+		-- the convention is to publish the message there too. Probes that never
+		-- set it leave it nil and nothing changes for them.
 		for n, f in pairs(env.hotkeys) do
+			probe_error = nil
 			local ok4, e4 = pcall(f)
 			want(path .. " の hotkey " .. tostring(n), ok4, true)
 			if not ok4 then print("      " .. tostring(e4)) end
+			local ok5, e5 = pcall(env.frame)
+			want(path .. " hotkey " .. tostring(n) .. " の次のフレーム", ok5, true)
+			if not ok5 then print("      " .. tostring(e5)) end
+			want(path .. " hotkey " .. tostring(n) .. " が飲み込んだエラー無し",
+				probe_error, nil)
+			if probe_error ~= nil then print("      " .. tostring(probe_error)) end
 		end
-		-- And a frame AFTER the hotkey, because that is what the press arms.
-		local ok5, e5 = pcall(env.frame)
-		want(path .. " 押した次のフレーム", ok5, true)
-		if not ok5 then print("      " .. tostring(e5)) end
 		-- The ROM hooks, for each side and for a third object that is neither -
 		-- then one more frame, since a hook usually leaves state behind for the
 		-- frame callback to read.

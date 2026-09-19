@@ -1,0 +1,117 @@
+    2059  begin_opportunity which=reversal key=1 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    2284  begin_opportunity which=reversal key=2 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    2298  arm which=reversal steps=4 loop_on=true
+    3987  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    3987  cancel (key was nil)
+    3988  cancel (key was nil)
+    3989  cancel (key was nil)
+    3990  cancel (key was nil)
+    3991  cancel (key was nil)
+    3992  cancel (key was nil)
+    3993  cancel (key was nil)
+    3994  cancel (key was nil)
+    3995  cancel (key was nil)
+    3996  cancel (key was nil)
+    3997  cancel (key was nil)
+    3998  cancel (key was nil)
+    3999  cancel (key was nil)
+    4000  cancel (key was nil)
+    4001  cancel (key was nil)
+    4002  cancel (key was nil)
+    4003  cancel (key was nil)
+    4004  cancel (key was nil)
+    4005  cancel (key was nil)
+    4006  cancel (key was nil)
+    4007  cancel (key was nil)
+    4008  cancel (key was nil)
+    4009  cancel (key was nil)
+    4010  cancel (key was nil)
+    4011  cancel (key was nil)
+    4012  cancel (key was nil)
+    4013  cancel (key was nil)
+    4014  cancel (key was nil)
+    4015  cancel (key was nil)
+    6888  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    6901  arm which=reversal steps=4 loop_on=true
+    6919  arm which=reversal steps=4 loop_on=true
+    7580  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    7652  arm which=reversal steps=4 loop_on=true
+    7674  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    7750  arm which=reversal steps=4 loop_on=true
+    7775  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    7789  arm which=reversal steps=4 loop_on=true
+    7797  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    7814  arm which=reversal steps=4 loop_on=true
+    7832  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    7900  cancel (key was nil)
+    7928  arm which=reversal steps=4 loop_on=true
+    7955  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    7970  arm which=reversal steps=4 loop_on=true
+    7976  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    7988  arm which=reversal steps=4 loop_on=true
+    8008  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    8077  cancel (key was nil)
+    8105  arm which=reversal steps=4 loop_on=true
+    8243  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    8312  arm which=reversal steps=4 loop_on=true
+    8798  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    8870  arm which=reversal steps=4 loop_on=true
+    8900  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    8915  arm which=reversal steps=4 loop_on=true
+    8921  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    8939  arm which=reversal steps=4 loop_on=true
+    9093  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    9107  arm which=reversal steps=4 loop_on=true
+    9117  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    9214  arm which=reversal steps=4 loop_on=true
+    9780  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+    9852  arm which=reversal steps=4 loop_on=true
+    9986  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   10057  arm which=reversal steps=4 loop_on=true
+   10064  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   10079  arm which=reversal steps=4 loop_on=true
+   10095  arm which=reversal steps=4 loop_on=true
+   10342  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   10414  cancel (key was nil)
+   10439  arm which=reversal steps=4 loop_on=true
+   10597  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   10610  arm which=reversal steps=4 loop_on=true
+   10654  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   10667  arm which=reversal steps=4 loop_on=true
+   10677  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   10746  arm which=reversal steps=4 loop_on=true
+   10784  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   10799  arm which=reversal steps=4 loop_on=true
+   10889  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   10915  arm which=reversal steps=4 loop_on=true
+   10932  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   11020  arm which=reversal steps=4 loop_on=true
+   11039  arm which=reversal steps=4 loop_on=true
+   11055  arm which=reversal steps=4 loop_on=true
+   11094  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   11107  arm which=reversal steps=4 loop_on=true
+   11165  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   11240  arm which=reversal steps=4 loop_on=true
+   11258  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   11399  arm which=reversal steps=4 loop_on=true
+   11475  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   11544  arm which=reversal steps=4 loop_on=true
+   11633  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   11702  arm which=reversal steps=4 loop_on=true
+   11710  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   11791  arm which=reversal steps=4 loop_on=true
+   11875  arm which=reversal steps=4 loop_on=true
+   11910  cancel (key was nil)
+   11911  cancel (key was nil)
+   11912  cancel (key was nil)
+   11942  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   12011  arm which=reversal steps=4 loop_on=true
+   12035  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   12049  arm which=reversal steps=4 loop_on=true
+   12140  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   12154  arm which=reversal steps=4 loop_on=true
+   12161  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   12175  arm which=reversal steps=4 loop_on=true
+   12189  begin_opportunity which=reversal -> NOT_ACTION_PATTERNS (entry=true version=1)
+   12314  arm which=reversal steps=4 loop_on=true
+   12435  arm which=reversal steps=4 loop_on=true

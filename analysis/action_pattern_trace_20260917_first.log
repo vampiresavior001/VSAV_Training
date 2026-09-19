@@ -1,0 +1,11 @@
+    3601  begin_opportunity which=reversal key=2 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    5109  begin_opportunity which=reversal key=3 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    5349  begin_opportunity which=reversal key=4 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    5597  begin_opportunity which=reversal key=5 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    5795  begin_opportunity which=reversal key=6 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    5816  begin_opportunity which=reversal key=7 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    5927  begin_opportunity which=reversal key=8 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    5928  begin_opportunity which=reversal key=9 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    6021  begin_opportunity which=reversal key=10 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    6099  begin_opportunity which=reversal key=11 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    6179  begin_opportunity which=reversal key=12 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil

@@ -1174,9 +1174,12 @@ local action_steps_loop_switch = checkbox_menu_item(
 
 -- The ceiling is the editor's own WAIT_MAX: this value IS step one's wait on
 -- every pass after the first (see the runner's LOOP_AUTO note).
+-- Mirrors LOOP_LANDING in actionSequenceRunner. Named here so the row and
+-- the runner cannot drift apart silently.
+local LOOP_WAIT_LANDING = -2
 local action_steps_loop_wait_item = integer_menu_item(
-      "Loop Wait", training_settings, "action_steps_loop_wait", -1, 120, false, -1, 0,
-      "How long after the last step the first one starts again, in game Ticks.\nAuto starts it when the dummy can act - enough for a blocking drill, but NOT\nthe fastest: the input begins then, so a dash is three or four Ticks later.\nA number lands the first step ON that Tick, counted from the last one, which is\nwhat a loop tight enough to be an infinite needs.\nWalk it down until it stops coming out. Three displayed frames are four Ticks."
+      "Loop Wait", training_settings, "action_steps_loop_wait", -2, 120, false, -1, 0,
+      "How long after the last step the first one starts again, in game Ticks.\nAuto (After) starts it when the dummy can act - fine for a blocking drill,\nbut NOT the fastest: the input begins then, so a dash is three Ticks later.\nAuto (Landing) starts it so the first step arrives ON the touchdown, which\nis what a hop into an air normal needs to loop at full speed.\nA number lands the first step on that Tick, counted from the last one."
     )
 
 -- Zero is not a supported loop boundary. Keep Auto at -1, but make Left and
@@ -1232,6 +1235,17 @@ local _aslw_draw = action_steps_loop_wait_item.draw
 action_steps_loop_wait_item.draw = function(self, _x, _y, _selected)
   local _v = self.object[self.property_name] or -1
   if _v >= 0 then return _aslw_draw(self, _x, _y, _selected) end
+  -- -2 is Auto (Landing): the restart is timed off the touchdown rather than
+  -- off the dummy becoming able to act. Kept above the Auto (After) branch
+  -- because that one answers for every negative value.
+  if _v == LOOP_WAIT_LANDING then
+    local _cl = _selected and text_selected_color or text_default_color
+    local _pl = _selected and "< " or ""
+    local _sl = _selected and " >" or ""
+    gui.text(_x, _y, _pl..self.name.." : Auto (Landing)".._sl, _cl,
+             text_default_border_color)
+    return
+  end
   local _c = text_default_color
   local _prefix, _suffix = "", ""
   if _selected then

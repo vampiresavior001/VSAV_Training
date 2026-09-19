@@ -4462,8 +4462,127 @@ memory.registerexec(0x02211A, function()
 			seq_held_btn = nil
 			seq_held_btn_until = nil
 			local _i = _s0.current_frame or 1
+			-- THE LAST PRESS WAITS FOR THE REAL TOUCHDOWN - BUT NOT FOREVER.
+			--
+			-- A landing step is committed lead ticks early so its final entry
+			-- falls on the tick the dummy can first act. That is a PREDICTION,
+			-- and a hit stop starting after the commit stops the physics while
+			-- this walk keeps counting ticks: the touchdown moves back, the
+			-- last press goes out in the air, and a press that misses free+0
+			-- does not come out late - it does not come out at all.
+			--
+			-- Measured 2026-09-19, ten runs each. Dash LP: FD:0, works. Dash
+			-- HP: FD:48, and every single landing press (AF 24 of 24) went out
+			-- roughly two ticks above the floor. The slow move connects late in
+			-- the descent, so its freeze lands inside this delivery.
+			--
+			-- ONLY A DELIVERY THAT WAS FROZEN IS TOUCHED. An earlier attempt
+			-- waited whenever the dummy was airborne at the last entry, which
+			-- fires constantly - half of the working LP presses are airborne
+			-- too, one tick out and perfectly fine - and measured LW:240 over
+			-- 24 laps. It pushed the dash cancel out of its window and had to
+			-- be reverted. saw_freeze is what keeps the working case untouched.
+			--
+			-- WAITING COSTS NO EDGE, BUT IT DOES COST THE WINDOW. The entry
+			-- before the last is neutral, so holding asserts nothing and the
+			-- forward is pressed fresh on the real touchdown. But the game's
+			-- command clock does not stop for hit stop, and the dash allows
+			-- only DASH_GRACE_TICKS on that neutral. Past it the motion is
+			-- dead, so the whole thing is entered again from the top rather
+			-- than pressed into a window that has already closed.
+			-- ONLY AS THE LAST ENTRY IS ABOUT TO START.
+			--
+			-- The last forward is asserted for TWO ticks (a buttonless entry
+			-- needs the v158 hold). On the first of them the dash is granted -
+			-- and Sasquatch's dash lifts his feet, so $38 goes 0 -> 1 on that
+			-- very tick (VSAV_MEMORY_NOTES.md). On the second tick this branch
+			-- then saw "airborne and on the way down" and re-entered the motion,
+			-- which granted another dash, which lifted him again: dash, land,
+			-- dash, land, for as long as the list was running (reported
+			-- 2026-09-19). The guard was reacting to the dash it had just
+			-- produced.
+			--
+			-- tick_held is zero only before the entry has been asserted at all,
+			-- so this now asks the question once, at the moment it is still a
+			-- question. A hold keeps it zero - that path returns before writing
+			-- - so waiting and re-entering both still work.
+			if _s0.seq_land and _s0.saw_freeze and _i == #_s0.sequence
+			   and (_s0.tick_held or 0) == 0
+			   -- The touchdown, not "able to act".
+			   --
+			   -- 2026-09-19: releasing on $05/$06 both zero instead was tried,
+			   -- because Jedah's landing press is on the floor every time
+			   -- (AF:0) and cannot act every time (NF 2 of 2) and still
+			   -- produces nothing. It made Sasquatch's second dash LATE - the
+			   -- case that was working - so it was taken straight back out.
+			   --
+			   -- The two are not the same question, and the evidence says so:
+			   -- Sasquatch's landing presses were AIRBORNE (AF 46 of 46) and
+			   -- his dash came out anyway. Whatever decides this is not simply
+			   -- "the press must land on free+0", and guessing again is how the
+			   -- working case keeps getting broken. Jedah is left unsolved and
+			   -- written up in design_landing_prediction.md.
+			   and memory.readbyte(0xFF8838) ~= 0
+			   and ticks_to_landing() ~= nil then
+				local _R = actionSequenceRunnerModule
+				_s0.land_hold = (_s0.land_hold or 0) + 1
+				-- One tick of the grace is already spent by the neutral entry
+				-- itself, so the hold may use the rest and no more.
+				if _s0.land_hold < (_R.DASH_GRACE_TICKS or 10) - 1 then
+					return
+				end
+				-- Spent. Start the motion over so the window is fresh.
+				--
+				-- saw_freeze STAYS SET. Clearing it made the second attempt
+				-- blind: it would walk straight to its own last entry and press
+				-- in the air again, which is the thing being fixed. Keeping it
+				-- means the list cycles - run up, hold out the grace, enter it
+				-- again - until the floor is really there. Every cycle hands the
+				-- final press a window that is still open.
+				--
+				-- This cannot spin forever: the whole branch is under
+				-- ticks_to_landing() ~= nil, so the moment the dummy is not on
+				-- its way down the press goes out instead.
+				_s0.current_frame = 1
+				_s0.tick_held = 0
+				_s0.land_hold = 0
+				_i = 1
+			end
+			-- THE WINDOW RAN OUT WHILE WAITING. START OVER INSTEAD.
+			--
+			-- Not counting frozen ticks keeps a press alive through a SHORT
+			-- freeze, which is what Jedah needed: three frozen ticks, the
+			-- forward held five, the dash came out. It cannot save a long
+			-- one. Sasquatch's HP freezes for eleven, the forward ends up
+			-- held thirteen ticks, and the game only lets the first
+			-- direction of a dash continue for ten (VSAV_MEMORY_NOTES.md).
+			-- Past that the motion is dead and every further tick feeds
+			-- something that cannot come out.
+			--
+			-- So stop asserting, let the freeze finish, and enter the whole
+			-- motion again on a window that is open. Traced 2026-09-19: the
+			-- runs that did re-enter (e3, then e1 again) produced a dash
+			-- every time, and the ones that kept feeding never did.
+			if _s0.restart_pending then
+				if memory.readbyte(0xFF885C) ~= 0 then return end
+				_s0.restart_pending = nil
+				_s0.current_frame = 1
+				_s0.tick_held = 0
+				_s0.entry_ticks = 0
+				_i = 1
+			end
 			if _i <= #_s0.sequence then
 				local _pl, _pb = entry_to_bits(_s0.sequence[_i])
+				-- Every tick this entry has been asserted, frozen ones too -
+				-- the game's command clock does not stop for hit stop.
+				_s0.entry_ticks = (_s0.entry_ticks or 0) + 1
+				if (_pl ~= 0 or _pb ~= 0)
+				   and memory.readbyte(0xFF885C) ~= 0
+				   and _s0.entry_ticks
+				       > (actionSequenceRunnerModule.DASH_GRACE_TICKS or 10) then
+					_s0.restart_pending = true
+					return
+				end
 				-- THE PARKED REVERSE RIDES THE FIRST ENTRY THAT HAS ROOM.
 				--
 				-- An entry with no lever of its own - an Attack step pressing a
@@ -4492,10 +4611,56 @@ memory.registerexec(0x02211A, function()
 				-- presses a button still goes in for exactly one tick, which
 				-- is what stops a chain-cancellable normal being swung twice.
 				local _hold = (_pb == 0 and _pl ~= 0) and 2 or 1
-				_s0.tick_held = (_s0.tick_held or 0) + 1
+				-- A TICK THE GAME DID NOT PROCESS IS NOT A TICK DELIVERED.
+				--
+				-- $126 is one tick's press edge, so a press made during hit
+				-- stop is thrown away (measured on Zabel's crouching LP, see
+				-- rapid_fire_open). Counting those ticks anyway retired an
+				-- entry the game never saw.
+				--
+				-- It bit the two tick entries. A buttonless direction has to
+				-- exist for two ticks or the game does not take it (v158), and
+				-- a dash is N forward N forward - all directions. Traced on
+				-- 2026-09-19 over ten Jedah runs: the five that worked had no
+				-- frozen press ticks at all, and the five that failed each had
+				-- EXACTLY ONE, always the second tick of the first forward.
+				-- So that tap was delivered for one effective tick, never
+				-- registered, and the second forward arrived alone - which is
+				-- not a dash. $06 never reached 0x14 in any of the five.
+				--
+				-- Nothing changes where nothing freezes: all five working runs
+				-- had $5C at zero on every press tick.
+				-- ONLY FOR AN ENTRY THAT ASSERTS SOMETHING.
+				--
+				-- A neutral entry hands the game nothing to take, so there is
+				-- no press for the freeze to discard and nothing is gained by
+				-- sitting on it. Waiting there only burns the dash's neutral
+				-- grace, which is ten frames and not renewable.
+				--
+				-- Traced 2026-09-19: an eleven tick freeze landed on the
+				-- neutral of Sasquatch's second dash, this held it for twelve
+				-- ticks, and the motion expired - breaking a case that had
+				-- been working. The same freeze on a DIRECTION is the case
+				-- this whole guard exists for, so the two are split here.
+				if (_pl ~= 0 or _pb ~= 0)
+				   and memory.readbyte(0xFF885C) ~= 0 then
+					-- asserted, but the game is not looking: not delivered
+				else
+					_s0.tick_held = (_s0.tick_held or 0) + 1
+				end
 				if _s0.tick_held >= _hold then
 					_s0.current_frame = _i + 1
 					_s0.tick_held = 0
+					_s0.entry_ticks = 0
+				end
+				-- ON THE RECORD, NOT IN A GLOBAL. Only the delivery that was
+				-- actually frozen may be re-timed above; a run that never met a
+				-- freeze has to come out exactly as it did before.
+				--
+				-- Measured 2026-09-19: dash LP never freezes mid delivery and
+				-- works, dash HP does and did not.
+				if memory.readbyte(0xFF885C) ~= 0 then
+					_s0.saw_freeze = true
 				end
 				debugKnockdownModule.mark_write("seq_tick", _pl * 256 + _pb, _i)
 				return

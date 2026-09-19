@@ -1,0 +1,25 @@
+    2475  begin_opportunity which=reversal key=1 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    2753  begin_opportunity which=reversal key=2 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    2768  arm which=reversal steps=4 loop_on=true
+    3349  begin_opportunity which=reversal key=3 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    3382  arm which=reversal steps=3 loop_on=true
+    5166  begin_opportunity which=reversal key=4 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    5196  arm which=reversal steps=4 loop_on=true
+    5438  begin_opportunity which=reversal key=5 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    5450  arm which=reversal steps=4 loop_on=true
+    5507  begin_opportunity which=reversal key=6 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    5519  arm which=reversal steps=3 loop_on=true
+    5728  begin_opportunity which=reversal key=7 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    5758  arm which=reversal steps=3 loop_on=true
+    5829  begin_opportunity which=reversal key=8 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    5861  arm which=reversal steps=3 loop_on=true
+    5887  begin_opportunity which=reversal key=9 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    5900  arm which=reversal steps=3 loop_on=true
+    5942  begin_opportunity which=reversal key=10 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    5971  arm which=reversal steps=4 loop_on=true
+    6071  begin_opportunity which=reversal key=11 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    6104  arm which=reversal steps=3 loop_on=true
+    6844  begin_opportunity which=reversal key=12 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    6857  arm which=reversal steps=4 loop_on=true
+    7171  begin_opportunity which=reversal key=13 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    7199  arm which=reversal steps=3 loop_on=true

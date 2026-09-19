@@ -1,0 +1,20 @@
+--- dialog probe start ---
+io.popen present
+[2] Export (SaveFileDialog)
+   using dialog_probe.ps1
+   stalled 39.20s (os.time delta 39s)
+   stdout [C:\fightcaVSAV-Debug\emulator\fbneo\analysis\action_patterns.json]
+   bytes  43 3A 5C 66 69 67 68 74 63 61 56 53 41 56 2D 44
+   file   [C:\fightcaVSAV-Debug\emulator\fbneo\analysis\action_patterns.json]
+   bytes  43 3A 5C 66 69 67 68 74 63 61 56 53 41 56 2D 44
+   same on both paths
+   OK wrote and read back 58 bytes
+[3] Import (OpenFileDialog)
+   stalled 3.39s (os.time delta 3s)
+   stdout [C:\fightcaVSAV-Debug\emulator\fbneo\analysis\action_patterns.json]
+   bytes  43 3A 5C 66 69 67 68 74 63 61 56 53 41 56 2D 44
+   file   [C:\fightcaVSAV-Debug\emulator\fbneo\analysis\action_patterns.json]
+   bytes  43 3A 5C 66 69 67 68 74 63 61 56 53 41 56 2D 44
+   same on both paths
+   OK read 58 bytes
+   head [{"probe":"dialog","patterns":[{"name":"test","st]

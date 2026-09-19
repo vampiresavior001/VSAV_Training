@@ -1,0 +1,45 @@
+    2800  begin_opportunity which=reversal key=5 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    2873  arm which=reversal steps=3 loop_on=true
+    2882  begin_opportunity which=reversal key=6 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    2911  arm which=reversal steps=4 loop_on=true
+    2921  begin_opportunity which=reversal key=7 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    2952  arm which=reversal steps=3 loop_on=true
+    2997  begin_opportunity which=reversal key=8 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    3028  arm which=reversal steps=3 loop_on=true
+    3036  begin_opportunity which=reversal key=9 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    3066  arm which=reversal steps=3 loop_on=true
+    3112  begin_opportunity which=reversal key=10 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    3144  arm which=reversal steps=4 loop_on=true
+    3151  begin_opportunity which=reversal key=11 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    3182  arm which=reversal steps=3 loop_on=true
+    3228  begin_opportunity which=reversal key=12 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    3259  arm which=reversal steps=4 loop_on=true
+    3268  begin_opportunity which=reversal key=13 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    3300  arm which=reversal steps=4 loop_on=true
+    3341  begin_opportunity which=reversal key=14 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    3373  arm which=reversal steps=3 loop_on=true
+    3381  begin_opportunity which=reversal key=15 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    3412  arm which=reversal steps=3 loop_on=true
+    3422  begin_opportunity which=reversal key=16 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    3491  arm which=reversal steps=4 loop_on=true
+    3542  begin_opportunity which=reversal key=17 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    3572  arm which=reversal steps=3 loop_on=true
+    3711  begin_opportunity which=reversal key=18 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    3712  begin_opportunity which=reversal key=19 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    3713  begin_opportunity which=reversal key=20 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    3782  arm which=reversal steps=4 loop_on=true
+    3791  begin_opportunity which=reversal key=21 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    3792  begin_opportunity which=reversal key=22 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    3805  arm which=reversal steps=3 loop_on=true
+    3817  begin_opportunity which=reversal key=23 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    3818  begin_opportunity which=reversal key=24 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    3847  arm which=reversal steps=3 loop_on=true
+    3856  begin_opportunity which=reversal key=25 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    3885  arm which=reversal steps=3 loop_on=true
+    3897  begin_opportunity which=reversal key=26 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    3927  arm which=reversal steps=4 loop_on=true
+    3973  begin_opportunity which=reversal key=27 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil
+    3974  begin_opportunity which=reversal key=28 -> ready reason=nil status=prepared pattern=pattern_3 loop=nil
+    3975  begin_opportunity which=reversal key=29 -> ready reason=nil status=prepared pattern=pattern_2 loop=nil
+    4002  arm which=reversal steps=3 loop_on=true
+    4012  begin_opportunity which=reversal key=30 -> ready reason=nil status=prepared pattern=pattern_1 loop=nil

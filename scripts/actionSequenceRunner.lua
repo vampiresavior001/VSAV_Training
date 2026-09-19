@@ -1487,6 +1487,27 @@ end
 -- touchdown is an EDGE, and an edge needs the other side of it remembered.
 local air_seen = false
 
+-- HOW LONG THE NEUTRAL IN THE MIDDLE OF A DASH MAY LAST.
+--
+-- A dash is N, forward, neutral, forward. The game gives the first forward ten
+-- frames to be held, then TEN FRAMES OF NEUTRAL, then takes the second forward.
+-- Unlike a special move - where the grace between inputs is one of six random
+-- values, 10F at 16/32 down to 15F at 2/32 - the dash grace is FIXED. 10F at
+-- Normal speed, 8F at the game's own Turbo setting (NOT the emulator's turbo,
+-- which is a different thing and was confused for it here once).
+--
+-- The tool runs on ticks and one frame is one tick at Normal, so this is ten
+-- ticks. Source and the probability table are in VSAV_MEMORY_NOTES.md under
+-- "コマンド受付の猶予" - reference material, not something measured here.
+--
+-- The list spends one tick on that neutral already, so a hold may add nine
+-- before the motion expires. Hit stop is eleven ticks ($5C is slammed to 0x0B),
+-- which is longer than the whole grace - so a freeze landing on the neutral
+-- kills the dash outright, and holding the last press into it presses into a
+-- window that has already closed. That is why exceeding this restarts the
+-- motion from the top rather than waiting longer.
+M.DASH_GRACE_TICKS = 10
+
 local function landing_ready(step)
 	local _air = memory.readbyte(P2_BASE + 0x38) ~= 0
 	if _air then
@@ -1503,6 +1524,24 @@ local function landing_ready(step)
 		-- A command motion has entries to get through, so it starts early and
 		-- uses the prediction to know how early.
 		local _lead = step.lead or 0
+		-- NOT WHILE THE PHYSICS IS FROZEN.
+		--
+		-- ticks_to_landing() answers in PHYSICS ticks and the delivery runs on
+		-- the CLOCK, and hitstop separates the two: position stops updating
+		-- while the tick counter keeps going (measured 2026-09-18 - y, vy and ay
+		-- identical across ticks while the hook kept firing). Committing in
+		-- there sends the run-up into a window that is still counting down, so
+		-- the motion expires mid-flight: the command acceptance counter does NOT
+		-- freeze with the physics.
+		--
+		-- $5C is the remaining hitstop, already read by tickDataVsav.lua. Zero
+		-- means the two clocks agree and the prediction can be acted on.
+		--
+		-- Nothing is lost by waiting. If the moment goes past, the branch below
+		-- fires this step on the touchdown instead - late, but out. A dummy that
+		-- stays silent teaches nothing, which is the whole reason the deadline
+		-- on this gate exists at all.
+		if memory.readbyte(P2_BASE + 0x5C) ~= 0 then return false end
 		if _lead > 0 and seq_ticks_to_landing ~= nil then
 			local _ld = seq_ticks_to_landing()
 			if _ld ~= nil and _ld <= _lead then return true end
@@ -1592,7 +1631,23 @@ local function service_body(defender)
 		-- out on its own instead of waiting for something that cannot happen.
 		if not _ok and not timing_missed(step) then return end
 	elseif step.timing == TIMING_LANDING then
-		if not landing_ready(step) then return end
+		-- A LANDING THAT CANNOT HAPPEN IS NOT A REASON TO STOP EITHER.
+		--
+		-- The connect-timed gate above already carries this deadline. Landing
+		-- did not, and it is the same mistake: if the step before it never left
+		-- the ground - a dash that did not come out, a jump that was swapped
+		-- away - there is no landing to wait for and the list stopped there for
+		-- good.
+		--
+		-- Reported 2026-09-17 on a three step list: Dash Forward Cancel, then
+		-- Attack LP, then Attack Down on Auto (Landing). The dash did not come
+		-- out, the standing LP did, and the run ended.
+		--
+		-- Same deadline as the others: once the dummy has been busy and is free
+		-- again, the moment being waited for is over and the step goes out on
+		-- its own. That is Auto (After) - which is what every Auto should fall
+		-- back to when its condition is missed (user, same report).
+		if not landing_ready(step) and not timing_missed(step) then return end
 	elseif step.auto then
 		if not dummy_free(step) then return end
 	else
@@ -1636,6 +1691,14 @@ local function service_body(defender)
 	if q ~= nil then
 		q.seq_tick = true
 		q.tick_held = 0
+		-- AIMED AT A TOUCHDOWN THAT HAS NOT HAPPENED YET.
+		--
+		-- lead is the cost of every entry BUT THE LAST (lead_ticks), so the
+		-- whole schedule exists to put the final press on one named tick. For a
+		-- landing step that tick is a prediction, and the walker needs to know
+		-- which segments are living on one.
+		q.seq_land = (step.timing == TIMING_LANDING
+		               and (step.lead or 0) > 0) or nil
 		-- Rides on the record so the walker picks it up when it runs off the
 		-- end of this segment - that is the tick the holding has to start, and
 		-- the walker is the only thing that knows it has arrived.
@@ -1670,6 +1733,13 @@ end
 -- be walked down until the move stops coming out, which is what a loop tight
 -- enough to be an infinite needs.
 local LOOP_AUTO = -1
+-- A loop boundary can also be "when the dummy lands", which is what a hop into
+-- an air normal wants: the next lap's first step is a dash, and a dash has to
+-- START before the touchdown for its last input to arrive on the first tick the
+-- dummy can act. Auto (After) is too late by that run-up; a number cannot know
+-- how long the hop took. -2 because -1 is already Auto and zero has no meaning
+-- here (see M.loop_wait).
+local LOOP_LANDING = -2
 
 -- Whether the list repeats at all. Read live rather than latched at arm time:
 -- switching it off should stop the loop that is running, which reads better
@@ -1684,6 +1754,7 @@ function M.loop_wait()
 	-- -1 is Auto. Zero was briefly accepted by the menu, but a loop boundary
 	-- has no supported zero-tick meaning. Treat old or manually edited zero
 	-- values as Auto as a second line of defence behind settings migration.
+	if _v == LOOP_LANDING then return LOOP_LANDING end
 	if type(_v) ~= "number" or _v <= 0 then return LOOP_AUTO end
 	return _v
 end
@@ -1757,8 +1828,21 @@ local function loop_refill()
 	local _w = M.loop_wait()
 	local _first = {}
 	for k, v in pairs(loop_sched[1]) do _first[k] = v end
-	_first.auto = (_w == LOOP_AUTO)
-	_first.wait = (_w == LOOP_AUTO) and 0 or _w
+	-- LANDING IS A TIMING, NOT A NUMBER.
+	--
+	-- service_body branches on step.timing before it looks at auto or wait, so
+	-- handing the restart the landing gate is all it takes: the prediction, the
+	-- run-up and the deadline all come with it. Safe to set here because
+	-- M.compile only ever puts a timing on steps 2 and later - step one's is
+	-- always nil, so nothing is being overwritten.
+	if _w == LOOP_LANDING then
+		_first.timing = TIMING_LANDING
+		_first.auto = false
+		_first.wait = 0
+	else
+		_first.auto = (_w == LOOP_AUTO)
+		_first.wait = (_w == LOOP_AUTO) and 0 or _w
+	end
 	-- Marked so the readout can say Loop rather than repeating step one's own
 	-- mode, which is not what this pass waited for.
 	_first.is_loop = true
