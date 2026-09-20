@@ -21,8 +21,12 @@ import os
 import shutil
 import sys
 
-LOG_DIR = r"C:\fightcade\emulator\fbneo\scripts\reversal_logs"
-ARCHIVE = r"C:\fightcade\emulator\fbneo\scripts\reversal_logs_archive"
+# THE REPOSITORY MOVED. These pointed at C:\fightcade, which CLAUDE.md says
+# is migrated and not to be touched - so a run from the new tree archived 66
+# recordings into the OLD one and they had to be carried back by hand
+# (2026-09-20).
+LOG_DIR = r"C:\fightcaVSAV-Debug\emulator\fbneo\scripts\reversal_logs"
+ARCHIVE = r"C:\fightcaVSAV-Debug\emulator\fbneo\scripts\reversal_logs_archive"
 
 
 def main():

@@ -6,6 +6,66 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.6
+
+### Action Pattern Library — save Action Steps under a name, pick and run them
+
+Dummy Action Steps (step lists) can now be **saved under a name, as many as
+you like, and picked when needed**. The library is **per character** and
+covers Reversal.
+
+`Trainer` -> `Guard Action Type` gains **`Reversal - Action Patterns`**.
+
+- The `[x]`-ticked patterns are what runs
+- **The number of ticks is the play mode.** One tick runs it every time;
+  several pick **one of them at random each lap**. Tick Sasquatch's
+  "short dash / long dash / low" all three and they loop as a set
+- **MP** toggles the tick right in the list. New / Copy / Move / Delete are
+  there too
+- **New** starts from empty, and **Add from current Steps** imports the whole
+  current Action Steps list. Editing uses the existing Action Steps editor
+  (opened via Edit)
+- **Export to a File / Import from a File** writes and reads one JSON file.
+  **Import adds, nothing is replaced** — hand your practice set to someone as
+  a file
+
+Only name typing uses a Windows input window (PowerShell); the emulator is
+temporarily frozen while it is open.
+
+### Dashes no longer run backwards mid-cross-up
+
+During a crossover the two taps of a dash could come out as opposite screen
+directions. The game has two left/right correction rules reading different
+bytes (confirmed in the ROM). Sequences made of raw directions only — dashes
+and walking — now resolve against the facing byte, and the dash taps wait
+until the turn has finished. The same fix closes a hole where the dummy kept
+receiving inputs while a menu was open.
+
+### The wake-up dash now comes out of a crossed knockdown
+
+With a dash set as the Guard Action reversal, a knockdown whose dummy was
+lying facing away ate the wake-up dash: the configured button came out alone
+as a plain normal. The dummy turns around on the free tick, and the dash's
+second tap was resolved against the old facing.
+
+The deferred press now follows the turn. Measured: 15 of 15 wake-up dashes
+failed before the fix; 35 of 35 come out after it.
+
+### Action Steps After / Landing adjustments
+
+- **After** keeps a ground dash grounded: it does not send the input while
+  the dummy is airborne. Air and ground dashes share one input string, so
+  this is decided at run time, not from the motion
+- **Landing** follows the landing prediction while one exists. The deadline
+  used to open before the prediction, dropping the press in mid-air (11 of
+  13 measured)
+- When a failed dash leaves a standing normal behind, the next step starts on
+  that normal's recovery instead of waiting on the landing forever
+
+**Defaults are unchanged.** Leave it alone and it behaves as before.
+
+---
+
 ## v11.7.5
 
 ### Tick Data and the Action Timeline can measure the dummy

@@ -180,10 +180,25 @@ print("[2] 期限は接続待ちと同じものを使っている")
 -- いることをソースで固定しておく。別々に育つと、また片方だけ期限を失う。
 do
 	local src = io.open("actionSequenceRunner.lua"):read("*a")
-	want("着地が timing_missed を見る",
-		src:find("not landing_ready(step) and not timing_missed(step)", 1, true) ~= nil, true)
+	-- 2026-09-20 に診断を挟んだので、1 行の式ではなくなった。見張りたいのは
+	-- 「着地の分岐が両方の門を見て、どちらも閉じていれば返す」こと。
+	local at = src:find("local _lr = landing_ready(step)", 1, true)
+	want("着地が landing_ready を見る", at ~= nil, true)
+	want("着地が timing_missed も見る",
+		at ~= nil and src:find("timing_missed(step)", at, true) ~= nil, true)
+	want("どちらも閉じていれば返す",
+		at ~= nil and src:find("else", at, true) ~= nil
+		and src:find("return", at, true) ~= nil, true)
 	want("接続待ちも同じ関数",
 		src:find("if not _ok and not timing_missed(step) then", 1, true) ~= nil, true)
+	-- 2026-09-20: 期限が狙いを追い越していた。落下中はダミーも「自由」なので、
+	-- timing_missed が landing_ready より 3 ティック早く開き、押しが空中に
+	-- 落ちていた (実測 13 回中 11 回)。着地が来るあいだは順番を譲ること。
+	want("着地が来るあいだは期限を効かせない",
+		at ~= nil and src:find("seq_ticks_to_landing() == nil", at, true) ~= nil, true)
+	-- 跳ばなかった場合の保険は残すこと。ここが消えると [1] が永久に待つ。
+	want("着地が来ないなら期限は生きている",
+		at ~= nil and src:find("timing_missed(step) then", at, true) ~= nil, true)
 end
 
 print(fails == 0 and "REP_OK" or (fails .. " REP_NG"))

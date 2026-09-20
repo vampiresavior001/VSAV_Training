@@ -225,6 +225,11 @@ do
 	-- 凍った配送だけを触ること。ここが外れると LW:240 の再発。
 	local guard = gsrc:find("if _s0.seq_land and _s0.saw_freeze and _i == #_s0.sequence", 1, true)
 	want("凍った配送だけに限っている", guard ~= nil, true)
+	-- ticks_to_landing() > 0 を直接聞く形は 2026-09-20 に試して戻した。
+	-- 着地ぴったりを狙った押しも「まだ落下中」なので、全部待たせてしまい
+	-- サスカッチの 2 回目が再び遅れた (LW:240)。
+	want("落下中というだけで待たせない",
+		guard ~= nil and gsrc:find("(ticks_to_landing() or 0) > 0", guard, true) == nil, true)
 	want("猶予を超えたら先頭へ戻す",
 		guard ~= nil and gsrc:find("_s0.current_frame = 1", guard, true) ~= nil, true)
 	local write = (guard ~= nil)

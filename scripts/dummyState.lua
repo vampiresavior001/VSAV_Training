@@ -125,7 +125,11 @@ local function get_guard_action()
     -- APPENDED, NEVER INSERTED. The index is what settings files store, so a
     -- new entry anywhere but the end would silently change what every saved
     -- profile means.
-    elseif globals.options.guard_action == 0xB then
+    elseif globals.options.guard_action == 0xB
+        or globals.options.guard_action == 0xC then
+        -- Both run a step list. Which list it is, is the runner's question -
+        -- 0xB is the one Action Steps list, 0xC is one out of the library -
+        -- and everything downstream of here is the same either way.
         return 'sequence'
     elseif globals.options.guard_action == 0x1 then
         return 'none'

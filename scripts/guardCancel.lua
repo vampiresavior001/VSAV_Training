@@ -1989,6 +1989,17 @@ local function bor8(a, b)
 	return r
 end
 
+-- Exchange the two facing-relative lever bits (0 and 1), leave the rest.
+-- Arithmetic style, like bor8 above - Lua 5.1 has no bitwise operators.
+-- No-op on 0, 3 and anything without exactly one of the two bits set, so
+-- down/up combinations and non-direction values pass through untouched.
+local function swap_facing_bits(_lev)
+	local _bit0 = _lev % 2
+	local _bit1 = math.floor(_lev / 2) % 2
+	if _bit0 == _bit1 then return _lev end
+	return _lev + (_bit0 == 1 and -1 or 1) + (_bit1 == 1 and -2 or 2)
+end
+
 -- Inject the motion's FINAL DIRECTION too, not just the button.
 --
 -- This was originally left out on purpose ("the directions arrive through the
@@ -2068,8 +2079,52 @@ local function side_flag_now()
 	return 0
 end
 
+-- IS THE CHARACTER STILL FACING THE WAY IT CAME?
+--
+-- $b is the facing the engine corrects a raw direction against, and it only
+-- moves when the character actually turns - which happens when it becomes
+-- free, not when the two cross over. While $b disagrees with the side the
+-- opponent is really on, "forward" points AWAY from them.
+--
+-- THIS MATTERS FOR DASHES AND NOTHING ELSE. Which way a dash travels is fixed
+-- the moment it is granted, so there is nothing to correct afterwards: a dash
+-- entered before the turn runs the wrong way for its whole length (user,
+-- 2026-09-20).
+local function facing_unsettled()
+	return memory.readbyte(0xFF880B) ~= side_flag_now()
+end
+
 local function facing_for_input()
 	if memory.readbyte(0xFF8838) ~= 0 or memory.readbyte(0xFF8915) ~= 0 then
+		return memory.readbyte(0xFF880B)
+	end
+	-- A DASH IS NOT A COMMAND MOTION, AND IT IS NOT CORRECTED LIKE ONE.
+	--
+	-- $122 is swapped on $b ALONE (0x02218E) while $12a is swapped on $120
+	-- when grounded (0x0221DC). side_flag_now() exists because $120 IS
+	-- recomputed between the injection at 0x02211A and the correction at
+	-- 0x022134, so reading the byte gives the tick before - a $12a problem
+	-- only. NOTHING recomputes $b in between, so for $122 the byte is read
+	-- outright and there is nothing to reproduce.
+	--
+	-- MEASURED 2026-09-20, three crossovers, same shape every time:
+	--
+	--     lg 18   $b=0  $120=1  used=0   injected L2
+	--     lg 19   $b=0  $120=1  used=0   injected L2
+	--     lg 21   $b=0  $120=1  used=1   injected L1   <- our answer flips
+	--     lg 22   $b=1  $120=1  used=1   injected L1   <- $b catches up after
+	--
+	-- Three different values at once, and the two taps of ONE dash went out as
+	-- opposite screen directions while the game's own reference had not moved.
+	-- Reported as: dash, Landing, dash - and the second dash does not come out
+	-- when the sides swapped during the first one (user, 2026-09-20).
+	--
+	-- Asked of the sequence being delivered rather than passed down through
+	-- twenty-odd call sites: the flag belongs to the command, and this is the
+	-- one place any of them resolves a direction.
+	local _d = player_objects and player_objects[2]
+	local _s = _d and _d.pending_input_sequence
+	if _s ~= nil and _s.raw_dir == true then
 		return memory.readbyte(0xFF880B)
 	end
 	return side_flag_now()
@@ -2252,6 +2307,20 @@ local hook_ticks = 0
 -- Measured on the v32 batch, that wait cost 0-3 ticks of jitter, which is
 -- the whole error budget: the press edge has to land on ONE specific tick.
 local function assert_input_bits(_lev, _btn)
+	-- NOTHING GOES IN BEHIND THE MENU.
+	--
+	-- Reported 2026-09-20: with the menu open the dummy stands still, as it
+	-- should, but its inputs keep arriving. Of the twenty-eight places that
+	-- assert bits, only the two hold paths asked about the menu; the walker
+	-- stops because M.service drops the pass, and the ARM's own delivery had
+	-- nothing stopping it at all. Present before the Action Pattern work -
+	-- confirmed on Reversal - Action Steps (0xB) as well (user).
+	--
+	-- Asked HERE rather than at the top of the hook. Returning from the hook
+	-- would also skip M.service, and that call is what drops a pass when the
+	-- menu opens - "the menu ends the run, it does not pause it" would quietly
+	-- become "it pauses it".
+	if globals ~= nil and globals.show_menu == true then return end
 	inject_guard = true
 	-- ALWAYS write the base address, even when there is no button.
 	--
@@ -2293,6 +2362,50 @@ local function assert_input_bits(_lev, _btn)
 		memory.getregister("m68000.pc"))
 	debugKnockdownModule.mark_write("0xFF8B95_lever", memory.readbyte(P2_INPUT_WORD + 1),
 		memory.getregister("m68000.pc"))
+
+	-- DIAGNOSTIC: WHICH FACING A DIRECTION WAS RESOLVED AGAINST, AND WHAT THE
+	-- GAME MADE OF IT (2026-09-20).
+	--
+	-- THE ENGINE HAS TWO CORRECTION RULES AND THEY READ DIFFERENT BYTES.
+	--
+	--   02218E: tst.b ($b,A6)      -> $122 is swapped on $b ALONE
+	--   0221DC: move.b ($120,A6)   -> $12a is swapped on $120 when grounded
+	--
+	-- facing_for_input() implements the $12a rule, so anything the game reads
+	-- out of $122 is resolved against the wrong byte whenever the two
+	-- disagree - and crossing over is exactly when they do: $120 follows the X
+	-- positions while $b only moves when the character actually turns, which a
+	-- character in a dash does not do.
+	--
+	-- Reported as: dash, Landing, dash - and the second dash does not come out
+	-- when the sides swapped during the first one (user, 2026-09-20).
+	--
+	-- $122 IS READ FOR THE PREVIOUS TICK'S INJECTION. Within one tick the
+	-- correction has not run yet (0x02211A injects, 0x022134 corrects), so the
+	-- byte still holds what the game made of the tick before. That is the line
+	-- that settles it: an injected "forward" arriving as back is $122, and
+	-- arriving intact means the cause is elsewhere.
+	--
+	-- Only on ticks a direction was actually asserted, so the volume stays at
+	-- a handful per knockdown. Costs nothing when the knockdown logger is off:
+	-- mark_write returns on its own gate.
+	if _lev ~= 0 then
+		-- $123, NOT $122. The 68000 is big-endian and this is a WORD: $122 is
+		-- the BUTTON byte and $123 is the lever. The first cut read $122 and
+		-- every row came back 0x00 - no button was being held, which is not the
+		-- same thing as no direction arriving (2026-09-20).
+		--
+		-- $38 rides along because facing_for_input() returns $b outright while
+		-- airborne, and the answer flipping mid-dash is what has to be
+		-- explained.
+		debugKnockdownModule.mark_write("dash_facing",
+			memory.readbyte(0xFF880B) * 100000      -- $b    the real facing
+			+ memory.readbyte(0xFF8920) * 10000     -- $120  the X-derived flag
+			+ facing_for_input() * 1000             -- what the tool used
+			+ ((memory.readbyte(0xFF8838) ~= 0) and 100 or 0)  -- $38 airborne
+			+ _lev,                                 -- the bits injected
+			memory.readbyte(0xFF8923))              -- the lever the game kept
+	end
 end
 
 memory.registerwrite(P2_INPUT_WORD, 2, function()
@@ -2581,6 +2694,16 @@ local fast_press_lg = nil
 local fast_press_lev = 0
 local fast_press_btn = 0
 local fast_press_off = 0
+-- THE FACING THE BITS WERE RESOLVED AGAINST, AT DEFER TIME (2026-09-20).
+--
+-- Raw bits only mean one direction against the facing the game's swap
+-- (0x022194) will apply where they land. A wake-up turns the dummy between the
+-- defer and the delivery - measured 15 of 15 failed wake-up dashes had $b flip
+-- exactly on the free tick, 12 of 12 successes kept it - so the deferred
+-- press, the only part of the delivery that straddles the turn, must be
+-- re-aimed. Both defer sites store the reference; the delivery swaps the two
+-- facing-relative bits when the reference has moved on.
+local fast_press_fref = nil
 -- THE DELAY SEPARATES THE MOTION FROM THE BUTTON (v173).
 --
 -- fast_press_moff is where the motion's LAST entry goes, fast_press_off where
@@ -3078,6 +3201,14 @@ end
 -- than required in the editor because the editor is loaded standalone by the
 -- offline tests, and because both tables it reads live in this file.
 seq_auto_ticks = actionSequenceRunnerModule.auto_ticks_for
+-- The editor calls this after writing a library item back, so the runner
+-- lets go of the copy it was holding.
+seq_forget_pick = actionSequenceRunnerModule.forget_pick
+-- The knockdown logger, for the runner to leave diagnostic marks on.
+-- It is a local in every file that requires it, so the runner cannot see
+-- it otherwise - and requiring it there would break the offline tests,
+-- which dofile the runner on its own.
+seq_debug = debugKnockdownModule
 -- Same reason: the editor asks whether "Recovered" would be a lie on this
 -- row, and the runner is where that is decided.
 seq_auto_needs_number = actionSequenceRunnerModule.auto_needs_number
@@ -4156,9 +4287,34 @@ memory.registerexec(0x02211A, function()
 		local _phold = (fast_press_btn == 0) and 1 or 0
 		if _dlg >= fast_press_off and _dlg <= fast_press_off + _phold
 		   and (_dlg > fast_press_off or memory.readbyte(0xFF8805) == 0x00) then
-			assert_input_bits(fast_press_lev, fast_press_btn)
+			-- RE-AIM THE DEFERRED PRESS AT THE FACING IT LANDS UNDER (2026-09-20).
+			--
+			-- The bits were captured raw at defer time, one to three ticks
+			-- before free. A knockdown whose dummy is lying facing away ends
+			-- with the wake-up turn: $b flips exactly on the free tick and the
+			-- swap at 0x022194 then reads the captured bits as the opposite
+			-- direction. Measured shape of every failure (kd_c05_s12..s16,
+			-- kd_c0A_s19..s37): tap one went in as corrected forward, the
+			-- press landed as corrected back, the two taps of ONE dash
+			-- disagreed, no dash came out, and the counter attack's own button
+			-- came out alone as a plain normal (0x0A at free+2..+3) or as
+			-- nothing at all. Swapping the two facing-relative bits when the
+			-- reference has moved restores the corrected direction the press
+			-- was asked for, tick by tick - a turn between the press's own two
+			-- ticks is handled the same way.
+			--
+			-- facing_for_input() is stable within a tick for this purpose:
+			-- nothing recomputes $b between the inject at 0x02211A and the
+			-- correction at 0x022134 (see the dash_facing diagnostic), so the
+			-- value read here is what the swap will use this tick.
+			local _pl = fast_press_lev
+			if fast_press_fref ~= nil
+			   and facing_for_input() ~= fast_press_fref then
+				_pl = swap_facing_bits(_pl)
+			end
+			assert_input_bits(_pl, fast_press_btn)
 			debugKnockdownModule.mark_write("press_now",
-				fast_press_lev * 256 + fast_press_btn, _dlg)
+				_pl * 256 + fast_press_btn, _dlg)
 			if _dlg < fast_press_off + _phold then
 				-- More ticks of this press to come; keep the state.
 				return
@@ -4515,6 +4671,21 @@ memory.registerexec(0x02211A, function()
 			-- so this now asks the question once, at the moment it is still a
 			-- question. A hold keeps it zero - that path returns before writing
 			-- - so waiting and re-entering both still work.
+			-- ticks_to_landing() > 0 WAS TRIED HERE AND BROKE SASQUATCH.
+			--
+			-- The reasoning was that saw_freeze is only a proxy for "would this
+			-- press land before the touchdown", which is true - but the direct
+			-- form waits on EVERY descending delivery, and a press that is
+			-- already aimed at the touchdown is still descending when it goes
+			-- out. Sasquatch's second dash went late again, the same LW:240 as
+			-- 2026-09-19. Reverted the same day it was tried (user, 2026-09-20).
+			--
+			-- The Morrigan case it was meant to fix is real and still open: the
+			-- freeze that shifts the schedule belongs to the PREVIOUS step's
+			-- contact and is over before this segment starts being delivered,
+			-- so saw_freeze - which only watches the delivery - never sees it.
+			-- Whatever replaces this has to ask about the freeze since the
+			-- ANCHOR, not the freeze during the delivery.
 			if _s0.seq_land and _s0.saw_freeze and _i == #_s0.sequence
 			   and (_s0.tick_held or 0) == 0
 			   -- The touchdown, not "able to act".
@@ -4580,11 +4751,87 @@ memory.registerexec(0x02211A, function()
 				_s0.entry_ticks = 0
 				_i = 1
 			end
+			-- A DASH CANNOT BE AIMED WHILE THE CHARACTER IS STILL TURNING.
+			--
+			-- Held, not corrected: the direction a dash travels is decided when
+			-- the game grants it, so one entered facing the old way runs away
+			-- from the opponent for its whole length. Waiting for the turn is
+			-- the only thing that puts it the right way round, because a back
+			-- dash cannot be used instead - $b flips inside the command window
+			-- and half a back dash plus half a forward dash is neither.
+			--
+			-- ONLY RAW DIRECTIONS, AND ONLY WHILE THE TWO DISAGREE. Outside a
+			-- crossover they never disagree, so nothing else waits a tick.
+			--
+			-- CAPPED BY THE COMMAND'S OWN WINDOW. If the turn has not happened
+			-- within the grace the dash has anyway (10 ticks Normal, 8 Turbo -
+			-- VSAV_MEMORY_NOTES.md), waiting longer buys nothing: the motion
+			-- would be dead by then. Past the cap it goes out as it did before,
+			-- which is no worse than not waiting at all.
+			if _s0.raw_dir == true and facing_unsettled() then
+				_s0.face_hold = (_s0.face_hold or 0) + 1
+				-- DIAGNOSTIC: is this wait firing where it was never meant to?
+				--
+				-- It is meant for a crossover and nothing else. $b and $120 are
+				-- different bytes, though, and at point blank they can sit
+				-- apart for long stretches - so a repeated dash attack could be
+				-- waiting out the whole cap on every repetition (reported:
+				-- Morrigan, repeated dash MK, 2026-09-20).
+				--
+				-- $05 and $38 ride along, NOT $06. test_land_regrace pins
+				-- that this span reads the ground and not "can act" - a real
+				-- past bug - and it cannot tell a diagnostic read of $06 from
+				-- a behavioural one. $38 answers the question that matters
+				-- here anyway: whether the wait is running while she is still
+				-- in the dash's air time.
+				debugKnockdownModule.mark_write("face_hold",
+					memory.readbyte(0xFF880B) * 1000
+					+ memory.readbyte(0xFF8920) * 100
+					+ _s0.face_hold,
+					memory.readbyte(0xFF8805) * 256
+					+ ((memory.readbyte(0xFF8838) ~= 0) and 1 or 0))
+				if _s0.face_hold
+				   <= (actionSequenceRunnerModule.DASH_GRACE_TICKS or 10) then
+					return
+				end
+			else
+				_s0.face_hold = 0
+			end
 			if _i <= #_s0.sequence then
 				local _pl, _pb = entry_to_bits(_s0.sequence[_i])
 				-- Every tick this entry has been asserted, frozen ones too -
 				-- the game's command clock does not stop for hit stop.
 				_s0.entry_ticks = (_s0.entry_ticks or 0) + 1
+				-- THE FREEZE DOES NOT HAVE TO STILL BE RUNNING.
+				--
+				-- This used to require $5C at the very tick the count crossed,
+				-- and that is not when the damage shows. A freeze that ends at
+				-- tick 8 leaves the entry asserted for another few ticks while
+				-- tick_held catches up, so the count crosses on a tick that is
+				-- no longer frozen, the guard misses it, and the entry goes out
+				-- having been held THIRTEEN ticks - past the ten the game gives
+				-- a dash's first direction, and with no press edge left at the
+				-- end because it never let go.
+				--
+				-- MEASURED 2026-09-20 (Morrigan, dash then Forward+MK, looped).
+				-- Every lap that dashed had entry one asserted 2 ticks; every
+				-- lap that did not had it asserted 12 or 13 and walked instead:
+				--
+				--     lg 144..156  e1 L2   (13 ticks)  -> no dash, $06 = 04
+				--     lg 185..186  e1 L2   ( 2 ticks)  -> dash,    $06 = 14
+				--
+				-- Which is why a whiff works and a hit does not: without the
+				-- hit there is no freeze to stretch the entry (user, 2026-09-20).
+				--
+				-- saw_freeze, so a delivery that never met a freeze still comes
+				-- out exactly as it did before - the same rule the re-timing
+				-- below already follows.
+				-- 2026-09-20: two guards were added here and then removed.
+				-- An early one that fired on the first frozen tick took landing
+				-- segments away from the landing measures above, and widening
+				-- this one with saw_freeze did not fix what it was aimed at
+				-- (Morrigan's looped dash MK). Both are recorded in
+				-- handoff_v11.5_action_steps.md; neither belongs here.
 				if (_pl ~= 0 or _pb ~= 0)
 				   and memory.readbyte(0xFF885C) ~= 0
 				   and _s0.entry_ticks
@@ -4672,6 +4919,43 @@ memory.registerexec(0x02211A, function()
 					_s0.saw_freeze = true
 				end
 				debugKnockdownModule.mark_write("seq_tick", _pl * 256 + _pb, _i)
+				-- DIAGNOSTIC: why an entry is being stretched, and whether the
+				-- press edge the dash needs ever appears.
+				--   val = $5C * 1000 + entry_ticks * 10 + tick_held
+				--   pc  = $127, the lever half of the press-edge word
+				-- $126 is the WORD and the 68000 is big-endian, so the lever is
+				-- the second byte - the same trap $122/$123 set earlier.
+				-- DIAGNOSTIC: WHICH OF THE LANDING GUARD'S FIVE CONDITIONS
+				-- IS THE ONE THAT FAILS.
+				--
+				-- The guard above holds the final tap until the touchdown, and
+				-- it only engages when ALL of these hold:
+				--
+				--     seq_land            this segment is aimed at a landing
+				--     saw_freeze          it met hit stop while being delivered
+				--     _i == last          the final entry is the one starting
+				--     tick_held == 0      that entry has not begun
+				--     $38 ~= 0            still in the air
+				--     ticks_to_landing()  and on the way down
+				--
+				-- Recorded per tick so a lap that dashed and a lap that did not
+				-- can be laid side by side. Measured shape of the failure
+				-- (2026-09-20, Morrigan, dash then Forward+MK, looped): a
+				-- GUARDED MK is always followed by a lap with no dash, and that
+				-- lap spends nine ticks in landing recovery - the dash never
+				-- cancelled it. A whiffed MK is followed by a lap that dashes
+				-- one tick after the touchdown.
+				--
+				--   val = seq_land, saw_freeze, airborne, entry, $5C
+				--   pc  = ticks_to_landing(), or 99 when it is nil
+				local _tl = ticks_to_landing()
+				debugKnockdownModule.mark_write("seq_frz",
+					(_s0.seq_land and 100000 or 0)
+					+ (_s0.saw_freeze and 10000 or 0)
+					+ ((memory.readbyte(0xFF8838) ~= 0) and 1000 or 0)
+					+ (_i % 10) * 100
+					+ (memory.readbyte(0xFF885C) % 100),
+					(_tl ~= nil) and (_tl % 99) or 99)
 				return
 			end
 			-- Spent. Free the slot so the next segment can be queued on this
@@ -4982,6 +5266,7 @@ memory.registerexec(0x02211A, function()
 				-- the normals use.
 				assert_input_bits(_plev, 0)
 				fast_press_lg  = memory.readbyte(0xFF8081)
+				fast_press_fref = facing_for_input()
 				fast_press_lev = _plev
 				fast_press_btn = _pbtn
 				fast_press_off = 1
@@ -5246,6 +5531,7 @@ memory.registerexec(0x02211A, function()
 			assert_input_bits(0, 0)
 		end
 		fast_press_lg  = memory.readbyte(0xFF8081)
+		fast_press_fref = facing_for_input()
 		-- What rides in WITH the button. Merged with the motion when there is
 		-- no delay; on a split it is the held direction, or nothing.
 		local _ov = button_lever_bits()

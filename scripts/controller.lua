@@ -258,12 +258,37 @@ function queue_input_sequence(_player_obj, _sequence, _hold_last)
   -- the point - replaying them from the start on a turnaround would silently
   -- change how many taps the dummy performs. Same for any button-only counter.
   _seq.uses_facing = false
+  -- WHICH FIELD THE GAME WILL READ THIS OUT OF.
+  --
+  -- One injected word is corrected TWICE, into two fields, by two different
+  -- bytes: $122 on $b alone (0x02218E) and $12a on $120 when grounded
+  -- (0x0221DC). While those two disagree - which is what crossing over does -
+  -- no single injection can be right for both, so the command has to say
+  -- which one it is.
+  --
+  -- A sequence of nothing but horizontals and neutrals is a dash or a walk,
+  -- and those are read raw out of $122. Anything carrying a button, an up or
+  -- a down is a command motion, read out of $12a, and keeps the old
+  -- resolution. guardCancel's facing_for_input() reads this flag.
+  --
+  -- Measured 2026-09-20: over three crossovers the tool's own answer flipped
+  -- one tick before $b did, so the two taps of ONE dash went out as opposite
+  -- screen directions while the game's reference had not moved - which is
+  -- "the same direction twice" failing to be twice.
+  _seq.raw_dir = false
   for _f = 1, #_seq.sequence do
     for _i = 1, #_seq.sequence[_f] do
       local _v = _seq.sequence[_f][_i]
-      if _v == "forward" or _v == "back" then _seq.uses_facing = true end
+      if _v == "forward" or _v == "back" then
+        _seq.uses_facing = true
+        _seq.raw_dir = true
+      elseif _v ~= nil then
+        -- A button, an up or a down: this is a command motion after all.
+        _seq.raw_dir = nil
+      end
     end
   end
+  if _seq.raw_dir == nil then _seq.raw_dir = false end
 
   -- Pre-buffering. Only safe when nothing before the final entry presses a
   -- button - see the note in process_pending_input_sequence for why.

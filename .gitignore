@@ -54,6 +54,12 @@ reversal_logs_archive/
 # they are 14 MB of traces that nobody installing the tool has a use for, and
 # one of them carried a Windows user name into the published tree (2026-09-20).
 /analysis/*_probe_*.log
+
+# The Action Pattern Library stages its export here for PowerShell to copy,
+# and reads an import back out of it. Written and deleted inside one menu
+# action - it is never meant to survive, and it holds whatever the player
+# last sent or received.
+/scripts/action_patterns_transfer.json
 mame_code/
 mame_roms/
 __pycache__/

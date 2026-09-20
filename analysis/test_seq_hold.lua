@@ -451,5 +451,37 @@ do
 	if fails == 0 then print("  ok 短い凍結は跨ぎ、長い凍結は凍結明けに入れ直す") end
 end
 
+print("")
+print("[12] メニューが開いているあいだは 1 ビットも書かない")
+-- 2026-09-20 報告: メニュー中もダミーの入力だけが届き続ける。ダミー自身は
+-- 止まっているので、入力を書いているのは注入側。28 箇所ある assert_input_bits
+-- のうちメニューを見ていたのは Hold の 2 箇所だけで、アームの配送経路には
+-- ゲートが無かった。Action Patterns より前からある穴 (0xB でも再現)。
+do
+	local gsrc = io.open("guardCancel.lua"):read("*a")
+	local a = gsrc:find("local function assert_input_bits", 1, true)
+	local b = gsrc:find("inject_guard = true", a or 1, true)
+	local before = fails
+	if a == nil then fail("assert_input_bits", "無い", "ある") end
+	local head = (a ~= nil and b ~= nil) and gsrc:sub(a, b) or ""
+	-- 書き込みの手前で返すこと。
+	if head:find("globals.show_menu == true then return end", 1, true) == nil then
+		fail("メニューのゲート", "無い", "書き込みの前にある")
+	end
+	-- フックの入口ではないこと。そこで返すと M.service が呼ばれず、
+	-- 「メニューは走行を終了させる」処理まで止まる。
+	local hook = gsrc:find("This hook fires once per TICK, at 0x014E7A", 1, true)
+	local svc = gsrc:find("actionSequenceRunnerModule.service(_d0)", 1, true)
+	if hook ~= nil and svc ~= nil then
+		local body = gsrc:sub(hook, svc)
+		if body:find("if globals.show_menu == true then return end", 1, true) ~= nil then
+			fail("ゲートの位置", "service より手前", "assert_input_bits の中だけ")
+		end
+	end
+	if fails == before then
+		print("  ok 注入の直前で止め、列を捨てる処理は残している")
+	end
+end
+
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))
 os.exit(fails == 0 and 0 or 1)

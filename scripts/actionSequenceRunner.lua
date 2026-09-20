@@ -912,6 +912,8 @@ function M.compile(seq, mis)
 			sequence = inputs,
 			motion = motion,
 			button = button,
+			-- Air Dash uses the same motion; retain the selected action's kind.
+			ground_dash = GROUND_DASH[step.action] or nil,
 			timing = timing,
 			-- Which row this was on screen. The queue is consumed from the
 			-- front, so by the time a step fires its position in `pending` no
@@ -1006,10 +1008,72 @@ local function dummy_cid()
 	return tostring(memory.readbyte(CID))
 end
 
--- The editor's saved sequence for this trigger AND this character, compiled.
--- nil when there is nothing usable there, which every caller treats as
--- "behave as before".
-function M.schedule(which)
+-- WHERE THE STEPS COME FROM: the one Action Steps list, or one out of the
+-- library. Guard Action Type is the switch, the same way it already is for
+-- Action Steps - a second enable flag would only give the two a way to
+-- disagree.
+local picked = nil
+
+local function patterns_mode()
+	return training_settings ~= nil and training_settings.guard_action == 0xC
+end
+
+-- The ticked ones, in list order. An empty list reads as nothing to run.
+local function ticked_patterns(which)
+	local store = training_settings and training_settings.action_patterns
+	local per = store and store[which]
+	if type(per) ~= "table" then return nil end
+	local row = per[dummy_cid()]
+	local items = (type(row) == "table") and row.items or nil
+	if type(items) ~= "table" then return nil end
+	local out = {}
+	for _, it in ipairs(items) do
+		if it.use == true and type(it.steps) == "table" and #it.steps > 0 then
+			out[#out + 1] = it
+		end
+	end
+	if #out == 0 then return nil end
+	return out
+end
+
+-- PICKED ONCE PER ARMING, NOT PER TICK.
+--
+-- schedule is asked many times while one reversal runs - by the arm, by the
+-- loop, by the menu - and rolling again on each of them would splice two
+-- patterns together one step at a time.
+function M.pick_pattern(which)
+	local list = ticked_patterns(which)
+	if list == nil then picked = nil return nil end
+	-- ONE TICKED RUNS EVERY TIME, SEVERAL PICK BETWEEN THEM. The ticks are the
+	-- play mode, so there is no second row for them to disagree with
+	-- (design_action_pattern_library.md).
+	picked = (#list == 1) and list[1] or list[math.random(#list)]
+	return picked
+end
+
+-- Exposed for the readout and the tests: which one is running right now.
+function M.picked_pattern() return picked end
+
+-- EDITING ONE DROPS THE HOLD ON IT.
+--
+-- The pick is a reference to the item itself, and saving replaces that table
+-- so the compile cache misses. Without this the old reference would keep the
+-- old steps alive until the next arming, and the menu would answer about a
+-- list that no longer exists.
+function M.forget_pick() picked = nil end
+
+local function source_seq(which)
+	if patterns_mode() then
+		-- Still the one that was picked, so every question asked during this
+		-- reversal gets the same answer. The fallback is for the menu, which
+		-- asks before anything has been armed.
+		if picked ~= nil and picked.use == true
+		   and type(picked.steps) == "table" and #picked.steps > 0 then
+			return picked
+		end
+		local list = ticked_patterns(which)
+		return list and list[1] or nil
+	end
 	local store = training_settings and training_settings.action_sequences
 	local per = store and store[which]
 	if type(per) ~= "table" then return nil end
@@ -1017,12 +1081,14 @@ function M.schedule(which)
 	-- it into the draft on open, but migrates it only on Save - until that
 	-- Save it belongs to no one and runs for no one.
 	if per.steps ~= nil then return nil end
+	return per[dummy_cid()]
+end
 
+-- The saved sequence for this trigger AND this character, compiled. nil when
+-- there is nothing usable, which every caller treats as "behave as before".
+function M.schedule(which)
 	local cid = dummy_cid()
-	local seq = per[cid]
-	-- No enable flag of its own. Guard Action Type = Reversal - Sequence is
-	-- what turns this on, and a second switch would only give the two a way to
-	-- disagree.
+	local seq = source_seq(which)
 	if seq == nil then return nil end
 	if seq ~= cache_src or which ~= cache_which or cid ~= cache_cid then
 		local ok, out = pcall(M.compile, seq)
@@ -1306,6 +1372,8 @@ end
 -- Compiles the trigger's sequence, keeps steps 2..n, and returns the first so
 -- the caller can queue it exactly where it queues a motion today.
 function M.arm(which)
+	-- THE ROLL HAPPENS HERE, BEFORE ANYTHING IS ASKED FOR THE STEPS.
+	if patterns_mode() then M.pick_pattern(which) end
 	local sched = M.schedule(which)
 	if sched == nil then return nil end
 	pending = {}
@@ -1657,8 +1725,74 @@ local function service_body(defender)
 		-- again, the moment being waited for is over and the step goes out on
 		-- its own. That is Auto (After) - which is what every Auto should fall
 		-- back to when its condition is missed (user, same report).
-		if not landing_ready(step) and not timing_missed(step) then return end
+		-- DIAGNOSTIC (2026-09-20): WHICH OF THE TWO GATES LET THIS OUT.
+		--
+		-- landing_ready aims the press at the touchdown - it opens at
+		-- ticks_to_landing() <= lead, and it refuses outright while $5C is set
+		-- because the physics and the clock disagree in there. timing_missed
+		-- has no such aim: once the dummy has been busy and is free again the
+		-- step goes out wherever it is. So a freeze that overlaps the fall can
+		-- hand the step to the SECOND gate, and the prediction is not used at
+		-- all.
+		--
+		-- Morrigan's looped dash MK starts delivering at ticks_to_landing() = 6
+		-- against a lead of 3, which is what that would look like. This says
+		-- whether it is (user, 2026-09-20).
+		--
+		--   val = gate (1 = landing_ready, 2 = timing_missed)
+		--         * 100000 + lead * 1000 + $5C * 10 + airborne
+		--   pc  = ticks_to_landing(), or 99 when it is nil
+		do
+			local _lr = landing_ready(step)
+			-- THE DEADLINE DOES NOT OVERTAKE THE AIM.
+			--
+			-- timing_missed exists for a landing that never comes - the step
+			-- that asked to wait for a touchdown on a character that did not
+			-- jump (test_landing_deadline [1]). It has no aim of its own: it
+			-- fires the moment the dummy is free, and a falling dummy IS free.
+			--
+			-- MEASURED 2026-09-20 (Morrigan, dash then Forward+MK, looped, MK
+			-- guarded). Thirteen landing steps, ELEVEN released by the deadline:
+			--
+			--     gate            lead  toLand  $5C  air
+			--     timing_missed      3       6    0    1    <- three ticks early
+			--     landing_ready      3       3    0    1    <- on target
+			--
+			-- $5C is zero throughout, so hit stop is not what does this. The
+			-- deadline simply opens three ticks before the aim would, the press
+			-- lands in the air, and no dash comes out.
+			--
+			-- A grounded normal after a failed dash must finish like After.
+			-- Only an airborne prediction may defer that recovery: grounded
+			-- Morrigan keeps y=floor=40, vy=-135168, ay=-24576, so the predictor
+			-- returns 1 forever (kd_c05_s02, frames 3536..3706). timing_missed
+			-- still requires busy -> free, so this does not skip the normal.
+			local _tm = false
+			if not _lr and timing_missed(step) then
+				_tm = (memory.readbyte(P2_BASE + 0x38) == 0)
+				      or (seq_ticks_to_landing == nil)
+				      or (seq_ticks_to_landing() == nil)
+			end
+			if _lr or _tm then
+				local _dbg = seq_debug
+				if _dbg ~= nil and _dbg.mark_write ~= nil then
+					local _ld = seq_ticks_to_landing and seq_ticks_to_landing()
+					_dbg.mark_write("land_gate",
+						(_lr and 100000 or 200000)
+						+ ((step.lead or 0) % 100) * 1000
+						+ (memory.readbyte(P2_BASE + 0x5C) % 100) * 10
+						+ ((memory.readbyte(P2_BASE + 0x38) ~= 0) and 1 or 0),
+						(_ld ~= nil) and (_ld % 99) or 99)
+				end
+			else
+				return
+			end
+		end
 	elseif step.auto then
+		-- Air attack readiness does not permit a ground dash. After starts
+		-- its input only when grounded and free; Landing has its own earlier
+		-- branch so its predicted airborne run-up remains unchanged.
+		if step.ground_dash and memory.readbyte(P2_BASE + 0x38) ~= 0 then return end
 		if not dummy_free(step) then return end
 	else
 		-- Negative means the motion is longer than the wait: there is no way to
@@ -1772,10 +1906,9 @@ end
 -- The raw steps, for the two questions the menu asks about the loop. Same
 -- reads M.schedule does, without the compile.
 local function loop_steps(which)
-	local store = training_settings and training_settings.action_sequences
-	local per = store and store[which]
-	if type(per) ~= "table" or per.steps ~= nil then return nil end
-	local seq = per[dummy_cid()]
+	-- The same source schedule uses, so the Loop Wait row on the menu is
+	-- answering about the list that will actually run.
+	local seq = source_seq(which)
 	local steps = seq and seq.steps
 	if type(steps) ~= "table" or #steps == 0 then return nil end
 	return steps
@@ -1827,6 +1960,18 @@ local function loop_refill()
 	-- compiled list would hide the failure and execute inputs no longer shown
 	-- by the Editor.
 	if loop_which ~= nil then
+		-- A NEW ROLL FOR EACH LAP, AND THIS IS THE LAST PLACE IT CAN HAPPEN.
+		--
+		-- pending empties on the tick the last step FIRES, not when it
+		-- finishes, so loop_refill runs one tick after that - long before the
+		-- landing the restart may be predicting. Rolling any later would leave
+		-- the new lap's first step unknown while its run-up should already be
+		-- going in, and Loop Wait = Auto (Landing) would have nothing to
+		-- predict for (user, 2026-09-20).
+		--
+		-- Before the schedule is fetched, so the fetch below is already about
+		-- the pattern this lap will run.
+		if patterns_mode() then M.pick_pattern(loop_which) end
 		local _fresh = M.schedule(loop_which)
 		if _fresh == nil or #_fresh == 0 then
 			loop_sched = nil

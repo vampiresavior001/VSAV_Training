@@ -761,6 +761,7 @@ guard_action_type = {
     "PB Recording",
     -- Appended, never inserted: the index is what the settings file stores.
     "Reversal - Action Steps",
+    "Reversal - Action Patterns",
 }
 
 _push_block_type = {
@@ -1086,7 +1087,8 @@ guard_action_delay_menu_item.is_disabled = function()
           training_settings.guard_action == 2 or -- GC (see gc_input_delay_menu_item below)
           -- A sequence carries its own waits, one per step. Two places to set
           -- the same thing is how they end up disagreeing.
-          training_settings.guard_action == 0xB
+          training_settings.guard_action == 0xB or
+          training_settings.guard_action == 0xC
 end
 
 -- GC専用の任意フレーム入力ディレイ。共用の guard_action_delay_menu_item
@@ -1160,6 +1162,17 @@ end
 local reversal_action_steps_item = actionSequenceEditorModule.parent_item("reversal", "Reversal Action Steps")
 reversal_action_steps_item.is_disabled = function()
 	return training_settings.guard_action ~= 0xB
+end
+
+-- THE LIBRARY SITS BESIDE THE LIST, GATED THE SAME WAY.
+--
+-- Same reason the row above is gated: the menu hides disabled rows and
+-- navigation skips them, so this removes the row rather than greying it. The
+-- saved patterns survive the switch - this gates the ROW, not the data.
+local reversal_action_patterns_item =
+	actionSequenceEditorModule.patterns_parent_item("reversal", "Reversal Action Patterns")
+reversal_action_patterns_item.is_disabled = function()
+	return training_settings.guard_action ~= 0xC
 end
 
 -- LOOP: THE LIST STARTS AGAIN WHEN IT ENDS.
@@ -1261,7 +1274,9 @@ end
 -- Gated with the row they belong to: the list is only reachable, and only runs,
 -- under Reversal - Action Steps.
 local function action_steps_rows_disabled()
+	-- Both sources run the same list machinery, so the loop belongs to both.
 	return training_settings.guard_action ~= 0xB
+		and training_settings.guard_action ~= 0xC
 end
 action_steps_loop_switch.is_disabled = action_steps_rows_disabled
 action_steps_loop_wait_item.is_disabled = action_steps_rows_disabled
@@ -1452,6 +1467,7 @@ return {
             gc_input_delay_menu_item,
             p2_reversal_list_menu_item,
             p2_reversal_strength_menu_item,
+            reversal_action_patterns_item,
             reversal_action_steps_item,
             action_steps_loop_switch,
             action_steps_loop_wait_item,

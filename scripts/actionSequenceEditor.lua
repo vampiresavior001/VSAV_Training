@@ -1025,6 +1025,49 @@ local function defaults()
 	return { version = 1, steps = { new_step() } }
 end
 
+-- THE LIBRARY'S OWN STORE, BESIDE THE ONE ACTION STEPS USES.
+--
+-- Same shape as action_sequences, so the per-character split reads the same
+-- way: action_patterns[trigger][character_id] = { version, items }. An item is
+-- one saved list - { name, use, steps }.
+--
+-- "use" IS THE PLAY MODE. One ticked runs that one, several ticked pick
+-- between them. There is no Play Mode row, because the ticks already say it
+-- and that is one thing to learn instead of two
+-- (design_action_pattern_library.md).
+-- WHICH LIBRARY ITEM THE DRAFT BELONGS TO, READ FROM THE STACK.
+--
+-- Derived rather than stored. Three places pop the stack, and a flag left
+-- behind by any one of them would point the next Save at the wrong list - which
+-- is the shape of two of the four bugs the ported implementation had.
+local function pattern_edit()
+	for i = #stack, 2, -1 do
+		if stack[i].type == "root" and stack[i - 1].type == "pattern" then
+			return stack[i - 1].index
+		end
+	end
+	return nil
+end
+
+local function pattern_store()
+	training_settings.action_patterns = training_settings.action_patterns or {}
+	return training_settings.action_patterns
+end
+
+local function pattern_row(which, character_id)
+	local per = pattern_store()[which]
+	if type(per) ~= "table" then per = {} ; pattern_store()[which] = per end
+	local key = tostring(character_id or cid_num())
+	local row = per[key]
+	if type(row) ~= "table" then row = { version = 1, items = {} } ; per[key] = row end
+	if type(row.items) ~= "table" then row.items = {} end
+	return row
+end
+
+local function pattern_items()
+	return pattern_row(trigger, editor_character_id).items
+end
+
 local function push(s) stack[#stack + 1] = s end
 local function top() return stack[#stack] end
 
@@ -1045,6 +1088,24 @@ end
 -- thing. A fresh table every time: the runner keys its compile cache on this
 -- table's identity, so replacing it IS the invalidation.
 local function save_draft()
+	-- Back to where it came from. Saving a library item into the Action Steps
+	-- list would overwrite a list the player never opened.
+	local _i = pattern_edit()
+	if _i ~= nil then
+		local items = pattern_items()
+		local it = items[_i]
+		if it ~= nil then
+			-- A WHOLE NEW TABLE, NOT A NEW steps FIELD. The runner keys its
+			-- compile cache on this table's identity, so replacing it IS the
+			-- invalidation - the same reason the Action Steps branch below
+			-- assigns a fresh table rather than editing one in place.
+			items[_i] = { name = it.name, use = it.use, steps = copy(draft).steps }
+		end
+		-- And the runner is holding a reference to the one just replaced.
+		if seq_forget_pick ~= nil then seq_forget_pick() end
+		mark_training_settings_dirty()
+		return
+	end
 	bucket(trigger, editor_character_id)[editor_character_id] = copy(draft)
 	mark_training_settings_dirty()
 end
@@ -1068,9 +1129,25 @@ local function same_step(a, b)
 	return true
 end
 
+-- WHAT THE DRAFT IS BEING COMPARED WITH.
+--
+-- While a library item is open it is that item's own steps, not the Action
+-- Steps list. The ported implementation took its baseline from the wrong place
+-- and the editor read "changed" from the moment it opened
+-- (design_action_pattern_library.md, bug 3).
+local function saved_baseline()
+	local _i = pattern_edit()
+	if _i ~= nil then
+		local it = pattern_items()[_i]
+		if it == nil or type(it.steps) ~= "table" then return nil end
+		return { version = 1, steps = it.steps }
+	end
+	return read_saved(trigger, editor_character_id)
+end
+
 local function dirty()
 	if draft == nil then return false end
-	local saved = read_saved(trigger, editor_character_id)
+	local saved = saved_baseline()
 	-- Nothing saved yet: a list with one untouched default step is still
 	-- nothing, and asking about it would be the same empty question.
 	if saved == nil or type(saved.steps) ~= "table" then
@@ -1249,7 +1326,353 @@ local function detail_items(i)
 	return a
 end
 
+-- TYPING A NAME HAPPENS OUTSIDE, AND EVERYTHING STOPS WHILE IT DOES.
+--
+-- FBNeo's Lua has no text entry. io.popen -> PowerShell -> a Windows Forms box
+-- is the route the file dialog probe proved on hardware (2026-09-16), and it
+-- costs what that cost: the emulator is frozen until the box is closed,
+-- measured there at 6.6s to 39s. Acceptable for an explicit menu action, which
+-- is the only place this is reachable from.
+--
+-- THE PLAYER IS TOLD FIRST. The naming screen is drawn on one frame and the box
+-- opens on the next, because registerBefore runs BEFORE the frame is presented:
+-- opening it immediately would freeze the picture on the previous screen, with
+-- no clue that a keyboard is now wanted.
+local NAME_MAX = 66
+local NAME_PS1 = nil
+local function find_name_ps1()
+	if NAME_PS1 ~= nil then return NAME_PS1 end
+	-- io.open resolves a relative path against THIS script's own folder, which
+	-- is where the .ps1 sits. The second candidate covers being driven from
+	-- the package root.
+	for _, cand in ipairs({ "name_prompt.ps1", "scripts/name_prompt.ps1" }) do
+		local f = io.open(cand, "r")
+		if f ~= nil then f:close() ; NAME_PS1 = cand ; return NAME_PS1 end
+	end
+	return nil
+end
+
+-- ASCII ONLY, BECAUSE gui.text DRAWS NOTHING ELSE.
+--
+-- Measured 2026-09-16: anything outside ASCII comes out blank, so a name typed
+-- in Japanese would save correctly and then show as an empty row. Stripped
+-- rather than refused, so a mixed name keeps the part that can be read.
+local function clean_name(s, max)
+	local out = {}
+	for i = 1, #tostring(s) do
+		local b = tostring(s):byte(i)
+		if b >= 0x20 and b <= 0x7E then out[#out + 1] = string.char(b) end
+	end
+	local t = table.concat(out)
+	t = t:gsub("^%s+", ""):gsub("%s+$", "")
+	if #t > max then t = t:sub(1, max) end
+	return t
+end
+
+-- Replaced wholesale by the offline tests, which must never spawn a process.
+function M.prompt_name(current)
+	if io.popen == nil then return nil end
+	local ps1 = find_name_ps1()
+	if ps1 == nil then return nil end
+	-- 2>&1 MATTERS. Without it PowerShell's own errors go to stderr, Lua sees
+	-- only the interactive banner, and a failure reports as "nothing happened"
+	-- with no way to say why. That cost a whole probe run in 2026-09-16.
+	local cmd = 'powershell -NoProfile -STA -ExecutionPolicy Bypass -File "'
+		.. ps1 .. '" "' .. clean_name(current, NAME_MAX):gsub('"', "'") .. '" '
+		.. NAME_MAX .. ' 2>&1'
+	local f = io.popen(cmd, "r")
+	if f == nil then return nil end
+	local ok, out = pcall(function() return f:read("*a") end)
+	f:close()
+	if not ok or type(out) ~= "string" then return nil end
+	-- Markers, not line numbers: the banner and anything on stderr land on the
+	-- same stream, and neither of them is between these two.
+	local body = out:match("VSAV_NAME_BEGIN(.-)VSAV_NAME_END")
+	if body == nil then return nil end
+	local status, name = body:match("^%s*([^\r\n]*)[\r\n]+(.-)%s*$")
+	-- CANCELLED and ERROR both mean "leave it alone", and they have to be told
+	-- apart from "PowerShell never ran" only in the log, not here.
+	if status == nil or status:sub(1, 2) ~= "OK" then return nil end
+	return clean_name(name, NAME_MAX)
+end
+
+-- WHAT IS ON SCREEN WHILE THE BOX IS OPEN.
+--
+-- Not a menu: the stick does nothing here and a cursor would say it did.
+local function naming_items(s)
+	local what = (s.purpose == "new") and "the new pattern" or "this pattern"
+	return {
+		{ plain = true, label = "USE YOUR KEYBOARD." },
+		{ plain = true, label = "" },
+		{ plain = true, label = "A window has opened for the name of " .. what .. "." },
+		{ plain = true, label = "The game is stopped until you close it." },
+		{ plain = true, label = "" },
+		{ plain = true, label = "If it is hiding behind this one, Alt+Tab to it." },
+		{ plain = true, label = "Cancel there changes nothing." },
+	}
+end
+
+-- WHAT THE TYPED NAME DOES, WHICH DEPENDS ON WHY IT WAS ASKED FOR.
+local function apply_name(s, name)
+	-- Cleaned again here, not only in prompt_name. This is the one place a
+	-- name reaches the saved data, and a row that cannot be drawn is worse
+	-- than a truncated one.
+	name = clean_name(name, NAME_MAX)
+	if name == "" then return end
+	local items = pattern_items()
+	if s.purpose == "rename" then
+		local it = items[s.index]
+		if it ~= nil then it.name = name ; mark_training_settings_dirty() end
+		return
+	end
+	-- Add from current Steps. The list the player already has, kept as it is -
+	-- a copy, so editing the pattern afterwards does not reach back into it.
+	if s.purpose == "import" then
+		local src = read_saved(trigger, editor_character_id)
+		local steps = nil
+		if type(src) == "table" and type(src.steps) == "table" then
+			steps = copy(src).steps
+		end
+		if steps == nil or #steps == 0 then steps = { new_step() } end
+		items[#items + 1] = { name = name, use = true, steps = steps }
+		mark_training_settings_dirty()
+		-- Not into the editor: it already has its steps, so the item screen is
+		-- where there is something to decide.
+		push({ type = "pattern", index = #items, cursor = 1 })
+		return
+	end
+	-- New. NOTHING IS CREATED UNTIL THERE IS A NAME TO PUT ON IT, so a Cancel
+	-- in the box leaves the list exactly as it was rather than dropping an
+	-- unnamed row into it.
+	--
+	-- Ticked on the way in: making one is asking to use it, and the tick is
+	-- visible on the row it lands on.
+	items[#items + 1] = { name = name, use = true, steps = { new_step() } }
+	mark_training_settings_dirty()
+	push({ type = "pattern", index = #items, cursor = 1 })
+	-- Straight into the editor. An empty pattern is not worth stopping to look
+	-- at (design_action_pattern_library.md).
+	draft = { version = 1, steps = { new_step() } }
+	push({ type = "root", cursor = 1 })
+end
+
+-- SENDING A LIBRARY OUT AND TAKING ONE IN.
+--
+-- Whole library, one file, one character - which is the unit anybody would
+-- actually share ("my Sasquatch set"), and one dialog instead of one per
+-- pattern. Each dialog freezes the emulator for as long as it is open.
+--
+-- LUA NEVER TOUCHES THE CHOSEN PATH. Lua 5.1 on Windows opens files through
+-- the ANSI API, so io.open cannot open a UTF-8 path - measured 2026-09-16, and
+-- cp932 cannot spell every path Windows allows either. The bytes are staged at
+-- an ASCII path of our own and PowerShell copies to or from the chosen file.
+local PATTERN_STAGE = "action_patterns_transfer.json"
+local IMPORT_MAX = 256
+local PATTERN_PS1 = nil
+local function find_pattern_ps1()
+	if PATTERN_PS1 ~= nil then return PATTERN_PS1 end
+	for _, cand in ipairs({ "pattern_file.ps1", "scripts/pattern_file.ps1" }) do
+		local f = io.open(cand, "r")
+		if f ~= nil then f:close() ; PATTERN_PS1 = cand ; return PATTERN_PS1 end
+	end
+	return nil
+end
+
+-- Replaced wholesale by the offline tests, which must never spawn a process.
+-- Returns the status word: OK, CANCELLED, or ERROR: something.
+-- The file name the save dialog offers. ASCII only and no path separators -
+-- it is pasted into a command line and then into a Windows file name.
+local function file_who()
+	local out = {}
+	for _, ch in ipairs({ string.byte(cid_name() or "", 1, 64) }) do
+		if (ch >= 0x30 and ch <= 0x39) or (ch >= 0x41 and ch <= 0x5A)
+		   or (ch >= 0x61 and ch <= 0x7A) or ch == 0x20 or ch == 0x2D then
+			out[#out + 1] = string.char(ch)
+		end
+	end
+	return table.concat(out)
+end
+
+function M.transfer_file(mode, who)
+	if io.popen == nil then return "ERROR: no io.popen" end
+	local ps1 = find_pattern_ps1()
+	if ps1 == nil then return "ERROR: pattern_file.ps1 not found" end
+	-- 2>&1, or PowerShell's errors go to stderr and Lua sees only the banner.
+	local cmd = 'powershell -NoProfile -STA -ExecutionPolicy Bypass -File "'
+		.. ps1 .. '" ' .. mode .. ' "' .. PATTERN_STAGE .. '" "'
+		.. tostring(who or "") .. '" 2>&1'
+	local f = io.popen(cmd, "r")
+	if f == nil then return "ERROR: io.popen returned nil" end
+	local ok, out = pcall(function() return f:read("*a") end)
+	f:close()
+	if not ok or type(out) ~= "string" then return "ERROR: nothing came back" end
+	local body = out:match("VSAV_PATTERN_BEGIN(.-)VSAV_PATTERN_END")
+	if body == nil then return "ERROR: the script did not run" end
+	local status = body:match("^%s*([^\r\n]*)")
+	if status == nil or status == "" then return "ERROR: no status" end
+	return status
+end
+
+local function export_now()
+	if write_object_to_json_file == nil then return "ERROR: no json writer" end
+	local items = pattern_items()
+	if #items == 0 then return "ERROR: there is nothing saved to send" end
+	local out = { version = 1, trigger = trigger,
+	              character = cid_num(), items = {} }
+	for i, it in ipairs(items) do
+		-- Copied field by field, so nothing the editor happens to be keeping
+		-- on an item rides along into a file other people will read.
+		out.items[i] = { name = it.name, use = it.use, steps = it.steps }
+	end
+	if not write_object_to_json_file(out, PATTERN_STAGE) then
+		return "ERROR: could not write the staging file"
+	end
+	local st = M.transfer_file("save", file_who())
+	os.remove(PATTERN_STAGE)
+	return st
+end
+
+-- EVERYTHING IN THAT FILE IS SOMEONE ELSE'S. None of it is trusted.
+--
+-- Fields are copied into a fresh table one at a time rather than the loaded
+-- table being kept: an item carrying anything else would go straight into the
+-- settings file and then into whatever that player exports next.
+local function import_now()
+	if read_object_from_json_file == nil then return "ERROR: no json reader" end
+	os.remove(PATTERN_STAGE)
+	local st = M.transfer_file("open", file_who())
+	if st ~= "OK" then return st end
+	local got = read_object_from_json_file(PATTERN_STAGE)
+	os.remove(PATTERN_STAGE)
+	if type(got) ~= "table" or type(got.items) ~= "table" then
+		return "ERROR: that is not a pattern file"
+	end
+	local items = pattern_items()
+	local added, skipped = 0, 0
+	for _, it in ipairs(got.items) do
+		if added >= IMPORT_MAX then break end
+		local nm = (type(it) == "table") and clean_name(it.name, NAME_MAX) or ""
+		local src = (type(it) == "table") and it.steps or nil
+		if nm == "" or type(src) ~= "table" or #src == 0 or #src > MAX_STEPS then
+			skipped = skipped + 1
+		else
+			local steps, ok = {}, true
+			for j, one in ipairs(src) do
+				if type(one) ~= "table" then ok = false break end
+				steps[j] = {
+					action = one.action, lever = one.lever, button = one.button,
+					wait = tonumber(one.wait) or WAIT_AUTO,
+					timing = one.timing, hold = one.hold,
+				}
+			end
+			if not ok then
+				skipped = skipped + 1
+			else
+				-- ADDED, NEVER REPLACING. An import that wiped the list would
+				-- destroy work that took far longer to make than the file did.
+				--
+				-- AND NEVER TICKED. Opening a file someone sent is not asking
+				-- for the dummy's behaviour to change on the spot; MP on the
+				-- row is one press when it is wanted.
+				items[#items + 1] = { name = nm, use = false, steps = steps }
+				added = added + 1
+			end
+		end
+	end
+	if added == 0 then return "ERROR: nothing usable in that file" end
+	mark_training_settings_dirty()
+	if skipped > 0 then
+		return "OK  " .. added .. " added, " .. skipped .. " skipped"
+	end
+	return "OK  " .. added .. " added"
+end
+
+-- THE SCREEN THAT IS UP WHILE THE DIALOG HAS THE EMULATOR STOPPED, AND THE
+-- ANSWER AFTERWARDS. One screen with two states, because the second one has to
+-- replace the first without the player having gone anywhere.
+local function transfer_items(s)
+	if s.result ~= nil then
+		return {
+			{ plain = true, label = s.result },
+			{ plain = true, label = "" },
+			{ plain = true, label = "Import adds to this list. Nothing is replaced," },
+			{ plain = true, label = "and what arrives starts unticked." },
+		}
+	end
+	local verb = (s.purpose == "export") and "save" or "open"
+	return {
+		{ plain = true, label = "A FILE WINDOW HAS OPENED." },
+		{ plain = true, label = "" },
+		{ plain = true, label = "Pick where to " .. verb .. " the pattern file." },
+		{ plain = true, label = "The game is stopped until you close it." },
+		{ plain = true, label = "" },
+		{ plain = true, label = "If it is hiding behind this one, Alt+Tab to it." },
+		{ plain = true, label = "Cancel there changes nothing." },
+	}
+end
+
+-- THE LIST. One row per saved pattern, then the two ways to make another.
+local function pattern_list_items()
+	local a = {}
+	local items = pattern_items()
+	-- The number is the ROW, not an id. Identity belongs to the item; what the
+	-- player points at is a position, and a position is what they can count.
+	local w = (#items >= 100) and 3 or 2
+	for i, it in ipairs(items) do
+		a[#a + 1] = {
+			kind = "pattern", index = i, child = true,
+			label = ((it.use == true) and "[x] " or "[ ] ")
+				.. string.format("%0" .. w .. "d", i)
+				.. "  " .. tostring(it.name or ""),
+		}
+	end
+	a[#a + 1] = { kind = "new", child = true, label = "New",
+		gap_before = (#items > 0) or nil }
+	a[#a + 1] = { kind = "import", child = true, label = "Add from current Steps" }
+	-- Set apart: these two leave the tool and take time, and the rows above
+	-- are the ones used every session.
+	a[#a + 1] = { kind = "export", child = true, label = "Export to a File",
+		gap_before = true }
+	a[#a + 1] = { kind = "import_file", child = true, label = "Import from a File" }
+	a[#a + 1] = { kind = "back", label = "Back", gap_before = true }
+	return a
+end
+
+-- ONE ITEM. Edit first, because it is what the row is for.
+local function pattern_item_items(i)
+	local it = pattern_items()[i]
+	return {
+		{ kind = "edit",   child = true, label = "Edit" },
+		-- LP or Right toggles it, and Left is left alone to mean Back. A value
+		-- on the stick's Left is a row the player cannot walk out of
+		-- (design_action_pattern_library.md).
+		{ kind = "use",    label = "Use in Random : "
+			.. (((it ~= nil) and it.use == true) and "Yes" or "No") },
+		{ kind = "rename", child = true, label = "Rename" },
+		{ kind = "copy",   label = "Copy" },
+		{ kind = "move",   child = true, label = "Move" },
+		{ kind = "delete", child = true, label = "Delete" },
+		{ kind = "back",   label = "Back" },
+	}
+end
+
 local function build(s)
+	if s.type == "naming" then return naming_items(s) end
+	if s.type == "transfer" then return transfer_items(s) end
+	if s.type == "patterns" then return pattern_list_items() end
+	if s.type == "pattern" then return pattern_item_items(s.index) end
+	-- THE SAME TWO SCREENS Move Step AND Remove USE, on the item list instead
+	-- of the step list. Same shape, same keys, nothing new to learn.
+	if s.type == "pattern_order" then
+		local _p = tostring(s.index) .. " / " .. tostring(#pattern_items())
+		if s.cursor == 1 then _p = "< " .. _p .. " >" end
+		return { { label = "Position : " .. _p, kind = "order" },
+		         { label = "Back", kind = "back", gap_before = true } }
+	end
+	if s.type == "pattern_delete" then
+		return { { label = "No, keep it", kind = "no" },
+		         { label = "Yes, delete this pattern", kind = "yes" } }
+	end
 	if s.type == "root" then return root_items() end
 	if s.type == "detail" then return detail_items(s.index) end
 	if s.type == "groups" then
@@ -1342,6 +1765,17 @@ local function build(s)
 	-- so whatever sits on row one is what a second press of a button already
 	-- being pressed will take. The row that changes nothing goes there, the
 	-- same way "No, keep it" leads the remove screen above.
+	-- LEAVING A LIBRARY ITEM IS NOT LEAVING THE MENU.
+	--
+	-- The close screen below drops out of the editor AND the menu, which is
+	-- right for the menu button. Left off a pattern's steps goes back to the
+	-- pattern - so it is the same question with a different destination, and
+	-- saying "Close" there would be a lie.
+	if s.type == "pattern_close" then
+		return { { label = "Cancel", kind = "no" },
+		         { label = "Save and go back", kind = "save_back", gap_before = true },
+		         { label = "Go back without saving", kind = "discard_back" } }
+	end
 	if s.type == "close" then
 		return { { label = "Cancel", kind = "no" },
 		         { label = "Save and Close", kind = "save_close", gap_before = true },
@@ -1404,13 +1838,109 @@ local function actions_screen(group, index)
 	         cursor = cursor, crumb = group.label }
 end
 
+-- WHERE THE STEP LIST GOES BACK TO.
+--
+-- Out of the menu when it IS the Action Steps list - the menu row is what
+-- opened it, so that is where it came from. One level up when it is a library
+-- item: the pattern sits above its steps, and leaving the menu is not what
+-- Save asked for (user, 2026-09-20).
+local function leave_root()
+	if pattern_edit() ~= nil then
+		table.remove(stack)
+		draft = nil
+		return
+	end
+	close()
+end
+
 local function enter()
 	local s = top()
 	local items = build(s)
 	local item = items[s.cursor]
 	if item == nil then return end
 
-	if s.type == "root" then
+	if s.type == "transfer" then
+		-- Any of them closes it. There is nothing on this screen to choose.
+		back()
+
+	elseif s.type == "patterns" then
+		if item.kind == "pattern" then
+			push({ type = "pattern", index = item.index, cursor = 1 })
+		elseif item.kind == "new" then
+			push({ type = "naming", cursor = 1, crumb = "New", purpose = "new" })
+		elseif item.kind == "import" then
+			push({ type = "naming", cursor = 1, crumb = "Add", purpose = "import" })
+		elseif item.kind == "export" then
+			push({ type = "transfer", cursor = 1, crumb = "Export",
+				purpose = "export" })
+		elseif item.kind == "import_file" then
+			push({ type = "transfer", cursor = 1, crumb = "Import",
+				purpose = "import" })
+		elseif item.kind == "back" then
+			back()
+		end
+
+	elseif s.type == "pattern" then
+		if item.kind == "edit" then
+			local it = pattern_items()[s.index]
+			if it ~= nil then
+				draft = copy({ version = 1, steps = it.steps or {} })
+				if type(draft.steps) ~= "table" or #draft.steps == 0 then
+					draft.steps = { new_step() }
+				end
+				push({ type = "root", cursor = 1 })
+			end
+		elseif item.kind == "rename" then
+			local it = pattern_items()[s.index]
+			push({ type = "naming", cursor = 1, crumb = "Rename",
+				purpose = "rename", index = s.index,
+				current = (it ~= nil) and it.name or "" })
+		elseif item.kind == "use" then
+			local it = pattern_items()[s.index]
+			if it ~= nil then
+				it.use = not (it.use == true)
+				mark_training_settings_dirty()
+			end
+		elseif item.kind == "copy" then
+			local items = pattern_items()
+			local it = items[s.index]
+			if it ~= nil then
+				-- Next to the original, not at the end: a copy is made to be
+				-- changed, and hunting for it down a list of thirty is work
+				-- the player did not ask for. Duplicate names are allowed, so
+				-- the name goes across untouched.
+				table.insert(items, s.index + 1, copy(it))
+				mark_training_settings_dirty()
+				-- BACK TO THE LIST, ON THE NEW ROW. Nothing on this screen
+				-- changes when a copy is made, so staying here would look
+				-- exactly like nothing having happened.
+				table.remove(stack)
+				local list = top()
+				if list ~= nil then list.cursor = s.index + 1 end
+			end
+		elseif item.kind == "move" then
+			push({ type = "pattern_order", index = s.index, cursor = 1,
+				crumb = "Move" })
+		elseif item.kind == "delete" then
+			push({ type = "pattern_delete", index = s.index, cursor = 1,
+				crumb = "Delete" })
+		elseif item.kind == "back" then
+			back()
+		end
+
+	elseif s.type == "pattern_delete" then
+		if item.kind == "yes" then
+			table.remove(pattern_items(), s.index)
+			mark_training_settings_dirty()
+			-- The confirm AND the item screen: the item it belonged to is
+			-- gone, so there is nothing to come back to.
+			table.remove(stack)
+			table.remove(stack)
+		else
+			back()
+		end
+
+	elseif s.type == "root" then
 		if item.kind == "step" then
 			push({ type = "detail", index = item.index, cursor = 1 })
 		elseif item.kind == "add" then
@@ -1418,16 +1948,17 @@ local function enter()
 			push({ type = "detail", index = #draft.steps, cursor = 1 })
 		elseif item.kind == "save" then
 			save_draft()
-			close()
+			leave_root()
 		elseif item.kind == "clear" then
 			push({ type = "clear", cursor = 1, crumb = "Clear All" })
 		elseif item.kind == "cancel" then
 			-- The row says "Without Saving", so it does not need to ask when
 			-- there is nothing to drop.
 			if dirty() then
-				push({ type = "close", cursor = 1, crumb = "Close" })
+				push({ type = (pattern_edit() ~= nil) and "pattern_close" or "close",
+					cursor = 1, crumb = "Close" })
 			else
-				close()
+				leave_root()
 			end
 		end
 
@@ -1551,6 +2082,22 @@ local function enter()
 			-- the editor has. This is the same list M.open builds from nothing.
 			draft.steps = { new_step() }
 			back()
+		else
+			back()
+		end
+
+	elseif s.type == "pattern_close" then
+		if item.kind == "save_back" then
+			-- Saved BEFORE the stack is popped: save_draft finds which item
+			-- the draft belongs to by reading the root frame underneath.
+			save_draft()
+			table.remove(stack)
+			table.remove(stack)
+			draft = nil
+		elseif item.kind == "discard_back" then
+			table.remove(stack)
+			table.remove(stack)
+			draft = nil
 		else
 			back()
 		end
@@ -1711,6 +2258,18 @@ function M.open(which)
 	active = true
 end
 
+-- THE LIBRARY'S OWN DOOR. A separate parent, so nothing about the Action Steps
+-- row changes for anyone not using this.
+function M.open_patterns(which)
+	validate()
+	trigger = which or "reversal"
+	editor_character_id = tostring(cid_num())
+	draft = nil
+	pattern_row(trigger, editor_character_id)
+	stack = { { type = "patterns", cursor = 1 } }
+	active = true
+end
+
 function M.abort(reason)
 	close_requested = false
 	close()
@@ -1724,6 +2283,35 @@ function M.registerBefore()
 		M.abort("character_changed")
 		return
 	end
+	-- THE BOX OPENS ONE FRAME AFTER ITS SCREEN WAS DRAWN.
+	--
+	-- io.popen is synchronous and runs on this thread, so the emulator stops
+	-- dead until the box is closed. Opening it on the frame that pushed the
+	-- screen would freeze the picture on the PREVIOUS screen, leaving no clue
+	-- that a keyboard is now wanted. guiRegister sets shown, and this runs
+	-- before the next frame, so by then the notice is up.
+	local naming = top()
+	if naming ~= nil and naming.type == "naming" then
+		if not naming.shown then return end
+		local got = M.prompt_name(naming.current)
+		table.remove(stack)
+		-- Cancel, an error, and a name that was nothing but unprintable
+		-- characters all mean the same thing here: leave it alone.
+		if got ~= nil and got ~= "" then apply_name(naming, got) end
+		return
+	end
+
+	-- THE FILE WINDOW OPENS ONE FRAME AFTER ITS SCREEN WAS DRAWN, for exactly
+	-- the reason the naming box does. The answer replaces the notice on the
+	-- same screen, so the player has not been moved anywhere by it.
+	local xfer = top()
+	if xfer ~= nil and xfer.type == "transfer" and xfer.result == nil then
+		if not xfer.shown then return end
+		xfer.result = (xfer.purpose == "export") and export_now() or import_now()
+		xfer.shown = false
+		return
+	end
+
 	-- The flag request_close raised, turned into a screen here where every
 	-- other screen is made. Pushed before the frame gate below so the press
 	-- that asked for it is not also read as a press ON it - the armed gate
@@ -1801,6 +2389,32 @@ function M.registerBefore()
 		return
 	end
 
+	if s.type == "pattern_order" then
+		-- Every key means what it means on Move Step, one screen over.
+		if held_repeat("down") then
+			s.cursor = 2
+		elseif held_repeat("up") then
+			s.cursor = 1
+		elseif s.cursor == 2 then
+			if pressed("left") or pressed("LP") or pressed("right") then back() end
+		else
+			local items = pattern_items()
+			local i = s.index
+			if held_repeat("left") and i > 1 then
+				items[i], items[i - 1] = items[i - 1], items[i]
+				s.index = i - 1
+				stack[#stack - 1].index = s.index
+				mark_training_settings_dirty()
+			elseif held_repeat("right") and i < #items then
+				items[i], items[i + 1] = items[i + 1], items[i]
+				s.index = i + 1
+				stack[#stack - 1].index = s.index
+				mark_training_settings_dirty()
+			end
+		end
+		return
+	end
+
 	if s.type == "order" then
 		-- Up/Down picks the row and Left/Right moves the step, which is what
 		-- the Wait screen above does with its number. The detail frame
@@ -1826,6 +2440,26 @@ function M.registerBefore()
 		return
 	end
 
+	-- MP TICKS THE ROW UNDER THE CURSOR.
+	--
+	-- A SHORTCUT AND NOTHING MORE. The same switch is on the item's own screen,
+	-- reachable with the lever and LP like everything else here - which is the
+	-- rule, and the reason the ported implementation's MP-only Random was wrong.
+	-- Ticking is the one thing done over and over, though: choosing which four
+	-- of thirty to use is what the list is FOR, and a trip in and back out for
+	-- each of them is the trip worth saving (design_action_pattern_library.md).
+	if s.type == "patterns" and pressed("MP") then
+		local row = items[s.cursor]
+		if row ~= nil and row.kind == "pattern" then
+			local it = pattern_items()[row.index]
+			if it ~= nil then
+				it.use = not (it.use == true)
+				mark_training_settings_dirty()
+			end
+		end
+		return
+	end
+
 	-- Only the root list runs. Every other screen here is a handful of rows
 	-- long, and a gear it can never reach is a gear that is only in the way.
 	local _fast = (s.type == "root") and #items or 0
@@ -1845,8 +2479,16 @@ function M.registerBefore()
 		--
 		-- It reached close() directly and took the edit with it. Deeper screens
 		-- are unaffected: back() there only pops one level.
-		if #stack == 1 and dirty() then
-			push({ type = "close", cursor = 1, crumb = "Close" })
+		--
+		-- ASKED ON THE ROOT, NOT ON stack[1]. A library item's steps sit on a
+		-- root frame three deep, and testing the depth instead of the screen
+		-- let Left drop an edited pattern without a word.
+		if s.type == "root" and dirty() then
+			if pattern_edit() ~= nil then
+				push({ type = "pattern_close", cursor = 1, crumb = "Close" })
+			else
+				push({ type = "close", cursor = 1, crumb = "Close" })
+			end
 		else
 			back()
 		end
@@ -1873,20 +2515,60 @@ end
 --
 -- Detail's crumb is computed rather than stored, because Order renumbers the
 -- step underneath it and the heading has to follow while the stick is moving.
+-- THE PANEL IS 360px AND THE GLYPHS ARE 4px, WITH ROWS STARTING AT x=33.
+-- Eighty-one characters, measured (design_action_pattern_library.md).
+local TITLE_COLS = 81
+
 local function crumb_of(f)
 	if f.type == "detail" then return "STEP " .. tostring(f.index) end
+	if f.type == "pattern" then return string.format("%02d", f.index) end
 	return f.crumb
 end
 
 -- The trigger leads, so Counter and Guard need no new string here when they
 -- arrive. Exposed so a test can read a heading without drawing a screen.
+-- THE HEADING NAMES WHAT IS ON SCREEN, NOT HOW THE PLAYER GOT THERE.
+--
+-- Crumbs are counted from the editor's own root when there is one above the
+-- library, so opening Edit switches to "... ACTION STEPS: Name" instead of
+-- growing a trail. Measured: the full trail reaches 105 characters = 453px and
+-- runs off a 360px panel (design_action_pattern_library.md).
 function M.title()
-	local t = string.upper(trigger) .. " ACTION STEPS: " .. cid_name()
-	for _, f in ipairs(stack) do
-		local c = crumb_of(f)
-		if c ~= nil then t = t .. "  >  " .. c end
+	-- Which frame is the library item, and where the editor's own heading
+	-- starts. A root above the item means the steps are open, and then the
+	-- heading is the steps editor's - the trail is replaced, not grown.
+	local pat_at, base, head = nil, 1, " ACTION STEPS: "
+	if stack[1] ~= nil and stack[1].type == "patterns" then
+		head = " ACTION PATTERNS: "
+		for i = 1, #stack do
+			if stack[i].type == "pattern" then pat_at = i end
+			if stack[i].type == "root" then base, head = i, " ACTION STEPS: " end
+		end
 	end
-	return t
+	local t = string.upper(trigger) .. head .. cid_name()
+	local tail = ""
+	for i = math.max(base, (pat_at or 0) + 1), #stack do
+		local c = crumb_of(stack[i])
+		if c ~= nil then tail = tail .. "  >  " .. c end
+	end
+	if pat_at ~= nil then
+		t = t .. "  >  " .. string.format("%02d", stack[pat_at].index)
+		-- THE NAME, WHILE THERE IS ROOM FOR IT.
+		--
+		-- Without it the steps editor said nothing about WHICH pattern was open
+		-- (user, 2026-09-20). It goes in FRONT of the crumbs and gives way to
+		-- them: they say where you are now and must not be cut, while the
+		-- number identifies the pattern on its own whatever happens to the name.
+		local it = pattern_items()[stack[pat_at].index]
+		local nm = it and it.name or nil
+		if nm ~= nil and nm ~= "" then
+			local room = TITLE_COLS - #t - #tail - 2
+			if room > 0 then
+				t = t .. "  " .. ((#nm > room) and nm:sub(1, room) or nm)
+			end
+		end
+	end
+	return t .. tail
 end
 
 function M.guiRegister()
@@ -1933,9 +2615,13 @@ function M.guiRegister()
 		-- Left goes back and Right goes in - so the brackets were borrowed for a
 		-- place with nothing to say. They are kept on the two screens where the
 		-- stick really does move a number, Wait and Move Step.
-		gui.text(33, y, (selected and ">  " or "   ") .. item.label
+		-- A PLAIN ROW IS A MESSAGE, NOT A CHOICE. No cursor on it: a cursor
+		-- says the stick can do something here, and on the naming screen it
+		-- cannot - the keyboard is what is wanted.
+		local mark = item.plain and "   " or (selected and ">  " or "   ")
+		gui.text(33, y, mark .. item.label
 			.. (item.child and (string.rep(" ", door_col - #item.label) .. ">") or ""),
-			selected and text_selected_color or text_default_color,
+			(selected and not item.plain) and text_selected_color or text_default_color,
 			text_default_border_color)
 		y = y + 10
 		shown = shown + 1
@@ -1947,12 +2633,21 @@ function M.guiRegister()
 	if note then gui.text(33, 168, note, text_disabled_color, text_default_border_color) end
 
 	local help = "Up/Down: Select   Right or LP: Enter   Left: Back"
-	if s.type == "wait" then
+	if s.type == "patterns" and cur ~= nil and cur.kind == "pattern" then
+		-- Named only where it does something. On New or Back it would be a
+		-- button that does nothing, which is worse than no legend at all.
+		help = "Up/Down: Select   Right or LP: Open   MP: Tick   Left: Back"
+	elseif s.type == "naming" then
+		help = "USE THE KEYBOARD in the other window"
+	elseif s.type == "transfer" then
+		help = (s.result ~= nil) and "Left or LP: Back"
+			or "Use the file window that has opened"
+	elseif s.type == "wait" then
 		help = "Up/Down: Select   Right or LP: Apply   Left: Back"
 	elseif s.type == "fixed_wait" then
 		if s.cursor == 2 then help = "Left, Right or LP: Back"
 		else help = "Left: fewer   Right: more   MP: Reset" end
-	elseif s.type == "order" then
+	elseif s.type == "order" or s.type == "pattern_order" then
 		if s.cursor == 2 then help = "Left, Right or LP: Back"
 		else help = "Left: earlier   Right: later" end
 	elseif cur and cur.kind == "hold" then
@@ -1960,6 +2655,50 @@ function M.guiRegister()
 		help = "Up/Down: Select   Right or LP: Toggle   Left: Back"
 	end
 	gui.text(33, 181, help, text_disabled_color, text_default_border_color)
+
+	-- ON THE PICTURE NOW. registerBefore waits for this before it opens
+	-- anything that blocks, so the notice is up before the emulator stops.
+	s.shown = true
+end
+
+-- THE LIBRARY'S ROW ON THE MENU, BESIDE THE ONE ACTION STEPS HAS.
+--
+-- A separate parent, so nothing about the Action Steps row changes for anyone
+-- not using this (design_action_pattern_library.md). What it says is what the
+-- library HOLDS - which of them runs is the Guard Action Type's question, the
+-- same division the row below draws.
+function M.patterns_parent_item(which, label)
+	return {
+		name = label,
+		draw = function(self, x, y, selected)
+			local row = pattern_store()[which]
+			local list = row and row[tostring(cid_num())]
+			local items = (type(list) == "table" and type(list.items) == "table")
+				and list.items or {}
+			local on = 0
+			for _, it in ipairs(items) do if it.use == true then on = on + 1 end end
+			local state
+			if #items == 0 then
+				state = "Empty"
+			else
+				state = #items .. " saved, " .. on .. " ticked"
+			end
+			gui.text(x, y, (selected and "< " or "") .. self.name .. " : "
+				.. cid_name() .. " : " .. state .. "  >",
+				selected and text_selected_color or text_default_color,
+				text_default_border_color)
+		end,
+		right = function() M.open_patterns(which) end,
+		validate = function() M.open_patterns(which) end,
+		left = function() end,
+		legend = function() return "Right or LP: Open" end,
+		description = function()
+			return "Named Action Steps lists, saved so they can be picked again."
+				.. "\nTick the ones to use: one ticked runs that one, several"
+				.. " ticked pick between them."
+				.. "\nNothing here is lost when you edit the Action Steps list below."
+		end,
+	}
 end
 
 function M.parent_item(which, label)
