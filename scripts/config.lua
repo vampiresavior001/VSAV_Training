@@ -29,6 +29,9 @@ local default_training_settings = {
   enable_slot_4=false,
   enable_slot_5=false,
   mo_enable_frame_data=false,
+  -- 1 = P1, 2 = P2. A 1-based index into the list on the menu row, and P1 is
+  -- how the readout has always behaved.
+  mo_frame_data_side = 1,
   display_recording_gui= false,
   display_hitbox_default = true,
   display_hud=true,

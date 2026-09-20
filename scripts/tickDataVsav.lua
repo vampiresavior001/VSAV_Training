@@ -2,6 +2,20 @@
 local M = {}
 local P1 = 0xFF8400
 local P2 = 0xFF8800
+-- WHICH SIDE IS BEING MEASURED, AND WHICH IS THE OTHER ONE.
+--
+-- THE SNAPSHOT KEYS DO NOT MEAN PLAYER ONE AND PLAYER TWO. p1 is whoever is
+-- being measured and p2 is their opponent - which is what the two readers have
+-- always asked for: p1 carries the fields describing an action, p2 carries the
+-- seven that say what was done TO them (block clock, guarding, hitstop,
+-- knockdown). Swapping the bases below therefore measures the other player
+-- with nothing changed downstream: tickData.lua and actionRoute.lua contain no
+-- addresses at all.
+--
+-- Everything that has to know a side reads these, the throw hook included - it
+-- is registered once when the module loads and so cannot hold a constant.
+local ATK, DEF = P1, P2
+local ATK_KEY = "P1"
 -- 32 objects of 0x100 bytes. A fireball, Demitri's bats, anything the move
 -- spawns rather than swings.
 local PROJ = 0xFF9400
@@ -55,9 +69,9 @@ end
 local throw_seen = false
 if memory ~= nil and memory.registerexec ~= nil then
   memory.registerexec(0x029406, function()
-    -- P1 only: the readout measures P1's move. A6 is the object attempting it.
+    -- The measured side only. A6 is the object attempting the throw.
     local _a6 = memory.getregister and memory.getregister("m68000.a6")
-    if _a6 ~= P1 then return end
+    if _a6 ~= ATK then return end
     throw_seen = true
   end)
 end
@@ -85,7 +99,7 @@ local function projectile_box()
   for i = 0, PROJ_COUNT - 1 do
     local b = PROJ + i * 0x100
     if memory.readword(b) > 0x0100 and memory.readbyte(b + 0x04) == 0x02
-       and memory.readword(b + 0x30) == (P1 % 0x10000) then
+       and memory.readword(b + 0x30) == (ATK % 0x10000) then
       local id = attack_box(b)
       -- Kept apart from the player's own ids (0..0xFF) and from the throw
       -- sentinel, so a run splits when the source changes rather than when two
@@ -124,7 +138,7 @@ local SPECIAL_KIND = { [0x0E] = "SP", [0x10] = "ES", [0x12] = "EX" }
 local label_cache_cid, label_cache = nil, nil
 local function step_label(name)
   if seq_special_list == nil then return nil end
-  local cid = memory.readbyte(P1 + 0x382)
+  local cid = memory.readbyte(ATK + 0x382)
   if cid ~= label_cache_cid then
     label_cache_cid, label_cache = cid, {}
     local rows = seq_special_list(cid)
@@ -138,7 +152,7 @@ local function step_label(name)
 end
 
 local function special_name(id)
-  local reg = globals and globals.char_moves and globals.char_moves.P1
+  local reg = globals and globals.char_moves and globals.char_moves[ATK_KEY]
   local list = reg and reg.all
   if type(list) == "table" then
     for _, mv in ipairs(list) do
@@ -156,13 +170,36 @@ local function held_bit(v, b)
   return (math.floor(v / b) % 2) == 1
 end
 
+-- FLIP THE SIDE. TRUE WHEN IT ACTUALLY MOVED.
+--
+-- The caller resets the two readers on a true, because a route that is half one
+-- player and half the other is worse than no route: it reads as one action that
+-- nobody performed.
+--
+-- The label cache is left alone on purpose. It is keyed on the character id and
+-- built from nothing else, so it is already right for whichever side asks - a
+-- mirror match shares the entry and any other pairing rebuilds on the first
+-- lookup.
+function M.set_side(side)
+  local _p2 = side == "P2" or side == 2
+  local _atk = _p2 and P2 or P1
+  if _atk == ATK then return false end
+  ATK, DEF = _atk, (_p2 and P1 or P2)
+  ATK_KEY = _p2 and "P2" or "P1"
+  -- A throw latched by the side being left is not this side's move.
+  throw_seen = false
+  return true
+end
+
+function M.side() return ATK_KEY end
+
 function M.capture(tick)
   snapshot.tick = tick
-  snapshot.p1.attack = memory.readbyte(P1 + 0x105)
+  snapshot.p1.attack = memory.readbyte(ATK + 0x105)
   -- The cel pointer itself, not just the box id inside it: where it points is
   -- what says which move is playing.
-  local _cel = memory.readdword(P1 + 0x1C) or 0
-  local _box = attack_box(P1)
+  local _cel = memory.readdword(ATK + 0x1C) or 0
+  local _box = attack_box(ATK)
   -- The attacker's own box first, then the throw it is offering, then whatever
   -- it has put on the screen. A move is one of the three.
   if _box == 0 then _box = projectile_box() end
@@ -189,8 +226,8 @@ function M.capture(tick)
   -- one off every tick it runs; $1C is the cel pointer, which moves when a cel
   -- is exhausted. Together they change on exactly the ticks the animation
   -- advanced, which is what "active" and "recovery" are counted in.
-  snapshot.p1.anim = memory.readbyte(P1 + 0x20) * 0x10000 + (_cel % 0x10000)
-  snapshot.p1.status = memory.readbyte(P1 + 0x005)
+  snapshot.p1.anim = memory.readbyte(ATK + 0x20) * 0x10000 + (_cel % 0x10000)
+  snapshot.p1.status = memory.readbyte(ATK + 0x005)
   -- THE ROUTE'S MILESTONES, AS BOOLEANS.
   --
   -- actionRoute is game-agnostic, so the $06 values stay on this side. Traced
@@ -202,11 +239,11 @@ function M.capture(tick)
   --        already raised.
   --   both bytes zero is free, which is where a route starts and ends.
   --   0x02 is being hit, which ends a route without a reading.
-  local _state = memory.readbyte(P1 + 0x006)
+  local _state = memory.readbyte(ATK + 0x006)
   snapshot.p1.jump_state = _state == 0x06
   snapshot.p1.free = snapshot.p1.status == 0x00 and _state == 0x00
   snapshot.p1.stunned = snapshot.p1.status == 0x02
-  snapshot.p1.airborne = memory.readbyte(P1 + 0x038) ~= 0
+  snapshot.p1.airborne = memory.readbyte(ATK + 0x038) ~= 0
   -- 0x0E / 0x10 / 0x12 are 必殺技 / ES / EX. A special is an action in its own
   -- right, so a route can begin on one (user, 2026-09-09) - it does not have to
   -- be reached through a jump or a dash.
@@ -257,7 +294,7 @@ function M.capture(tick)
   snapshot.p1.stance = nil
   if snapshot.p1.status == 0x00 and not snapshot.p1.airborne
      and (_state == 0x00 or _state == 0x04) then
-    local _lever = memory.readbyte(P1 + 0x125)
+    local _lever = memory.readbyte(ATK + 0x125)
     if held_bit(_lever, 0x04) then snapshot.p1.stance = "Crouch"
     elseif held_bit(_lever, 0x01) or held_bit(_lever, 0x02) then
       snapshot.p1.stance = "Walk"
@@ -300,8 +337,8 @@ function M.capture(tick)
   -- bytes never move (measured: a dash LP reads 00/00 before, during and
   -- after), so the name is right but the CHANGE cannot be seen - the route
   -- falls back to the animation for the moment, and takes the name from here.
-  local _s = memory.readbyte(P1 + 0x102)
-  local _f = memory.readbyte(P1 + 0x101)
+  local _s = memory.readbyte(ATK + 0x102)
+  local _f = memory.readbyte(ATK + 0x101)
   snapshot.p1.button_name = (({ [0] = "L", [2] = "M", [4] = "H" })[_s] or "?")
     .. ((_f == 0) and "P" or "K")
   local _name, _key = nil, 0
@@ -309,7 +346,7 @@ function M.capture(tick)
     _name = snapshot.p1.button_name
     _key = 0x10000 + _s * 0x100 + _f
   elseif _state == 0x0E or _state == 0x10 or _state == 0x12 then
-    local _id = memory.readbyte(P1 + 0x106)
+    local _id = memory.readbyte(ATK + 0x106)
     _key = 0x20000 + _state * 0x100 + _id
     _name = special_name(_id) or SPECIAL_KIND[_state]
   end
@@ -340,7 +377,7 @@ function M.capture(tick)
   --
   -- Only ever compared with itself here, so the word order does not matter and
   -- the wrap at 0x10000 costs nothing.
-  snapshot.p1.attack_seq = memory.readword(P1 + 0x1B8)
+  snapshot.p1.attack_seq = memory.readword(ATK + 0x1B8)
 
   snapshot.p1.air_normal = snapshot.p1.airborne
     and (_state == 0x06 or _state == 0x0A)
@@ -361,14 +398,14 @@ function M.capture(tick)
   -- which is what starting a different move IS. Measured over three whiffed
   -- dash LPs: +0x18, +0x18, then +0x102e onto the attack's own script.
   snapshot.p1.cel = _cel
-  snapshot.p1.hitfreeze = memory.readbyte(P1 + 0x05C) ~= 0
+  snapshot.p1.hitfreeze = memory.readbyte(ATK + 0x05C) ~= 0
 
-  snapshot.p2.status = memory.readbyte(P2 + 0x005)
+  snapshot.p2.status = memory.readbyte(DEF + 0x005)
   -- $06 as well as $05, because a knockdown leaves $05 before the character can
   -- act - the getting-up animation is $06. "Can act" is $05 and $06 both zero,
   -- which is the test dummy_free uses everywhere else in the tool.
-  snapshot.p2.state = memory.readbyte(P2 + 0x006)
-  snapshot.p2.block_clock = memory.readbyte(P2 + 0x158)
+  snapshot.p2.state = memory.readbyte(DEF + 0x006)
+  snapshot.p2.block_clock = memory.readbyte(DEF + 0x158)
   -- HIT OR GUARD, WHICH $158 COULD NOT SAY.
   --
   -- $140 is the recovery KIND: 0x02 / 0x12 while guarding, 0x00 / 0x04 in
@@ -382,7 +419,7 @@ function M.capture(tick)
   -- still at 0x00, set on the very next tick. Never later than that. This is
   -- why actionRoute holds its Hit/Guard label open for a tick before printing
   -- it: without the grace those 3 would read as Hit.
-  local _recover = memory.readbyte(P2 + 0x140)
+  local _recover = memory.readbyte(DEF + 0x140)
   snapshot.p2.guarding = _recover == 0x02 or _recover == 0x12
   -- THE VALUE, NOT JUST WHETHER IT IS SET.
   --
@@ -390,10 +427,10 @@ function M.capture(tick)
   -- does that EVEN WHEN THE DEFENDER IS ALREADY IN STUN, which the $05 edge
   -- does not (five times in the 2026-09-08 trace). A rise in it is the only
   -- contact signal that survives a combo.
-  snapshot.p2.hitstop = memory.readbyte(P2 + 0x05C)
+  snapshot.p2.hitstop = memory.readbyte(DEF + 0x05C)
   snapshot.p2.hitfreeze = snapshot.p2.hitstop ~= 0
   -- $1A7 is the reliable wake-up tally used by the existing GC trainer.
-  snapshot.p2.knockdown = memory.readbyte(P2 + 0x1A7) ~= 0
+  snapshot.p2.knockdown = memory.readbyte(DEF + 0x1A7) ~= 0
   return snapshot
 end
 

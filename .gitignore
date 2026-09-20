@@ -48,6 +48,12 @@
 # committed at all.
 reversal_logs/
 reversal_logs_archive/
+
+# Probe logs. Measurement records from the investigations, cited by name in
+# the source comments, so they stay on disk where those citations point - but
+# they are 14 MB of traces that nobody installing the tool has a use for, and
+# one of them carried a Windows user name into the published tree (2026-09-20).
+/analysis/*_probe_*.log
 mame_code/
 mame_roms/
 __pycache__/

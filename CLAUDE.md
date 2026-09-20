@@ -80,7 +80,7 @@ gui.text は ASCII のみ。日本語は空白になる (2026-09-16 実測)。�
 とだけ書いて指摘された。
 
 ```bash
-cd C:/fightcaVSAV-Debug/emulator/fbneo; .cadefbneo.exe vsavj savestatessavj_fbneo.fs "$PWD\scriptssav_training_master_script.lua"
+cd C:/fightcaVSAV-Debug/emulator/fbneo; .\fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs "$PWD\scripts\vsav_training_master_script.lua"
 ```
 
 `analysis/run_*_probe.bat` は 9 本あり、**プローブ名以外は中身が同一**で取り違え

@@ -85,6 +85,27 @@ local function on_tick(tick)
   end
   last_match = true
 
+  -- WHICH PLAYER THE READOUT IS MEASURING.
+  --
+  -- The option stores a 1-based index into { "P1", "P2" }, the way every
+  -- list_menu_item does. Anything else - a settings file written before this
+  -- row existed, a value that never was - reads as P1, which is how the readout
+  -- has behaved since it shipped.
+  local side = "P1"
+  if globals.options ~= nil and globals.options.mo_frame_data_side == 2 then
+    side = "P2"
+  end
+  -- A ROUTE CANNOT BE HALF ONE PLAYER AND HALF THE OTHER.
+  --
+  -- Both readers carry state from one tick to the next, so without this the
+  -- ticks measured before the flip would be joined onto the ticks after it and
+  -- printed as one action that nobody performed. The result is cleared too: it
+  -- belongs to the side being left.
+  if vsav.set_side(side) then
+    tickData.reset("side_changed", true)
+    actionRoute.reset("side_changed", true)
+  end
+
   -- ONE CAPTURE, TWO READERS. vsav.capture hands back the same table every
   -- tick, so calling it twice would not give two snapshots - it would give the
   -- same one twice, and cost a second pass over the RAM for nothing.
@@ -122,8 +143,19 @@ function M.registerAfter()
   -- separately and the HUD draws the route in its own colour (user,
   -- 2026-09-10). Empty when there is nothing to say, and the readout goes back
   -- to two rows on its own.
-  globals.set_last_data(tickData.formatResult())
-  globals.set_last_route(actionRoute.formatResult())
+  -- SO A SCREENSHOT SAYS WHICH SIDE IT IS.
+  --
+  -- Nothing is added on P1: that is the default and the rows have read that way
+  -- since they shipped. The marker is its own double-space field, so the HUD
+  -- wraps it like any other.
+  local data = tickData.formatResult()
+  local route = actionRoute.formatResult()
+  if vsav.side() == "P2" then
+    if data ~= "" then data = "P2  " .. data end
+    if route ~= "" then route = "P2  " .. route end
+  end
+  globals.set_last_data(data)
+  globals.set_last_route(route)
 end
 
 return M

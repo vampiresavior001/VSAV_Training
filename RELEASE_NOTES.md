@@ -6,6 +6,34 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.5
+
+### Tick Data and the Action Timeline can measure the dummy
+
+All three rows only ever measured YOUR move. What the dummy did had to be
+guessed from the input display, so **there was no way to read what a recorded
+Action Steps pattern actually came out as.**
+
+`Trainer` -> `Tick Data` now has **`Tick Data Side`** under it. Set it to **P2**
+and
+
+- startup / active / recovery describe the DUMMY's move
+- advantage is from the DUMMY's side
+- the Action Timeline follows what the DUMMY did
+
+The rows say `P2` while it is on, so **a screenshot tells you which side it is.**
+
+```
+P2  Startup 6t  Active 7 / 3t (Anime 7 / 3t)  Recovery 4t
+    Total 27t  Advantage +14t  Hitstun 24t  Hitfreeze 24t
+P2  1t Walk > 2t Dash > 6t Air > 12t LP > 14t MK >
+    19t Hit > 37t LP > 41t Hit > 53t Landing > 62t Crouch
+```
+
+**P1 is the default.** Leave it alone and nothing changes.
+
+---
+
 ## v11.7.4
 
 ### A fresh install came up with the diagnostic overlays on

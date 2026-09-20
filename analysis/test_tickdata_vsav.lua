@@ -334,4 +334,86 @@ end
 ram[P2 + 0x05C] = 0x00
 want("0 なら false", vsav.capture(55).p2.hitfreeze, false)
 
+-- === どちらの側を測るか ===
+--
+-- スナップショットの p1 / p2 は「測る側」と「相手側」であって、プレイヤー 1 と
+-- 2 ではない。tickData.lua と actionRoute.lua はアドレス参照がゼロなので、側を
+-- 持っているのはこのファイルだけ - ここが通れば道筋も測定も両側で動く。
+want("既定は P1", vsav.side(), "P1")
+want("同じ側を指しても倒れない", vsav.set_side("P1"), false)
+
+-- 掃除してから見分けのつく値を入れる。片方が漏れたら分かるようにする。
+local function clear(b)
+	for _, off in ipairs({ 0x005, 0x006, 0x01C, 0x020, 0x038, 0x05C, 0x101,
+	                       0x102, 0x105, 0x106, 0x122, 0x125, 0x140, 0x158,
+	                       0x1A7, 0x1B8, 0x382 }) do
+		ram[b + off] = 0
+	end
+end
+clear(P1) clear(P2)
+
+want("P2 へ倒すと倒れたと答える", vsav.set_side("P2"), true)
+want("倒したあとは P2", vsav.side(), "P2")
+want("二度目は倒れない", vsav.set_side("P2"), false)
+
+-- 測る側は P2 を読む。P1 に別の値を置いても漏れてこない。
+ram[P2 + 0x006] = 0x14
+ram[P1 + 0x006] = 0x0A
+want("測る側は P2 の $06", vsav.capture(200).p1.dash, true)
+
+-- 相手側は P1 を読む。有利不利は「相手が何をされたか」なので、ここが入れ替わら
+-- ないと測定そのものが成り立たない。
+ram[P1 + 0x05C] = 0x0B
+ram[P2 + 0x05C] = 0x00
+do
+	local s = vsav.capture(201)
+	want("相手側は P1 のヒットストップ", s.p2.hitstop, 0x0B)
+	want("測る側は自分のヒットストップを見る", s.p1.hitfreeze, false)
+end
+ram[P1 + 0x05C] = 0
+
+-- 投げフックは A6 が測る側かどうかで決める。登録はモジュール読み込み時の一度
+-- きりなので、側を定数のまま閉じ込めているとここで落ちる。
+ram[P2 + 0x01C] = 0x920000
+ram[0x920000 + 0x0A] = 0
+regs["m68000.a6"] = P1
+hooks[0x029406]()
+want("測っていない側の投げは拾わない", vsav.capture(202).p1.attack_box, false)
+regs["m68000.a6"] = P2
+hooks[0x029406]()
+want("P2 の投げを拾う", vsav.capture(203).p1.attack_box_id, 0x100)
+
+-- 飛び道具の持ち主も倒れる。$30 が測る側なら自分の技。
+spawn(6, P2, 5)
+want("P2 の飛び道具を拾う", vsav.capture(204).p1.attack_box_id, 0x205)
+despawn(6)
+spawn(7, P1, 5)
+want("測っていない側の飛び道具は拾わない", vsav.capture(205).p1.attack_box, false)
+despawn(7)
+
+-- 技の名前は P2 のキャラクターと P2 の登録簿から引く。両側に別の技を置いて
+-- おき、どちらを引いたかで判る形にする。
+seq_special_list = function(cid)
+	if cid ~= 0x08 then return nil end
+	return { { name = "Bricks", label = "Enma Seki" } }
+end
+globals.char_moves = {
+	P1 = { all = { { value = 0x02, name = "Chaos Flare" } } },
+	P2 = { all = { { value = 0x02, name = "Bricks" } } },
+}
+ram[P1 + 0x382] = 0x01
+ram[P2 + 0x382] = 0x08
+ram[P2 + 0x006] = 0x0E
+ram[P2 + 0x106] = 0x02
+want("P2 の登録簿とキャラクターから引く", vsav.capture(206).p1.move_name, "Enma Seki")
+
+-- 戻せること。
+want("P1 へ戻すと倒れる", vsav.set_side("P1"), true)
+want("戻したら P1", vsav.side(), "P1")
+ram[P1 + 0x006] = 0x0E
+ram[P1 + 0x106] = 0x02
+want("戻したら P1 の登録簿", vsav.capture(207).p1.move_name, "Chaos Flare")
+seq_special_list = nil
+globals.char_moves = nil
+
 if fails == 0 then print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

@@ -158,7 +158,7 @@ REVERSAL ACTION PATTERNS: Dark Gallon > 256 > STEP 16 > Action > Super Jump
 
 - ブランチ `action-patterns` / タグ `v11.8.0-wip-action-patterns`
 - 元パッケージ:
-  `C:\Users\masam\デスクトップ\Claude\その2\VSAV_Training_v11.6.0-reviewfix3-ActionPatterns-ap3.zip`
+  `C:\Users\<user>\デスクトップ\Claude\その2\VSAV_Training_v11.6.0-reviewfix3-ActionPatterns-ap3.zip`
   (土台は v11.5.2)
 
 ### 移植版で見つけた先方のバグ 4 件

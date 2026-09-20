@@ -6,6 +6,33 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.5
+
+### Tick Data と Action Timeline を、ダミー側でも測れるようにしました
+
+3 行とも、これまでは **1P (自分) の技**だけを測っていました。ダミーが何をしたのか
+は入力表示から推測するしかなく、**記録した Action Steps が実際に何になったのかを
+読む手段がありません**でした。
+
+`Trainer` -> `Tick Data` の下に **`Tick Data Side`** が付きます。**P2** にすると、
+
+- 発生 / 持続 / 硬直が **ダミーの技**のもの
+- 有利不利が **ダミーから見た値**
+- Action Timeline が **ダミーの行動**を追う
+
+になります。行の先頭に `P2` と出るので、**画面を見ればどちら側か分かります。**
+
+```
+P2  Startup 6t  Active 7 / 3t (Anime 7 / 3t)  Recovery 4t
+    Total 27t  Advantage +14t  Hitstun 24t  Hitfreeze 24t
+P2  1t Walk > 2t Dash > 6t Air > 12t LP > 14t MK >
+    19t Hit > 37t LP > 41t Hit > 53t Landing > 62t Crouch
+```
+
+**既定は P1 です。** 触らなければ今までと同じ表示です。
+
+---
+
 ## v11.7.4
 
 ### 新規インストールで診断表示が出ていたのを直しました

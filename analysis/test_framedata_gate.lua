@@ -28,16 +28,27 @@ end
 -- subscribe, so the callback is captured here and driven by hand.
 local captured
 local resets = {}
+local fd_result = ""
 package.loaded["./scripts/tickData"] = {
 	reset = function(reason) resets[#resets + 1] = reason end,
 	update = function() end,
-	formatResult = function() return "" end,
+	formatResult = function() return fd_result end,
 	isMeasuring = function() return false end,
 	getAbortReason = function() return nil end,
 }
-package.loaded["./scripts/tickDataVsav"] = {
+-- 測る側は本物と同じく「倒れたら true」。framedata はその true を見て読み手を
+-- 白紙に戻す。
+local side_now = "P1"
+local vsav = {
 	capture = function(tick) return { tick = tick, p1 = {}, p2 = {} } end,
+	set_side = function(s)
+		if s == side_now then return false end
+		side_now = s
+		return true
+	end,
+	side = function() return side_now end,
 }
+package.loaded["./scripts/tickDataVsav"] = vsav
 
 memory = { readbyte = function() return 0 end, readdword = function() return 0 end }
 globals = {
@@ -92,5 +103,44 @@ globals.game_state.match_begun = true
 tick(4)
 globals.game_state.match_begun = false
 want("未公開なら match_begun を見る", tick(5), "match_not_running")
+
+-- 測る側を倒したら読み手を白紙に戻すこと。倒す前のティックと後のティックが
+-- 1 本の道筋として繋がると、誰もやっていない行動が 1 行として出る。
+globals.game_state.match_begun = true
+tick(12)
+want("既定は P1", vsav.side(), "P1")
+want("指定が無ければ何も起きない", tick(13), "")
+globals.options.mo_frame_data_side = 2
+want("側が倒れたら作り直す", tick(14), "side_changed")
+want("倒れたあとは P2", vsav.side(), "P2")
+want("同じままなら作り直さない", tick(15), "")
+globals.options.mo_frame_data_side = 1
+want("戻したときも作り直す", tick(16), "side_changed")
+want("戻ったら P1", vsav.side(), "P1")
+-- 一覧の外の値は P1 として読む。この行が無かった頃の設定ファイルがそれ。
+globals.options.mo_frame_data_side = 0
+want("一覧の外は P1 のまま", tick(17), "")
+globals.options.mo_frame_data_side = nil
+want("値が無くても P1 のまま", tick(18), "")
+
+-- 画面に出る行は、どちらを測っているかを自分で名乗ること。スクリーンショット
+-- だけで判断できるようにするため。P1 では今までどおり何も足さない。
+local shown_data, shown_route = nil, nil
+globals.set_last_data = function(v) shown_data = v end
+globals.set_last_route = function(v) shown_route = v end
+fd_result = "Startup 5t"
+globals.options.mo_frame_data_side = 1
+tick(19)
+fd.registerAfter()
+want("P1 では何も足さない", shown_data, "Startup 5t")
+globals.options.mo_frame_data_side = 2
+tick(20)
+fd.registerAfter()
+want("P2 では側を名乗る", shown_data, "P2  Startup 5t")
+-- 何も測れていない行に印だけ出しても読めない。
+fd_result = ""
+fd.registerAfter()
+want("空の行には印も足さない", shown_data, "")
+want("道筋の行も空のまま", shown_route, "")
 
 if fails == 0 then print("全て通った") else print(fails .. " 件 NG") os.exit(1) end
