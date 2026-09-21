@@ -183,4 +183,26 @@ eq("ループが生きている判定より後ろ", (at_on or 0) < (at_pick or 0
 eq("patterns_mode の中にある",
    body:find("if patterns_mode() then M.pick_pattern(loop_which) end", 1, true) ~= nil, true)
 
+print("")
+print("[11] キャラ選択に戻るとループは止まる - refill も走行中の周も")
+-- match_running はマスタースクリプトが公開する「本当に試合中」の定義。
+-- それが false を返すあいだは、refill も pending の残り周も出してはいけない。
+do
+  local sgate = body:find("if not match_live() then return end", 1, true)
+  eq("refill の先頭で試合中を見る", sgate ~= nil, true)
+  local after_on = body:find("if not M.loop_on() then return end", 1, true)
+  eq("loop_on の判定より後ろにある", (after_on or 0) < (sgate or 0), true)
+  -- service 側: menu の後片付けと同じ形で、走行中の周ごと落ちる。
+  local at_menu = rsrc:find("if loop_blocked() then", 1, true)
+  local at_live = rsrc:find("if not match_live() then", at_menu or 1, true)
+  eq("service も試合外で落とす", at_live ~= nil, true)
+  eq("menu の後片付けの後に置いてある",
+     (at_menu or 0) < (at_live or 0), true)
+  -- 定義: match_running が無い環境では「生きている」扱い (テスト互換)。
+  local def_s = rsrc:find("local function match_live()", 1, true)
+  local def_e = rsrc:find("\nend", def_s or 1, true)
+  local dbody = rsrc:sub(def_s or 1, (def_e or 1) + 3)
+  eq("無ければ生きている扱い", dbody:find("if f == nil then return true end", 1, true) ~= nil, true)
+end
+
 if fails == 0 then print("") print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

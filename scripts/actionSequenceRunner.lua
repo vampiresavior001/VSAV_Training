@@ -1938,6 +1938,25 @@ local function loop_blocked()
 	return globals ~= nil and globals.show_menu == true
 end
 
+-- THE MATCH IS THE OTHER WALL (user, 2026-09-21). The arm fires on an
+-- opportunity, which only exists in a fight - but the LOOP refills on the
+-- first tick the queue is empty, and nothing downstream knows where the
+-- player is. Back on the character select (0xFF8009 leaves 4, the dummy
+-- object lingers) the refill kept handing laps to the walker and the
+-- injections kept reaching 0xFF8B94: the pattern ran against an empty scene.
+-- Reported as "back on the character select, the Action Pattern loop is
+-- still playing".
+--
+-- Asked of globals.match_running - the one definition the master script
+-- publishes (fight really running, not the entrance, not a transformation).
+-- nil means whoever is driving the tests did not publish it, so the answer
+-- stays yes and nothing changes for them.
+local function match_live()
+	local f = globals ~= nil and globals.match_running or nil
+	if f == nil then return true end
+	return f() == true
+end
+
 -- Puts the whole list back, with step one carrying the loop's wait instead of
 -- the arm's. The copy is one level deep and only step one needs it - the other
 -- entries are handed on untouched, and loop_sched must survive intact because
@@ -1945,6 +1964,7 @@ end
 local function loop_refill()
 	if loop_sched == nil or #loop_sched == 0 then return end
 	if not M.loop_on() then return end
+	if not match_live() then return end
 	-- EDITS TAKE EFFECT ON THE NEXT LAP.
 	--
 	-- loop_sched is what M.arm compiled, and replaying it meant the loop kept
@@ -2081,6 +2101,29 @@ function M.service(defender)
 		-- The same pair the savestate clean-up in the master script does, for
 		-- the same reason: the schedule lives on the Lua side and clearing one
 		-- half does not reach the other.
+		defender.pending_input_sequence = nil
+		loop_sched = nil
+		loop_which = nil
+		anchor = nil
+		held_after = nil
+		return
+	end
+	-- AND THE SELECT SCREEN DROPS THE LOOP WITH IT (user, 2026-09-21).
+	--
+	-- loop_refill now refuses to refill out of a match, which alone would
+	-- leave a lap already in pending to finish walking on the select screen -
+	-- the same half-cleared state the menu path cleans below. Same treatment:
+	-- the whole pass goes, and the next arm starts it again. The queue at that
+	-- point is one lap of the pattern, so counting it as dropped steps keeps
+	-- the readout honest.
+	--
+	-- match_running missing (the offline tests, any other launcher) reads as
+	-- live, same as it does in loop_refill.
+	if not match_live() then
+		if pending ~= nil then
+			M.steps_dropped = M.steps_dropped + #pending
+			pending = nil
+		end
 		defender.pending_input_sequence = nil
 		loop_sched = nil
 		loop_which = nil
