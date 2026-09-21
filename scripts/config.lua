@@ -144,6 +144,12 @@ local default_training_settings = {
   -- scripts/reversal_logs, which is what the timing work was built on and
   -- is pure cost for anyone just training. Toggle it in the Analysis tab.
   knockdown_logger_enable = false,
+  -- The folder of the last ACCEPTED Export/Import dialog, remembered across
+  -- sessions. One for the whole tool, not per character. Empty means no
+  -- memory yet and the dialog opens where it always did; a folder that has
+  -- since been deleted falls back the same way, inside the dialog itself.
+  -- Written by the Action Pattern Library's file transfer, never shipped.
+  pattern_dir = "",
 }
 
 local configModule = {

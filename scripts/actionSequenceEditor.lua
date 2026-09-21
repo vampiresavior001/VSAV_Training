@@ -1493,24 +1493,78 @@ local function file_who()
 	return table.concat(out)
 end
 
-function M.transfer_file(mode, who)
-	if io.popen == nil then return "ERROR: no io.popen" end
+-- THE SUGGESTED FILE NAME FOR ONE PATTERN: the character AND the pattern's
+-- own name. A folder of one-pattern files all called the same thing is the
+-- same dead end a folder of libraries called the same thing is. The pattern
+-- name carries whatever the player typed, so it is narrowed to the character
+-- set file_who() allows - the value is pasted into a command line and then
+-- into a Windows file name.
+local function file_name_of(s)
+	local out = {}
+	for _, ch in ipairs({ string.byte(tostring(s or ""), 1, 64) }) do
+		if (ch >= 0x30 and ch <= 0x39) or (ch >= 0x41 and ch <= 0x5A)
+		   or (ch >= 0x61 and ch <= 0x7A) or ch == 0x20 or ch == 0x2D then
+			out[#out + 1] = string.char(ch)
+		end
+	end
+	local t = table.concat(out)
+	t = t:gsub("^%s+", ""):gsub("%s+$", "")
+	if t == "" then return "vsav_action_pattern(" .. file_who() .. ").json" end
+	return "vsav_action_pattern(" .. file_who() .. "-" .. t .. ").json"
+end
+
+-- THE FOLDER THE LAST ACCEPTED DIALOG ENDED IN (user, 2026-09-21). One for
+-- the whole tool: a file handed to someone and a file received live wherever
+-- the player keeps them, not per character. Empty means "no memory yet" and
+-- the dialog opens where it always did. The value is written back through the
+-- ordinary settings save, which the distribution never includes.
+local function remember_dir()
+	local s = training_settings
+	if type(s) ~= "table" then return "" end
+	if type(s.pattern_dir) ~= "string" then return "" end
+	return s.pattern_dir
+end
+
+-- Only an OK carries a folder. A cancel says "I looked, then changed my
+-- mind" - the Windows dialogs themselves do not move for one of those, and
+-- neither does this.
+local function store_dir(dir)
+	if type(dir) ~= "string" or dir == "" then return end
+	if training_settings == nil then return end
+	if training_settings.pattern_dir == dir then return end
+	training_settings.pattern_dir = dir
+	mark_training_settings_dirty()
+end
+
+-- THE REMEMBER PARAMETER IS FOR THE TESTS, which stub nothing here but assert
+-- on what was handed over. Every caller in this file passes nothing, and the
+-- settings value is what runs.
+function M.transfer_file(mode, who, suggest, remember)
+	if io.popen == nil then return "ERROR: no io.popen", nil end
 	local ps1 = find_pattern_ps1()
-	if ps1 == nil then return "ERROR: pattern_file.ps1 not found" end
+	if ps1 == nil then return "ERROR: pattern_file.ps1 not found", nil end
 	-- 2>&1, or PowerShell's errors go to stderr and Lua sees only the banner.
 	local cmd = 'powershell -NoProfile -STA -ExecutionPolicy Bypass -File "'
 		.. ps1 .. '" ' .. mode .. ' "' .. PATTERN_STAGE .. '" "'
-		.. tostring(who or "") .. '" 2>&1'
+		.. tostring(who or "") .. '" "' .. tostring(suggest or "") .. '" "'
+		.. tostring(remember or remember_dir()):gsub('"', "'") .. '" 2>&1'
 	local f = io.popen(cmd, "r")
-	if f == nil then return "ERROR: io.popen returned nil" end
+	if f == nil then return "ERROR: io.popen returned nil", nil end
 	local ok, out = pcall(function() return f:read("*a") end)
 	f:close()
-	if not ok or type(out) ~= "string" then return "ERROR: nothing came back" end
+	if not ok or type(out) ~= "string" then
+		return "ERROR: nothing came back", nil
+	end
 	local body = out:match("VSAV_PATTERN_BEGIN(.-)VSAV_PATTERN_END")
-	if body == nil then return "ERROR: the script did not run" end
-	local status = body:match("^%s*([^\r\n]*)")
-	if status == nil or status == "" then return "ERROR: no status" end
-	return status
+	if body == nil then return "ERROR: the script did not run", nil end
+	-- THE FOURTH LINE INSIDE THE FENCE IS THE FOLDER OF THE CHOSEN FILE.
+	-- Empty for CANCELLED and ERROR. The status stays the first line and the
+	-- byte count the second, exactly as before this existed.
+	local lines = {}
+	for line in body:gmatch("[^\r\n]+") do lines[#lines + 1] = line end
+	local status = (lines[1] or ""):match("^%s*(.-)%s*$")
+	if status == nil or status == "" then return "ERROR: no status", nil end
+	return status, lines[3]
 end
 
 local function export_now()
@@ -1527,7 +1581,32 @@ local function export_now()
 	if not write_object_to_json_file(out, PATTERN_STAGE) then
 		return "ERROR: could not write the staging file"
 	end
-	local st = M.transfer_file("save", file_who())
+	local st, dir = M.transfer_file("save", file_who())
+	if st == "OK" then store_dir(dir) end
+	os.remove(PATTERN_STAGE)
+	return st
+end
+
+-- ONE PATTERN, NOT THE LIBRARY (user, 2026-09-21). A single shared pattern is
+-- the thing people hand each other; asking for the whole library and deleting
+-- what arrives is not. The file is the same schema with a single item, so an
+-- import that already knows how to add items takes it unchanged - and arrives
+-- unticked there, like everything does.
+local function export_one_now(i)
+	if write_object_to_json_file == nil then return "ERROR: no json writer" end
+	local it = pattern_items()[i]
+	if it == nil then return "ERROR: that pattern is gone" end
+	local out = { version = 1, trigger = trigger,
+	              character = cid_num(), items = {} }
+	-- The same field-by-field copy as the whole-library export, so nothing
+	-- the editor happens to be keeping on an item rides along into a file
+	-- other people will read.
+	out.items[1] = { name = it.name, use = it.use, steps = it.steps }
+	if not write_object_to_json_file(out, PATTERN_STAGE) then
+		return "ERROR: could not write the staging file"
+	end
+	local st, dir = M.transfer_file("save", file_who(), file_name_of(it.name))
+	if st == "OK" then store_dir(dir) end
 	os.remove(PATTERN_STAGE)
 	return st
 end
@@ -1540,10 +1619,16 @@ end
 local function import_now()
 	if read_object_from_json_file == nil then return "ERROR: no json reader" end
 	os.remove(PATTERN_STAGE)
-	local st = M.transfer_file("open", file_who())
+	local st, dir = M.transfer_file("open", file_who())
 	if st ~= "OK" then return st end
-	local got = read_object_from_json_file(PATTERN_STAGE)
+	-- THE READ CARRIES ITS REASON NOW (utilities.lua). A missing stage and a
+	-- broken file are no longer the same silent nil, and the message below
+	-- names the file so a wrong pick is visible on the spot.
+	local got, reason = read_object_from_json_file(PATTERN_STAGE)
 	os.remove(PATTERN_STAGE)
+	if got == nil then
+		return "ERROR: could not read the chosen file (" .. tostring(reason) .. ")"
+	end
 	if type(got) ~= "table" or type(got.items) ~= "table" then
 		return "ERROR: that is not a pattern file"
 	end
@@ -1581,6 +1666,7 @@ local function import_now()
 	end
 	if added == 0 then return "ERROR: nothing usable in that file" end
 	mark_training_settings_dirty()
+	store_dir(dir)
 	if skipped > 0 then
 		return "OK  " .. added .. " added, " .. skipped .. " skipped"
 	end
@@ -1599,7 +1685,8 @@ local function transfer_items(s)
 			{ plain = true, label = "and what arrives starts unticked." },
 		}
 	end
-	local verb = (s.purpose == "export") and "save" or "open"
+	local verb = (s.purpose == "import" or s.purpose == "import_file")
+		and "open" or "save"
 	return {
 		{ plain = true, label = "A FILE WINDOW HAS OPENED." },
 		{ plain = true, label = "" },
@@ -1652,6 +1739,10 @@ local function pattern_item_items(i)
 		{ kind = "copy",   label = "Copy" },
 		{ kind = "move",   child = true, label = "Move" },
 		{ kind = "delete", child = true, label = "Delete" },
+		-- Set apart, like its siblings on the list: this leaves the tool and
+		-- takes time.
+		{ kind = "export_one", child = true, label = "Export this Pattern",
+			gap_before = true },
 		{ kind = "back",   label = "Back" },
 	}
 end
@@ -1924,6 +2015,12 @@ local function enter()
 		elseif item.kind == "delete" then
 			push({ type = "pattern_delete", index = s.index, cursor = 1,
 				crumb = "Delete" })
+		elseif item.kind == "export_one" then
+			-- The index rides the state, the same way rename/move/delete
+			-- carry it: the export happens when the dialog has been closed,
+			-- and asks "which row" not "which table".
+			push({ type = "transfer", cursor = 1, crumb = "Export",
+				purpose = "export_one", index = s.index })
 		elseif item.kind == "back" then
 			back()
 		end
@@ -2307,7 +2404,13 @@ function M.registerBefore()
 	local xfer = top()
 	if xfer ~= nil and xfer.type == "transfer" and xfer.result == nil then
 		if not xfer.shown then return end
-		xfer.result = (xfer.purpose == "export") and export_now() or import_now()
+		if xfer.purpose == "export" then
+			xfer.result = export_now()
+		elseif xfer.purpose == "export_one" then
+			xfer.result = export_one_now(xfer.index)
+		else
+			xfer.result = import_now()
+		end
 		xfer.shown = false
 		return
 	end

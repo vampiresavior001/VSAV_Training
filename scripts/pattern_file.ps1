@@ -25,6 +25,7 @@
 #   VSAV_PATTERN_BEGIN
 #   OK | CANCELLED | ERROR: <message>
 #   <bytes copied>
+#   <the folder of the chosen file, empty for CANCELLED / ERROR>
 #   VSAV_PATTERN_END
 
 param(
@@ -33,12 +34,24 @@ param(
   # The character the library belongs to, so the suggested file name says whose
   # patterns these are. A library is per character and a folder full of files
   # all called the same thing is a folder nobody can use.
-  [string]$Who = ''
+  [string]$Who = '',
+  # The whole suggested file name, ready to use. The single-pattern export
+  # passes one that carries the pattern's own name, because a folder of
+  # one-pattern files all called the same thing is the same dead end. Empty
+  # means "build it from $Who as before".
+  [string]$Suggest = '',
+  # Where the dialog opens. Lua saves the folder the player last accepted a
+  # file in and hands it back here; a fresh process forgets everything on its
+  # own (RestoreDirectory would remember inside this process only, and the
+  # process lives for exactly one dialog). Invalid or empty falls back to the
+  # process location, which is what the tool did before this existed.
+  [string]$RememberDir = ''
 )
 
 $ErrorActionPreference = 'Stop'
 $status = 'ERROR: never ran'
 $size = 0
+$dir = ''
 
 try {
   Add-Type -AssemblyName System.Windows.Forms
@@ -58,7 +71,9 @@ try {
 
   if ($Mode -eq 'save') {
     $d = New-Object System.Windows.Forms.SaveFileDialog
-    if ($Who -ne '') {
+    if ($Suggest -ne '') {
+      $d.FileName = $Suggest
+    } elseif ($Who -ne '') {
       $d.FileName = 'vsav_action_patterns(' + $Who + ').json'
     } else {
       $d.FileName = 'vsav_action_patterns.json'
@@ -71,7 +86,14 @@ try {
 
   $d.Title = 'VSAV Training - Action Patterns - ' + $Mode
   $d.Filter = 'Action Patterns (*.json)|*.json|All files (*.*)|*.*'
-  $d.InitialDirectory = (Get-Location).Path
+  # Last folder the player accepted, not the process location. A directory
+  # that has since been deleted makes ShowDialog fall back on its own, so no
+  # existence test is needed here.
+  if ($RememberDir -ne '') {
+    $d.InitialDirectory = $RememberDir
+  } else {
+    $d.InitialDirectory = (Get-Location).Path
+  }
 
   $result = $d.ShowDialog($owner)
   $owner.Close()
@@ -91,6 +113,7 @@ try {
       $size = (Get-Item -LiteralPath $Payload).Length
     }
     $status = 'OK'
+    $dir = Split-Path -Parent $d.FileName
   }
 } catch {
   $status = 'ERROR: ' + $_.Exception.Message
@@ -99,4 +122,5 @@ try {
 Write-Output 'VSAV_PATTERN_BEGIN'
 Write-Output $status
 Write-Output $size
+Write-Output $dir
 Write-Output 'VSAV_PATTERN_END'

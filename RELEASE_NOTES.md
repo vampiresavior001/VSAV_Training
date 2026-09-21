@@ -6,6 +6,44 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.7
+
+### Export a single Action Pattern
+
+One pattern can now be written to a file on its own, without the whole
+library. The entry point is **`Export this Pattern`** on the item screen
+(the one with Edit).
+
+- The save dialog suggests `vsav_action_pattern(<character>-<pattern>).json`
+  (characters a file name cannot carry are dropped automatically)
+- The file uses the same schema as a whole-library export, so **Import from
+  a File takes it unchanged** (additive, and what arrives starts unticked)
+- `Export to a File` on the list — the whole library — is unchanged
+
+### Export/Import remember the last folder
+
+The file window now opens in **the folder last accepted with OK**.
+
+- One memory for the whole tool. A cancel does not move it (the Windows
+  standard: looking is not choosing)
+- A folder that has since been deleted falls back to the default, inside the
+  dialog itself
+- The location is saved in `training_settings.json` (never shipped)
+
+### A failed import says why
+
+When a file could not be read, the message used to be only "that is not a
+pattern file", with no way to tell **an unreadable file from a broken one**.
+Fixed:
+
+```
+ERROR: could not read the chosen file (<reason>)
+```
+
+A wrong pick is visible on the spot.
+
+---
+
 ## v11.7.6
 
 ### Action Pattern Library — save Action Steps under a name, pick and run them

@@ -161,18 +161,26 @@ end
 function read_object_from_json_file(_file_path)
 	local _f = io.open(_file_path, "r")
 	if _f == nil then
-	  return nil
+	  return nil, "the file could not be opened"
 	end
-  
+
 	local _object
 	local _pos, _err
+	-- THE ERROR IS IN _err, NOT err. This used to test `if (err)` - a global
+	-- that is always nil - so a missing file AND a broken file both came back
+	-- as silent nil, and the caller could only say "that is not a pattern
+	-- file" with no way to tell which. The second return value carries the
+	-- reason; every existing caller reads only the first, so this stays
+	-- compatible with all of them.
 	_object, _pos, _err = json.decode(_f:read("*all"))
 	_f:close()
-  
-	if (err) then
-	  print(string.format("Failed to find json file \"%s\" : %s", _file_path, _err))
+
+	if _object == nil then
+	  print(string.format("Failed to read json file \"%s\" : %s",
+		_file_path, tostring(_err or "no value")))
+	  return nil, tostring(_err or "no value")
 	end
-  
+
 	return _object
   end
   

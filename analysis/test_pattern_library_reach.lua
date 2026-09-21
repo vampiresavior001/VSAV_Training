@@ -108,7 +108,8 @@ end
 
 print("")
 print("[2] 項目 - 下と LP だけで、どの行にも入れる")
-for _, row in ipairs({ "Edit", "Use in Random", "Rename", "Copy", "Move", "Delete", "Back" }) do
+for _, row in ipairs({ "Edit", "Use in Random", "Rename", "Copy", "Move",
+                       "Delete", "Export this Pattern", "Back" }) do
   E.open_patterns("reversal")
   tap("LP")
   eq("届く: " .. row, goto_row(row), true)
@@ -302,10 +303,12 @@ print("[14] Export - 画面が先、ファイル窓はその次のフレーム")
 local jstore, jpath = nil, nil
 function write_object_to_json_file(obj, path) jstore, jpath = obj, path return true end
 function read_object_from_json_file(path) return jstore end
-local xfer_calls, xfer_mode, xfer_who, xfer_answer = 0, nil, nil, "OK"
-E.transfer_file = function(mode, who)
+local xfer_calls, xfer_mode, xfer_who, xfer_suggest, xfer_answer = 0, nil, nil, nil, "OK"
+local xfer_dir, xfer_remember = nil, nil
+E.transfer_file = function(mode, who, suggest, remember)
   xfer_calls = xfer_calls + 1 xfer_mode = mode xfer_who = who
-  return xfer_answer
+  xfer_suggest = suggest xfer_remember = remember
+  return xfer_answer, xfer_dir
 end
 
 open({ { name="one", use=true,  steps=one_step() },
@@ -404,6 +407,123 @@ local _, rows17b = draw()
 eq("形が違えば断る",
    table.concat(rows17b, " "):find("not a pattern file", 1, true) ~= nil, true)
 eq("何も増えていない", #items(), 0)
+tap("LP")
+
+print("")
+print("[18] Export this Pattern - 1 本だけ、提案名に名前が乗る")
+-- 一覧の Export はライブラリ全部。項目の画面のこれは 1 本だけ。
+open({ { name="one", use=true,  steps=one_step() },
+       { name="two", use=false, steps=one_step() } })
+tap("LP")
+xfer_calls = 0
+goto_row("Export this Pattern") tap("LP")
+eq("押しただけでは開かない", xfer_calls, 0)
+local _, rows18 = draw()
+eq("知らせは保存の言葉",
+   table.concat(rows18, " "):find("save the pattern file", 1, true) ~= nil, true)
+E.registerBefore()
+eq("開いた", xfer_calls, 1)
+eq("保存で開いた", xfer_mode, "save")
+eq("提案名はキャラとパターン", xfer_suggest,
+   "vsav_action_pattern(Morrigan-one).json")
+eq("1 本だけ入っている", #jstore.items, 1)
+eq("その名前", jstore.items[1].name, "one")
+eq("印も一緒に", jstore.items[1].use, true)
+eq("ステップも一緒に", jstore.items[1].steps[1].button, "LP")
+eq("キャラも入っている", jstore.character, 0x05)
+local _, rows18b = draw()
+eq("結果が出ている", table.concat(rows18b, " "):find("OK", 1, true) ~= nil, true)
+tap("LP")
+eq("項目の画面へ戻る",
+   title_of(), "REVERSAL ACTION PATTERNS: Morrigan  >  01  one")
+
+print("")
+print("[19] Export this Pattern - 名前は提案にだけ乗る。使えない文字は落ちる")
+xfer_answer = "CANCELLED"
+open({ { name="vs Kai (DP)!", use=true, steps=one_step() } })
+tap("LP")
+xfer_calls = 0
+goto_row("Export this Pattern") tap("LP") draw() E.registerBefore()
+eq("使えない文字が落ちた",
+   xfer_suggest, "vsav_action_pattern(Morrigan-vs Kai DP).json")
+-- クラムは生の名前のまま。提案名に落とされた文字は画面の名前ではない。
+eq("画面の名前はそのまま",
+   title_of():find("vs Kai (DP)!", 1, true) ~= nil, true)
+local _, rows19 = draw()
+eq("キャンセルと出る",
+   table.concat(rows19, " "):find("CANCELLED", 1, true) ~= nil, true)
+eq("1 本とも増えていない", #items(), 1)
+tap("LP")
+eq("項目の画面へ戻る",
+   title_of(), "REVERSAL ACTION PATTERNS: Morrigan  >  01  vs Kai (DP)!")
+
+print("")
+print("[20] Export this Pattern - 読めなかった理由が出る")
+-- read_object が理由を返すようになった。届かない理由がそのまま画面に出る。
+local saved_tf = E.transfer_file
+E.transfer_file = function() return "OK", nil end
+local reads_answer = nil
+function read_object_from_json_file(path) return unpack(reads_answer) end
+open({ { name="one", use=true, steps=one_step() } })
+-- まず形が違う表: 「not a pattern file」のまま。
+reads_answer = { { hello = "world" } }
+goto_row("Import from a File") tap("LP") draw() E.registerBefore()
+local _, rows20 = draw()
+eq("形が違えば断る",
+   table.concat(rows20, " "):find("not a pattern file", 1, true) ~= nil, true)
+tap("LP")
+-- 次に読みが nil と理由: 理由が画面に出る。
+reads_answer = { nil, "the file could not be opened" }
+goto_row("Import from a File") tap("LP") draw() E.registerBefore()
+local _, rows20b = draw()
+eq("読めない理由が出る",
+   table.concat(rows20b, " "):find("the file could not be opened", 1, true) ~= nil, true)
+eq("1 本とも増えていない", #items(), 1)
+tap("LP")
+-- 本物に戻す。
+E.transfer_file = saved_tf
+function read_object_from_json_file(path) return jstore end
+
+print("")
+print("[21] 前回のフォルダを覚える - OK だけが書き、CANCELLED は書かない")
+-- remember は transfer_file の中で settings から読まれる (呼び出し側は渡さ
+-- ない)。ここでは remember_dir() の読み先そのものを差し替えて、渡る値と
+-- settings に残った値を両方見る。
+local remember_dir_value = nil
+function remember_dir() return remember_dir_value or "" end
+open({ { name="one", use=true, steps=one_step() } })
+xfer_calls = 0
+xfer_answer = "OK"
+xfer_dir = [[C:\Users\me\Downloads]]
+goto_row("Export to a File") tap("LP") draw() E.registerBefore()
+eq("最初は記憶が空", remember_dir_value, nil)
+eq("OK でフォルダが載る", training_settings.pattern_dir,
+   [[C:\Users\me\Downloads]])
+-- 次の窓は覚えたフォルダから開く。remember_dir の値は editor の本物が
+-- settings から読むので、ここは settings を見る。
+open({ { name="one", use=true, steps=one_step() } })
+xfer_calls = 0
+goto_row("Export to a File") tap("LP") draw() E.registerBefore()
+eq("次の窓の初期位置は settings のもの", training_settings.pattern_dir,
+   [[C:\Users\me\Downloads]])
+tap("LP")
+-- キャンセルは書かない。
+xfer_answer = "CANCELLED"
+xfer_dir = [[C:\Users\me\Desktop]]
+open({ { name="one", use=true, steps=one_step() } })
+goto_row("Export to a File") tap("LP") draw() E.registerBefore()
+eq("CANCELLED では変わらない", training_settings.pattern_dir,
+   [[C:\Users\me\Downloads]])
+tap("LP")
+-- import の OK も書く。
+xfer_answer = "OK"
+open({ { name="mine", use=true, steps=one_step() } })
+jstore = { version=1, items={
+  { name="theirs", use=true, steps=one_step() } } }
+goto_row("Import from a File") tap("LP") draw() E.registerBefore()
+eq("Import の OK でも載る", training_settings.pattern_dir,
+   [[C:\Users\me\Desktop]])
+eq("2 本になった", #items(), 2)
 tap("LP")
 
 if fails == 0 then print("") print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

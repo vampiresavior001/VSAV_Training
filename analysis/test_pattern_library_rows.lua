@@ -154,6 +154,7 @@ rows_eq("項目の行", {
   "   Copy",
   "   Move  >",
   "   Delete  >",
+  "   Export this Pattern  >",
   "   Back",
 })
 
