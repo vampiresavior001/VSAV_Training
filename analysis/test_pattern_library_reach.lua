@@ -92,7 +92,9 @@ end
 -- character's library. lib_key may be defined later; fall back to Morrigan.
 local function items()
   local key = (type(lib_key) == "function") and lib_key() or "5"
-  return training_settings.action_patterns.reversal[key].items
+  local per = training_settings.action_patterns.reversal[key]
+  if per == nil then return {} end
+  return per.items
 end
 local function one_step() return { { action="atk", lever="none", button="LP", wait=-1 } } end
 local function open(list)
@@ -532,28 +534,29 @@ eq("2 本になった", #items(), 2)
 tap("LP")
 
 print("")
-print("[22] Import - キャラ違いは名前を出して警告する。届くのは届く")
+print("[22] Import - キャラ違いは拒む。理由に両方の名前を出す")
 -- cid_num はエディタ内のローカルで RAM を読む。ハーネスの ram を書き換えて
--- 「別キャラのライブラリを開いた」を作る。鍵は tostring(cid) = '16' (0x10)。
-function lib_key() return tostring(ram[0xFF8B82]) end
-open({ { name="mine", use=true, steps=one_step() } })
+-- 「別キャラのライブラリを開いた」を作る。エディタは cid 変化で閉じるので、
+-- 書き換えたあとに開き直す。
 jstore = { version=1, character=0x05, items={
   { name="from Sasquatch", use=true, steps=one_step() } } }
 ram[0xFF8B82] = 0x0A
--- ライブラリはキャラ別。開く側のキャラも 0x0A に揃える。
 training_settings.action_patterns.reversal =
   { [tostring(0x0A)] = { version=1, items={ { name="mine", use=true, steps=one_step() } } } }
 E.open_patterns("reversal")
 goto_row("Import from a File") tap("LP") draw() E.registerBefore()
-eq("2 本になった", #items(), 2)
-eq("足された", items()[2].name, "from Sasquatch")
--- 届いたものは未チェックのまま。
-eq("印は付かない", items()[2].use, false)
+-- 拒まれたので何も増えていない。items() は拒否後の鍵を見るが、
+-- ここでは数だけを見る (1 本のはずが 0 に見えたら鍵の問題)。
+eq("1 本のまま", #(training_settings.action_patterns.reversal[tostring(0x0A)].items), 1)
 local _, rows22 = draw()
-eq("結果に出自が出る",
-   table.concat(rows22, " "):find("from Morrigan", 1, true) ~= nil, true)
+eq("ファイルのキャラが出る",
+   table.concat(rows22, " "):find("for Morrigan", 1, true) ~= nil, true)
+eq("開いた側のキャラも出る",
+   table.concat(rows22, " "):find("not Sasquatch", 1, true) ~= nil, true)
+eq("何も足していないと言う",
+   table.concat(rows22, " "):find("Nothing was added", 1, true) ~= nil, true)
 tap("LP")
--- 一致していれば何も出ない。
+-- 一致していれば入る。
 jstore = { version=1, character=0x05, items={
   { name="same char", use=true, steps=one_step() } } }
 ram[0xFF8B82] = 0x05
@@ -563,17 +566,16 @@ E.open_patterns("reversal")
 goto_row("Import from a File") tap("LP") draw() E.registerBefore()
 eq("2 本になった", #items(), 2)
 local _, rows22b = draw()
-eq("一致では出自は出ない",
+eq("一致では added と出る",
    table.concat(rows22b, " "):find("added", 1, true) ~= nil, true)
-eq("キャラ名は出ない", table.concat(rows22b, " "):find("Morrigan", 1, true), nil)
 tap("LP")
--- character フィールドが無い古い手作りファイルは、警告も出さず通す。
+-- character フィールドが無い古い手作りファイルは、そのまま通す。
 open({})
 jstore = { items={ { name="fieldless", use=true, steps=one_step() } } }
 goto_row("Import from a File") tap("LP") draw() E.registerBefore()
 eq("1 本になった", #items(), 1)
 local _, rows22c = draw()
-eq("不明でも出自は出ない",
+eq("不明でも added と出る",
    table.concat(rows22c, " "):find("added", 1, true) ~= nil, true)
 tap("LP")
 -- 本物に戻す。

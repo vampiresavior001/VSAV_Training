@@ -1632,23 +1632,23 @@ local function import_now()
 	if type(got) ~= "table" or type(got.items) ~= "table" then
 		return "ERROR: that is not a pattern file"
 	end
-	-- THE FILE SAYS WHOSE PATTERNS THESE ARE. A pattern for one character
-	-- cannot resolve another character's motions (the library is per
-	-- character for exactly that reason), so a crossed import is warned
-	-- about by name and the items still arrive - the player may be filing
-	-- somebody else's set on purpose. A file with no character field is a
-	-- hand-made one from before the field existed; nothing to warn about.
+	-- THE FILE SAYS WHOSE PATTERNS THESE ARE, AND IMPORT REFUSES A CROSSED
+	-- ONE (user, 2026-09-21). A pattern for one character cannot resolve
+	-- another character's motions - the library is per character for exactly
+	-- that reason - and a step list filed under the wrong name offers
+	-- specials the dummy does not have. Warned-about arrivals were worse
+	-- than silent ones: they sat in the list looking runnable. A file with
+	-- no character field is a hand-made one from before the field existed;
+	-- nothing to refuse, nothing to warn about either.
 	--
 	-- Measured: gui.text is ASCII only, so the name goes through the same
 	-- narrowing as the transfer screen's own messages.
 	local who_from_file = tonumber(got.character)
-	local wrong_character = (who_from_file ~= nil and who_from_file ~= cid_num())
-	if wrong_character then
-		local theirs = CHARS[who_from_file] or string.format("Char %02X", who_from_file)
-		local mine = cid_name()
-		print(string.format(
-			"Pattern import: the file holds %s patterns, opened on %s.",
-			theirs, mine))
+	if who_from_file ~= nil and who_from_file ~= cid_num() then
+		local theirs = CHARS[who_from_file]
+			or string.format("Char %02X", who_from_file)
+		return "ERROR: that file is for " .. theirs
+			.. ", not " .. cid_name() .. ". Nothing was added."
 	end
 	local items = pattern_items()
 	local added, skipped = 0, 0
@@ -1685,12 +1685,10 @@ local function import_now()
 	if added == 0 then return "ERROR: nothing usable in that file" end
 	mark_training_settings_dirty()
 	store_dir(dir)
-	local crossed = wrong_character and " (from " ..
-		(CHARS[who_from_file] or string.format("Char %02X", who_from_file)) .. ")" or ""
 	if skipped > 0 then
-		return "OK  " .. added .. " added" .. crossed .. ", " .. skipped .. " skipped"
+		return "OK  " .. added .. " added, " .. skipped .. " skipped"
 	end
-	return "OK  " .. added .. " added" .. crossed
+	return "OK  " .. added .. " added"
 end
 
 -- THE SCREEN THAT IS UP WHILE THE DIALOG HAS THE EMULATOR STOPPED, AND THE
