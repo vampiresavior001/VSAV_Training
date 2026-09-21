@@ -30,6 +30,19 @@ The file window now opens in **the folder last accepted with OK**.
   dialog itself
 - The location is saved in `training_settings.json` (never shipped)
 
+### A crossed import is named
+
+An exported file carries whose patterns these are. Opening one on another
+character's library used to add them silently - patterns that cannot resolve
+the other character's motions and will not run. The result now says where
+they came from:
+
+```
+OK  1 added (from Morrigan)
+```
+
+They still arrive, so collecting somebody's set as a file is still fine.
+
 ### A failed import says why
 
 When a file could not be read, the message used to be only "that is not a

@@ -88,7 +88,12 @@ local function answer_name(name)
   E.registerBefore()
 end
 
-local function items() return training_settings.action_patterns.reversal["5"].items end
+-- The library key follows the harness's ram, so [22] can open another
+-- character's library. lib_key may be defined later; fall back to Morrigan.
+local function items()
+  local key = (type(lib_key) == "function") and lib_key() or "5"
+  return training_settings.action_patterns.reversal[key].items
+end
 local function one_step() return { { action="atk", lever="none", button="LP", wait=-1 } } end
 local function open(list)
   training_settings.action_patterns.reversal = { ["5"] = { version=1, items=list } }
@@ -525,5 +530,53 @@ eq("Import の OK でも載る", training_settings.pattern_dir,
    [[C:\Users\me\Desktop]])
 eq("2 本になった", #items(), 2)
 tap("LP")
+
+print("")
+print("[22] Import - キャラ違いは名前を出して警告する。届くのは届く")
+-- cid_num はエディタ内のローカルで RAM を読む。ハーネスの ram を書き換えて
+-- 「別キャラのライブラリを開いた」を作る。鍵は tostring(cid) = '16' (0x10)。
+function lib_key() return tostring(ram[0xFF8B82]) end
+open({ { name="mine", use=true, steps=one_step() } })
+jstore = { version=1, character=0x05, items={
+  { name="from Sasquatch", use=true, steps=one_step() } } }
+ram[0xFF8B82] = 0x0A
+-- ライブラリはキャラ別。開く側のキャラも 0x0A に揃える。
+training_settings.action_patterns.reversal =
+  { [tostring(0x0A)] = { version=1, items={ { name="mine", use=true, steps=one_step() } } } }
+E.open_patterns("reversal")
+goto_row("Import from a File") tap("LP") draw() E.registerBefore()
+eq("2 本になった", #items(), 2)
+eq("足された", items()[2].name, "from Sasquatch")
+-- 届いたものは未チェックのまま。
+eq("印は付かない", items()[2].use, false)
+local _, rows22 = draw()
+eq("結果に出自が出る",
+   table.concat(rows22, " "):find("from Morrigan", 1, true) ~= nil, true)
+tap("LP")
+-- 一致していれば何も出ない。
+jstore = { version=1, character=0x05, items={
+  { name="same char", use=true, steps=one_step() } } }
+ram[0xFF8B82] = 0x05
+training_settings.action_patterns.reversal =
+  { [tostring(0x05)] = { version=1, items={ { name="mine", use=true, steps=one_step() } } } }
+E.open_patterns("reversal")
+goto_row("Import from a File") tap("LP") draw() E.registerBefore()
+eq("2 本になった", #items(), 2)
+local _, rows22b = draw()
+eq("一致では出自は出ない",
+   table.concat(rows22b, " "):find("added", 1, true) ~= nil, true)
+eq("キャラ名は出ない", table.concat(rows22b, " "):find("Morrigan", 1, true), nil)
+tap("LP")
+-- character フィールドが無い古い手作りファイルは、警告も出さず通す。
+open({})
+jstore = { items={ { name="fieldless", use=true, steps=one_step() } } }
+goto_row("Import from a File") tap("LP") draw() E.registerBefore()
+eq("1 本になった", #items(), 1)
+local _, rows22c = draw()
+eq("不明でも出自は出ない",
+   table.concat(rows22c, " "):find("added", 1, true) ~= nil, true)
+tap("LP")
+-- 本物に戻す。
+ram[0xFF8B82] = 0x05
 
 if fails == 0 then print("") print("全て通った") else print(fails .. " 件 NG") os.exit(1) end
