@@ -1957,6 +1957,13 @@ local function match_live()
 	return f() == true
 end
 
+-- Whether a lap exists at all - armed and running, or mid-delivery. The
+-- master script's select-screen cleanup asks this so its diagnostic can tell
+-- "the loop is alive here" from "nothing was ever armed".
+function M.loop_alive()
+	return loop_sched ~= nil or pending ~= nil
+end
+
 -- Puts the whole list back, with step one carrying the loop's wait instead of
 -- the arm's. The copy is one level deep and only step one needs it - the other
 -- entries are handed on untouched, and loop_sched must survive intact because

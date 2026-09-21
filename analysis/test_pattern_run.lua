@@ -203,6 +203,21 @@ do
   local def_e = rsrc:find("\nend", def_s or 1, true)
   local dbody = rsrc:sub(def_s or 1, (def_e or 1) + 3)
   eq("無ければ生きている扱い", dbody:find("if f == nil then return true end", 1, true) ~= nil, true)
+  -- ランナーだけでは届かない画面がある (0x02211A のフックが回る保証が無い /
+  -- globals.dummy は選択画面で更新されない)。マスタースクリプトの側で、
+  -- シーン 2 のあいだ毎フレーム落としていることをソースで固定する。
+  local msrc = io.open("vsav_training_master_script.lua"):read("*a")
+  local gate = msrc:find("if memory.readbyte(0xFF8009) == 2 then", 1, true)
+  eq("マスターにシーン 2 の門がある", gate ~= nil, true)
+  if gate ~= nil then
+    local win = msrc:sub(gate, gate + 400)
+    eq("その門の中で cancel している",
+       win:find("actionSequenceRunnerModule.cancel()", 1, true) ~= nil, true)
+    eq("配信スロットも空にしている",
+       win:find("pending_input_sequence = nil", 1, true) ~= nil, true)
+  end
+  local la = rsrc:find("function M.loop_alive()", 1, true)
+  eq("loop_alive がある (選択画面の診断が 生/死 を聞ける)", la ~= nil, true)
 end
 
 if fails == 0 then print("") print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

@@ -905,29 +905,48 @@ Afterの修正、通常のLanding連発、立ち中Kが漏れた後の地上復�
 修正直前のAfter・Landing確認済みソースと設定は
 `local_checkpoints/20260920_after_and_landing_confirmed/` に保存した。
 
-## キャラ選択に戻ると Action Pattern のループが回る (2026-09-21、解決済み)
+## キャラ選択に戻ると Action Pattern のループが回る (2026-09-21、2 段階で解決、実機確認済み)
 
 症状: 試合からキャラ選択へ戻っても、Guard Action 0xC のパターンが
-選択画面のダミーで再生され続けた。
+再生され続けた。
 
-原因は 2 つの前提が重なったもの。ループの補充 (loop_refill) は
-「キューが空なら次の周を積む」だけで、今が試合中かを聞いていなかった。
-アームは機会で燃えるので試合中にしか立たないが、1 周目さえ積まれれば
-あとは自分で積み直せる。キャラ選択へ戻ってもダミーオブジェクトと
-guard_action='sequence' は残るので、補充が続き、注入は選択画面の P2 にも
-届いた。メニューは loop_blocked() で落としていたが、選択画面にメニューは
-無い。
+### 1 段階目 (match_live) — 不十分だった
 
-直しは actionSequenceRunner.lua に match_live() を足し、マスタースクリプト
-が公開する globals.match_running (変身中も落ちない「本当に試合中」の 1 定義)
-を見る。false のあいだは loop_refill が補充せず (loop_on 判定の後)、
-service は走行中の周ごと落とす (メニューの後片付けと同じ形: pending は
-dropped に数え、pending_input_sequence / loop_sched / loop_which / anchor /
-held_after を空にする)。
+ループの補充 (loop_refill) は「キューが空なら次の周を積む」だけで、今が
+試合中かを聞いていなかった。actionSequenceRunner.lua に match_live() を
+足し、globals.match_running (変身中も落ちない「本当に試合中」の 1 定義) が
+false のあいだは補充も走行中の周の配送も止めた。
 
-**match_running が無い環境では「生きている」扱い。** オフラインテストは
-このグローバルを公開していないので、この一行がテスト互換の要点。
-テスト [11] を test_pattern_run.lua に (ソース契約で位置を固定)。
+**実機で止まらなかった。** 理由は届き方の前提。service は guardCancel の
+0x02211A フックから呼ばれ、その命令が選択画面で実行される保証は無い。
+さらに globals.dummy は選択画面で更新されない (マスタースクリプトが
+ミラーリングの枝で早期リターンするため、最終試合フレームの stale オブ
+ジェクトのまま)。ランナー側のゲートが走らない场景でも、loop_sched と
+loop_which は生き残り、次の試合で勝手に再開し得た。
+
+### 2 段階目 (シーン 2 の毎フレームキャンセル) — 解決
+
+マスタースクリプトの registerbefore 冒頭で、シーン 2 (0xFF8009 == 2 =
+キャラ選択。ミラーリングが同じ信号を使うので実機で動作保証済み) の
+あいだ毎フレーム:
+
+- actionSequenceRunnerModule.cancel() (ループ状態ごと落とす)
+- player_objects[2].pending_input_sequence = nil (cancel が届かない
+  配信スロットの半分)
+
+フレーム側が先に走るので、そのフレームのティックフックは空の状態から
+始まる。savestate ロードの後片付けと同じ形。
+
+### 残すもの
+
+- ランナー側の match_live ゲートも残す (dummy が生きている移行窓の
+  防御)。match_running が無い環境では「生きている」扱い = テスト互換。
+- M.loop_alive() を追加 (診断が 生/死 を聞けるようにしただけ)。
+- テスト [11] を test_pattern_run.lua に。ランナー側の契約に加え、
+  マスタースクリプトの「シーン 2 の門の中で cancel している」「配信
+  スロットも空にしている」をソース契約で固定。既存 28 本 + ルート 10 本
+  通過。**ユーザが実機で確認済み (2026-09-21)。**
+
 
 ## 起き上がりのダッシュが向きの反転で消える (2026-09-20、実機確認済み)症状: Guard Action 12 (`counter_attack_stick_dummy = forward dash`、button2 あり)
 の起き上がりリバーサルで、**ダウン中に相手と逆向きだったダウン**のとき

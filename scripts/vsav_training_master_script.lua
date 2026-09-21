@@ -461,6 +461,28 @@ emu.registerbefore(function()
 	-- end
 	gameStateModule.registerBefore()
 
+	-- THE CHARACTER SELECT STOPS THE LOOP (user, 2026-09-21).
+	--
+	-- The Action Pattern loop refills itself whenever its queue is empty, and
+	-- nothing in the runner knows what scene the game is in. Back on this
+	-- screen the runner's service gate is not enough: service runs from the
+	-- 0x02211A hook, which has no reason to still be executing here, and
+	-- globals.dummy is never rebuilt on this screen (the early return below
+	-- skips the refresh), so a stale object kept answering. The lap survived
+	-- and the next one was delivered here, moving the P2 cursor by itself.
+	--
+	-- Scene 2 is this screen and nothing else. No pattern should ever run
+	-- here, so the whole pass goes - the same cancel the savestate load does,
+	-- plus the delivery slot, whose runner-side half cancel cannot reach.
+	-- Every frame while the scene says so: the runner's refill may run later
+	-- in the same frame, and this has to win.
+	if memory.readbyte(0xFF8009) == 2 then
+		actionSequenceRunnerModule.cancel()
+		if player_objects ~= nil and player_objects[2] ~= nil then
+			player_objects[2].pending_input_sequence = nil
+		end
+	end
+
 	-- Lua keys 1 and 2 are held off until the match is genuinely running -
 	-- the same gate the overlay uses, meaning the characters are on screen
 	-- and the modules behind those keys are initialised. Pressing them during
