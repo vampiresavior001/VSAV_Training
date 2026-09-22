@@ -15,6 +15,8 @@ local timers = {
     p2_pb_simul = 0,
     p1_pb_marks = {},
     p2_pb_marks = {},
+    p1_pb_raws = {},
+    p2_pb_raws = {},
 }
 
 -- THE PUSH BLOCK COUNT, TAKEN AT THE INCREMENT (v248).
@@ -112,8 +114,8 @@ end
 -- drawing a green 0 on the red "nothing counted" box (user screenshot,
 -- 2026-09-13).
 local pb = {
-    [0xFF8400] = { count = 0, ok = false, after = 0, simul = 0, marks = {} },
-    [0xFF8800] = { count = 0, ok = false, after = 0, simul = 0, marks = {} },
+    [0xFF8400] = { count = 0, ok = false, after = 0, simul = 0, marks = {}, raws = {} },
+    [0xFF8800] = { count = 0, ok = false, after = 0, simul = 0, marks = {}, raws = {} },
 }
 
 local function pb_publish()
@@ -125,6 +127,8 @@ local function pb_publish()
     timers.p2_pb_simul          = pb[0xFF8800].simul
     timers.p1_pb_marks          = pb[0xFF8400].marks
     timers.p2_pb_marks          = pb[0xFF8800].marks
+    timers.p1_pb_raws           = pb[0xFF8400].raws
+    timers.p2_pb_raws           = pb[0xFF8800].raws
 end
 
 -- THE TIMELINE MARK (user, 2026-09-21).
@@ -157,10 +161,11 @@ end
 -- the same way the game keeps $170.
 local function pb_mark_tick(_a6, _t)
     local _w = memory.readbyte(_a6 + 0x1AB)
-    if _w >= 14 then _t.marks = {} end
+    if _w >= 14 then _t.marks = {}; _t.raws = {} end
     local _pos = 15 - _w
     if _pos < 1 or _pos > 14 or _t.marks[_pos] ~= nil then return end
     local _mark = "-"
+    local _raw = 0
     if memory.readword(_a6 + 0x04) == 0x0202
        and memory.readbyte(_a6 + 0x140) == 0x02
        and memory.readbyte(_a6 + 0x3B4) == 0
@@ -169,10 +174,12 @@ local function pb_mark_tick(_a6, _t)
         if _e ~= 0 then
             local _nbtn = math.min(count_pb_buttons(_e), 9)
             _mark = tostring(_nbtn)
+            _raw = _e
             if _nbtn >= 2 then _t.simul = _t.simul + 1 end
         end
     end
     _t.marks[_pos] = _mark
+    _t.raws[_pos] = _raw
     pb_publish()
 end
 
@@ -188,7 +195,7 @@ memory.registerexec(0x0275E0, function()
     -- the previous one's number.
     if _n == 0 and not _granted
        and (_t.count ~= 0 or _t.ok or _t.after ~= 0 or _t.simul ~= 0) then
-        _t.count, _t.ok, _t.after, _t.simul, _t.marks = 0, false, 0, 0, {}
+        _t.count, _t.ok, _t.after, _t.simul, _t.marks, _t.raws = 0, false, 0, 0, {}, {}
         pb_publish()
     end
 
