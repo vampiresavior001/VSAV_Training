@@ -6,7 +6,36 @@ Newest first. Older releases are kept below.
 
 ---
 
-## v11.7.8
+## v11.7.9
+
+### PB Count now shows whether your delayed push block came out as intended
+
+A skilled push block is **one button per tick, spaced across the window,
+starting a few ticks after the guard**. Two buttons on one tick buy one count
+(the ROM's addq runs once per tick) where a spaced pair would have bought two.
+
+To the right of PB Count, a **tick timeline of the last window** now shows:
+
+```
+PB Count: 6   Guard|----1-1-1-1-1-1|Expired   at:9-14t   MultiPush: 0
+```
+
+- **Guard** — the block that opens the window
+- **Digits** — how many buttons edge on that tick (**1 = clean single · white, 2-6 = simultaneous · red**)
+- **-** — no press on that tick
+- **Expired** — the window closed (14 ticks elapsed)
+- **at:9-14t** — the head and tail of your presses. The ideal is `at:9-14t` with PB Count: 6 (six presses on the last six ticks, none wasted)
+- **MultiPush** — how many ticks had 2+ buttons at once (**red = mistake**). Zero is the goal
+
+**With the dummy set to Push Block, P2's MultiPush should always read 0.**
+A number there means this tool delivered a simultaneous press - a bug.
+
+### The tab is called Dummy
+
+Everything on the Player tab is the DUMMY's behaviour. It is now called
+**Dummy**.
+
+---## v11.7.8
 
 ### A shortcut to re-place, on the Position row
 

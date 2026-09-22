@@ -10,7 +10,11 @@ local timers = {
     p1_pushblock_counter = 0,
     p2_pushblock_counter = 0,
     p1_pushblock_ok = false,
-    p2_pushblock_ok = false
+    p2_pushblock_ok = false,
+    p1_pb_simul = 0,
+    p2_pb_simul = 0,
+    p1_pb_marks = {},
+    p2_pb_marks = {},
 }
 
 -- THE PUSH BLOCK COUNT, TAKEN AT THE INCREMENT (v248).
@@ -108,8 +112,8 @@ end
 -- drawing a green 0 on the red "nothing counted" box (user screenshot,
 -- 2026-09-13).
 local pb = {
-    [0xFF8400] = { count = 0, ok = false, after = 0 },
-    [0xFF8800] = { count = 0, ok = false, after = 0 },
+    [0xFF8400] = { count = 0, ok = false, after = 0, simul = 0, marks = {} },
+    [0xFF8800] = { count = 0, ok = false, after = 0, simul = 0, marks = {} },
 }
 
 local function pb_publish()
@@ -117,6 +121,59 @@ local function pb_publish()
     timers.p2_pushblock_counter = pb[0xFF8800].count
     timers.p1_pushblock_ok      = pb[0xFF8400].ok
     timers.p2_pushblock_ok      = pb[0xFF8800].ok
+    timers.p1_pb_simul          = pb[0xFF8400].simul
+    timers.p2_pb_simul          = pb[0xFF8800].simul
+    timers.p1_pb_marks          = pb[0xFF8400].marks
+    timers.p2_pb_marks          = pb[0xFF8800].marks
+end
+
+-- THE TIMELINE MARK (user, 2026-09-21).
+--
+-- One character per tick of the window, drawn beside the count in hud.lua:
+-- the digit is HOW MANY buttons edge on that tick (1 = a clean single, 2..6
+-- a simultaneous press). The ruler is the game's own countdown - $1ab opens
+-- at 14 on the block (0x023966) and reads one less per tick, so 15 - $1ab is
+-- "which tick of the window this is" and no Lua-side clock is needed.
+--
+-- A skilled input is one button per tick, spaced across the window (user):
+-- two buttons on ONE tick buy one count (the ROM's addq runs once per tick,
+-- however many buttons edge together) where a spaced pair would have bought
+-- two. That lost count is why the simultaneous tick goes into the marks and
+-- into MultiPush, the negative the readout exists to show.
+--
+-- Rewind-safe: marks are keyed by position, so a speculative re-execution
+-- rewrites the same slot instead of appending a second one - the same shape
+-- the count's $n + 1 recomputation uses.
+local function count_pb_buttons(v)
+    local r = 0
+    for _, b in ipairs({1, 2, 4, 16, 32, 64}) do
+        if math.floor(v / b) % 2 == 1 then r = r + 1 end
+    end
+    return r
+end
+
+-- One span = one window ($1ab 14 -> 0). A blocked hit re-arms the window
+-- mid-string, and each span is drawn fresh; the COUNT carries across them
+-- the same way the game keeps $170.
+local function pb_mark_tick(_a6, _t)
+    local _w = memory.readbyte(_a6 + 0x1AB)
+    if _w >= 14 then _t.marks = {} end
+    local _pos = 15 - _w
+    if _pos < 1 or _pos > 14 or _t.marks[_pos] ~= nil then return end
+    local _mark = "-"
+    if memory.readword(_a6 + 0x04) == 0x0202
+       and memory.readbyte(_a6 + 0x140) == 0x02
+       and memory.readbyte(_a6 + 0x3B4) == 0
+       and memory.readbyte(0xFF815D) == 0 then
+        local _e = and77(memory.readbyte(_a6 + 0x126))
+        if _e ~= 0 then
+            local _nbtn = math.min(count_pb_buttons(_e), 9)
+            _mark = tostring(_nbtn)
+            if _nbtn >= 2 then _t.simul = _t.simul + 1 end
+        end
+    end
+    _t.marks[_pos] = _mark
+    pb_publish()
 end
 
 memory.registerexec(0x0275E0, function()
@@ -129,10 +186,13 @@ memory.registerexec(0x0275E0, function()
     -- A guard the game has counted nothing for yet. Clearing here rather than
     -- on the first press means a guard you did not mash through stops showing
     -- the previous one's number.
-    if _n == 0 and not _granted and (_t.count ~= 0 or _t.ok or _t.after ~= 0) then
-        _t.count, _t.ok, _t.after = 0, false, 0
+    if _n == 0 and not _granted
+       and (_t.count ~= 0 or _t.ok or _t.after ~= 0 or _t.simul ~= 0) then
+        _t.count, _t.ok, _t.after, _t.simul, _t.marks = 0, false, 0, 0, {}
         pb_publish()
     end
+
+    pb_mark_tick(_a6, _t)
 
     -- The tests the ROM makes after this point, repeated, so the readout moves
     -- on exactly the presses the game takes. $184 is deliberately not among

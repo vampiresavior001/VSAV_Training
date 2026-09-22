@@ -126,7 +126,11 @@ local function draw_pb_counter()
 		if globals == nil then return;	end
 		local color = "#0000ff"
 		if globals.timers.p1_pushblock_counter == 0 then
-			color = "#FF0000"
+			-- NOT PRESSING IS NOT AN ERROR (user, 2026-09-22). The red box
+			-- used to say "nothing counted" as if that were a failure, but a
+			-- player who chooses to just guard is playing correctly. Inactive
+			-- grey instead of alarming red.
+			color = "#555555"
 		end
 
 		local x = 21
@@ -139,19 +143,102 @@ local function draw_pb_counter()
 		-- (0x02760E takes eight, but six is 100% through the table below it).
 		local _ga = globals.dummy and globals.dummy.guard_action
 		local _showp2 = (_ga == 'pb' or _ga == 'recording on pushblock')
-		gui.rect(x, y, x + (_showp2 and 78 or 50), y+8, color)
-		-- The count is PRESSES TAKEN: it stops the moment the push block is
-		-- granted, so three is a lucky attempt rather than a weak one. Green
-		-- for granted, amber for not - reading the number alone gets it
-		-- backwards (see timers.lua).
-		if globals and globals.timers and globals.timers.p1_pushblock_counter then
-			gui.text( x + 2, y + 1, "PB Count: "..globals.timers.p1_pushblock_counter,
-				globals.timers.p1_pushblock_ok and "#00FF00" or "#FFFFFF")
+		-- THE TIMELINE INSIDE THE WIDENED BOX (user, 2026-09-21).
+		--
+		-- One character per tick of the window, published by timers.lua:
+		-- Guard = the block that opens it, Expired = the tick it closes, and
+		-- the digit is HOW MANY buttons edge on that tick. A skilled input is
+		-- one button per tick spaced across the window, so a tick reading 2 or
+		-- more is the mistake the colour exists to show - the ROM adds one
+		-- count per TICK, so two buttons together buy one where a spaced pair
+		-- would have bought two. MultiPush is the count of those ticks.
+		--
+		-- The window being open is read live ($1ab): while it is, the line is
+		-- still growing and no label closes it; when it reads zero the last
+		-- span is complete and stays up until the next one starts.
+		local _marks = globals.timers.p1_pb_marks
+		local _simul = globals.timers.p1_pb_simul or 0
+		local _last = 0
+		if _marks ~= nil then
+			for _p = 1, 14 do if _marks[_p] ~= nil then _last = _p end end
 		end
-		if _showp2 and globals.timers and globals.timers.p2_pushblock_counter then
+		local _live = memory.readbyte(0xFF84AB) > 0
+
+		-- RECT FIRST, THEN TEXT ON TOP - gui.rect is a filled rect and covers
+		-- anything drawn under it. The width is computed from the parts before
+		-- drawing, because drawing and measuring in the same pass would leave
+		-- the rect on top of the text it is meant to frame.
+		local _tlw = 0
+		if _last > 0 then
+			_tlw = 22 + (_last * 4.2) + 34 + 40 + 56
+		end
+		local _w = 50 + ((_showp2) and 28 or 6) + _tlw
+		gui.rect(x, y, x + _w, y + 8, color)
+
+		-- PB Count text
+		gui.text( x + 2, y + 1, "PB Count: "..globals.timers.p1_pushblock_counter,
+			globals.timers.p1_pushblock_ok and "#00FF00" or "#FFFFFF")
+		local _cx = x + 50
+		if _showp2 and globals.timers.p2_pushblock_counter then
 			local _n = globals.timers.p2_pushblock_counter
-			gui.text( x + 52, y + 1, "P2:".._n,
+			gui.text( _cx + 2, y + 1, "P2:".._n,
 				globals.timers.p2_pushblock_ok and "#00FF00" or "#FFD700")
+			_cx = _cx + 26
+			-- THE DUMMY'S DELIVERY IS ONE BUTTON PER TICK (guardCancel's PB
+			-- taps are one entry per tick for exactly this reason) - so its
+			-- MultiPush reads 0, and a number here is a bug in this tool.
+			local _s2 = globals.timers.p2_pb_simul or 0
+			if _s2 > 0 then
+				gui.text( _cx + 2, y + 1, "MULTI!", "#FF0000")
+				_cx = _cx + 30
+			end
+		else
+			_cx = _cx + 6
+		end
+		if _last > 0 then
+			-- THE FIRST PRESS TICK, AFTER THE METER (user, 2026-09-22): the
+			-- marks are hard to count by eye, so the tick the pressing started
+			-- on is called out as a number after the timeline. Lowercase "at"
+			-- because it is a preposition, not a field name.
+			local _first = nil
+			for _p = 1, _last do
+				if (_marks and _marks[_p] or "-") ~= "-" then _first = _p break end
+			end
+			gui.text(_cx, y + 1, "Guard", "#AAAAAA")
+			_cx = _cx + 22
+			for _p = 1, _last do
+				local _m = (_marks and _marks[_p]) or "-"
+				if _m == "-" then
+					gui.text(_cx, y + 1, "-", "#555555")
+				elseif tonumber(_m) >= 2 then
+					gui.text(_cx, y + 1, _m, "#FF0000")
+				else
+					gui.text(_cx, y + 1, _m, "#FFFFFF")
+				end
+				_cx = _cx + 4.2
+			end
+			if not _live then
+				gui.text(_cx, y + 1, "|Expired", "#AAAAAA")
+				_cx = _cx + 34
+			end
+			if _first ~= nil then
+				-- HEAD AND TAIL OF THE PRESSES (user, 2026-09-22): a:8-13t with
+				-- PB Count: 6 is the ideal spacing - six presses on six
+				-- consecutive ticks, none wasted on a simultaneous press.
+				local _lastpress = nil
+				for _p = _last, 1, -1 do
+					if (_marks and _marks[_p] or "-") ~= "-" then _lastpress = _p break end
+				end
+if _lastpress ~= nil and _lastpress ~= _first then
+					gui.text(_cx + 6, y + 1, "at:".._first.."-".._lastpress.."t", "#FFFFFF")
+				else
+					gui.text(_cx + 6, y + 1, "at:".._first.."t", "#FFFFFF")
+				end
+			end
+			_cx = _cx + 40
+			gui.text(_cx + 6, y + 1, "MultiPush: ".._simul,
+				(_simul > 0) and "#FF0000" or "#888888")
+			_cx = _cx + 6 + 50
 		end
 	-- NOTHING TO DO WHEN THE READOUT IS OFF.
 	--

@@ -191,6 +191,98 @@ for _, who in ipairs({ P1, P2 }) do
 end
 want("count 0 かつ ok true にならない", bad, 0)
 
+print("-- タイムライン: $1ab を置けば 1 tick ごとに印が記録される (user, 2026-09-21)")
+-- Skilled input is one button per tick, spaced across the window: the marks
+-- draw where each press landed, and a tick with 2+ buttons is the mistake
+-- the readout exists to catch. The hook reads $1ab for the position, so the
+-- harness sets it by hand.
+local function marks_of(who)
+	local t = (who == P1) and timers.p1_pb_marks or timers.p2_pb_marks
+	local out = {}
+	for i = 1, 14 do out[i] = t[i] or "-" end
+	return table.concat(out)
+end
+
+tick(P1, 0, false, true)                 -- $1ab unset: the hook records nothing
+want("窓外は記録しない", marks_of(P1):sub(1, 1), "-")
+want("窓外は simul も動かない", timers.p1_pb_simul, 0)
+
+print("-- 1 ボタン 1 tick: 印にボタン数、simul は動かない")
+ram[P1 + 0x1AB] = 14                     -- the window's first tick ($1ab = 14)
+guarding(P1, 0, false, true)             -- one button (LP)
+execs[0x0275E0]()
+want("1 tick 目に 1", marks_of(P1):sub(1, 1), "1")
+want("単押しで simul は 0", timers.p1_pb_simul, 0)
+ram[P1 + 0x1AB] = 13                     -- the second tick
+guarding(P1, 1, false, true)
+execs[0x0275E0]()
+want("2 tick 目も 1", marks_of(P1):sub(2, 2), "1")
+want(" simul はまだ 0", timers.p1_pb_simul, 0)
+
+print("-- 同時押し: 2 ボタンは 1 カウント、Simul が別勘定で増える")
+ram[P1 + 0x1AB] = 12
+guarding(P1, 2, false, true)
+ram[P1 + 0x126] = 0x03                   -- LP+MP on the same tick
+execs[0x0275E0]()
+want("同時押しの tick は 2", marks_of(P1):sub(3, 3), "2")
+want("カウントは 1 しか買えない", timers.p1_pushblock_counter, 3)
+want("simul が 1", timers.p1_pb_simul, 1)
+ram[P1 + 0x1AB] = 11
+guarding(P1, 3, false, true)
+ram[P1 + 0x126] = 0x07                   -- three buttons at once
+execs[0x0275E0]()
+want("3 ボタンでも 1 イベント", marks_of(P1):sub(4, 4), "3")
+want("simul はイベント数で 2", timers.p1_pb_simul, 2)
+ram[P1 + 0x1AB] = 10
+guarding(P1, 4, false, true)
+ram[P1 + 0x126] = 0x21                   -- LP+HK on one tick
+execs[0x0275E0]()
+want("別組合せも 2", marks_of(P1):sub(5, 5), "2")
+want("simul は 3", timers.p1_pb_simul, 3)
+
+print("-- 成立後の押しも同じゲートで数える")
+ram[P1 + 0x1AB] = 9
+grant(P1)
+guarding(P1, 3, true, true)
+ram[P1 + 0x126] = 0x03
+execs[0x0275E0]()
+want("成立後の同時押しも 2", marks_of(P1):sub(6, 6), "2")
+want("成立後も simul は続く", timers.p1_pb_simul, 4)
+want("カウントも続く", timers.p1_pushblock_counter, 4)
+
+print("-- ゲートが違う tick は - (数えられていない押しだけが母集団)")
+ram[P1 + 0x1AB] = 8
+guarding(P1, 4, true, true)
+ram[P1 + 0x04] = 0x0000                  -- not in hitstun/blockstun
+execs[0x0275E0]()
+want("ゲート外は -", marks_of(P1):sub(7, 7), "-")
+want("simul は動かない", timers.p1_pb_simul, 4)
+
+print("-- 窓の再設定 (多段の 2 発目) で marks は新スパンになる")
+ram[P1 + 0x1AB] = 14                     -- 0x023966 re-arms
+tick(P1, 4, true, false)
+want("新スパンは空", marks_of(P1), "--------------")
+want("simul は文字列をまたいで累計", timers.p1_pb_simul, 4)
+
+print("-- 新規ガードで simul も消える (count と同じリセット)")
+ram[P1 + 0x1AB] = 0
+tick(P1, 0, false, false)
+want("simul が 0 に戻る", timers.p1_pb_simul, 0)
+
+print("-- P2 は別勘定")
+ram[P2 + 0x1AB] = 14                     -- the window's first tick
+guarding(P2, 0, false, true)             -- one button (LP)
+execs[0x0275E0]()
+ram[P2 + 0x1AB] = 13                     -- the second tick
+guarding(P2, 1, false, true)             -- $170 = 1
+ram[P2 + 0x126] = 0x03                   -- LP+MP, set AFTER guarding()
+execs[0x0275E0]()
+want("P2 の同時押しも 1", timers.p2_pb_simul, 1)
+want("P1 は動かない", timers.p1_pb_simul, 0)
+want("P2 の marks も記録", marks_of(P2):sub(1, 2), "12")
+ram[P2 + 0x1AB] = 0
+tick(P2, 0, false, false)
+
 if fails == 0 then
 	print("test_pb_counter ok")
 else
