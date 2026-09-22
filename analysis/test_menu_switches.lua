@@ -26,7 +26,11 @@ package.preload["./scripts/actionSequenceEditor"] = function()
 end
 package.preload["./scripts/actionSequenceRunner"] = function()
 	return dofile("actionSequenceRunner.lua")
+	end
+package.preload["./scripts/position"] = function()
+	return dofile("position.lua")
 end
+
 training_settings = {}
 globals = { getCharacter = function() return "Demitri" end }
 memory = { readbyte = function() return 0 end }

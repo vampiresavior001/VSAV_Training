@@ -35,6 +35,9 @@ end
 package.preload["./scripts/actionSequenceRunner"] = function()
 	return dofile("actionSequenceRunner.lua")
 end
+package.preload["./scripts/position"] = function()
+	return dofile("position.lua")
+end
 
 training_settings = {}
 globals = {}

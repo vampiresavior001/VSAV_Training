@@ -6,6 +6,28 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.8
+
+### Position の行に再配置の近道
+
+Position の行は、値が変わったときだけ配置を適用します。だから
+**同じ位置に戻すには、別の項目を挟んで 2 回変えるしかありませんでした。**
+
+Position の行にカーソルを置いたまま:
+
+- **LP** — その位置に**再配置**します (値は変えません)。練習中に
+  位置がずれたとき、1 押しで戻せます
+- **HP** — 再配置して、そのまま**メニューを閉じます**
+- **MP** — Off へのリセット (従来どおり)
+- **Off** を選んでいるとき、LP と HP は何もしません
+
+### タブの名前を Dummy に
+
+Player タブの中身は、Position も Pose も Guard も Action Steps も
+**すべてダミーの挙動**です。名前を **Dummy** にしました。
+
+---
+
 ## v11.7.7
 
 ### Action Pattern の単体書き出し
@@ -204,7 +226,7 @@ Start を渡すようにしました。ステージセレクトの Coin は従�
 出ます。
 
 ```
-Player タブ
+Dummy タブ
   Guard Action Type      : Reversal - Action Steps
   Guard Action Frequency : 100%
   P2 Random Guard %      : 100%

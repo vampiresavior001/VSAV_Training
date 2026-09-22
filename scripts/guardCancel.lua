@@ -5971,7 +5971,7 @@ local function service_held_reversal()
 				--
 				-- The Character Specific route is the original: pick the move
 				-- there and it comes out here. The Pit of Blame row on the
-				-- Player tab is the second, and it does not care what the guard
+				-- Dummy tab is the second, and it does not care what the guard
 				-- action is - the move is used while the opponent is down, so
 				-- tying it to a reversal setting meant giving that setting up.
 				--

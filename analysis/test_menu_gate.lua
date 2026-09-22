@@ -1,4 +1,4 @@
--- MENU GATE TEST: "Reversal Action Steps" is on the Player tab only while
+-- MENU GATE TEST: "Reversal Action Steps" is on the Dummy tab only while
 -- Guard Action Type is "Reversal - Action Steps" (0xB).
 --
 -- Loads the REAL menu.lua and the REAL editor with only the two load-time
@@ -20,7 +20,11 @@ package.preload["./scripts/actionSequenceEditor"] = function()
 end
 package.preload["./scripts/actionSequenceRunner"] = function()
 	return dofile("actionSequenceRunner.lua")
+	end
+package.preload["./scripts/position"] = function()
+	return dofile("position.lua")
 end
+
 
 training_settings = {}
 globals = {}
@@ -32,9 +36,9 @@ dofile("menu.lua")
 menuModule.guiRegister()
 local player
 for _, tab in ipairs(menu) do
-	if tab.name == "Player" then player = tab end
+	if tab.name == "Dummy" then player = tab end
 end
-assert(player, "Player tab not found")
+assert(player, "Dummy tab not found")
 
 -- WHICH TAB A ROW SITS ON IS NOT WHAT THESE TESTS ARE ABOUT.
 --

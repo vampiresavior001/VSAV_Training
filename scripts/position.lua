@@ -669,6 +669,28 @@ positionModule = {
   -- the Lua hotkeys on this as well: acting on the menu before the round is
   -- set up is no better than sliding on it.
   ["round_ready"] = function() return have_start end,
+  -- RE-PLACE THE PAIR AT THE CURRENT SETTING (user, 2026-09-21).
+  --
+  -- The menu row changes the setting to re-place, and the watcher above acts
+  -- only on a CHANGE (mode ~= last_applied) - so returning to the arrangement
+  -- already stored meant picking another one and back. Asked of the menu row
+  -- directly: LP places again, HP places and closes the menu.
+  --
+  -- Off means leave everyone alone, so it does nothing. The same gates the
+  -- hotkey path runs: not while the round is not under way or the wizard is
+  -- up (slide_allowed), and not while a slide is already running - the
+  -- arrangement on screen is the one just asked for. last_applied rides along
+  -- so the settle watcher below does not re-place it a second time.
+  ["reapply"] = function()
+    local mode = globals and globals.options and globals.options.stage_position
+    if mode == nil or mode == 1 then return false end
+    if steps ~= nil or not slide_allowed() then return false end
+    place(mode - 1)
+    last_applied = mode
+    pending_mode = nil
+    run()
+    return true
+  end,
   ["figure"] = function()
     if figure_left <= 0 then return nil end
     figure_left = figure_left - 1

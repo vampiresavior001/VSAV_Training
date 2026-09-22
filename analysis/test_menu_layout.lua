@@ -11,7 +11,7 @@
 -- cursor by (#name + 5) * 4 px and nothing stops the last one running past the
 -- right edge of the panel.
 --
--- WHAT IS COUNTED, AND WHY NOT SIMPLY EVERY ROW. The Player tab holds 26
+-- WHAT IS COUNTED, AND WHY NOT SIMPLY EVERY ROW. The Dummy tab holds 26
 -- entries but only ever draws a handful: it is a state machine, and most of
 -- its rows are gated on a guard action or a character being selected, several
 -- of them mutually exclusive. Asserting on its raw total would be asserting
@@ -35,7 +35,11 @@ package.preload["./scripts/actionSequenceEditor"] = function()
 end
 package.preload["./scripts/actionSequenceRunner"] = function()
 	return dofile("actionSequenceRunner.lua")
+	end
+package.preload["./scripts/position"] = function()
+	return dofile("position.lua")
 end
+
 
 training_settings = {}
 globals = {}

@@ -21,6 +21,7 @@ panel_outline_color = MENU_STYLE.panel_outline
 charMovesModule   = require "./scripts/charMoves"
 actionSequenceEditorModule = require "./scripts/actionSequenceEditor"
 actionSequenceRunnerModule = require "./scripts/actionSequenceRunner"
+positionModule    = require "./scripts/position"
 function check_input_down_autofire(_player_object, _input, _autofire_rate, _autofire_time)
   _autofire_rate = _autofire_rate or 4
   -- A RATE OF ZERO TURNED THE HOLD OFF, SILENTLY.
@@ -886,7 +887,7 @@ gc_freq = {
     "100%",
 }
 -- Same five as Guard Action Frequency and P2 Random Guard %, because it is the
--- same question asked about a different reaction, and the Player tab already
+-- same question asked about a different reaction, and the Dummy tab already
 -- teaches the reader what None/25/50/75/100 means.
 p2_throw_tech_chance = {
   "None",
@@ -913,6 +914,23 @@ stage_position = {
     "|------12|",
     "|------21|",
 }
+-- THE POSITION ROW'S BUTTONS (user, 2026-09-21).
+--
+-- Returning to the arrangement already stored meant picking another one and
+-- back: the row changes the value to re-place, and position.lua's watcher
+-- acts only on a CHANGE. So the row gets two shortcuts. LP is free on a list
+-- row (there is no child to open); HP is free menu-wide (nothing dispatched
+-- on it). MP keeps its reset. Off means leave everyone alone, so neither
+-- shortcut does anything there - which is why reapply answers for the close
+-- decision: no move, no menu close.
+local position_menu_item = list_menu_item("Position", training_settings, "stage_position", stage_position, 1, "Places both characters on the stage. 1 is you, 2 is the dummy, | is the wall.\nWalls put the two touching; the middle puts them exactly where a round starts.\nOff leaves everyone alone. Left/Right pick an arrangement; the move starts\nonce the value has settled.\nLP places the pair at this setting again - practice walks them out of it.\nHP also closes the menu. Both do nothing on Off. MP resets to Off.")
+function position_menu_item:validate() positionModule.reapply() end
+function position_menu_item:hp()
+	if positionModule.reapply() then togglemenu() end
+end
+function position_menu_item:legend()
+	return "LP: Place again   MP: Reset   HP: Place + close"
+end
 guard = {
     "None",
     "Stand Block",
@@ -1153,7 +1171,7 @@ end
 -- SHOWN ONLY WHEN GUARD ACTION TYPE IS "Reversal - Action Steps" (0xB).
 --
 -- The row used to carry no is_disabled at all, so it sat at the end of the
--- Player tab whatever the guard action was - and with the longer lists it was
+-- Dummy tab whatever the guard action was - and with the longer lists it was
 -- the row that overflowed onto the second column. The menu hides disabled rows
 -- and navigation skips them, so gating here removes the row from the list
 -- instead of greying it. The saved list itself survives the switch: this gates
@@ -1326,7 +1344,7 @@ enable_slot_5_menu_item.is_disabled = is_random_playback_on
 -- display, and the dummy's input column inside the HUD. Leaving them visible
 -- while they cannot act is what made the Display tab read as a wall of
 -- switches, and the draw loop already hides is_disabled rows and navigation
--- already skips them (see the Reversal Action Steps row on the Player tab).
+-- already skips them (see the Reversal Action Steps row on the Dummy tab).
 --
 -- The test is ~= true rather than a falsy check because that is how each
 -- parent's OWN consumer reads it - hud() and render_hitboxes() and the
@@ -1420,9 +1438,9 @@ return {
         }
       },
     {
-        name = "Player",
+        name = "Dummy",
         entries = {
-            list_menu_item("Position", training_settings, "stage_position", stage_position, 1, "Places both characters on the stage. 1 is you, 2 is the dummy, | is the wall.\nWalls put the two touching; the middle puts them exactly where a round starts.\nOff leaves everyone alone. Selecting an entry moves them at once."),
+            position_menu_item,
             list_menu_item("Pose", training_settings, "dummy_neutral", dummy_neutral,1,"The dummy will hold this direction."),
             list_menu_item("Wakeup", training_settings, "roll_direction", roll_direction,1, "Determines which direction the dummy will roll on knockdown"),
             anak_menu_item,
@@ -1789,6 +1807,14 @@ menuModule = {
               mark_training_settings_dirty()
             end
           end
+
+      if P1.input.pressed.HP or P2.input.pressed.HP then
+        if is_main_menu_selected then
+        elseif _current_entry.hp then
+          _current_entry:hp()
+          mark_training_settings_dirty()
+        end
+      end
       
           -- screen size 383,223
           local _gui_box_bg_color = MENU_STYLE.panel_fill

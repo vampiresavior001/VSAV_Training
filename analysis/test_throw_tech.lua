@@ -115,6 +115,9 @@ end
 package.preload["./scripts/actionSequenceRunner"] = function()
 	return dofile("actionSequenceRunner.lua")
 end
+package.preload["./scripts/position"] = function()
+	return dofile("position.lua")
+end
 training_settings = {}
 memory = { readbyte = function() return 0 end }
 gui = { text = function() end, box = function() end }
@@ -123,7 +126,7 @@ menuModule.guiRegister()
 
 local row
 for _, tab in ipairs(menu) do
-	if tab.name == "Player" then
+	if tab.name == "Dummy" then
 		for _, e in ipairs(tab.entries) do
 			if e.name == "Tech Throws" then row = e end
 		end

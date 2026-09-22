@@ -1,6 +1,6 @@
 -- HOW OFTEN THE DUMMY ESCAPES A THROW.
 --
--- Was a checkbox: every throw, or none. Now the same five the Player tab's
+-- Was a checkbox: every throw, or none. Now the same five the Dummy tab's
 -- other two rate rows offer - Guard Action Frequency and P2 Random Guard % -
 -- because it is the same question about a different reaction.
 

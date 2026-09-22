@@ -6,6 +6,28 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.8
+
+### A shortcut to re-place, on the Position row
+
+The Position row applies the arrangement only when the value CHANGES — so
+going back to the arrangement already stored meant picking another one and
+back. With the cursor on the Position row:
+
+- **LP** — **re-places** the pair at this setting (the value stays). One
+  press puts them back when practice has walked them out of it
+- **HP** — re-places and **closes the menu**, so you are back in the fight
+  at once
+- **MP** — resets to Off (unchanged)
+- With **Off** selected, neither LP nor HP does anything
+
+### The tab is called Dummy
+
+Everything on the Player tab — Position, Pose, Guard, Guard Action Type,
+Action Steps — is the DUMMY's behaviour. It is now called **Dummy**.
+
+---
+
 ## v11.7.7
 
 ### Export a single Action Pattern
@@ -207,7 +229,7 @@ The infinite on Demitri and Bishamon comes out **without tuning `Loop Wait` to a
 number.**
 
 ```
-Player tab
+Dummy tab
   Guard Action Type      : Reversal - Action Steps
   Guard Action Frequency : 100%
   P2 Random Guard %      : 100%

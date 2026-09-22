@@ -1266,7 +1266,7 @@ Attack Dash Gap)はまだ `emu.framecount()` のまま**で、表示フレーム
 しても実測にはならない)。メニューの説明に「DISPLAYED frames - not game Ticks」
 と明記して、嘘にはならないようにした。**未変換。**
 
-### 8.13 Player タブの棚卸し (v172)
+### 8.13 Dummy タブの棚卸し (v172)
 
 説明文が実装と合っていなかったものを直した。**Guard の「one Tick」は v168 で
 私が入れた誤り** - `autoguard.lua` の proxy block は `emu.framecount()` で
