@@ -8,39 +8,26 @@ Newest first. Older releases are kept below.
 
 ## v11.7.10
 
-### PB Count now shows the mashing that came after the window
+### PB Count now warns about the mashing that leaks a normal
 
-The push block window is **fourteen ticks**. Inside it you may press as much as
-you like - **you cannot see the grant**, so carrying on is not a mistake.
-**Past it, nothing can be bought.**
+The push block window is **fourteen ticks**. **Press after that and a normal
+comes out the moment guard stun ends** - right next to the opponent, with you
+in its recovery.
 
-**LateMash** counts only that part.
+**LateMash** warns you when you are pressing that way.
 
 ```
 PB Count: 6   Guard ----21--21-11-|   at:5-13t   MultiPush: 2   LateMash: 18 (+60t)
 ```
 
-- **LateMash: 18** — buttons pressed **after** the window's fourteen ticks
+- **LateMash: 18** — buttons pressed after the window's fourteen ticks
 - **(+60t)** — how far past the end the last of them landed
-- **It stops at sixty ticks**, so holding the buttons down cannot make the
-  number climb for as long as you like
+- **It stops at sixty ticks**, so holding the buttons down cannot make it climb
 
-**And it is worse than merely wasted.** The moment guard stun ends, the buttons
-still being held come out as a NORMAL - right next to the opponent, with you in
-its recovery. **LateMash is the warning that you are pressing in the way that
-leaks one.**
+**Inside the window it stays 0 however hard you press.** You cannot see the
+grant, so pressing on in there is not a mistake.
 
-**Inside the window it stays 0 however hard you press.** `MultiPush` on the same
-line is about pressing too many at once; `LateMash` is about being late.
-
-### The line no longer runs off the screen
-
-Each field's width was a guessed constant, so the text outgrew its own box and
-covered the art at the right edge. Every gap is now **measured from the text
-itself**, and the box follows whatever the numbers grow to.
-
-The end-of-window marker is now just **`|`** rather than `|Expired` - the bar
-and the end of the timeline already say the same thing.
+The end-of-window marker is now **`|`** rather than `|Expired`.
 
 ---
 
