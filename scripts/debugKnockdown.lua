@@ -76,7 +76,7 @@
 -- FBNeo/Fightcade not fully restarted after an edit, so the OLD bytecode is
 -- still running - shows up immediately as an old version number in the next
 -- batch of logs, instead of looking like a silent logic bug.
-local SCRIPT_VERSION = "v11.7.9"
+local SCRIPT_VERSION = "v11.7.10"
 
 local LOG_DIR   = "reversal_logs"
 

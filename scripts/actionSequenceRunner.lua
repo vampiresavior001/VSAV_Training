@@ -1725,19 +1725,17 @@ local function service_body(defender)
 		-- again, the moment being waited for is over and the step goes out on
 		-- its own. That is Auto (After) - which is what every Auto should fall
 		-- back to when its condition is missed (user, same report).
-		-- DIAGNOSTIC (2026-09-20): WHICH OF THE TWO GATES LET THIS OUT.
+		-- WHICH GATE LET THIS OUT, ON THE RECORD.
 		--
-		-- landing_ready aims the press at the touchdown - it opens at
-		-- ticks_to_landing() <= lead, and it refuses outright while $5C is set
-		-- because the physics and the clock disagree in there. timing_missed
-		-- has no such aim: once the dummy has been busy and is free again the
-		-- step goes out wherever it is. So a freeze that overlaps the fall can
-		-- hand the step to the SECOND gate, and the prediction is not used at
-		-- all.
+		-- KEPT ON PURPOSE - this is not a leftover diagnostic. The two gates
+		-- mean different things and produce the same visible result, so telling
+		-- them apart is the only way to check this branch:
+		-- test_landing_ground_recovery reads the mark and asserts 2 for the
+		-- recovery gate and 1 for the predicted one. Remove it and that test
+		-- stops observing anything. The three diagnostics from the same
+		-- investigation WERE removed (2026-09-23); this one is a seam.
 		--
-		-- Morrigan's looped dash MK starts delivering at ticks_to_landing() = 6
-		-- against a lead of 3, which is what that would look like. This says
-		-- whether it is (user, 2026-09-20).
+		-- Costs nothing when the knockdown logger is off: seq_debug is nil.
 		--
 		--   val = gate (1 = landing_ready, 2 = timing_missed)
 		--         * 100000 + lead * 1000 + $5C * 10 + airborne

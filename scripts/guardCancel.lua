@@ -2363,49 +2363,6 @@ local function assert_input_bits(_lev, _btn)
 	debugKnockdownModule.mark_write("0xFF8B95_lever", memory.readbyte(P2_INPUT_WORD + 1),
 		memory.getregister("m68000.pc"))
 
-	-- DIAGNOSTIC: WHICH FACING A DIRECTION WAS RESOLVED AGAINST, AND WHAT THE
-	-- GAME MADE OF IT (2026-09-20).
-	--
-	-- THE ENGINE HAS TWO CORRECTION RULES AND THEY READ DIFFERENT BYTES.
-	--
-	--   02218E: tst.b ($b,A6)      -> $122 is swapped on $b ALONE
-	--   0221DC: move.b ($120,A6)   -> $12a is swapped on $120 when grounded
-	--
-	-- facing_for_input() implements the $12a rule, so anything the game reads
-	-- out of $122 is resolved against the wrong byte whenever the two
-	-- disagree - and crossing over is exactly when they do: $120 follows the X
-	-- positions while $b only moves when the character actually turns, which a
-	-- character in a dash does not do.
-	--
-	-- Reported as: dash, Landing, dash - and the second dash does not come out
-	-- when the sides swapped during the first one (user, 2026-09-20).
-	--
-	-- $122 IS READ FOR THE PREVIOUS TICK'S INJECTION. Within one tick the
-	-- correction has not run yet (0x02211A injects, 0x022134 corrects), so the
-	-- byte still holds what the game made of the tick before. That is the line
-	-- that settles it: an injected "forward" arriving as back is $122, and
-	-- arriving intact means the cause is elsewhere.
-	--
-	-- Only on ticks a direction was actually asserted, so the volume stays at
-	-- a handful per knockdown. Costs nothing when the knockdown logger is off:
-	-- mark_write returns on its own gate.
-	if _lev ~= 0 then
-		-- $123, NOT $122. The 68000 is big-endian and this is a WORD: $122 is
-		-- the BUTTON byte and $123 is the lever. The first cut read $122 and
-		-- every row came back 0x00 - no button was being held, which is not the
-		-- same thing as no direction arriving (2026-09-20).
-		--
-		-- $38 rides along because facing_for_input() returns $b outright while
-		-- airborne, and the answer flipping mid-dash is what has to be
-		-- explained.
-		debugKnockdownModule.mark_write("dash_facing",
-			memory.readbyte(0xFF880B) * 100000      -- $b    the real facing
-			+ memory.readbyte(0xFF8920) * 10000     -- $120  the X-derived flag
-			+ facing_for_input() * 1000             -- what the tool used
-			+ ((memory.readbyte(0xFF8838) ~= 0) and 100 or 0)  -- $38 airborne
-			+ _lev,                                 -- the bits injected
-			memory.readbyte(0xFF8923))              -- the lever the game kept
-	end
 end
 
 memory.registerwrite(P2_INPUT_WORD, 2, function()
@@ -4770,26 +4727,6 @@ memory.registerexec(0x02211A, function()
 			-- which is no worse than not waiting at all.
 			if _s0.raw_dir == true and facing_unsettled() then
 				_s0.face_hold = (_s0.face_hold or 0) + 1
-				-- DIAGNOSTIC: is this wait firing where it was never meant to?
-				--
-				-- It is meant for a crossover and nothing else. $b and $120 are
-				-- different bytes, though, and at point blank they can sit
-				-- apart for long stretches - so a repeated dash attack could be
-				-- waiting out the whole cap on every repetition (reported:
-				-- Morrigan, repeated dash MK, 2026-09-20).
-				--
-				-- $05 and $38 ride along, NOT $06. test_land_regrace pins
-				-- that this span reads the ground and not "can act" - a real
-				-- past bug - and it cannot tell a diagnostic read of $06 from
-				-- a behavioural one. $38 answers the question that matters
-				-- here anyway: whether the wait is running while she is still
-				-- in the dash's air time.
-				debugKnockdownModule.mark_write("face_hold",
-					memory.readbyte(0xFF880B) * 1000
-					+ memory.readbyte(0xFF8920) * 100
-					+ _s0.face_hold,
-					memory.readbyte(0xFF8805) * 256
-					+ ((memory.readbyte(0xFF8838) ~= 0) and 1 or 0))
 				if _s0.face_hold
 				   <= (actionSequenceRunnerModule.DASH_GRACE_TICKS or 10) then
 					return
@@ -4919,43 +4856,6 @@ memory.registerexec(0x02211A, function()
 					_s0.saw_freeze = true
 				end
 				debugKnockdownModule.mark_write("seq_tick", _pl * 256 + _pb, _i)
-				-- DIAGNOSTIC: why an entry is being stretched, and whether the
-				-- press edge the dash needs ever appears.
-				--   val = $5C * 1000 + entry_ticks * 10 + tick_held
-				--   pc  = $127, the lever half of the press-edge word
-				-- $126 is the WORD and the 68000 is big-endian, so the lever is
-				-- the second byte - the same trap $122/$123 set earlier.
-				-- DIAGNOSTIC: WHICH OF THE LANDING GUARD'S FIVE CONDITIONS
-				-- IS THE ONE THAT FAILS.
-				--
-				-- The guard above holds the final tap until the touchdown, and
-				-- it only engages when ALL of these hold:
-				--
-				--     seq_land            this segment is aimed at a landing
-				--     saw_freeze          it met hit stop while being delivered
-				--     _i == last          the final entry is the one starting
-				--     tick_held == 0      that entry has not begun
-				--     $38 ~= 0            still in the air
-				--     ticks_to_landing()  and on the way down
-				--
-				-- Recorded per tick so a lap that dashed and a lap that did not
-				-- can be laid side by side. Measured shape of the failure
-				-- (2026-09-20, Morrigan, dash then Forward+MK, looped): a
-				-- GUARDED MK is always followed by a lap with no dash, and that
-				-- lap spends nine ticks in landing recovery - the dash never
-				-- cancelled it. A whiffed MK is followed by a lap that dashes
-				-- one tick after the touchdown.
-				--
-				--   val = seq_land, saw_freeze, airborne, entry, $5C
-				--   pc  = ticks_to_landing(), or 99 when it is nil
-				local _tl = ticks_to_landing()
-				debugKnockdownModule.mark_write("seq_frz",
-					(_s0.seq_land and 100000 or 0)
-					+ (_s0.saw_freeze and 10000 or 0)
-					+ ((memory.readbyte(0xFF8838) ~= 0) and 1000 or 0)
-					+ (_i % 10) * 100
-					+ (memory.readbyte(0xFF885C) % 100),
-					(_tl ~= nil) and (_tl % 99) or 99)
 				return
 			end
 			-- Spent. Free the slot so the next segment can be queued on this

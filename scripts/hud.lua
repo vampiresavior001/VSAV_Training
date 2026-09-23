@@ -168,44 +168,89 @@ local function draw_pb_counter()
 		-- anything drawn under it. The width is computed from the parts before
 		-- drawing, because drawing and measuring in the same pass would leave
 		-- the rect on top of the text it is meant to frame.
+		-- EVERY ADVANCE IS MEASURED FROM ITS OWN TEXT (2026-09-23).
+		--
+		-- The trailing fields used fixed allowances - 40 for at:, 56 for
+		-- MultiPush, 70 for LateMash - while the box was sized from the same
+		-- constants. LateMash's worst case is nineteen characters (about 80px)
+		-- against an allowance of 70, so the text ran past its own box and off
+		-- the right edge of the screen, over the art (user screenshot,
+		-- 2026-09-23). Measuring every part keeps the box and the text in step
+		-- whatever the numbers grow to, and hands back the ~25px the old
+		-- allowances were rounding away.
+		--
+		-- 4.2px is the advance the timeline has always used for one glyph.
+		local CH, GAP = 4.2, 4
+		local _first, _lastpress = nil, nil
+		for _p = 1, _last do
+			if (_marks and _marks[_p] or "-") ~= "-" then _first = _p break end
+		end
+		for _p = _last, 1, -1 do
+			if (_marks and _marks[_p] or "-") ~= "-" then _lastpress = _p break end
+		end
+		-- THE FIRST PRESS TICK, AFTER THE METER (user, 2026-09-22): the marks
+		-- are hard to count by eye, so the tick the pressing started on is
+		-- called out as a number. Lowercase "at" because it is a preposition,
+		-- not a field name. The pair is head and tail - at:8-13t with
+		-- PB Count: 6 is the ideal spacing, six presses on six consecutive
+		-- ticks with none wasted on a simultaneous one.
+		local _attxt = nil
+		if _first ~= nil then
+			_attxt = (_lastpress ~= nil and _lastpress ~= _first)
+				and ("at:" .. _first .. "-" .. _lastpress .. "t")
+				or ("at:" .. _first .. "t")
+		end
+		local _mptxt = "MultiPush: " .. _simul
+		-- LATEMASH: THE BUTTONS PRESSED AFTER THE WINDOW CLOSED.
+		--
+		-- The word is the one fighting game players use for it, not one
+		-- invented here (user, 2026-09-23).
+		--
+		-- INSIDE the fourteen ticks every press is a fair attempt, grant or no
+		-- grant: the player cannot see the grant, so carrying on is not a
+		-- mistake and PB Count keeps counting it. PAST the fourteen nothing can
+		-- be bought, and that is the habit this shows. The bracket is how far
+		-- past the window the LAST of them landed; the tally stops sixty ticks
+		-- out so holding the buttons down cannot make it climb forever.
+		local _over = globals.timers.p1_pb_latemash or 0
+		local _late = globals.timers.p1_pb_latemash_late or 0
+		local _omtxt = "LateMash: " .. _over
+			.. ((_over > 0) and (" (+" .. _late .. "t)") or "")
+
 		local _tlw = 0
 		if _last > 0 then
-			_tlw = 22 + (_last * 4.2) + 34 + 40 + 56
+			_tlw = GAP + 5 * CH                      -- "Guard"
+				+ _last * CH                          -- the timeline
+				+ (_live and 0 or (1 * CH))           -- the "|" that closes it
+				+ ((_attxt ~= nil) and (GAP + #_attxt * CH) or 0)
+				+ GAP + #_mptxt * CH
+				+ GAP + #_omtxt * CH
 		end
-		local _w = 50 + ((_showp2) and 28 or 6) + _tlw
+		local _pbtxt = "PB Count: " .. globals.timers.p1_pushblock_counter
+		local _w = 4 + #_pbtxt * CH + ((_showp2) and 28 or 0) + _tlw
 		gui.rect(x, y, x + _w, y + 8, color)
 
-		-- PB Count text
-		gui.text( x + 2, y + 1, "PB Count: "..globals.timers.p1_pushblock_counter,
+		gui.text( x + 2, y + 1, _pbtxt,
 			globals.timers.p1_pushblock_ok and "#00FF00" or "#FFFFFF")
-		local _cx = x + 50
+		local _cx = x + 2 + #_pbtxt * CH
 		if _showp2 and globals.timers.p2_pushblock_counter then
 			local _n = globals.timers.p2_pushblock_counter
-			gui.text( _cx + 2, y + 1, "P2:".._n,
+			gui.text( _cx + GAP, y + 1, "P2:".._n,
 				globals.timers.p2_pushblock_ok and "#00FF00" or "#FFD700")
-			_cx = _cx + 26
+			_cx = _cx + GAP + 4 * CH
 			-- THE DUMMY'S DELIVERY IS ONE BUTTON PER TICK (guardCancel's PB
 			-- taps are one entry per tick for exactly this reason) - so its
 			-- MultiPush reads 0, and a number here is a bug in this tool.
 			local _s2 = globals.timers.p2_pb_simul or 0
 			if _s2 > 0 then
-				gui.text( _cx + 2, y + 1, "MULTI!", "#FF0000")
-				_cx = _cx + 30
+				gui.text( _cx + GAP, y + 1, "MULTI!", "#FF0000")
+				_cx = _cx + GAP + 6 * CH
 			end
-		else
-			_cx = _cx + 6
 		end
 		if _last > 0 then
-			-- THE FIRST PRESS TICK, AFTER THE METER (user, 2026-09-22): the
-			-- marks are hard to count by eye, so the tick the pressing started
-			-- on is called out as a number after the timeline. Lowercase "at"
-			-- because it is a preposition, not a field name.
-			local _first = nil
-			for _p = 1, _last do
-				if (_marks and _marks[_p] or "-") ~= "-" then _first = _p break end
-			end
+			_cx = _cx + GAP
 			gui.text(_cx, y + 1, "Guard", "#AAAAAA")
-			_cx = _cx + 22
+			_cx = _cx + 5 * CH
 			for _p = 1, _last do
 				local _m = (_marks and _marks[_p]) or "-"
 				if _m == "-" then
@@ -215,30 +260,30 @@ local function draw_pb_counter()
 				else
 					gui.text(_cx, y + 1, _m, "#FFFFFF")
 				end
-				_cx = _cx + 4.2
+				_cx = _cx + CH
 			end
 			if not _live then
-				gui.text(_cx, y + 1, "|Expired", "#AAAAAA")
-				_cx = _cx + 34
+				-- JUST THE BAR (2026-09-23). It used to read "|Expired", and
+				-- the word costs seven glyphs to repeat what the bar and the
+				-- end of the timeline already say. With the dummy's count
+				-- beside P1's the line ran 12px off the right edge of the
+				-- screen; this is where the room came from.
+				gui.text(_cx, y + 1, "|", "#AAAAAA")
+				_cx = _cx + 1 * CH
 			end
-			if _first ~= nil then
-				-- HEAD AND TAIL OF THE PRESSES (user, 2026-09-22): a:8-13t with
-				-- PB Count: 6 is the ideal spacing - six presses on six
-				-- consecutive ticks, none wasted on a simultaneous press.
-				local _lastpress = nil
-				for _p = _last, 1, -1 do
-					if (_marks and _marks[_p] or "-") ~= "-" then _lastpress = _p break end
-				end
-if _lastpress ~= nil and _lastpress ~= _first then
-					gui.text(_cx + 6, y + 1, "at:".._first.."-".._lastpress.."t", "#FFFFFF")
-				else
-					gui.text(_cx + 6, y + 1, "at:".._first.."t", "#FFFFFF")
-				end
+			if _attxt ~= nil then
+				_cx = _cx + GAP
+				gui.text(_cx, y + 1, _attxt, "#FFFFFF")
+				_cx = _cx + #_attxt * CH
 			end
-			_cx = _cx + 40
-			gui.text(_cx + 6, y + 1, "MultiPush: ".._simul,
-				(_simul > 0) and "#FF0000" or "#888888")
-			_cx = _cx + 6 + 50
+			_cx = _cx + GAP
+			gui.text(_cx, y + 1, _mptxt, (_simul > 0) and "#FF0000" or "#888888")
+			_cx = _cx + #_mptxt * CH
+			-- Same colour rule as MultiPush, the other negative on this line:
+			-- grey at zero, red once there is something to fix.
+			_cx = _cx + GAP
+			gui.text(_cx, y + 1, _omtxt, (_over > 0) and "#FF0000" or "#888888")
+			_cx = _cx + #_omtxt * CH
 		end
 	-- NOTHING TO DO WHEN THE READOUT IS OFF.
 	--

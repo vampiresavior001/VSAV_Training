@@ -25,6 +25,11 @@ button byte, $123 is the lever. Reading $122 gave 0x00 on every row.
 
 Lever bits: 0x01 and 0x02 are the two horizontals, 0x04 down, 0x08 up.
 
+THE DASH_FACING, SEQ_FRZ AND FACE_HOLD MARKS WERE REMOVED ON 2026-09-23.
+Those sections now read archived logs only - see
+scripts/reversal_logs_archive/2026-09-20_*. The land_gate section still
+works on fresh captures: that mark is kept as a test seam.
+
 Usage:  python read_dash_facing.py [log_dir]
 """
 import glob

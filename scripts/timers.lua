@@ -183,6 +183,88 @@ local function pb_mark_tick(_a6, _t)
     pb_publish()
 end
 
+-- LATEMASH: THE BUTTONS PRESSED AFTER THE WINDOW HAS CLOSED.
+--
+-- The push block window is fourteen ticks: 0x023966 writes it into $1ab and
+-- 0x02249C takes one off per tick. Inside it every press is a legitimate
+-- attempt, whether or not the block has already been granted - the player
+-- cannot see the grant, so pressing on is not a mistake (user, 2026-09-23).
+-- PAST THE FOURTEEN it buys nothing at all, and that is the habit worth
+-- showing. "LateMash" is what fighting game players call it.
+--
+-- WHY THIS NEEDS ITS OWN OBSERVATION POINT. The 0x0275E0 hook above only ever
+-- runs while the window is open - two instructions earlier the ROM tests $1ab
+-- and leaves - so the presses this counts are invisible from there. Reading
+-- once per displayed frame is not enough either: at turbo the game runs four
+-- ticks per three frames and the edge is missed, which is the same trap the
+-- note at the top of this file records. So it rides the tick stream.
+--
+-- THE FOURTEEN IS READ, NOT WRITTEN DOWN. Whatever $1ab holds on the tick the
+-- window opens is the length, so a build or a situation that uses a different
+-- number is followed rather than contradicted.
+--
+-- THE END IS COUNTED FROM THE OPENING, NOT FROM $1ab REACHING ZERO. A LIGHT
+-- block's guard stun is eleven ticks and the exit clears $1ab (0x024AF6)
+-- before it can count down, so the zero never arrives on its own - waiting for
+-- it would miss every light block (measured, see the note at the top).
+local LATEMASH_CAP = 60         -- ticks past the window end (user, 2026-09-23)
+local om_subscribed = false
+local om = {
+    [0xFF8400] = { n = 0, late = 0, open_lg = nil, len = 0, was = 0 },
+    [0xFF8800] = { n = 0, late = 0, open_lg = nil, len = 0, was = 0 },
+}
+
+local function om_publish()
+    timers.p1_pb_latemash      = om[0xFF8400].n
+    timers.p2_pb_latemash      = om[0xFF8800].n
+    timers.p1_pb_latemash_late = om[0xFF8400].late
+    timers.p2_pb_latemash_late = om[0xFF8800].late
+end
+
+-- One tick of the stream. Exported below so the offline test can drive it:
+-- nothing else can, because the real caller is the emulator's own clock.
+local function latemash_tick()
+    local _now = memory.readbyte(0xFF8081)
+    for _a6, _o in pairs(om) do
+        local _w = memory.readbyte(_a6 + 0x1AB)
+        -- A RISE IS AN OPENING. The window only ever counts down while it is
+        -- running, so a larger value than last tick is 0x023966 arming it -
+        -- including the re-arm a blocked string makes mid-count, which starts
+        -- a new attempt and therefore a new tally.
+        if _w > _o.was then
+            _o.open_lg, _o.len, _o.n, _o.late = _now, _w, 0, 0
+        end
+        _o.was = _w
+        if _o.open_lg ~= nil then
+            -- Eight bits, so the gap wraps; the same % 256 every other gap in
+            -- this tool uses. _since is 0 on the opening tick, so the window
+            -- itself is 0 .. len-1 and the first tick outside it is +1.
+            local _since = (_now - _o.open_lg) % 256
+            local _past = _since - _o.len + 1
+            if _past >= 1 then
+                if _past > LATEMASH_CAP then
+                    -- Past the limit the readout stops following. A player who
+                    -- simply keeps the buttons down would otherwise climb for
+                    -- as long as they felt like it, and the number would stop
+                    -- meaning anything (user, 2026-09-23).
+                    _o.open_lg = nil
+                else
+                    local _e = and77(memory.readbyte(_a6 + 0x126))
+                    if _e ~= 0 then
+                        -- BUTTONS, not ticks: two at once is two presses that
+                        -- bought nothing. MultiPush is the one that counts
+                        -- ticks, and it is about a different mistake.
+                        _o.n = _o.n + count_pb_buttons(_e)
+                        _o.late = _past
+                    end
+                end
+            end
+        end
+    end
+    om_publish()
+end
+om_publish()
+
 memory.registerexec(0x0275E0, function()
     local _a6 = memory.getregister("m68000.a6")
     local _t = pb[_a6]
@@ -213,6 +295,10 @@ memory.registerexec(0x0275E0, function()
     if _granted then
         -- $170 is frozen from the grant on, so the rest are ours to add.
         _t.after = _t.after + 1
+        -- STILL FOLDED INTO THE TOTAL. A press after the grant is a press the
+        -- player made and could not have known was unnecessary, so PB Count
+        -- keeps showing it; only LateMash - the window's OUTSIDE - is a
+        -- mistake (user, 2026-09-23).
         _t.count = _n + _t.after
     else
         -- $170 is read here, one instruction before 0x027606 adds to it, so
@@ -538,7 +624,18 @@ local timerModule = {
       -- draw_pursuit_OK(2)
     end
   end,
+  -- Driven by the emulator's clock in the real thing; exported so the offline
+  -- test can step it by hand, which nothing else can do.
+  ["latemash_tick"] = latemash_tick,
   ["registerBefore"] = function()
+    -- SUBSCRIBED ONCE, LAZILY. This module is required before globals.truth
+    -- exists, so it cannot be done at load; registerBefore runs every frame
+    -- and the flag keeps it to one subscription.
+    if not om_subscribed and globals ~= nil and globals.truth ~= nil
+       and globals.truth.ticker ~= nil then
+      om_subscribed = true
+      globals.truth.ticker:subscribe(function() latemash_tick() end)
+    end
     -- Both counts are maintained by the tick hook above; nothing to sample
     -- here. (v186 added the dummy's count beside P1's so "Guard Action =
     -- Push Block" had feedback on screen instead of only in a log.)

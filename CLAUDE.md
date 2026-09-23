@@ -95,7 +95,7 @@ Run ボタンで出す。
 オフラインテストの一括実行も同じ形で出す。
 
 ```bash
-cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts; $ng=0; foreach ($t in @("test_editor_rows","test_editor_ops","test_runner_compile","test_seq_hold","test_gc_frequency","test_gc_leftover","test_random_sources","test_menu_gate","test_menu_children","test_menu_layout","test_menu_switches","test_pb_counter","test_input_releases","test_input_tick_columns","test_release_defaults","test_throw_tech","test_hs_countdown","test_landing_deadline","test_landing_hitstop","test_land_regrace","test_loop_wait_landing","test_pattern_library_rows","test_pattern_library_reach","test_pattern_run","test_raw_dir_facing")) { lua5.1 "../analysis/$t.lua" > $null; if (-not $?) { Write-Output "NG $t"; $ng++ } }; Write-Output "scripts 25 本 NG=$ng"
+cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts; $ng=0; foreach ($t in @("test_editor_rows","test_editor_ops","test_runner_compile","test_seq_hold","test_gc_frequency","test_gc_leftover","test_random_sources","test_menu_gate","test_menu_children","test_menu_layout","test_menu_switches","test_pb_counter","test_input_releases","test_input_tick_columns","test_release_defaults","test_throw_tech","test_hs_countdown","test_landing_deadline","test_landing_hitstop","test_land_regrace","test_loop_wait_landing","test_pattern_library_rows","test_pattern_library_reach","test_pattern_run","test_raw_dir_facing","test_after_ground_dash","test_landing_ground_recovery","test_wakeup_facing","test_position_row")) { lua5.1 "../analysis/$t.lua" > $null; if (-not $?) { Write-Output "NG $t"; $ng++ } }; Write-Output "scripts 29 本 NG=$ng"
 ```
 
 ## 変更したら
@@ -104,7 +104,7 @@ cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts; $ng=0; foreach ($t in @("test_ed
 (相対パスで `controller.lua` と `guardCancel.lua` をソースごと読むため)。
 
 ```bash
-cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts && for t in test_editor_rows test_editor_ops test_runner_compile test_seq_hold test_gc_frequency test_gc_leftover test_random_sources test_menu_gate test_menu_children test_menu_layout test_menu_switches test_pb_counter test_input_releases test_input_tick_columns test_release_defaults test_throw_tech test_hs_countdown test_landing_deadline test_landing_hitstop test_land_regrace test_loop_wait_landing test_pattern_library_rows test_pattern_library_reach test_pattern_run test_raw_dir_facing; do lua5.1 ../analysis/$t.lua > /dev/null && echo "$t ok" || echo "$t NG"; done
+cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts && for t in test_editor_rows test_editor_ops test_runner_compile test_seq_hold test_gc_frequency test_gc_leftover test_random_sources test_menu_gate test_menu_children test_menu_layout test_menu_switches test_pb_counter test_input_releases test_input_tick_columns test_release_defaults test_throw_tech test_hs_countdown test_landing_deadline test_landing_hitstop test_land_regrace test_loop_wait_landing test_pattern_library_rows test_pattern_library_reach test_pattern_run test_raw_dir_facing test_after_ground_dash test_landing_ground_recovery test_wakeup_facing test_position_row; do lua5.1 ../analysis/$t.lua > /dev/null && echo "$t ok" || echo "$t NG"; done
 ```
 
 下記はパッケージのルートから走らせる (Tick Data は `scripts/tickData` を require

@@ -283,6 +283,81 @@ want("P2 の marks も記録", marks_of(P2):sub(1, 2), "12")
 ram[P2 + 0x1AB] = 0
 tick(P2, 0, false, false)
 
+-- LATEMASH: THE BUTTONS PRESSED AFTER THE WINDOW CLOSED.
+--
+-- Inside the fourteen ticks a press is a fair attempt whether or not the block
+-- has been granted - the player cannot see the grant, so carrying on is not a
+-- mistake, and PB Count keeps counting it. PAST the fourteen nothing can be
+-- bought (user, 2026-09-23).
+--
+-- Stepped by hand here because the real caller is the emulator's clock. The
+-- 0x0275E0 hook cannot see any of this: it only runs while the window is open.
+print("-- LateMash: 窓の外で押したボタン")
+local om_tick = timersModule.latemash_tick
+want("ティック関数が公開されている", type(om_tick), "function")
+
+-- 窓の外にいる状態から始める。まだ何も無い。
+local function lg(v) ram[0xFF8081] = v end
+local function press(who, e) ram[who + 0x126] = e or 0 end
+ram[P1 + 0x1AB] = 0 ; ram[P2 + 0x1AB] = 0
+press(P1, 0) ; press(P2, 0) ; lg(0) ; om_tick()
+want("窓が無ければ 0", timers.p1_pb_latemash, 0)
+
+-- 窓が開く。$1ab が跳ね上がったティックが起点で、長さはその値そのもの。
+lg(10) ; ram[P1 + 0x1AB] = 14 ; press(P1, 0x01) ; om_tick()
+want("開いたティックの押しは数えない", timers.p1_pb_latemash, 0)
+-- 窓の中 (残り 13..1)。成立していようがいまいが、ここは咎めない。
+for _i = 1, 13 do
+	lg(10 + _i) ; ram[P1 + 0x1AB] = 14 - _i ; press(P1, 0x01) ; om_tick()
+end
+want("窓の中は 14 ティックとも数えない", timers.p1_pb_latemash, 0)
+want("窓の中なら遅れも出ない", timers.p1_pb_latemash_late, 0)
+
+-- 窓の外 1 ティック目。開いてから 14 ティック目 (lg 24)。
+lg(24) ; ram[P1 + 0x1AB] = 0 ; press(P1, 0x01) ; om_tick()
+want("窓を出た最初の押しは 1 発", timers.p1_pb_latemash, 1)
+want("遅れは +1t", timers.p1_pb_latemash_late, 1)
+
+-- 同じティックに 3 ボタン。ティックではなくボタンを数える。
+lg(25) ; press(P1, 0x01 + 0x02 + 0x04) ; om_tick()
+want("同時 3 ボタンは 3 発", timers.p1_pb_latemash, 4)
+want("遅れは最後の押しのもの", timers.p1_pb_latemash_late, 2)
+
+-- 押していないティックは遅れを進めない。
+lg(30) ; press(P1, 0) ; om_tick()
+want("押さなければ増えない", timers.p1_pb_latemash, 4)
+want("押さなければ遅れも動かない", timers.p1_pb_latemash_late, 2)
+
+-- 60 ティックを超えたら追うのをやめる。押しっぱなしで伸び続けないこと。
+-- 窓は lg 10..23 (開いた lg + 長さ 14)。外の 1 ティック目が lg 24 なので、
+-- +60t は lg 83、+61t は lg 84。
+lg(83) ; press(P1, 0x01) ; om_tick()
+want("60t ちょうどは数える", timers.p1_pb_latemash, 5)
+want("遅れは 60t", timers.p1_pb_latemash_late, 60)
+lg(84) ; press(P1, 0x01) ; om_tick()
+want("61t は数えない", timers.p1_pb_latemash, 5)
+want("遅れも 60t で止まる", timers.p1_pb_latemash_late, 60)
+
+-- 窓が張り直されたら、そこから数え直す。多段ガードは 0x023966 で再武装する。
+lg(100) ; ram[P1 + 0x1AB] = 14 ; press(P1, 0) ; om_tick()
+want("張り直しで 0 に戻る", timers.p1_pb_latemash, 0)
+want("遅れも 0 に戻る", timers.p1_pb_latemash_late, 0)
+lg(114) ; ram[P1 + 0x1AB] = 0 ; press(P1, 0x02) ; om_tick()
+want("新しい窓の外で数え始める", timers.p1_pb_latemash, 1)
+
+-- ティックカウンタは 8 ビットで一周する。負や巨大な値を出さないこと。
+lg(250) ; ram[P1 + 0x1AB] = 14 ; press(P1, 0) ; om_tick()
+lg(9) ; ram[P1 + 0x1AB] = 0 ; press(P1, 0x01) ; om_tick()   -- 250 +14 = 264 -> 8
+want("一周しても数える", timers.p1_pb_latemash, 1)
+want("一周しても遅れは正しい", timers.p1_pb_latemash_late, 2)
+
+-- ダミー側も同じ形で出ること (Guard Action = Push Block の確認用)。
+lg(0) ; ram[P2 + 0x1AB] = 14 ; press(P2, 0) ; om_tick()
+lg(14) ; ram[P2 + 0x1AB] = 0 ; press(P2, 0x10) ; om_tick()
+want("P2 も数える", timers.p2_pb_latemash, 1)
+want("P2 も遅れを持つ", timers.p2_pb_latemash_late, 1)
+press(P1, 0) ; press(P2, 0)
+
 if fails == 0 then
 	print("test_pb_counter ok")
 else
