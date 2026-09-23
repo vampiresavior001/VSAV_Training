@@ -3,7 +3,7 @@
 -- 数字は作り話ではなく、2026-09-08 と 09 の routeProbe のトレースから起こして
 -- いる。ログの 1 本を 1 テストにしてあるので、実測が変われば期待値も変わる。
 --
---   cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 scripts/tests/actionRoute_test.lua
+--   lua5.1 scripts/tests/actionRoute_test.lua
 package.path = "./?.lua;./?/init.lua;" .. package.path
 local ar = require "scripts/actionRoute"
 local passed = 0

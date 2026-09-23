@@ -6,6 +6,44 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.11
+
+### A tick count on the guard cancel trainer
+
+Next to **SUCCESS** in the input viewer, **how many ticks into the window the
+cancel came out**. The window is fourteen ticks, so it reads 1 to 14 - lower
+is faster.
+
+```
+GC ████ SUCCESS 1t
+```
+
+**A cancel done on the guard itself sometimes drew no SUCCESS at all.** The
+cancel was coming out; only the label was lost. Fixed.
+
+### Menu tidied up, and a reset per tab
+
+- **`Reset This Tab` at the end of Display, Trainer and Analysis.** It puts
+  that tab's rows back to what they ship with. **Right, LP and MP all ask
+  first** with an OK / Cancel box, and the box works from the stick alone
+- **The `Game` tab moved to the right of `Dummy`**, so everything left of it
+  decides what happens and everything right of it decides what is drawn
+- **The `Timer` / `Mash` pair by the characters' feet has its own row now**
+  (`Display`, under `HUD (Life / Meter)`, **off by default**). The same
+  values are already in `Show PB Counter`
+
+### Diagonals no longer steer the menu
+
+**Up and down move the row, left and right change the value on it**, so a
+diagonal did **both on the same frame** - the list walked and a setting
+changed with it.
+
+While one stick holds one of each axis, **none of the four directions count**.
+Return to a cardinal and it works again. **Buttons are unaffected**: confirm
+and cancel still answer with the stick on a diagonal.
+
+---
+
 ## v11.7.10
 
 ### PB Count now warns about the mashing that leaks a normal

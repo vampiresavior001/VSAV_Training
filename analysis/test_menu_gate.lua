@@ -307,4 +307,31 @@ do
 		true)
 end
 
+
+-- 足元の Timer / Mash に自前のスイッチができた (2026-09-23)。
+--
+-- $1AB と $170 の生値で、Show PB Counter が同じ 2 バイトを履歴として
+-- 出している。同じ情報が 2 か所に出たうえ、受付が開くたびに Mash: 0 が
+-- 足元に居座っていた。既定 OFF にしたので、出荷値が true に戻ったら
+-- 気付けるようにする。
+--
+-- メニューが書く先、config の出荷値、描く側が読む先の 3 か所を突き合わせる。
+do
+	local row, on_tab = find_row("Show Tech Hit Mash")
+	want("行がある (" .. tostring(on_tab) .. " タブ)", row ~= nil, true)
+	want("書く先", row ~= nil and row.property_name or "", "display_tech_hit")
+	local shipped = dofile("config.lua").default_training_settings
+	want("既定値は OFF", shipped.display_tech_hit, false)
+	local v2 = io.open("vsavscriptv2.lua"):read("*a")
+	-- 1P と 2P の 2 か所とも門の内側にあること。片方だけ塞ぐと、
+	-- 消したはずの表示が対戦相手側にだけ残る。
+	local n = 0
+	for _ in v2:gmatch("globals%.options%.display_tech_hit") do n = n + 1 end
+	want("描く側は 2 か所とも読んでいる", n, 2)
+	-- 門の無い元の形が残っていないこと。
+	want("素の if が残っていない",
+		v2:find("		if memory.readbyte(0xff85ab) > 0 then", 1, true), nil)
+	want("2P 側も同じ",
+		v2:find("		if memory.readbyte(0xff89ab) > 0 then", 1, true), nil)
+end
 if fails == 0 then print("全て通った") else print(fails .. " failures") os.exit(1) end

@@ -472,6 +472,10 @@ function make_input_history_entry(_prefix, _input, _raw)
     -- not part of is_input_history_entry_equal().
     pressed = _pressed,
     gc_event = globals.gc_event,
+    -- Drawing only, like pressed and released above - deliberately not
+    -- part of is_input_history_entry_equal(). Two columns that differ only
+    -- in this cannot happen: it is set on one tick per window.
+    gc_ticks = globals.gc_ticks,
     pb_event = globals.pb_event,
   }
 end
@@ -539,6 +543,10 @@ function make_event_history_entry(event)
         type = "event",
         frame = frame_number,
         gc_event = globals.gc_event,
+        -- NO gc_ticks HERE. Event entries are built every frame and then
+        -- dropped: the isEvent branch of update_input_history that would
+        -- insert them is commented out, so nothing built here is ever
+        -- drawn. Adding the field would be a line no test can reach.
         pb_event = globals.pb_event    
     }
 end
@@ -696,6 +704,18 @@ function draw_input_history_entry(_entry, _x, _y, color, step)
 			gui.text(_x + 1 , _y - 9, "GC", "#FF0000")
 		elseif _entry.gc_event == "p1_gc_success" then
 			gui.text(_x + 1 , _y - 9, "SUCCESS", "#FFD700")
+			-- How far into the 14 tick window the cancel came out, measured on
+			-- ticks by the hook in guardCancel.lua. Absent when that hook is not
+			-- running (the offline tests and the old frame path), and then
+			-- nothing is drawn rather than a frame count wearing a t.
+			--
+			-- SUCCESS is seven glyphs from _x + 1 at about 4.2px each, so this
+			-- starts past it. It runs wider than the column, which is already
+			-- true of SUCCESS itself; the columns after a cancel draw nothing in
+			-- this band unless a push block starts on top of it (user, 2026-09-23).
+			if _entry.gc_ticks ~= nil then
+				gui.text(_x + 32, _y - 9, _entry.gc_ticks .. "t", "#FFD700")
+			end
     end
     if _entry.pb_event == "p1_pb_begin" then
 			gui.text(_x + 1 , _y - 9, "PB", "#00FF00")
@@ -943,7 +963,13 @@ local function handle_gc_event()
 
     -- todo: GC event history should be moved to a tick-based queue
     -- (ie accommodate frameskip for more granular event data)
-    if p1_gc_timer == 0 and globals.gc_event == "p1_gc_in_progress" then
+    -- BEGIN COUNTS TOO. A cancel on the tick after the window opened
+    -- arrives while the state is still begin, and requiring in_progress
+    -- left it stuck there with no SUCCESS drawn. Kept in step with
+    -- gc_next_state() in guardCancel.lua, which is the path that runs
+    -- when the tick hook is there (user, 2026-09-23).
+    if p1_gc_timer == 0 and (globals.gc_event == "p1_gc_in_progress"
+                             or globals.gc_event == "p1_gc_begin") then
       -- The window closing does not say WHY it closed. Two different things
       -- were being drawn with the same red "GC":
       --   * the window simply ran out (nothing was cancelled)
@@ -1131,6 +1157,9 @@ local inpHistoryModule = {
                     -- The window state as of THAT tick, so the column carries
                     -- the label belonging to it.
                     if _raw.gc ~= nil then globals.gc_event = _raw.gc end
+                    -- nil on every tick but the one the cancel came out
+                    -- on, which is how the label clears itself.
+                    globals.gc_ticks = _raw.gct
                     update_input_history(input_history[1], "P1", _input, false, nil, _raw)
                 end
                 globals.p1_tick_inputs = {}

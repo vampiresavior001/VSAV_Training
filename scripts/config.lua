@@ -35,6 +35,9 @@ local default_training_settings = {
   display_recording_gui= false,
   display_hitbox_default = true,
   display_hud=true,
+  -- OFF. Show PB Counter reads the same two bytes and gives them a
+  -- history; this is the raw pair drawn by the characters' feet.
+  display_tech_hit = false,
   input_event_type = 0,
   inp_history_scroll = 0,
   graph_data_index = 0,

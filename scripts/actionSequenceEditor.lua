@@ -2234,14 +2234,38 @@ local function enter()
 	end
 end
 
+-- A DIAGONAL IS NOT A MENU DIRECTION - see menu_input_crossed in menu.lua.
+--
+-- These screens are reached from that menu and are steered the same way, so
+-- they follow the same rule: while one pad holds one of each axis, neither
+-- direction counts. The autofire path already asks through the menu's helper;
+-- the two below read the pad straight, so they ask here.
+--
+-- ABSENT MEANS NOT CROSSED. The offline editor tests stub
+-- check_input_down_autofire and never load menu.lua, and they drive one
+-- direction at a time, so a diagonal cannot arise in them. The real wiring is
+-- pinned by analysis/test_menu_diagonal.lua, which loads both files for real.
+local function crossed(p, name)
+	if menu_input_crossed == nil then return false end
+	return menu_input_crossed(p, name)
+end
+
 local function pressed(name)
 	local p1 = player_objects and player_objects[1]
 	local p2 = player_objects and player_objects[2]
-	if p1 and p1.input and p1.input.pressed and p1.input.pressed[name] then return true end
-	if p2 and p2.input and p2.input.pressed and p2.input.pressed[name] then return true end
+	if p1 and p1.input and p1.input.pressed and p1.input.pressed[name]
+		and not crossed(p1, name) then return true end
+	if p2 and p2.input and p2.input.pressed and p2.input.pressed[name]
+		and not crossed(p2, name) then return true end
 	return false
 end
 
+-- NOT FILTERED, AND ON PURPOSE. The one caller is the arming guard below,
+-- which asks whether the stick is STILL PHYSICALLY on Right - not whether
+-- Right is a direction the menu should act on. Dropping a diagonal here
+-- would let a screen arm while Right is still held, and coming back to a
+-- clean Right would then walk another level in on the same hold: exactly
+-- what that guard exists to stop.
 local function held(name)
 	local p1 = player_objects and player_objects[1]
 	local p2 = player_objects and player_objects[2]

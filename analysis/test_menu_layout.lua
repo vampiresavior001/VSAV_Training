@@ -261,6 +261,36 @@ end
 print(("  -- タブバーは x=%d まで (パネル右端 %d)"):format(last_end, box_right))
 want("タブバーがパネルに収まる", last_end <= box_right, true)
 
+-- THE ORDER OF THE TABS, WHICH IS A RULE AND NOT A HABIT.
+--
+-- Split by what a tab acts on, there are two groups: the ones that change
+-- what HAPPENS (Recording, Gauge, Dummy, Game) and the ones that change what
+-- you SEE (Display, Trainer, Analysis). Game sat between Trainer and
+-- Analysis, inside the second group, although not one of its four rows draws
+-- anything - so the bar had no rule you could state, and which side a tab
+-- was on had to be remembered one tab at a time (user, 2026-09-23).
+--
+-- Moved to the right of Dummy, there is exactly ONE boundary: everything
+-- left of it decides what happens, everything right of it decides what is
+-- drawn. That is worth pinning, because the next tab added will be dropped
+-- at whichever end is convenient and the rule goes with it.
+do
+	local order = {}
+	for _, tab in ipairs(menu) do order[#order + 1] = tab.name end
+	want("並び", table.concat(order, " "),
+		"Recording Gauge Dummy Game Display Trainer Analysis")
+	-- 境界は 1 本だけ。左群のどれもが右群のどれより先にあること。
+	local happens = { Recording = true, Gauge = true, Dummy = true, Game = true }
+	local last_happens, first_seen = 0, nil
+	for i, name in ipairs(order) do
+		if happens[name] then
+			last_happens = i
+		elseif first_seen == nil then
+			first_seen = i
+		end
+	end
+	want("境界が 1 本", last_happens < (first_seen or 99), true)
+end
 if fails == 0 then
 	print("test_menu_layout ok")
 else

@@ -1,3 +1,8 @@
+-- Tick Data の集計そのもの。package.path をパッケージのルートに向けて
+-- scripts/tickData を require するので、ここから走らせる必要がある。
+--
+-- Run from the package root.
+--   lua5.1 scripts/tests/tickData_test.lua
 package.path = "./?.lua;./?/init.lua;" .. package.path
 local td = require "scripts/tickData"
 local passed = 0

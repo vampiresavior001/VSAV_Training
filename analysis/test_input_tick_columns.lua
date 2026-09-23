@@ -173,6 +173,62 @@ do
 	end
 end
 
+print("-- SUCCESS の隣に出すティック数が列まで届く")
+-- guardCancel の gc_tick_count が出した数は gct として列に乗り、
+-- inputHistory が gc_ticks に移して描く。ここが切れていると SUCCESS だけが
+-- 出て数字が消え、しかも誰も気付かない - 数字が無いのは正常な状態でもある
+-- (フックが無いとき) ため。
+do
+	-- GC の列が別物として積まれるのは、この行が ON のときだけ
+	-- (is_input_history_entry_equal が gc_event を見る条件)。既定の
+	-- ハーネスは OFF なので、ここだけ立てて戻す。
+	-- 走査は自分が積んだぶんだけ。前の節も success の列を作っており、
+	-- そちらは gct を渡していないので数が無いのが正しい。
+	local base = #input_history[1]
+	local was = globals.options.show_gc_trainer
+	globals.options.show_gc_trainer = true
+	local function gc_frame(gc, gct)		frame = frame + 1
+		globals.p1_tick_seq = (globals.p1_tick_seq or 0) + 1
+		globals.p1_tick_inputs = { { dir = 0x05, btn = 0x00,
+			seq = globals.p1_tick_seq, gc = gc, gct = gct } }
+		inp.registerBefore({})
+		return input_history[1][#input_history[1]]
+	end
+	gc_frame("p1_gc_begin", nil)
+	gc_frame("p1_gc_in_progress", nil)
+	local hit = gc_frame("p1_gc_success", 9)
+	want("成立した列に数が乗る", hit.gc_ticks, 9)
+	want("その列は success", hit.gc_event, "p1_gc_success")
+	-- 列は 2 通りの作られ方をする: 排出でティックごとに積まれるものと、
+	-- 排出の後に 1 つ置かれるイベント行。SUCCESS はどちらの形でも描かれる
+	-- ので、数が乗っていない側が残ると、同じ成立で数が出たり出なかったりする。
+	local marked, bare = 0, 0
+	for i = base + 1, #input_history[1] do
+		local e = input_history[1][i]
+		if e.gc_event == "p1_gc_success" then
+			if e.gc_ticks == 9 then marked = marked + 1 else bare = bare + 1 end
+		end
+	end
+	want("成立の列が見つかる", marked > 0, true)
+	want("数の無い成立の列は無い", bare, 0)
+	-- 次の列に持ち越さないこと。残ると、関係のない入力の隣に数字が出る。
+	local after = gc_frame("p1_gc_none", nil)
+	want("次の列には乗らない", after.gc_ticks, nil)
+	-- 描く側が、数が無いときは何も出さないこと。フックが無い環境では
+	-- 常に nil なので、ここで落ちるとオフラインでも壊れる。
+	local ih = io.open("inputHistory.lua"):read("*a")
+	want("描く側は nil を見てから出す",
+		ih:find("if _entry.gc_ticks ~= nil then", 1, true) ~= nil, true)
+	want("出すのは t 付き",
+		ih:find('_entry.gc_ticks .. "t"', 1, true) ~= nil, true)
+	-- 等価判定には入れない。入れると、数が付いた列と付かない列が別物に
+	-- なって、押しっぱなしが列に割れる。
+	local eq_s = ih:find("function is_input_history_entry_equal", 1, true)
+	local eq_e = ih:find("function is_event_history_entry_equal", eq_s or 1, true)
+	want("等価判定の中にはいない",
+		ih:sub(eq_s or 1, eq_e or 1):find("gc_ticks", 1, true), nil)
+	globals.options.show_gc_trainer = was
+end
 print("-- フックが無くても落ちない (オフラインとロード順)")
 globals.p1_tick_seq = nil
 globals.p1_tick_inputs = nil

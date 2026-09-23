@@ -54,7 +54,15 @@ local function hud()
 		end
 		
 		--Tech Hit
-		if memory.readbyte(0xff85ab) > 0 then
+		-- OFF BY DEFAULT, AND ITS OWN ROW SINCE 2026-09-23.
+		--
+		-- Timer and Mash are $1AB and $170 straight out of the game, drawn at a
+		-- fixed spot low on the screen - which is under the characters' feet most
+		-- of the time. Show PB Counter reads the same two bytes and draws them as
+		-- a history, so this was the same information twice, and Mash: 0 sat there
+		-- every time a window opened (user, 2026-09-23).
+		if globals.options.display_tech_hit == true
+		   and memory.readbyte(0xff85ab) > 0 then
 		gui.text(130,198,"Timer: " .. memory.readbyte(0xff85ab))
 		gui.text(130,190,"Mash: " .. memory.readbyte(0xff8570))
 		end
@@ -85,7 +93,9 @@ local function hud()
 		end
 		
 		--Tech Hit
-		if memory.readbyte(0xff89ab) > 0 then
+		-- Same switch as P1 above; the reason is written there.
+		if globals.options.display_tech_hit == true
+		   and memory.readbyte(0xff89ab) > 0 then
 		gui.text(208,198,"Timer: " .. memory.readbyte(0xff89ab))
 		gui.text(208,190,"Mash: " .. memory.readbyte(0xff8970))
 		end

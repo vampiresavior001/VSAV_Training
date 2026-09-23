@@ -22,7 +22,42 @@ charMovesModule   = require "./scripts/charMoves"
 actionSequenceEditorModule = require "./scripts/actionSequenceEditor"
 actionSequenceRunnerModule = require "./scripts/actionSequenceRunner"
 positionModule    = require "./scripts/position"
+-- A DIAGONAL IS NOT A MENU DIRECTION.
+--
+-- The four direction blocks in the menu are independent and they do different
+-- jobs: a vertical moves the cursor down the rows, a horizontal changes the
+-- value ON the row. Held together they both fire on the same frame, so a stick
+-- passing through down-right walks the list AND edits a setting in one motion,
+-- with nothing on screen to say the second thing happened (user, 2026-09-23).
+--
+-- So a direction counts only while its own axis is the only one held. Both are
+-- dropped while the stick sits on a diagonal, and coming back to a cardinal is
+-- what lets one through again.
+--
+-- PER PAD, NOT ACROSS THE TWO. 1P holding Down while 2P pushes Right is two
+-- players, not a diagonal - either stick drives this menu, and testing them
+-- together would let one player's hold lock the other one out.
+--
+-- BUTTONS ARE NOT FILTERED. Confirm and cancel still answer with the stick on
+-- a diagonal. Only what moves the cursor is dropped.
+local MENU_CROSS_AXIS = {
+  up    = { "left", "right" },
+  down  = { "left", "right" },
+  left  = { "up",   "down"  },
+  right = { "up",   "down"  },
+}
+function menu_input_crossed(_player_object, _input)
+  local _other = MENU_CROSS_AXIS[_input]
+  if _other == nil then return false end
+  local _down = _player_object and _player_object.input
+                and _player_object.input.down
+  if _down == nil then return false end
+  -- == true rather than truthiness: the offline harnesses build these sets
+  -- with the keys they are driving and leave every other one nil.
+  return _down[_other[1]] == true or _down[_other[2]] == true
+end
 function check_input_down_autofire(_player_object, _input, _autofire_rate, _autofire_time)
+  if menu_input_crossed(_player_object, _input) then return false end
   _autofire_rate = _autofire_rate or 4
   -- A RATE OF ZERO TURNED THE HOLD OFF, SILENTLY.
   --
@@ -1356,6 +1391,141 @@ local function child_of(_parent_property, _item)
   return _item
 end
 
+
+-- RESET A WHOLE TAB, AND IT FINDS OUT WHICH TAB IT IS ON BY ITSELF.
+--
+-- Every row here already resets on MP; what was missing was doing it to the
+-- lot. The place for that is the tab it belongs to, not one tab that owns the
+-- others - a tab that resets itself needs no owner, and the rows change in
+-- front of you when you press it (user, 2026-09-23).
+--
+-- NO LIST OF ROWS. It is told which TAB it is on and resets whatever that
+-- tab holds at the time, so a row added later is covered without anyone
+-- remembering to add it anywhere. Naming the rows would be a second list to
+-- keep in step, which is how the test list drifted and left four unrun.
+--
+-- THE TAB IS NAMED, NOT FOUND. It used to look itself up in menu, which
+-- reads better and does not work: menu = get_menu() sits inside guiRegister,
+-- so every row object is thrown away and remade EVERY DRAWN FRAME. The popup
+-- is answered on a later frame than the one that opened it, and the row held
+-- across that gap was an object that no longer existed anywhere in menu -
+-- the lookup returned nil and the reset did nothing at all, silently (user,
+-- 2026-09-23: the GC Frequency Counter row stayed on). A name survives the
+-- rebuild. test_menu_reset_tab.lua checks each row's name against the tab it
+-- actually sits in, so a renamed tab fails there rather than in front of
+-- someone.
+--
+-- IT ASKS FIRST, ON EVERY WAY IN. Right, LP and MP all open the same two-row
+-- popup rather than doing anything - MP included, because MP resets a single
+-- row everywhere else in this menu and the muscle memory that goes with it
+-- would wipe a tab (user, 2026-09-23).
+--
+-- THE STICK ALONE IS ENOUGH. Right opens it, Up/Down choose, Right confirms
+-- and Left cancels, so nothing here needs a button. Right keeps its one
+-- meaning throughout: further in.
+--
+-- IT LANDS ON CANCEL, AND RIGHT IS HELD OFF FOR FIFTEEN FRAMES. Right auto-
+-- repeats while held, so the press that opens the popup would otherwise
+-- carry straight on into the row it lands on - the same guard Play Recording
+-- and the Loop Interval popup use. Landing on Cancel means even a repeat
+-- that got through would close the popup rather than wipe the tab.
+--
+-- HIDDEN ROWS ARE RESET TOO. A row behind a parent switch still holds a
+-- value and shows it again the moment the parent comes back on, so leaving
+-- it alone would make the reset depend on what happened to be on screen.
+local function reset_tab_item(_tab_name)
+  local _o = {}
+  _o.name = "Reset This Tab"
+  -- Exposed so the test can hold it against the tab it is in.
+  _o.tab_name = _tab_name
+  local opened_at = nil
+  local function right_locked()
+    return opened_at ~= nil and emu.framecount() - opened_at < 15
+  end
+  -- BY NAME, BECAUSE THE ROWS DO NOT SURVIVE THE FRAME.
+  --
+  -- menu = get_menu() runs inside guiRegister, which runs every drawn frame,
+  -- so every row object is rebuilt each frame. The popup is answered on a
+  -- LATER frame than the one that opened it, and holding the row itself over
+  -- that gap meant looking for an object that no longer existed anywhere in
+  -- menu: tab_of returned nil and the reset did nothing at all, silently
+  -- (user, 2026-09-23 - the GC Frequency Counter row stayed on).
+  --
+  -- The lookup still happens by identity, but on the frame of the press,
+  -- where the row IS the one in menu. Only the tab's name crosses the gap.
+  local function do_reset(_tab_name)
+    for _, _tab in ipairs(menu) do
+      if _tab.name == _tab_name then
+        for _, _r in ipairs(_tab.entries) do
+          if _r.name ~= "Reset This Tab" and _r.reset ~= nil then
+            _r:reset()
+          end
+        end
+        return
+      end
+    end
+  end
+  local function confirm_rows(_tab_name)
+    local _ok = {}
+    _ok.name = "OK"
+    function _ok:draw(_x, _y, _selected)
+      local c = _selected and text_selected_color or text_default_color
+      gui.text(_x, _y, (_selected and "< " or "") .. self.name, c, text_default_border_color)
+    end
+    -- CLOSED FIRST, THEN THE WORK. Closing afterwards hid whether the reset
+    -- touched this row too: its own reset opens the box, and clearing the
+    -- popup on the way out threw that second box away again, so a reset that
+    -- included itself was invisible. This way it would be left standing.
+    function _ok:validate() current_popup = nil do_reset(_tab_name) end
+    function _ok:right() if right_locked() then return end self:validate() end
+    function _ok:legend() return "Right or LP: Reset the tab" end
+    function _ok:description() return "" end
+    local _no = {}
+    _no.name = "Cancel"
+    function _no:draw(_x, _y, _selected)
+      local c = _selected and text_selected_color or text_default_color
+      gui.text(_x, _y, (_selected and "< " or "") .. self.name, c, text_default_border_color)
+    end
+    function _no:validate() current_popup = nil end
+    function _no:left() current_popup = nil end
+    function _no:legend() return "Left or LP: Leave it alone" end
+    function _no:description() return "" end
+    return { _ok, _no }
+  end
+  local function ask()
+    if right_locked() then return end
+    opened_at = emu.framecount()
+    current_popup = make_popup(92, 84, 292, 144, confirm_rows(_tab_name),
+      "Reset " .. (_tab_name or "this tab") .. " to defaults?")
+    -- Lands on Cancel. See the note above.
+    current_popup.selected_index = 2
+  end
+  function _o:draw(_x, _y, _selected)
+    local _c = text_default_color
+    local _prefix, _suffix = "", ""
+    if _selected then
+      _c = text_selected_color
+      _prefix, _suffix = "< ", " >"
+    end
+    gui.text(_x, _y, _prefix .. self.name .. _suffix, _c, text_default_border_color)
+  end
+  function _o:right() ask() end
+  function _o:validate() ask() end
+  -- MP asks as well. Everywhere else in this menu MP resets the row under the
+  -- cursor outright, and that habit is the one that would cost a tab.
+  function _o:reset() ask() end
+  function _o:legend() return "Right / LP / MP: Asks before resetting" end
+  function _o:description()
+    return "Puts every row on this tab back to the value it ships with. It asks first -"
+        .. "\nRight, LP and MP all open the same OK / Cancel box, which lands on Cancel."
+        .. "\nIn the box: Up/Down choose, Right or LP confirms, Left cancels."
+        .. "\nOnly this tab. The others are left alone."
+        .. "\nRows hidden behind another setting are reset too - they are still holding a"
+        .. "\nvalue, and it comes back into view when that setting is turned on."
+  end
+  return _o
+end
+
 local function get_menu() 
 return {
     {
@@ -1493,48 +1663,6 @@ return {
         }
     },
     {
-      name = "Display",
-      entries = {
-        -- checkbox_menu_item("Use Custom Palettes *at your own risk*", training_settings, "enable_custom_palette", "Shows Health and Meter values"),
-        -- integer_menu_item("P1 Char Palette", training_settings, "p1_char_palette", 0, 255, false, 0,0,"Scroll through these on char select to see if you like one\nMany do not look good"),
-        -- integer_menu_item("P2 Char Palette", training_settings, "p2_char_palette", 0, 255, false, 0,0,"Scroll through these on char select to see if you like one\nMany do not look good"),
-
-        checkbox_menu_item("HUD (Life / Meter)", training_settings, "display_hud", true, "Red and white life for both players at the top of the screen, the meter, and\nthe character specific readouts - curse, Dark Force timer, tech hit.\nThe trainers and the input bar are not part of this; they have their own rows."),
-        checkbox_menu_item("Movelist", training_settings, "display_movelist", false,"Shows a character specific move list"),
-        checkbox_menu_item("Display Hitboxes", training_settings, "display_hitbox_default",1, "Display hitboxes for P1 and P2"),
-        child_of("display_hitbox_default", checkbox_menu_item("Display Pushbox X Center", training_settings, "display_pushbox_axis", false, "Display the x center of the pushbox")),
-        list_menu_item("Show Pushbox Distance", training_settings, "show_x_distance", { "Off", "X Only", "X,Y,Triangle"},1,"Gives a numerical / visual representation of the distances between characters"),
-        checkbox_menu_item("Show Damage Calc (on P2)", training_settings, "show_damage_calc", false, "This shows a damage calculation.\nDamage calculations are recalculated on hit"),
-        checkbox_menu_item("Recording GUI", training_settings, "display_recording_gui", false, "Shows the current recording staet"),
-        checkbox_menu_item("Show Scrolling Input", training_settings, "show_scrolling_input",1, "The input bar along the bottom of the screen: YOUR inputs, newest at the right.\nShow P2 Inputs is the same thing for the dummy, down the right edge.\nThe four rows under this one all draw into this bar and come off with it."),
-        child_of("show_scrolling_input", integer_menu_item("Scrolling Input History", training_settings, "inp_history_scroll", 0, 80, false, 0,0,"How far back into the Scrolling Input bar above to look. 0 is the newest input.\nRaising it slides the bar along so inputs that have gone off the left come\nback into view. It does not pause anything - new inputs still arrive.")),
-        child_of("show_scrolling_input", checkbox_menu_item("Show Button Releases", training_settings, "show_button_releases", true, "Draws a hollow marker on the frame a button is let go, in its own one-frame\ncolumn. Off leaves presses and holds only, and a release just ends the column\nthe button was held in - the way the input bar read before the marker existed.\nHide Negative Edge Inputs below does not touch these columns.")),
-        child_of("show_scrolling_input", checkbox_menu_item("Hide Negative Edge Inputs", training_settings, "skip_nedge_displays", true, "Hides the columns that carry nothing new: same direction as the one before and\nno button newly pressed - the clutter a release leaves behind.\nNot the release marker itself. Show Button Releases above owns that, and this\nrow leaves those columns alone.")),
-        child_of("show_scrolling_input", checkbox_menu_item("Show GC Trainer", training_settings, "show_gc_trainer", true,"This option shows the GC window in the input viewer.\nThe Green GC shows when the window begins,\nand Red when it is performed or ends.")),
-        checkbox_menu_item("Show P2 Inputs", training_settings, "display_p2_inputs", 1, "The dummy's inputs, as icons down the right edge of the screen.\nShow Scrolling Input above is the same thing for YOUR side, along the bottom.\nThis used to come off only with the whole HUD."),
-      }
-    },
-    {
-      name = "Trainer",
-      entries = {
-        checkbox_menu_item("Tick Data", training_settings, "mo_enable_frame_data", false, "Startup, active, recovery, advantage, total, hitstun, hitfreeze - in Ticks.\nThe first three come from the ATTACK HITBOX, the box the hitbox display draws,\nso they do not move with distance. They add up to Total and exclude the\nattacker's own hitfreeze; * means the attacker was not frozen.\nACTION TIMELINE (third row, green): one action on a clock, each entry stamped\nwith its Tick. LP..HK and Action Steps names. 1t PreJump > 4t Air > 10t MP."),
-        child_of("mo_enable_frame_data", list_menu_item("Tick Data Side", training_settings, "mo_frame_data_side", { "P1", "P2" }, 1, "WHICH PLAYER the rows above measure. P1 is you.\nP2 measures the DUMMY: its move gets Startup / Active / Recovery, the Action\nTimeline follows what the DUMMY did, and YOUR side supplies the hit or guard\nit ran into. This is how to see what a recorded Action Steps pattern really\ncame out as.\nOne side at a time. Both readouts say P2 while it is on.")),
-        checkbox_menu_item("Show Step Wait Ticks", training_settings, "display_step_wait_ticks", false,"Shows what each Action Step actually waited, in game Ticks.\nThe Wait row names a mode - Auto (After), Auto (Chain) - without saying how\nlong it came to. This measures it: Step.2 Wait:13 is step two connecting 13 Ticks\nafter step one. Act is the Ticks that step spends entering its own inputs.\nLoop Wait is the gap a loop restart waited, which is not step one own wait.\nMeasured only - what the row is set to is on the row."),
-        checkbox_menu_item("Show PB Counter", training_settings, "display_pb_counter",1, "Push block presses the game counted ($170), plus any after it grants - a lucky\nthree would read three however hard you mash. Green once granted; the count\ncarries a blocked string. Right: the TICK timeline of the last window (Guard\nopens it, | closes it, digit = buttons that tick; 2+ red is simultaneous).\nMultiPush counts those. LateMash: buttons pressed AFTER the 14 ticks - they\nLEAK A NORMAL when guard stun ends. Cap 60t. The dummy shows as P2."),
-        checkbox_menu_item("Show PB Stats", training_settings, "display_pb_stats", false,"Displays your succeeded, failed and total attempts at pushblocking.\n Turning this feature off and on will reset the data to 0"),
-        checkbox_menu_item("Show GC Frequency Counter", training_settings, "display_gc_freq_counter", 0, "Counts what Guard Action Frequency actually did.\nopp = chances the dummy had, roll+ = how many the roll allowed,\narm = guard actions started, seq = later sequence steps sent.\nGreen when roll+/opp matches the setting. seq above opp means\nleftover steps from an earlier chance are still coming out."),
-        checkbox_menu_item("Show Frame Trap Trainer", training_settings, "display_frame_trap_trainer", false,"Shows the gap between p2 recovering from hit or block stun\nand the next one, in game Ticks."),
-        checkbox_menu_item("Show Jump In Trainer", training_settings, "display_jump_in_trainer", false,"Displays the gap between p2 getting hit and your character landing,\nin DISPLAYED frames - not game Ticks."),
-        checkbox_menu_item("Show IAD Trainer", training_settings, "display_airdash_trainer", 0,"This option shows the HEIGHT of your last few aidashes.\nGreen is best! Red is Worst!"),
-        checkbox_menu_item("Show Dashes Interval", training_settings, "display_dash_interval_trainer", 0,"Shows how many DISPLAYED frames between dashes - not game Ticks.\nGreen is best! Red is Worst!"),
-        checkbox_menu_item("Show Dash Time", training_settings, "display_dash_length_trainer", 0,"Shows how many DISPLAYED frames you dashed for - not game Ticks.\nIf Sas then Smileys describe short hop success.\nGreen is best! Red is Worst!"),
-        checkbox_menu_item("Show Dash Attack Cancel Trainer", training_settings, "display_dash_attack_cancel_trainer", false,"Shows the DISPLAYED frames between starting a dash\nand the start of an attack - not game Ticks.\nThis is printed under Dash ATK in the gui."),
-        checkbox_menu_item("Show Attack Dash Gap Trainer", training_settings, "display_attack_dash_gap_trainer", false,"Shows the DISPLAYED frames between an attack recovering\nand the start of a dash - not game Ticks.\nThis is printed under Gap BTW ATK Dash in the gui."),
-        checkbox_menu_item("Show Short Hop Counter (Sas)", training_settings, "display_short_hop_counter", false,"Shows how many short hops you.\nhave done in a row on Sasquatch"),
-        checkbox_menu_item("Show Bishamon UBK Trainer", training_settings, "display_bishamon_ubk_trainer", false,"Overlays onto P2 whether you are in a crouch or standing\n unblockable distance for Karame Dama or Bricks"),
-      }
-    },
-    {
       name = "Game",
       entries = {
         integer_menu_item("Game Speed", training_settings, "game_speed", 0, 3, false, 3, 0, "Change the game speed\n0 = normal, 1-3 = turbo 1-3"),
@@ -1566,6 +1694,51 @@ return {
       }
     },
     {
+      name = "Display",
+      entries = {
+        -- checkbox_menu_item("Use Custom Palettes *at your own risk*", training_settings, "enable_custom_palette", "Shows Health and Meter values"),
+        -- integer_menu_item("P1 Char Palette", training_settings, "p1_char_palette", 0, 255, false, 0,0,"Scroll through these on char select to see if you like one\nMany do not look good"),
+        -- integer_menu_item("P2 Char Palette", training_settings, "p2_char_palette", 0, 255, false, 0,0,"Scroll through these on char select to see if you like one\nMany do not look good"),
+
+        checkbox_menu_item("HUD (Life / Meter)", training_settings, "display_hud", true, "Red and white life for both players at the top of the screen, the meter, and\nthe character specific readouts - curse, Dark Force timer.\nTech hit has its own row under this one.\nThe trainers and the input bar are not part of this; they have their own rows."),
+        child_of("display_hud", checkbox_menu_item("Show Tech Hit Mash", training_settings, "display_tech_hit", false, "Timer and Mash under the characters while the tech hit window is open - the\nraw $1AB and $170, straight from the game.\nShow PB Counter on this tab reads the same two bytes and draws them as a\nhistory, so this is the same information twice.\nPart of the HUD row above - it comes off with that as well.")),
+        checkbox_menu_item("Movelist", training_settings, "display_movelist", false,"Shows a character specific move list"),
+        checkbox_menu_item("Display Hitboxes", training_settings, "display_hitbox_default",1, "Display hitboxes for P1 and P2"),
+        child_of("display_hitbox_default", checkbox_menu_item("Display Pushbox X Center", training_settings, "display_pushbox_axis", false, "Display the x center of the pushbox")),
+        list_menu_item("Show Pushbox Distance", training_settings, "show_x_distance", { "Off", "X Only", "X,Y,Triangle"},1,"Gives a numerical / visual representation of the distances between characters"),
+        checkbox_menu_item("Show Damage Calc (on P2)", training_settings, "show_damage_calc", false, "This shows a damage calculation.\nDamage calculations are recalculated on hit"),
+        checkbox_menu_item("Recording GUI", training_settings, "display_recording_gui", false, "Shows the current recording staet"),
+        checkbox_menu_item("Show Scrolling Input", training_settings, "show_scrolling_input",1, "The input bar along the bottom of the screen: YOUR inputs, newest at the right.\nShow P2 Inputs is the same thing for the dummy, down the right edge.\nThe four rows under this one all draw into this bar and come off with it."),
+        child_of("show_scrolling_input", integer_menu_item("Scrolling Input History", training_settings, "inp_history_scroll", 0, 80, false, 0,0,"How far back into the Scrolling Input bar above to look. 0 is the newest input.\nRaising it slides the bar along so inputs that have gone off the left come\nback into view. It does not pause anything - new inputs still arrive.")),
+        child_of("show_scrolling_input", checkbox_menu_item("Show Button Releases", training_settings, "show_button_releases", true, "Draws a hollow marker on the frame a button is let go, in its own one-frame\ncolumn. Off leaves presses and holds only, and a release just ends the column\nthe button was held in - the way the input bar read before the marker existed.\nHide Negative Edge Inputs below does not touch these columns.")),
+        child_of("show_scrolling_input", checkbox_menu_item("Hide Negative Edge Inputs", training_settings, "skip_nedge_displays", true, "Hides the columns that carry nothing new: same direction as the one before and\nno button newly pressed - the clutter a release leaves behind.\nNot the release marker itself. Show Button Releases above owns that, and this\nrow leaves those columns alone.")),
+        child_of("show_scrolling_input", checkbox_menu_item("Show GC Trainer", training_settings, "show_gc_trainer", true,"This option shows the GC window in the input viewer.\nThe Green GC shows when the window begins,\nand Red when it is performed or ends.")),
+        checkbox_menu_item("Show P2 Inputs", training_settings, "display_p2_inputs", 1, "The dummy's inputs, as icons down the right edge of the screen.\nShow Scrolling Input above is the same thing for YOUR side, along the bottom.\nThis used to come off only with the whole HUD."),
+        reset_tab_item("Display"),
+      }
+    },
+    {
+      name = "Trainer",
+      entries = {
+        checkbox_menu_item("Tick Data", training_settings, "mo_enable_frame_data", false, "Startup, active, recovery, advantage, total, hitstun, hitfreeze - in Ticks.\nThe first three come from the ATTACK HITBOX, the box the hitbox display draws,\nso they do not move with distance. They add up to Total and exclude the\nattacker's own hitfreeze; * means the attacker was not frozen.\nACTION TIMELINE (third row, green): one action on a clock, each entry stamped\nwith its Tick. LP..HK and Action Steps names. 1t PreJump > 4t Air > 10t MP."),
+        child_of("mo_enable_frame_data", list_menu_item("Tick Data Side", training_settings, "mo_frame_data_side", { "P1", "P2" }, 1, "WHICH PLAYER the rows above measure. P1 is you.\nP2 measures the DUMMY: its move gets Startup / Active / Recovery, the Action\nTimeline follows what the DUMMY did, and YOUR side supplies the hit or guard\nit ran into. This is how to see what a recorded Action Steps pattern really\ncame out as.\nOne side at a time. Both readouts say P2 while it is on.")),
+        checkbox_menu_item("Show Step Wait Ticks", training_settings, "display_step_wait_ticks", false,"Shows what each Action Step actually waited, in game Ticks.\nThe Wait row names a mode - Auto (After), Auto (Chain) - without saying how\nlong it came to. This measures it: Step.2 Wait:13 is step two connecting 13 Ticks\nafter step one. Act is the Ticks that step spends entering its own inputs.\nLoop Wait is the gap a loop restart waited, which is not step one own wait.\nMeasured only - what the row is set to is on the row."),
+        checkbox_menu_item("Show PB Counter", training_settings, "display_pb_counter",1, "Push block presses the game counted ($170), plus any after it grants - a lucky\nthree would read three however hard you mash. Green once granted; the count\ncarries a blocked string. Right: the TICK timeline of the last window (Guard\nopens it, | closes it, digit = buttons that tick; 2+ red is simultaneous).\nMultiPush counts those. LateMash: buttons pressed AFTER the 14 ticks - they\nLEAK A NORMAL when guard stun ends. Cap 60t. The dummy shows as P2."),
+        checkbox_menu_item("Show PB Stats", training_settings, "display_pb_stats", false,"Displays your succeeded, failed and total attempts at pushblocking.\n Turning this feature off and on will reset the data to 0"),
+        checkbox_menu_item("Show GC Frequency Counter", training_settings, "display_gc_freq_counter", 0, "Counts what Guard Action Frequency actually did.\nopp = chances the dummy had, roll+ = how many the roll allowed,\narm = guard actions started, seq = later sequence steps sent.\nGreen when roll+/opp matches the setting. seq above opp means\nleftover steps from an earlier chance are still coming out."),
+        checkbox_menu_item("Show Frame Trap Trainer", training_settings, "display_frame_trap_trainer", false,"Shows the gap between p2 recovering from hit or block stun\nand the next one, in game Ticks."),
+        checkbox_menu_item("Show Jump In Trainer", training_settings, "display_jump_in_trainer", false,"Displays the gap between p2 getting hit and your character landing,\nin DISPLAYED frames - not game Ticks."),
+        checkbox_menu_item("Show IAD Trainer", training_settings, "display_airdash_trainer", 0,"This option shows the HEIGHT of your last few aidashes.\nGreen is best! Red is Worst!"),
+        checkbox_menu_item("Show Dashes Interval", training_settings, "display_dash_interval_trainer", 0,"Shows how many DISPLAYED frames between dashes - not game Ticks.\nGreen is best! Red is Worst!"),
+        checkbox_menu_item("Show Dash Time", training_settings, "display_dash_length_trainer", 0,"Shows how many DISPLAYED frames you dashed for - not game Ticks.\nIf Sas then Smileys describe short hop success.\nGreen is best! Red is Worst!"),
+        checkbox_menu_item("Show Dash Attack Cancel Trainer", training_settings, "display_dash_attack_cancel_trainer", false,"Shows the DISPLAYED frames between starting a dash\nand the start of an attack - not game Ticks.\nThis is printed under Dash ATK in the gui."),
+        checkbox_menu_item("Show Attack Dash Gap Trainer", training_settings, "display_attack_dash_gap_trainer", false,"Shows the DISPLAYED frames between an attack recovering\nand the start of a dash - not game Ticks.\nThis is printed under Gap BTW ATK Dash in the gui."),
+        checkbox_menu_item("Show Short Hop Counter (Sas)", training_settings, "display_short_hop_counter", false,"Shows how many short hops you.\nhave done in a row on Sasquatch"),
+        checkbox_menu_item("Show Bishamon UBK Trainer", training_settings, "display_bishamon_ubk_trainer", false,"Overlays onto P2 whether you are in a crouch or standing\n unblockable distance for Karame Dama or Bricks"),
+        reset_tab_item("Trainer"),
+      }
+    },
+    {
       name = "Analysis",
       entries = {
         checkbox_menu_item("Show Invuln Timer", training_settings, "show_invuln_timer", false,"The invulnerability timer ($147), over each character's head: a green bar and\nthe number, labelled Inv. Counts down while the character cannot be hit.\nA raw value read straight from the game, not a measurement."),
@@ -1578,6 +1751,7 @@ return {
         checkbox_menu_item("Show Hit Strength + PB PushBack", training_settings, "show_move_strength", false,"Four lines at the top left: the strength of the attack each character was last\nhit by ($59), and each one's push block pushback timer ($1B0).\nAdded while chasing a delayed-pushback bug. Raw values, no measurement."),
         checkbox_menu_item("Show Projectile Allocation", training_settings, "show_projectile_count_limiter", false,"The projectile allocation value ($FFF9BE) in hex, near the top of the screen.\nThe game's own budget for what can be on screen at once.\nA readout, not a limiter - nothing here changes the value."),
         checkbox_menu_item("Knockdown Logger", training_settings, "knockdown_logger_enable", false,"Writes a JSON trace of every recovery to scripts/reversal_logs.\nFor investigating timing. Leave it off unless you are measuring something -\nit writes a file per recovery."),
+        reset_tab_item("Analysis"),
       }
     }
 }

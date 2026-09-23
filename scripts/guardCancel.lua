@@ -3304,6 +3304,60 @@ local p1_tick_input_last = -1
 -- The guard cancel window state, carried across ticks so the transitions
 -- can be spotted. Mirrors handle_gc_event() in inputHistory.lua.
 local p1_gc_state = "p1_gc_none"
+-- The tick the window opened on, so the label can say how far into it the
+-- cancel came out. p1_tick_seq is monotonic, so this is a plain subtraction -
+-- $FF8081 is a byte and wraps.
+local p1_gc_open_seq = nil
+
+-- THE WINDOW, ONE TICK AT A TIME.
+--
+-- Same test as handle_gc_event() in inputHistory.lua: $158 is the block
+-- clock, and the cancel came out if $06 is a special (0x0E), an ES (0x10) or
+-- an EX (0x12) on the tick it reaches zero. Checked against 35 attempts
+-- logged both ways (analysis/gc_success_probe_20260915b.log).
+--
+-- SUCCESS IS ALSO REACHABLE STRAIGHT FROM BEGIN. It used to require
+-- in_progress, and a cancel that came out on the tick right after the window
+-- opened arrives while the state is still begin: no branch matched, the
+-- state stayed begin, and it stayed there until the NEXT guard - so the
+-- cancel came out, was correct, and drew no SUCCESS at all. Cancelling on
+-- the guard itself is exactly when that happens (user, 2026-09-23).
+--
+-- Pure, and out of the hook, so it can be driven tick by tick offline -
+-- the hook only runs when the game reaches 0x0221CC.
+local function gc_next_state(_state, _clock, _act)
+	if _clock == 0 and (_state == "p1_gc_in_progress"
+						or _state == "p1_gc_begin") then
+		if _act == 0x0E or _act == 0x10 or _act == 0x12 then
+			return "p1_gc_success"
+		end
+		return "p1_gc_ended"
+	end
+	if _state == "p1_gc_none" and _clock > 0 then return "p1_gc_begin" end
+	if _clock > 0 then return "p1_gc_in_progress" end
+	if _state == "p1_gc_ended" or _state == "p1_gc_success" then
+		return "p1_gc_none"
+	end
+	return _state
+end
+
+-- WHEN THE COUNT STARTS, AND WHAT IT COMES TO.
+--
+-- Pulled out of the hook on purpose. The hook only runs when the game
+-- reaches 0x0221CC, so nothing offline can drive it; this is lifted out of
+-- the file and run tick by tick by analysis/test_gc_success_ticks.lua, the
+-- same way make_input_sequence is lifted out of controller.lua.
+--
+-- Returns the tick count to hang on this tick's column (nil on every tick
+-- but the one a cancel came out on) and the opening tick to carry forward.
+local function gc_tick_count(_gc, _open_seq, _seq)
+	if _gc == "p1_gc_begin" then return nil, _seq end
+	if _gc == "p1_gc_success" then
+		if _open_seq == nil then return nil, nil end
+		return _seq - _open_seq, nil
+	end
+	return nil, _open_seq
+end
 memory.registerexec(0x0221CC, function()
 	local _who = memory.getregister("m68000.a6")
 
@@ -3353,21 +3407,23 @@ memory.registerexec(0x0221CC, function()
 		-- moving it here changes WHERE the label lands, not WHAT it says
 		-- (analysis/gc_success_probe_20260915b.log).
 		local _clock = memory.readbyte(0xFF8558)
-		local _gc = p1_gc_state
-		if _clock == 0 and p1_gc_state == "p1_gc_in_progress" then
-			local _act = memory.readbyte(0xFF8406)
-			if _act == 0x0E or _act == 0x10 or _act == 0x12 then
-				_gc = "p1_gc_success"
-			else
-				_gc = "p1_gc_ended"
-			end
-		elseif p1_gc_state == "p1_gc_none" and _clock > 0 then
-			_gc = "p1_gc_begin"
-		elseif _clock > 0 then
-			_gc = "p1_gc_in_progress"
-		elseif p1_gc_state == "p1_gc_ended" or p1_gc_state == "p1_gc_success" then
-			_gc = "p1_gc_none"
-		end
+		local _gc = gc_next_state(p1_gc_state, _clock,
+			memory.readbyte(0xFF8406))
+		-- HOW FAR INTO THE WINDOW THE CANCEL CAME OUT, IN TICKS.
+		--
+		-- $158 takes 14 on a guard and 0x022492 removes one EVERY TICK, so this
+		-- is a tick count or it is nothing. It is measured here rather than in
+		-- inputHistory because that side runs on displayed frames - at turbo 3
+		-- that is 3 frames to 4 ticks, and the number would be frames under a
+		-- tick label.
+		--
+		-- Counted from the tick the window OPENED rather than read out of $158,
+		-- because a cancel clears the clock early and the last value before it
+		-- was cleared is already gone by the time we know it succeeded. Both
+		-- ends are sampled in this one hook, so whatever offset the hook sits
+		-- at within a tick cancels out of the difference.
+		local _gct
+		_gct, p1_gc_open_seq = gc_tick_count(_gc, p1_gc_open_seq, globals.p1_tick_seq)
 		local _gc_changed = _gc ~= p1_gc_state
 		p1_gc_state = _gc
 
@@ -3384,7 +3440,7 @@ memory.registerexec(0x0221CC, function()
 				if _q == nil then _q = {}; globals.p1_tick_inputs = _q end
 				if #_q < 64 then
 					table.insert(_q, { dir = _dir, btn = _btn,
-						seq = globals.p1_tick_seq, gc = _gc })
+						seq = globals.p1_tick_seq, gc = _gc, gct = _gct })
 				end
 			end
 		end

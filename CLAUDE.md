@@ -30,6 +30,7 @@ training_settings.json は絶対に配布物へ入れない
 ビルドした zip はリポジトリに置かない (../../dist)
 スクリーンショットは依頼の前に全行読む (測定値が既に写っていたことがある)
 プローブを渡す前に test_probe_smoke.lua を通す (loadfile は nil 参照を通す)
+テストは analysis/run_all_tests.py で回す。一覧を手で持たない
 Lua の io.open の相対パスはその .lua 自身のフォルダ。require は package.path で基準が違う
 registerexec / registerwrite のコールバックの中から io.open は書けない。数えてフレーム側で出す
 Lua 5.1 の io.open は UTF-8 パスを開けない (ANSI API)。日本語パスは PowerShell 側でコピーさせる
@@ -95,33 +96,26 @@ Run ボタンで出す。
 オフラインテストの一括実行も同じ形で出す。
 
 ```bash
-cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts; $ng=0; foreach ($t in @("test_editor_rows","test_editor_ops","test_runner_compile","test_seq_hold","test_gc_frequency","test_gc_leftover","test_random_sources","test_menu_gate","test_menu_children","test_menu_layout","test_menu_switches","test_pb_counter","test_input_releases","test_input_tick_columns","test_release_defaults","test_throw_tech","test_hs_countdown","test_landing_deadline","test_landing_hitstop","test_land_regrace","test_loop_wait_landing","test_pattern_library_rows","test_pattern_library_reach","test_pattern_run","test_raw_dir_facing","test_after_ground_dash","test_landing_ground_recovery","test_wakeup_facing","test_position_row")) { lua5.1 "../analysis/$t.lua" > $null; if (-not $?) { Write-Output "NG $t"; $ng++ } }; Write-Output "scripts 29 本 NG=$ng"
+cd C:/fightcaVSAV-Debug/emulator/fbneo; python analysis/run_all_tests.py
 ```
 
 ## 変更したら
 
-**FBNeo は完全再起動が必要。** オフライン検証は必ず `scripts/` から走らせる
-(相対パスで `controller.lua` と `guardCancel.lua` をソースごと読むため)。
+**FBNeo は完全再起動が必要。** オフライン検証はこの 1 本で全部回る。
 
 ```bash
-cd C:/fightcaVSAV-Debug/emulator/fbneo/scripts && for t in test_editor_rows test_editor_ops test_runner_compile test_seq_hold test_gc_frequency test_gc_leftover test_random_sources test_menu_gate test_menu_children test_menu_layout test_menu_switches test_pb_counter test_input_releases test_input_tick_columns test_release_defaults test_throw_tech test_hs_countdown test_landing_deadline test_landing_hitstop test_land_regrace test_loop_wait_landing test_pattern_library_rows test_pattern_library_reach test_pattern_run test_raw_dir_facing test_after_ground_dash test_landing_ground_recovery test_wakeup_facing test_position_row; do lua5.1 ../analysis/$t.lua > /dev/null && echo "$t ok" || echo "$t NG"; done
+cd C:/fightcaVSAV-Debug/emulator/fbneo; python analysis/run_all_tests.py
 ```
 
-下記はパッケージのルートから走らせる (Tick Data は `scripts/tickData` を require
-するため、配線テストは master script をソースごと読むため)。
+**一覧を手で持たない。** 以前は PowerShell 版と bash 版の 2 か所にテスト名を並べていて、**2026-09-23 に 4 本取りこぼしていた**
+(`test_after_ground_dash` / `test_landing_ground_recovery` / `test_wakeup_facing` / `test_position_row`)。
+うち 3 本は**いちばん難しかった修正を守るテスト**で、通ってはいたが**誰も走らせていなかった**。
 
-```bash
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 scripts/tests/tickData_test.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_framedata_gate.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_tickdata_vsav.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_state_load_wiring.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_probe_smoke.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_position_hotkey.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_char_chosen.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 scripts/tests/actionRoute_test.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_dash_auto_coverage.lua
-cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_mirror_start.lua
-```
+`run_all_tests.py` は `analysis/test_*.lua` と `scripts/tests/*_test.lua` を**探して**回すので、
+新しいテストは置いた時点で対象になる。**走らせ方はテスト自身が宣言する** — ヘッダに
+`cd scripts && lua5.1 ../analysis/<name>.lua` か `lua5.1 analysis/<name>.lua` のどちらかを書く。
+**書いていないファイルは NG 扱いで止まる。** 推測で両方試すと、片方でたまたま通ったものを
+「ok」と報告してしまう。
 
 **`io.open` の相対パスは「その Lua スクリプト自身のフォルダ」に解決される。**
 bat の `cd` 先ではない。`analysis/run_*_probe.bat` は `cd /d "%~dp0.."` で fbneo
@@ -186,6 +180,12 @@ python -c "s=open('FILE',encoding='utf-8',newline='').read(); c=s.count(chr(13)+
 
 個人名・ハンドル・X へのリンクを公開物に入れない (2026-09-14 の判断)。
 以前入っていたクレジットは全部消してある。足し直さないこと。
+
+**`scripts/` の中に絶対パスを書かない。** ここは丸ごと配布物に入る。テストの
+ヘッダに開発機のパスを書いていたものが 2 本あり、v11.7.9 から配られていた
+(`scripts/tests/actionRoute_test.lua` / `tickData_test.lua`、2026-09-23 に発見)。
+走らせ方は `lua5.1 scripts/tests/<name>.lua` とだけ書けばよく、run_all_tests.py の
+判定もそこしか見ていない。絶対パスの例を書いてよいのは配られない `analysis/` だけ。
 
 ## GitHub への公開手順
 
