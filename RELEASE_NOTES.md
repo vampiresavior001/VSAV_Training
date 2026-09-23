@@ -25,6 +25,11 @@ PB Count: 6   Guard ----21--21-11-|   at:5-13t   MultiPush: 2   LateMash: 18 (+6
 - **It stops at sixty ticks**, so holding the buttons down cannot make the
   number climb for as long as you like
 
+**And it is worse than merely wasted.** The moment guard stun ends, the buttons
+still being held come out as a NORMAL - right next to the opponent, with you in
+its recovery. **LateMash is the warning that you are pressing in the way that
+leaks one.**
+
 **Inside the window it stays 0 however hard you press.** `MultiPush` on the same
 line is about pressing too many at once; `LateMash` is about being late.
 
