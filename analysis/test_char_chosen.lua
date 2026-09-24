@@ -5,9 +5,14 @@
 -- answered the same as an empty slot. Control never passed to P2 for her, and
 -- for nobody else, because she is the only character numbered zero.
 --
--- The numbers below are from analysis/select_probe.log (2026-09-12): both
--- players' $3E1 read 0x00 until each locked in, then P1 read 0x01 having taken
--- Demitri and P2 read 0x03 having taken Bishamon.
+-- SUPERSEDED MODEL (2026-09-12): $3BD or $3E1, from analysis/select_probe.log.
+-- It could not see Bulleta picked with LP (both bytes 0), and $3BD turned out to
+-- keep the LAST match's pick when the select screen comes back.
+--
+-- CURRENT (2026-09-24): $04 on the select screen - 00 before picks are taken,
+-- 00 while picking, 02 for the one frame the confirm is taken, 04 once
+-- confirmed. See analysis/test_char_chosen_press.lua for the full table and the
+-- logs it came from. This file keeps the shapes the mirror depends on.
 --
 --   cd C:/fightcaVSAV-Debug/emulator/fbneo && lua5.1 analysis/test_char_chosen.lua
 package.path = "./?.lua;./?/init.lua;" .. package.path
@@ -36,36 +41,41 @@ local function want(what, got, w)
 end
 
 local function clear()
-	ram[P1 + 0x3BD], ram[P1 + 0x3E1] = 0, 0
-	ram[P2 + 0x3BD], ram[P2 + 0x3E1] = 0, 0
+	for _, b in ipairs({ P1, P2 }) do
+		ram[b + 0x3BD], ram[b + 0x3E1] = 0, 0
+		ram[b + 0x04], ram[b + 0x05] = 0x00, 0x02   -- 選択中
+	end
 end
+local function confirm(b) ram[b + 0x04], ram[b + 0x05] = 0x04, 0x00 end
 
 clear()
 want("誰も選んでいない", util.char_chosen(P1), false)
 
--- 実測: デミトリを選んだ P1 は $3BD=01 $3E1=01。
+-- デミトリを選んだ P1。$04 が 04 になる。
+confirm(P1)
 ram[P1 + 0x3BD], ram[P1 + 0x3E1] = 0x01, 0x01
 want("デミトリを選んだ", util.char_chosen(P1), true)
 want("相手はまだ選んでいない", util.char_chosen(P2), false)
 
--- 実測: ビシャモンを選んだ P2 は $3BD=08 $3E1=03。$3E1 は id ではない。
+-- ビシャモンを選んだ P2。
+confirm(P2)
 ram[P2 + 0x3BD], ram[P2 + 0x3E1] = 0x08, 0x03
 want("ビシャモンを選んだ", util.char_chosen(P2), true)
 
--- これが直したかったもの。バレッタは id 0x00 なので $3BD は 0 のまま。
+-- これが直したかったもの。バレッタを LP で選ぶと $3BD も $3E1 も 0 のまま。
 clear()
-ram[P1 + 0x3BD], ram[P1 + 0x3E1] = 0x00, 0x01
-want("バレッタを選んでも選択済みと分かる", util.char_chosen(P1), true)
+confirm(P1)
+want("バレッタ + LP でも選択済みと分かる", util.char_chosen(P1), true)
 
--- 逆側も成り立つこと。$3E1 が 0 でも $3BD が立っていれば選択済み - 今まで
--- 動いていた経路を落とさないための条件。
+-- 逆に、$3BD が立っていても $04 が 00 なら選んでいない - 選択画面に戻った
+-- 直後は前の試合の値が残っている。
 clear()
 ram[P1 + 0x3BD] = 0x0A
-want("$3E1 が無くても $3BD で分かる", util.char_chosen(P1), true)
+want("古い $3BD だけでは選択済みにしない", util.char_chosen(P1), false)
 
 -- 片側だけ選んでいる状態。ミラーはこの形のときだけ働く。
 clear()
-ram[P1 + 0x3BD], ram[P1 + 0x3E1] = 0x00, 0x01
+confirm(P1)
 want("バレッタの P1 は選択済み", util.char_chosen(P1), true)
 want("P2 は未選択のまま", util.char_chosen(P2), false)
 

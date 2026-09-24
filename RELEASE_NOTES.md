@@ -6,6 +6,63 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.13
+
+### Air chains, and cancels out of jumps and dashes, now come out
+
+Action Steps' **`Auto (Chain)`** and **`Auto (Cancel)` / `Late Cancel`** almost
+never connected when the move before them was a jump attack or a dash attack.
+Air normals into air normals, air normals into specials and supers, and cancels
+out of a dash attack were all affected.
+
+The tool decided "a normal is out" from a value **the game itself never
+checks**. During a jump or a dash that value still reads as the jump or the
+dash, so the step sat waiting for a window that never opened and went out late
+on its deadline. It now uses **only what the game uses** - contact, and the
+cancel window.
+
+Rapid-fire cancels are ground normals into ground normals only, so they are
+unchanged.
+
+### A step that missed its connection now says why
+
+With **`Show Step Wait Ticks`** on the `Trainer` tab, an `Auto (Chain)`,
+`Auto (Cancel)` or `Late Cancel` step that went out on its deadline carries
+**the condition it was still waiting on**.
+
+```
+Step.3 Wait:29 Act:7 ?hit
+```
+
+| Tag | Meaning |
+|---|---|
+| `?hit` | The step before it did not hit |
+| `?spent` | That contact was already used by an earlier step |
+| `?chain` | The move started from a chain, so `Late Cancel` is refused |
+| `?win9` | The cancel window is still nine ticks away |
+| `?inhib` / `?rank` / `?str` | The chain rules refused it |
+
+**A step that did connect carries nothing.** When `Wait` is large, you can tell
+"connected late" from "never connected at all".
+
+### Fixed: character select, including problems v11.7.12 introduced
+
+Picking P2's character with the same arcade stick had three problems.
+
+- **Picking Bulleta with light punch did not hand control to P2** - v11.7.12
+  meant to fix this, but the fix caused the two below
+- **On the second character select, P2 could not be controlled** - introduced
+  in v11.7.12
+- **Pressing a button before the screen accepted picks let one stick move both
+  cursors at once** - introduced in v11.7.12
+
+All three came from treating "a button was pressed" as "a character was
+confirmed". **The game's own "confirmed" state was found by measurement, and
+the tool now reads that.** Bulleta, light punch, and early presses are all
+judged correctly.
+
+---
+
 ## v11.7.12
 
 ### The guard cancel command, in the order the game took it

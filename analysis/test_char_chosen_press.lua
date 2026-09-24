@@ -1,24 +1,28 @@
--- 「このプレイヤーはキャラを選んだか」— ゲームが書く値では答えられない。
+-- 「このプレイヤーはキャラを選んだか」— 選択画面の $04 で答える。
 --
--- $3BD と $3E0 はキャラ ID で、バレッタは 0x00。$3AE とその写し $3E1 は
--- 決定に使ったボタンの番号で、実測では MP が 1、LK が 3、MK が 4 -
--- 並びは LP MP HP LK MK HK なので LP は 0 (2026-09-23)。
+-- 実測 (2026-09-24、選択画面 6 回分、両プレイヤーの $04/$05 を変化のたびに記録):
 --
--- つまり「バレッタを LP で決定」すると 4 バイトとも 0 のまま。キャラは
--- 選ばれているのに、読める値が無い。アーケードスティックのミラーが 2P へ
--- 渡らない不具合はこれで、バレッタ「かつ」弱パンチのときだけ起きる。
--- 本人が実機でその組み合わせに切り分けた。
+--     $04 $05
+--     00  00   受付前 (画面が出てくる途中)
+--     00  02   選択中。カーソルが動く
+--     02  06   決定の押しが通った (1 フレーム)
+--     04  00   決定済み
 --
--- $380..$3FF を 4 セッション毎フレーム走査して、この決定で動く別のバイトは
--- 無いことを確認済み。$3BC と $3E3 は逆アセンブル上それらしく見えるが
--- 終始 0。
+-- これで 3 つが同時に片付いた。
 --
--- なので決定そのものを見る。選択画面では攻撃ボタンが決定で、$394 が入力の
--- ボタン側。
+--   * バレッタを LP で決定しても $04 は 04 になる。$3BD と $3E1 はどちらも 0 の
+--     ままで、ここがずっと答えられなかった穴。
+--   * 受付前にボタンを押しても $04 は 00 のまま (早押し 3 回を記録)。押下 latch は
+--     まさにそこで立ち、1 本のスティックで両方のカーソルが動いた。
+--   * $3BD は古い値が残る。選択画面に戻った直後、前の試合の選択を持ったまま
+--     $04 だけ 00 に戻っていた。$3BD は最初から「今回選んだか」ではなかった。
+--
+-- ログは scripts/reversal_logs_archive/2026-09-24-css-confirm/ に退避してある。
 --
 -- Run from scripts/ - the dofile below is relative.
 --   cd scripts && lua5.1 ../analysis/test_char_chosen_press.lua
 local P1, P2 = 0xFF8400, 0xFF8800
+local CSS = 0xFF8009
 local ram = {}
 memory = {
 	readbyte = function(a) return ram[a] or 0 end,
@@ -48,116 +52,90 @@ local function want(what, got, expected)
 	end
 end
 
-local CSS = 0xFF8009
-local function css(on) ram[CSS] = on and 2 or 0 end
--- 値を消すだけでは足りない。latch は選択画面を離れたときに落ちるので、
--- 新しい試行を始めるには画面を一度出る。
-local function clear(base)
-	ram[base + 0x3BD], ram[base + 0x3E1] = 0, 0
-	ram[base + 0x394] = 0
-	ram[0xFF8009] = 0
-	util.char_chosen(base)
-	ram[0xFF8009] = 2
-	util.char_chosen(base)
+-- 1 プレイヤーぶんの状態を置く。
+local function state(base, s04, s05)
+	ram[base + 0x04], ram[base + 0x05] = s04, s05
 end
--- 1 フレーム進める。char_chosen は毎フレーム呼ばれる想定。
-local function frame(base) return util.char_chosen(base) end
 
-print("[1] バレッタを LP で決定 - ゲームは何も書かない")
--- ID 0 かつボタン番号 0 なので $3BD も $3E1 も 0 のまま。
+print("[1] 局面ごとの答え")
 do
-	css(true)
-	clear(P1)
-	want("押す前は false", frame(P1), false)
-	ram[P1 + 0x394] = 0x01                 -- LP
-	want("押した瞬間に true", frame(P1), true)
-	ram[P1 + 0x394] = 0x00                 -- 離す
-	want("離しても true のまま", frame(P1), true)
-	want("ゲームが書いた値は 0 のまま", ram[P1 + 0x3BD], 0)
+	ram = {}
+	ram[CSS] = 2
+	state(P1, 0x00, 0x00)
+	want("受付前は false", util.char_chosen(P1), false)
+	state(P1, 0x00, 0x02)
+	want("選択中は false", util.char_chosen(P1), false)
+	state(P1, 0x02, 0x06)
+	want("決定の押しが通った 1 フレームも true", util.char_chosen(P1), true)
+	state(P1, 0x04, 0x00)
+	want("決定済みは true", util.char_chosen(P1), true)
 end
 
 print("")
-print("[2] 従来どおりの経路も残っている")
+print("[2] バレッタを LP で決定 - 元の不具合")
 do
-	css(true)
-	clear(P2)
-	want("押す前は false", frame(P2), false)
-	ram[P2 + 0x3BD] = 0x05                 -- モリガン
-	want("ID が入れば true", frame(P2), true)
-	clear(P2)
-	frame(P2)
-	ram[P2 + 0x3E1] = 0x04                 -- ボタン番号だけ入る場合
-	want("$3E1 でも true", frame(P2), true)
-end
-
-print("")
-print("[3] 攻撃ボタン以外では立たない")
--- Start や Coin で立つと、キャラを選ぶ前に「選んだ」ことになる。
-do
-	css(true)
-	clear(P1)
-	frame(P1)
-	for _, bit in ipairs({ 0x08, 0x80 }) do
-		ram[P1 + 0x394] = bit
-		want(string.format("0x%02X では立たない", bit), frame(P1), false)
-		ram[P1 + 0x394] = 0
-		frame(P1)
-	end
-	-- 6 つの攻撃ボタンはどれでも立つ。LP が 0 番なのが今回の件。
-	for _, bit in ipairs({ 0x01, 0x02, 0x04, 0x10, 0x20, 0x40 }) do
-		clear(P1)
-		frame(P1)
-		ram[P1 + 0x394] = bit
-		want(string.format("0x%02X で立つ", bit), frame(P1), true)
-		ram[P1 + 0x394] = 0
-	end
-end
-
-print("")
-print("[4] 選択画面を離れたら落ちる")
--- 残ると、次に選択画面へ来たとき最初から「選んでいる」ことになり、
--- ミラーが自分のキャラを選ぶ前から動く。
-do
-	css(true)
-	clear(P1)
-	frame(P1)
-	ram[P1 + 0x394] = 0x01
-	want("立っている", frame(P1), true)
-	ram[P1 + 0x394] = 0
-	css(false)
-	want("選択画面を出たら false", frame(P1), false)
-	css(true)
-	want("戻ってきても false のまま", frame(P1), false)
-end
-
-print("")
-print("[5] 片方だけが立つ")
--- 1P が選んで 2P がまだ、がミラーの動く条件そのもの。
-do
-	css(true)
-	clear(P1) clear(P2)
-	frame(P1) frame(P2)
-	ram[P1 + 0x394] = 0x01
-	want("P1 は true", frame(P1), true)
-	want("P2 は false のまま", frame(P2), false)
-end
-
-print("")
-print("[6] 押しっぱなしで選択画面へ入っても立たない")
--- 前の画面で押したボタンを持ったまま選択画面へ入るのは普通に起きる。
--- 水準で見ると、キャラを選ぶ前に「選んだ」ことになり、ミラーが自分の
--- カーソルを動かせなくなる。押し始め (端) で見ること。
-do
-	css(false)
+	-- キャラ id 0、ボタン番号 0。値では見えないが $04 は 04 になる (frame 2824)。
+	ram = {}
+	ram[CSS] = 2
 	ram[P1 + 0x3BD], ram[P1 + 0x3E1] = 0, 0
-	ram[P1 + 0x394] = 0x01            -- 前の画面から押しっぱなし
-	frame(P1)
-	css(true)
-	want("入った直後は false", frame(P1), false)
-	want("押したままなら立たない", frame(P1), false)
-	ram[P1 + 0x394] = 0x00            -- 一度離す
-	want("離しても false", frame(P1), false)
-	ram[P1 + 0x394] = 0x01            -- 押し直す
-	want("押し直せば立つ", frame(P1), true)
+	state(P1, 0x04, 0x00)
+	want("選んだと答える", util.char_chosen(P1), true)
 end
+
+print("")
+print("[3] 受付前の押しでは立たない - 両カーソル同時の不具合")
+do
+	-- 早押し 3 回とも $04 は 00 のまま (frame 1743 / 1751 / 1760)。
+	ram = {}
+	ram[CSS] = 2
+	state(P1, 0x00, 0x00)
+	ram[P1 + 0x394] = 0x01
+	want("押しても false", util.char_chosen(P1), false)
+	ram[P1 + 0x396] = 0x01
+	want("押しっぱなしでも false", util.char_chosen(P1), false)
+end
+
+print("")
+print("[4] 戻った直後の古い $3BD では立たない")
+do
+	-- 選択画面に戻った瞬間、$3BD は前の試合の値のまま $04 だけ 00
+	-- (frame 2573: P1 01 / P2 04、frame 2279: P1 01 / P2 0A)。
+	ram = {}
+	ram[CSS] = 2
+	ram[P1 + 0x3BD], ram[P2 + 0x3BD] = 0x01, 0x0A
+	state(P1, 0x00, 0x00)
+	state(P2, 0x00, 0x00)
+	want("1P は選んでいない", util.char_chosen(P1), false)
+	want("2P も選んでいない", util.char_chosen(P2), false)
+end
+
+print("")
+print("[5] 2P も同じ規則")
+do
+	-- 2P が決定したときも 02/06 -> 04/00 (frame 2287 / 1993)。
+	ram = {}
+	ram[CSS] = 2
+	state(P2, 0x00, 0x02)
+	want("選択中は false", util.char_chosen(P2), false)
+	state(P2, 0x04, 0x00)
+	want("決定済みは true", util.char_chosen(P2), true)
+	-- 1P の決定は 2P の答えに影響しない。
+	state(P1, 0x04, 0x00)
+	state(P2, 0x00, 0x02)
+	want("1P だけ決定なら 2P は false", util.char_chosen(P2), false)
+end
+
+print("")
+print("[6] 読むのは $04 だけ - 状態も押下も持たない")
+do
+	local src = io.open("utilities.lua"):read("*a")
+	local a = src:find("local function char_chosen(base_addr)", 1, true)
+	local b = src:find(string.char(10) .. "end", a or 1, true)
+	local body = src:sub(a or 1, (b or 1) + 4)
+	want("$04 を読む", body:find("base_addr + 0x04", 1, true) ~= nil, true)
+	want("$3BD を読まない (古い値が残る)", body:find("0x3BD", 1, true), nil)
+	want("押下を読まない", body:find("0x394", 1, true), nil)
+	want("latch を持たない", body:find("css_picked", 1, true), nil)
+end
+
 if fails == 0 then print("") print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

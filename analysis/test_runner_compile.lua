@@ -341,6 +341,24 @@ end
 for i=3,4 do
   if aul[i].lead~=0 then fail("step "..i.." の押しが free+0 に乗らない","free+"..aul[i].lead,"free+0") end
 end
+-- 止まった条件は行にも出る。Wait の数字だけでは「窓が開くのが遅かった」のか
+-- 「一度も開かず締切で出た」のかが区別できない (本人、2026-09-24)。
+print("[wait_log] 止まった条件が行に出る")
+do
+  R.wait_log = {
+    { index = 1, mode = "Auto", op = 5 },
+    { index = 2, mode = "Set", ticks = 11, op = 1 },
+    { index = 3, mode = "Cancel", ticks = 29, op = 7, why = "hit" },
+  }
+  local lines = R.wait_log_lines(120)
+  local all = table.concat(lines, " ")
+  want("理由が付く", all:find("Step.3 Wait:29 Act:7 ?hit", 1, true) ~= nil, true)
+  R.wait_log[3].why = nil
+  all = table.concat(R.wait_log_lines(120), " ")
+  want("通った step には付かない", all:find("?", 1, true), nil)
+  R.wait_log = {}
+end
+
 if fails==0 then print("  ok 3 歩目も 4 歩目も free+0") end
 
 

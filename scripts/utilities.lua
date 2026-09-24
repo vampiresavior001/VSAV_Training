@@ -391,64 +391,38 @@ local function get_character(base_addr)
     elseif char_id == 0x12 	then return "Dark Gallon"
     elseif char_id == 0x18 	then return "Oboro" end
 end
--- HAS THIS PLAYER CHOSEN A CHARACTER YET?
+-- HAS THIS PLAYER PICKED A CHARACTER? ANSWERED FROM $04 ON THE SELECT SCREEN.
 --
--- NOT FROM WHAT THE GAME WRITES, BECAUSE ALL OF IT CAN BE ZERO.
+-- MEASURED, 2026-09-24 (six select-screen visits, both players, logged on every
+-- change of $04/$05):
 --
--- $3BD and $3E0 are the character id (0x020AC8), and BULLETA IS 0x00.
--- $3AE and its copy $3E1 are the number of the button the pick was confirmed
--- with - measured on the select screen, 2026-09-23: MP gave 1, LK gave 3, MK
--- gave 4, so the order is LP MP HP LK MK HK and LP GIVES 0.
+--     $04 $05
+--     00  00   before the screen accepts picks - it is still sliding in
+--     00  02   picking; the cursor is live
+--     02  06   the confirm press was taken (one frame)
+--     04  00   confirmed
 --
--- Bulleta confirmed with LP therefore leaves every one of those four bytes
--- at zero. The character is chosen; there is simply nothing to read. That is
--- the whole of the bug where the arcade-stick mirror never handed control to
--- P2 - it needed Bulleta AND light punch, which is why it came and went
--- (user, 2026-09-23, isolated it to exactly that pair).
+-- Three things this settles at once:
 --
--- The byte range $380..$3FF was scanned frame by frame across four sessions
--- and nothing else moves on that confirm. $3BC and $3E3 stay zero throughout
--- (the disassembly makes them look like the answer; they are not).
+--   * Bulleta picked with LP: $3BD and $3E1 both stay 0 - the hole this
+--     function has always had - but $04 still goes to 04.
+--   * A button pressed BEFORE the screen accepts picks leaves $04 at 00 -
+--     three early presses logged. The press latch that stood here fired on
+--     exactly those and drove both cursors with one stick.
+--   * $3BD is STALE. Coming back to the select screen, it still holds the
+--     last match's pick while $04 has already gone back to 00. So $3BD never
+--     meant "chosen this time" at all.
 --
--- SO WATCH THE CONFIRM ITSELF. On the select screen an attack button IS the
--- confirm, and $394 is the button half of the input pair ($395 is the lever,
--- $396/$397 the previous tick's). A press edge there means that player has
--- picked, whatever the id and whatever the button.
+-- The latch tried before this produced three regressions in one day; see the
+-- handoff for the list. None of them can happen here: this reads what the
+-- game decided, and holds no state of its own.
 --
--- Only attack buttons count: $77 is the same mask the command code uses
--- (0x029FE8 takes $7700 of the word), so Start and Coin cannot latch it.
---
--- The latch is dropped whenever the screen is not select, so a new visit
--- starts clean. The two original reads are kept: they answer the moment the
--- id lands, which is a frame earlier, and nothing that works today may start
--- failing because of this.
-local CSS_SCENE = 2
-local css_picked = {}
-local css_btn_was = {}
-
-local function css_attack_bits(_b)
-	-- No bitwise operators in Lua 5.1. $77 is LP MP HP . LK MK HK .
-	for _, _bit in ipairs({ 0, 1, 2, 4, 5, 6 }) do
-		if math.floor(_b / 2 ^ _bit) % 2 == 1 then return true end
-	end
-	return false
-end
-
+-- Only meaningful on the select screen ($FF8009 == 2). Every caller already
+-- asks only there; in a match $04 is the character's own state byte.
 local function char_chosen(base_addr)
-	local _written = memory.readbyte(base_addr + 0x3BD) ~= 0
-		or memory.readbyte(base_addr + 0x3E1) ~= 0
-	if memory.readbyte(0xFF8009) ~= CSS_SCENE then
-		css_picked[base_addr] = nil
-		css_btn_was[base_addr] = nil
-		return _written
-	end
-	local _btn = css_attack_bits(memory.readbyte(base_addr + 0x394))
-	if _btn and css_btn_was[base_addr] == false then
-		css_picked[base_addr] = true
-	end
-	css_btn_was[base_addr] = _btn
-	return _written or css_picked[base_addr] == true
+	return memory.readbyte(base_addr + 0x04) ~= 0
 end
+
 utilitiesModule = {
 	["char_chosen"] = char_chosen,
     ["save_training_data"]         = save_training_data,

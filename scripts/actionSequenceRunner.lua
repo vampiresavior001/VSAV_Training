@@ -467,18 +467,52 @@ end
 local function contact_spent()
 	return contact_used
 end
+-- WHY THE LAST GATE SAID NO, FOR THE READOUT.
+--
+-- A connect-timed step that misses its gate goes out on the deadline instead,
+-- and the Wait number alone cannot tell that apart from a gate that opened
+-- late: both are just a bigger number. So the gate names the first condition
+-- it failed on, and Show Step Wait Ticks prints it next to the step
+-- (user, 2026-09-24 - an air cancel that read Wait:29 with no way to see why).
+--
+-- Cleared on success, so a step that really did connect carries nothing.
+local gate_why = nil
+local function why(_t) gate_why = _t return false end
+
 local function chain_ready(step)
-	if contact_spent() then return false end
+	if contact_spent() then return why("spent") end
 	local next_rank = CHAIN_RANK[normal_button(step)]
-	if next_rank == nil then return false end
-	if memory.readbyte(P2_BASE + 0x06) ~= 0x0A then return false end
-	if memory.readbyte(P2_BASE + 0x39) == 0 then return false end
-	if memory.readbyte(P2_BASE + 0x1B2) ~= 0 then return false end
+	if next_rank == nil then return why("btn") end
+	-- $06 IS NOT A CONDITION. IT WAS AN INVENTED ONE AND IT WAS WRONG.
+	--
+	-- 0x028E42 tests $39, $1B2, the latched button word and the cel flags -
+	-- never $06, and never $38 either. This gate stood in for "a normal is
+	-- out" on the belief that a normal writes 0x0A (0x0274CE does put
+	-- 02 00 0A 00 into $04..$07). Measured at the contact tick, $06 is
+	-- whatever the character was already doing:
+	--
+	--     0x06 jump    12 of 13 air contacts
+	--     0x14 dash     7 of 12 ground contacts
+	--     0x00          5 of 12 ground contacts
+	--     0x0A normal   1 of 13 air contacts
+	--
+	-- (VSAV_MEMORY_NOTES, 2026-09-09.) So 0x0A is the minority everywhere, and
+	-- the gate refused air strings and dash attacks alike - reported as an air
+	-- chain that never came out, then as a dash-attack cancel reading ?act14
+	-- (user, 2026-09-24).
+	--
+	-- Dropping it costs nothing. With no attack out there is no contact, and
+	-- the $39 test below already demands one.
+	if memory.readbyte(P2_BASE + 0x39) == 0 then return why("hit") end
+	if memory.readbyte(P2_BASE + 0x1B2) ~= 0 then return why("inhib") end
 	local strength = memory.readbyte(P2_BASE + 0x102)
 	local family = memory.readbyte(P2_BASE + 0x101)
-	if strength ~= 0 and strength ~= 2 and strength ~= 4 then return false end
+	if strength ~= 0 and strength ~= 2 and strength ~= 4 then
+		return why("str")
+	end
 	local current_rank = strength + ((family == 0) and 1 or 2)
-	if next_rank <= current_rank then return false end
+	if next_rank <= current_rank then return why("rank") end
+	gate_why = nil
 	return true
 end
 
@@ -508,6 +542,17 @@ local function rapid_ready(step)
 	if rapid_used then return false end
 	local b = normal_button(step)
 	if b == nil then return false end
+	-- $06 STAYS HERE, UNLIKE IN chain_ready AND cancel_ready.
+	--
+	-- Rapid fire is a normal cancelled into the SAME normal, so "a plain
+	-- normal is out" is a real condition of the thing itself (user,
+	-- 2026-09-24). The two gates also ask at different moments: chain and
+	-- cancel require contact, so they are asked on a contact tick, where $06
+	-- is whatever the character was already doing - jump, dash, 0x00. This one
+	-- takes no contact and is asked inside the move's own cel window, which is
+	-- the span 0x0274CE wrote 0x0A for. Nobody has measured $06 across that
+	-- window, so this is untested rather than confirmed - do not remove it by
+	-- analogy with the other two.
 	if memory.readbyte(P2_BASE + 0x06) ~= 0x0A then return false end
 	-- $38: rapid fire is ground only. An air chain is the other routine.
 	if memory.readbyte(P2_BASE + 0x38) ~= 0 then return false end
@@ -550,17 +595,26 @@ local function ordinary_cancel_window()
 	return math.min(a, b)
 end
 local function cancel_ready(step, late)
-	if contact_spent() then return false end
-	if memory.readbyte(P2_BASE + 0x06) ~= 0x0A then return false end
+	if contact_spent() then return why("spent") end
+	-- Same $06 as chain_ready, and dropped for the same reason: the ROM's
+	-- cancel permission is $167 / $168 with $119, never $06. See the note
+	-- there for the measured values.
 	if not late then
 		-- Do not reject $119 here: sequence-command supers are allowed after a
 		-- chain and the game, not the runner, owns that distinction.
-		return memory.readbyte(P2_BASE + 0x39) ~= 0
+		if memory.readbyte(P2_BASE + 0x39) == 0 then return why("hit") end
+		gate_why = nil
+		return true
 	end
 	-- The $167/$168 ordinary gates reject chain-started normals themselves.
-	if memory.readbyte(P2_BASE + 0x119) ~= 0 then return false end
+	if memory.readbyte(P2_BASE + 0x119) ~= 0 then return why("chain") end
 	local window = ordinary_cancel_window()
-	return window > 0 and window <= (step.lead + 1)
+	if window == 0 then return why("win0") end
+	if window > (step.lead + 1) then
+		return why("win" .. window)
+	end
+	gate_why = nil
+	return true
 end
 
 -- WHAT AN Auto RESOLVES TO, IN ONE PLACE.
@@ -1272,6 +1326,9 @@ local function log_wait(step, ticks)
 		mode  = mode,
 		ticks = ticks,
 		op    = step.op_ticks,
+		-- Only a connect-timed step can miss a gate, and only then is there
+		-- anything to name. gate_why is nil once a gate has opened.
+		why   = CONNECT_TIMED[step.timing] and gate_why or nil,
 	})
 end
 
@@ -1298,6 +1355,9 @@ local function wait_log_items()
 			or ("Step." .. tostring(e.index or "?"))
 		if e.ticks ~= nil then t = t .. " Wait:" .. e.ticks end
 		if e.op ~= nil then t = t .. " Act:" .. e.op end
+		-- The gate never opened, so the step went out on its deadline. The
+		-- tag says which condition it was still waiting on.
+		if e.why ~= nil then t = t .. " ?" .. e.why end
 		out[#out + 1] = t
 	end
 	return out
