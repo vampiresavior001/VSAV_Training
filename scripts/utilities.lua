@@ -393,27 +393,62 @@ local function get_character(base_addr)
 end
 -- HAS THIS PLAYER CHOSEN A CHARACTER YET?
 --
--- $3BD alone cannot say. The ROM copies the character id into it
--- (0x020AC8: move.b ($382,A6), ($3bd,A6)), and BULLETA IS 0x00 - so "chose
--- Bulleta" and "chose nobody" are the same byte. That is the whole of the bug
--- where the arcade-stick mirror never handed control to P2 for her, and only
--- for her: she is the only character numbered zero (user, 2026-09-11).
+-- NOT FROM WHAT THE GAME WRITES, BECAUSE ALL OF IT CAN BE ZERO.
 --
--- $3E1 is written at the same moment and is NOT the id. Measured on the select
--- screen (analysis/select_probe.log, 2026-09-12): both players read 0x00 there
--- until each locked in, and then P1 read 0x01 having chosen Demitri while P2
--- read 0x03 having chosen Bishamon - different values for different players,
--- neither of them the character. The ROM pairs it with $3AE the same way it
--- pairs $3E0 with $382 (0x009BC0 and 0x009BD0 copy the two pairs together).
+-- $3BD and $3E0 are the character id (0x020AC8), and BULLETA IS 0x00.
+-- $3AE and its copy $3E1 are the number of the button the pick was confirmed
+-- with - measured on the select screen, 2026-09-23: MP gave 1, LK gave 3, MK
+-- gave 4, so the order is LP MP HP LK MK HK and LP GIVES 0.
 --
--- Either one is enough. $3E1 is what answers for Bulleta; $3BD is kept because
--- it is what every working case has been answering with, and no case that
--- works today may start failing because of this.
-local function char_chosen(base_addr)
-	return memory.readbyte(base_addr + 0x3BD) ~= 0
-		or memory.readbyte(base_addr + 0x3E1) ~= 0
+-- Bulleta confirmed with LP therefore leaves every one of those four bytes
+-- at zero. The character is chosen; there is simply nothing to read. That is
+-- the whole of the bug where the arcade-stick mirror never handed control to
+-- P2 - it needed Bulleta AND light punch, which is why it came and went
+-- (user, 2026-09-23, isolated it to exactly that pair).
+--
+-- The byte range $380..$3FF was scanned frame by frame across four sessions
+-- and nothing else moves on that confirm. $3BC and $3E3 stay zero throughout
+-- (the disassembly makes them look like the answer; they are not).
+--
+-- SO WATCH THE CONFIRM ITSELF. On the select screen an attack button IS the
+-- confirm, and $394 is the button half of the input pair ($395 is the lever,
+-- $396/$397 the previous tick's). A press edge there means that player has
+-- picked, whatever the id and whatever the button.
+--
+-- Only attack buttons count: $77 is the same mask the command code uses
+-- (0x029FE8 takes $7700 of the word), so Start and Coin cannot latch it.
+--
+-- The latch is dropped whenever the screen is not select, so a new visit
+-- starts clean. The two original reads are kept: they answer the moment the
+-- id lands, which is a frame earlier, and nothing that works today may start
+-- failing because of this.
+local CSS_SCENE = 2
+local css_picked = {}
+local css_btn_was = {}
+
+local function css_attack_bits(_b)
+	-- No bitwise operators in Lua 5.1. $77 is LP MP HP . LK MK HK .
+	for _, _bit in ipairs({ 0, 1, 2, 4, 5, 6 }) do
+		if math.floor(_b / 2 ^ _bit) % 2 == 1 then return true end
+	end
+	return false
 end
 
+local function char_chosen(base_addr)
+	local _written = memory.readbyte(base_addr + 0x3BD) ~= 0
+		or memory.readbyte(base_addr + 0x3E1) ~= 0
+	if memory.readbyte(0xFF8009) ~= CSS_SCENE then
+		css_picked[base_addr] = nil
+		css_btn_was[base_addr] = nil
+		return _written
+	end
+	local _btn = css_attack_bits(memory.readbyte(base_addr + 0x394))
+	if _btn and css_btn_was[base_addr] == false then
+		css_picked[base_addr] = true
+	end
+	css_btn_was[base_addr] = _btn
+	return _written or css_picked[base_addr] == true
+end
 utilitiesModule = {
 	["char_chosen"] = char_chosen,
     ["save_training_data"]         = save_training_data,

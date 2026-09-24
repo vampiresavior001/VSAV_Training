@@ -3341,6 +3341,259 @@ local function gc_next_state(_state, _clock, _act)
 	return _state
 end
 
+-- ------------------------------------------------------- GC COMMAND TRACE
+-- WHAT THE GAME ACCEPTED ON THE WAY TO A GUARD CANCEL, AND WHEN.
+--
+-- The engine keeps one 8 byte block per command at $300..$358, walked by
+-- 0x029F4A. Which block is the guard cancel's is per character (GC_BLOCK
+-- below) and every one of them is a DPF.
+--
+--   +0  WHICH HANDLER runs: 02 while directions are being taken, 04 once it
+--       is waiting for the button. NOT the step number - reading it as one
+--       made a dragon punch look like two directions (2026-09-23).
+--   +1  THE STEP. 02 / 04 / 06 are the first, second and third direction.
+--   +4  ticks the current step has left; it goes back up when one is taken.
+--
+-- A direction is 'taken' when +1 rises, and the lever ON THAT TICK is what
+-- was taken - read from the game rather than from what we think a dragon
+-- punch is, so a shortcut the engine allowed still shows what it allowed.
+--
+-- NOTHING IS DRAWN UNTIL A GUARD. Rows are collected all the time, because
+-- the motion often starts before the guard, but a trace only becomes visible
+-- when one arrives - otherwise every lever wiggle would draw (user,
+-- 2026-09-23).
+local GC_BLOCK = {
+	[0x00] = 0x340, [0x01] = 0x308, [0x02] = 0x328, [0x03] = 0x308,
+	[0x04] = 0x338, [0x05] = 0x318, [0x06] = 0x330, [0x07] = 0x310,
+	[0x08] = 0x300, [0x09] = 0x348, [0x0A] = 0x308, [0x0B] = 0x338,
+	[0x0C] = 0x330, [0x0D] = 0x310, [0x0E] = 0x310, [0x0F] = 0x308,
+}
+-- HOW LONG A DEAD COMMAND STAYS WORTH SHOWING.
+--
+-- The wait between two inputs of a special is rolled, and 15 ticks is the
+-- widest a player gets, so 16 covers a guard still inside the reach of the
+-- motion that just died (user, 2026-09-24).
+--
+-- NOT the 14..19 the step timer is loaded with from 0x02A55A - that byte is
+-- not the window a player experiences; the acceptance around it is its own
+-- thing (user).
+local REATTACH_TICKS = 16
+local P1_BASE = 0xFF8400
+local TRACE_ROWS = 8
+-- The attempt being collected. rows are {kind, tick, value}.
+local gct = { rows = {}, guard = nil, prog = nil, step = nil, done = nil, at = nil }
+
+local function gct_reset()
+	gct.rows, gct.guard, gct.done, gct.at = {}, nil, nil, nil
+	gct.prog, gct.step = nil, nil
+end
+
+local function gct_add(kind, tick, value)
+	if #gct.rows >= TRACE_ROWS then table.remove(gct.rows, 1) end
+	gct.rows[#gct.rows + 1] = { k = kind, t = tick, v = value }
+end
+
+-- WHAT IS COLLECTED AND WHAT IS SHOWN ARE NOT THE SAME THING.
+--
+-- A motion often starts before the guard, so collecting never stops. But a
+-- finished trace was being thrown away the moment the next motion began, and
+-- after a successful cancel the stick is usually still moving - so the
+-- result vanished a tick or two after it appeared, before anyone could read
+-- it (user, 2026-09-23).
+--
+-- So the last attempt THAT HAD A GUARD IN IT stays on screen, and the one
+-- being collected only takes its place once it has a guard of its own. No
+-- timer decides this: a guard is what a trace is about, so a guard is what
+-- replaces one.
+--
+-- Published whole, so the drawing never sees half an update. gct_reset makes
+-- a NEW rows table rather than emptying this one, which is what lets the
+-- shown copy go on pointing at the old one.
+local gct_shown = nil
+local function gct_publish()
+	if globals == nil then return end
+	if gct.guard ~= nil then
+		gct_shown = { rows = gct.rows, guard = gct.guard,
+		              done = gct.done, at = gct.at }
+	end
+	globals.gc_trace = gct_shown
+end
+
+-- THE DIRECTION, READ THE SAME WAY THE INPUT VIEWER READS IT.
+--
+-- The point of this readout is to be held against the bar along the bottom,
+-- so an arrow has to mean the same thing in both places. The surest way to
+-- get that is not to have a second opinion: this is read_game_input's rule
+-- from inputHistory.lua, byte for byte - $125 for the lever and $b for the
+-- facing, swapped back the same way, turned into the same numpad number that
+-- indexes the same arrow images.
+--
+-- TWO WRONG ANSWERS CAME BEFORE THIS ONE, both from deciding the rule
+-- instead of borrowing it (user, 2026-09-23). First $12B was drawn raw and a
+-- 1P dragon punch came out as a 2P one. Then $12B was swapped on $120,
+-- because 0x0221CC picks $120 over $b on the ground - true of what the
+-- ENGINE matches on, but $120's own sense of which way is which was never
+-- checked, and the arrows stayed mirrored.
+--
+-- $125 is the PREVIOUS tick's direction and is the steady one: measured over
+-- recorded play, $123 changed value on 20.3% of frames during a held
+-- horizontal against 4.2% for $125 (inputHistory.lua). The bar lags by that
+-- same tick, so the two still line up.
+local function gct_numpad()
+	local _d = memory.readbyte(P1_BASE + 0x125)
+	local _b0 = (_d % 2) >= 1
+	local _b1 = (math.floor(_d / 2) % 2) >= 1
+	local _left, _right
+	if memory.readbyte(P1_BASE + 0x00B) == 0 then
+		_left, _right = _b1, _b0
+	else
+		_left, _right = _b0, _b1
+	end
+	local _down = (math.floor(_d / 4) % 2) >= 1
+	local _up   = (math.floor(_d / 8) % 2) >= 1
+	if _down then
+		if _left then return 1 elseif _right then return 3 else return 2 end
+	elseif _up then
+		if _left then return 7 elseif _right then return 9 else return 8 end
+	end
+	if _left then return 4 elseif _right then return 6 end
+	return 5
+end
+
+-- WHICH BUTTONS FINISHED IT, IN THE VIEWER'S OWN ORDER.
+--
+-- $1AC and $1AE are the press edges the engine's button step reads
+-- (0x029FEC): bits 8/9/10 are the punches, 12/13/14 the kicks. Returned as
+-- LP MP HP LK MK HK so the drawing can lay them out as the input viewer
+-- does - two rows of three - rather than spelling a name. A kick completed a
+-- guard cancel in the measurements, so a punch-shaped label was never safe.
+--
+-- No bitwise operators in Lua 5.1, so the bits are divided out.
+local GCT_BITS = { 8, 9, 10, 12, 13, 14 }
+local function gct_buttons()
+	local _w = memory.readword(P1_BASE + 0x1AC)
+	local _v = memory.readword(P1_BASE + 0x1AE)
+	local _out = {}
+	for _i, _bit in ipairs(GCT_BITS) do
+		local _p = 2 ^ _bit
+		_out[_i] = (math.floor(_w / _p) % 2 == 1)
+					or (math.floor(_v / _p) % 2 == 1)
+	end
+	return _out
+end
+
+local function gct_tick(_gc)
+	local _blk = GC_BLOCK[memory.readbyte(P1_BASE + 0x382)]
+	if _blk == nil then gct_reset() return end
+	local _now = globals.p1_tick_seq or 0
+	local _step = memory.readbyte(P1_BASE + _blk + 1)
+	local _prog = memory.readbyte(P1_BASE + _blk)
+	local _was_prog, _was_step = gct.prog or 0, gct.step or 0
+
+	-- WHICH BYTE CARRIES THE STATE, AND WHY IT IS NOT THE STEP NUMBER.
+	--
+	-- +0 is the handler the command sits in: 0 waiting for a first
+	-- direction, 2 waiting for a middle one, 4 waiting for the button. +1 is
+	-- the step index inside the motion, and the game does NOT clear it when
+	-- an attempt dies - it keeps its last value until a later attempt writes
+	-- over it.
+	--
+	-- So an attempt ends when +0 falls back to 0, and a fresh first
+	-- direction is +0 leaving 0. Reading either of those off +1 misses them.
+	--
+	-- Replaying the 2026-09-23 log (6831 ticks) through this: 47 attempts
+	-- died part-way, and the version that watched +1 saw NONE of them. 25 of
+	-- those were restarted while +1 still read 02, which the old reading
+	-- also could not see - two goes then collect into one trace, and the gap
+	-- drawn between two directions is the sum of both waits. That is the
+	-- shape of the 19t the trace showed once (2026-09-24), but the log holds
+	-- no instance that reached the drawing, so the link is not proven.
+	local _restart = _was_prog == 0 and _prog ~= 0
+	local _dropped = _was_prog ~= 0 and _prog == 0
+	-- A direction landed if the handler moved on, OR if the step index
+	-- advanced. The index has to be able to carry it alone: when the button
+	-- lands on the same tick as the last direction, +0 falls back to 0 in
+	-- that same tick, and requiring +0 to be non-zero drops the direction.
+	-- One of the three cancels in the 2026-09-23 log does exactly this
+	-- (seq=5576, 02.04 -> 00.06 with the success event).
+	local _took = _prog > _was_prog or _step > _was_step
+
+	-- A GUARD THAT LANDS RIGHT AFTER A DEAD COMMAND BELONGS TO THE SAME GO.
+	--
+	-- One input's grace is random, and REATTACH_TICKS is the widest it gets,
+	-- so a guard closer than that is inside the span the motion was still
+	-- live for. Throwing the rows away there loses exactly the thing worth
+	-- seeing - the inputs that were too slow, and then the guard (user,
+	-- 2026-09-24).
+	--
+	-- The expiry becomes a row of its own rather than vanishing, so the rows
+	-- above it are still marked as belonging to the attempt that died. This
+	-- falls through rather than returning, so a direction taken on the same
+	-- tick as the guard is still recorded.
+	if gct.done == "Cmd Expired" and _gc == "p1_gc_begin"
+		and gct.at ~= nil and ((_now - gct.at) % 256) <= REATTACH_TICKS then
+		gct_add("dead", gct.at, gct.done)
+		gct.done, gct.at = nil, nil
+		gct.guard = _now
+		gct_add("guard", _now, nil)
+	elseif gct.done == "Cmd Expired" and _restart and gct.guard ~= nil
+		and _gc == "p1_gc_in_progress" then
+		-- A DEAD COMMAND IS NOT THE END WHILE THE GUARD IS STILL OPEN.
+		--
+		-- The cancel window outlasts one go at the motion, so dropping it and
+		-- inputting it again cancels off the SAME guard. Resetting here threw
+		-- that guard away, and the attempt that then succeeded had no guard of
+		-- its own - so it was never published, and the screen kept showing the
+		-- expiry while the input viewer said SUCCESS (user, 2026-09-24).
+		--
+		-- The 2026-09-23 log holds 11 windows and not one of them is restarted
+		-- after a drop, which is why this was never seen there. The evidence
+		-- is two screenshots: the trace stopped at Cmd Expired three ticks
+		-- after the guard while the input viewer counted SUCCESS twelve ticks
+		-- off that same guard.
+		gct_add("dead", gct.at, gct.done)
+		gct.done, gct.at = nil, nil
+	elseif gct.done ~= nil then
+		-- A finished attempt stays up until the next one starts.
+		if _gc == "p1_gc_begin" or _restart then
+			gct_reset()
+		else
+			gct.prog, gct.step = _prog, _step
+			gct_publish()
+			return
+		end
+	end
+
+	if gct.done == nil then
+		-- A direction the game took.
+		if _took then
+			gct_add("dir", _now, gct_numpad())
+		end
+		if _gc == "p1_gc_begin" and gct.guard == nil then
+			gct.guard = _now
+			gct_add("guard", _now, nil)
+		end
+		if _gc == "p1_gc_success" then
+			gct_add("btn", _now, gct_buttons())
+			gct.done, gct.at = "Success", _now
+		elseif _gc == "p1_gc_ended" then
+			gct.done, gct.at = "GC Expired", _now
+		elseif _dropped and #gct.rows > 0 then
+			-- The motion did not stay together. A cancel that succeeds drops
+			-- +0 on the same tick as the success event, so this has to come
+			-- after both events, not before them (log, 2026-09-24).
+			--
+			-- Kept even when no guard has happened yet: without that, the
+			-- re-attach above can never fire for the case it exists for -
+			-- the command dying first and the guard arriving after.
+			gct.done, gct.at = "Cmd Expired", _now
+		end
+	end
+	gct.prog, gct.step = _prog, _step
+	gct_publish()
+end
+-- --------------------------------------------------- END GC COMMAND TRACE
+
 -- WHEN THE COUNT STARTS, AND WHAT IT COMES TO.
 --
 -- Pulled out of the hook on purpose. The hook only runs when the game
@@ -3424,6 +3677,7 @@ memory.registerexec(0x0221CC, function()
 		-- at within a tick cancels out of the difference.
 		local _gct
 		_gct, p1_gc_open_seq = gc_tick_count(_gc, p1_gc_open_seq, globals.p1_tick_seq)
+		gct_tick(_gc)
 		local _gc_changed = _gc ~= p1_gc_state
 		p1_gc_state = _gc
 

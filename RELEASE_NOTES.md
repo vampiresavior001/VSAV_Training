@@ -6,6 +6,99 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.12
+
+### The guard cancel command, in the order the game took it
+
+**GC Command Trace** lists the inputs the game ACCEPTED on the way to a guard
+cancel, with the tick each was taken on. **Not everything you pressed.**
+
+```
+GC Command Trace
+  Guard
+  ->        3t
+  v         1t
+  v>        1t
+  [LP]      7t
+  Success  12t
+```
+
+- **The arrows and buttons are the input viewer's own artwork**, so the two
+  read against each other
+- **A number is the gap from the input above it.** As fast as the engine can
+  take it reads `1t` on every direction, and a button on the same tick as the
+  last direction reads `0t`
+- **Twelve or more between two inputs is amber.** The wait the game allows
+  between two inputs of a special is rolled, not fixed, and **eleven is still
+  inside what comes up often**. Past that the input only landed because the
+  roll was generous, and the same input drops on a worse one. It is a
+  **warning, not an error** - the cancel did come out. **Numbers measured
+  against the guard or the expiry never get it** - the `Guard` row, and the
+  first number below it - since neither end of those is an input
+- **Only the `Guard` row is bracketed.** A guard is not an input, so its
+  number alone is set apart. `Guard (8t)` is eight ticks after your last
+  input, or eight ticks after the expiry once the command has died.
+  **Numbers measured from the guard are not bracketed** - the guard is where
+  the count starts again, so they are part of the chain
+- **Success counts from the Guard** - the same number the input viewer
+  already draws beside SUCCESS
+
+**Nothing is drawn until a guard happens**, and the motion is followed before
+that - so a command started early still shows.
+
+**The two ways it fails are told apart.**
+
+- **`GC Expired`** - the fourteen tick window ran out. **The motion was fine**
+- **`Cmd Expired`** - the motion did not stay together: a neutral broke it, or
+  a step came too late
+
+**A motion that dies and is input again while the window is still open stays
+in the same trace.** The window outlasts one go at the motion, so dropping it
+and starting over still cancels off the same guard.
+
+**A guard that lands within sixteen ticks of a dead command is kept in the
+same trace.** Sixteen is one past the widest wait a player gets, so the
+guard is still inside the reach of the motion that just died - and the inputs
+that were too slow, followed by the guard, is exactly the pair worth seeing.
+The expiry stays as a row, so the lines above it are still marked as belonging
+to the attempt that died.
+
+```
+GC Command Trace
+  ->
+  v            4t
+  Cmd Expired 15t     <- how long after your last input it died
+  Guard       (2t)    <- how long it was dead before you blocked
+  ->           3t     <- how long after the guard you started again
+  v            4t
+```
+
+**The count restarts at `Cmd Expired`.** Everything below it belongs to a
+second go, so counting from the first one's inputs would add three spans
+together and read as a single wait.
+
+**A motion restarted after the window has closed starts a new trace**, and
+counts from scratch. No number is ever the sum of two attempts' waits.
+
+`Show GC Command Trace` on the `Trainer` tab, off by default.
+
+### Fixed: picking Bulleta with light punch left P2 unreachable
+
+Choosing P2's character with the same stick did not work **when Bulleta was
+picked with LP, and only then**. It needed both, which is why it came and went.
+
+Every byte the tool was reading is zero for that pair: the character number is
+**zero for Bulleta**, and the number of the button a pick was confirmed with is
+**zero for LP**. The character was chosen; the tool could not tell.
+
+### The character specific readouts have a switch of their own
+
+Aulbath's `Direct Scissors` and Anakaris's `Ate Projectile` appeared with
+nothing to say what they were. They are now `Show Character Specific` on the
+`Display` tab, **off by default** - so they will not appear after this update.
+Turn it on if you want them.
+
+---
 ## v11.7.11
 
 ### A tick count on the guard cancel trainer

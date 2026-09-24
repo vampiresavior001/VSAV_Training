@@ -84,15 +84,34 @@ do
 	local v2 = io.open("vsavscriptv2.lua"):read("*a")
 	-- The column's own switch, and NOT inside the branch that draws the HUD.
 	local at_col = v2:find("globals.options.display_p2_inputs", 1, true)
-	-- Built rather than written out: the needle spans a line break, and a
-	-- literal one here would be read as this file's own whitespace.
-	local _needle = "if globals.options.display_hud == true then"
-	                .. string.char(10) .. string.char(9) .. string.char(9)
-	                .. string.char(9) .. "charaspecfic()"
-	local at_hud = v2:find(_needle, 1, true)
+	-- WHAT IS INSIDE THE HUD BRANCH, AND WHAT IS NOT.
+	--
+	-- charaspecfic is the only thing the HUD branch draws, and it now sits
+	-- behind a switch of its own inside it (Show Character Specific, 2026-09-23)
+	-- so the two lines are no longer adjacent. What this pins is unchanged:
+	-- charaspecfic is in the branch, and P2's column is not.
+	-- 呼び出し側から探す。display_hud の枝はこのファイルに 2 つあり、
+	-- 先頭から探すと hud() のほうに当たる。
+	local at_spec = v2:find(string.rep(string.char(9), 4) .. "charaspecfic()", 1, true)
+	local at_hud = nil
+	do
+		local i = 1
+		while true do
+			local j = v2:find("if globals.options.display_hud == true then", i, true)
+			if j == nil or (at_spec ~= nil and j > at_spec) then break end
+			at_hud = j
+			i = j + 1
+		end
+	end
+	want("HUD の枝が charaspecfic を呼ぶ",
+		(at_hud ~= nil and at_spec ~= nil) and (at_spec - at_hud) < 500, true)
 	want("描く側が同じキーを読む", at_col ~= nil, true)
-	want("HUD の枝は charaspecfic だけになった", at_hud ~= nil, true)
-	want("P2 の列は HUD の枝より後ろ", (at_col ~= nil and at_hud ~= nil) and at_col > at_hud, true)
+	want("P2 の列は HUD の枝の中に無い",
+		(at_col ~= nil and at_spec ~= nil) and at_col > at_spec, true)
+	-- 自前のスイッチの内側にあること。ここが外れると、HUD を出した人には
+	-- また説明の無い表示が出る。
+	want("charaspecfic は自分のスイッチの内側",
+		v2:find("if globals.options.display_char_specific == true then", 1, true) ~= nil, true)
 end
 
 -- A parent gated on a property no row writes would take its children off the

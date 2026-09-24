@@ -35,6 +35,12 @@ local default_training_settings = {
   display_recording_gui= false,
   display_hitbox_default = true,
   display_hud=true,
+  -- OFF. Two hand-written readouts for one character each, with nothing
+  -- on screen to say what they are (user, 2026-09-23).
+  display_char_specific = false,
+  -- OFF. A readout for working on guard cancels, not something to have up
+  -- all the time.
+  display_gc_command_trace = false,
   -- OFF. Show PB Counter reads the same two bytes and gives them a
   -- history; this is the raw pair drawn by the characters' feet.
   display_tech_hit = false,

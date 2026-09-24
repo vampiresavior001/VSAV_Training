@@ -3400,7 +3400,13 @@ vsavScriptModule = {
 			movelist()
 		end 
 		if globals.options.display_hud == true then
-			charaspecfic()
+			-- OFF BY DEFAULT AND ON ITS OWN SWITCH. Two readouts for one
+			-- character each - Anakaris's swallowed projectile and Aulbath's
+			-- Direct Scissors progress - which appeared with nothing to say
+			-- what they were (user, 2026-09-23).
+			if globals.options.display_char_specific == true then
+				charaspecfic()
+			end
 		end
 		-- P2's INPUT COLUMN IS ITS OWN SWITCH, NOT PART OF THE HUD.
 		--
