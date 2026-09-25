@@ -66,8 +66,43 @@ end
 
 for _, action in ipairs({ "atk", "air.f", "air.b" }) do
 	local d = setup(action, false)
+	-- The LP before it is out first: busy - no permission bit, not in air
+	-- neutral. A free tick with nothing having happened since is a refused
+	-- press, which After now waits out in the air (2026-09-25, below).
+	ram[CEL + 1] = 0
+	tick(d, 1, 0x14)
+	want(action .. " waits while the move before it is out", queued, nil)
+	ram[CEL + 1] = 2
 	tick(d, 1, 0x14)
 	want(action .. " can still start in air", queued ~= nil, true)
+end
+
+-- IN THE AIR, A REFUSED PRESS DOES NOT USE UP THE STEPS BEHIND IT.
+--
+-- Anakaris's float stops taking attacks before it lands. The press was
+-- refused, the dummy stayed free in air neutral, and every After behind it
+-- went out on the next ticks - refused too. Nothing was left for after the
+-- landing (user, 2026-09-25). In the air an After now waits for the dummy to
+-- have been busy since the step before it; the landing is that.
+do
+	local d = setup("atk", false)
+	for _ = 1, 6 do tick(d, 1, 0x06) end   -- free in the air, nothing happened
+	want("air: a refused press does not drain the next After", queued, nil)
+	ram[CEL + 1] = 0
+	ram[P2 + 0x07] = 0x04                  -- the landing cel: busy
+	tick(d, 1, 0x06)
+	want("air: not on the landing cel itself", queued, nil)
+	ram[P2 + 0x07] = 0
+	tick(d, 0, 0)                          -- down, and free
+	want("fires on the ground after the landing", queued ~= nil, true)
+end
+
+-- On the ground free is still enough. Waiting for a busy spell there could
+-- stop a list for good.
+do
+	local d = setup("atk", false)
+	tick(d, 0, 0)
+	want("ground: free is still enough", queued ~= nil, true)
 end
 
 -- Landing must still start the run-up in the air at its existing lead.

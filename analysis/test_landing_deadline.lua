@@ -194,12 +194,47 @@ do
 	-- 2026-09-20: 期限が狙いを追い越していた。落下中はダミーも「自由」なので、
 	-- timing_missed が landing_ready より 3 ティック早く開き、押しが空中に
 	-- 落ちていた (実測 13 回中 11 回)。着地が来るあいだは順番を譲ること。
-	want("着地が来るあいだは期限を効かせない",
-		at ~= nil and src:find("seq_ticks_to_landing() == nil", at, true) ~= nil, true)
+	--
+	-- 2026-09-25: 予測が取れない空中 (アナカリスの浮遊) では期限が開いていて、
+	-- 着地後の MP が着地 5 フレーム前の空中で押された。空中では予測の有無に
+	-- かかわらず期限を効かせない - 期限は地上にいるときだけ。[3] が実際に動かす。
+	local tm_a = at and src:find("local _tm = false", at, true)
+	local tm_b = tm_a and src:find("if _lr or _tm then", tm_a, true)
+	local tm = (tm_a and tm_b) and src:sub(tm_a, tm_b) or ""
+	want("期限は地上にいるときだけ",
+		tm:find("_tm = (memory.readbyte(P2_BASE + 0x38) == 0)", 1, true) ~= nil, true)
+	want("予測が無いことを理由に空中で期限を開けない",
+		tm:find("seq_ticks_to_landing", 1, true), nil)
 	-- 跳ばなかった場合の保険は残すこと。ここが消えると [1] が永久に待つ。
 	want("着地が来ないなら期限は生きている",
 		at ~= nil and src:find("timing_missed(step) then", at, true) ~= nil, true)
 end
+
+print("[3] 予測の取れない空中で動作が終わっても、着地までは押さない")
+-- 実機 2026-09-25。アナカリスの浮遊の最後の攻撃が終わり、空中の待機 ($07 = 02)
+-- に戻った瞬間に、着地待ちの MP が押された。空中で出ず、着地後の攻撃が消えた。
+-- 着地の予測はこの浮遊を解けない (seq_ticks_to_landing は nil を返す)。
+install({
+	{ action = "atk", lever = "none", button = "LP", wait = 0 },
+	{ action = "atk", lever = "none", button = "MP", timing = "landing", wait = -1 },
+})
+start()
+local real_ld = seq_ticks_to_landing
+seq_ticks_to_landing = function() return nil end
+-- 空中で攻撃中 ($07 = 06) - 忙しい。
+ram[P2 + 0x38], ram[P2 + 0x05], ram[P2 + 0x06], ram[P2 + 0x07] = 1, 0, 0x06, 0x06
+run(4)
+-- 空中の待機に戻る ($07 = 02) - 空中では「自由」。ここで押してはいけない。
+ram[P2 + 0x07] = 0x02
+local before = buttons()
+run(10)
+want("空中の待機では押さない", buttons(), before)
+-- 着地。最初の地上のティックで押す。
+ram[P2 + 0x38], ram[P2 + 0x06], ram[P2 + 0x07] = 0, 0, 0
+run(6)
+want("着地したら押す", buttons() > before, true)
+seq_ticks_to_landing = real_ld
+print("   " .. trace():sub(1, 110))
 
 print(fails == 0 and "REP_OK" or (fails .. " REP_NG"))
 os.exit(fails == 0 and 0 or 1)

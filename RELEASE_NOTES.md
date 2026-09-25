@@ -6,6 +6,90 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.14
+
+### GC Command Trace: which tick of the guard persistence you blocked on
+
+The trick to guard cancels is **guard pose persistence**. Letting go of back
+does not drop the guard pose at once - it stays up for a few ticks, and a hit
+inside that span is still blocked. That is what covers the part of the motion
+that leaves the guard direction.
+
+A block that landed while the pose was persisting now reads **`G-Persist n`**
+instead of `Guard`, where **n is how many ticks after the lever left the guard
+direction the hit landed**. A block with back still held (cross-ups included)
+is a plain `Guard`, as before.
+
+```
+GC Command Trace
+  ->
+  G-Persist 2  (2t)   <- 2 ticks after letting go of back, 2 after the ->
+  v             4t
+  v>            5t
+  [HP]          0t
+  Success       6t
+```
+
+### The guard row sits on the tick the block landed
+
+The cancel window opens **one tick after** the block lands. The guard row used
+to sit on the tick the window opened, so a direction entered right after the
+block was drawn above the guard at `(0t)` - and **read as blocking with the
+lever already forward**.
+
+The guard row now sits on the tick the block landed, and every row is in the
+order things happened. When a direction and the guard share a tick, the
+direction comes first.
+
+```
+Before                   v11.7.14
+  ->                       G-Persist 5
+  G-Persist 5 (0t)         ->            1t
+  v             5t         v             5t
+```
+
+**`Success` is still counted from the tick the window opened**, so it is the
+same number as the input viewer's `SUCCESS`.
+
+### GC Command Trace: the warning color is now orange
+
+The warning on gaps of `12t` or more is orange instead of amber - amber was
+too close to the gold of `Success`. **The arrow on that row is drawn orange
+too.**
+
+### GC Command Trace: a blockstring carries the command to the next guard
+
+Guarding a string, the first hit's window can run out halfway through the
+motion and the cancel come out off the second guard. The trace started over at
+the second guard, so only the last direction and the button were left and it
+**looked like a guard cancel off a single direction**. The directions of a
+command that is still alive now carry over to the next guard.
+
+### Action Steps: an attack after a jump can be `Auto`
+
+An attack after a jump was `Auto (Not Measured)`, and a low jump attack meant
+typing the Ticks in by hand. The "before attack" column of the published jump
+table now gives a value for **every character**, shown as a number such as
+`Auto (4)`. It is the table value minus one, because the jump input is held
+for two ticks. Checked on hardware: Aulbath's and Jedah's forward jumps.
+
+### Action Steps: in the air, `Auto (After)` lets the game decide
+
+- **The tool no longer stops the same button being pressed again.** Anakaris's
+  repeated air attacks while floating stopped at the second one. If the game
+  takes the press, it comes out
+- **A press the game refuses in the air no longer uses up the steps behind
+  it.** After a step, the next one waits until the dummy has been busy once -
+  the landing counts
+
+### MP on the step list removes a step
+
+Pressing **MP** on a row of the step list opens the remove confirmation, and
+the help line says `MP: Remove`. Opening the step and choosing
+`Remove This Step` still works.
+
+---
+
 ## v11.7.13
 
 ### Air chains, and cancels out of jumps and dashes, now come out

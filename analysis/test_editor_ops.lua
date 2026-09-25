@@ -612,5 +612,58 @@ E.open("reversal")
 hold_walk("down", 100, 3)
 want("短いリストは今までどおり", cur(), 4)
 
+print("[MP] 一覧から MP でステップを外す - 確認は残す")
+-- 本人の依頼 (2026-09-25)。ステップの画面の Remove This Step と同じ確認画面を、
+-- 一覧から直接開く近道。確認を残すので、うっかり押しても LP を押すまで消えない。
+local function help_line()
+  local h = ""
+  gui.text=function(x,y,t) if y==181 then h=t end end
+  E.guiRegister()
+  gui.text=function() end
+  return h
+end
+ram[0xFF8B82]=0x05
+training_settings.action_sequences.reversal = { ["5"] = { version=1, steps={
+  {action="atk", lever="none", button="LP", wait=0},
+  {action="atk", lever="none", button="MP", wait=-1},
+  {action="atk", lever="none", button="HP", wait=-1} } } }
+E.open("reversal")
+goto_row("Attack : MP")
+want("操作説明に MP: Remove", help_line():find("MP: Remove", 1, true) ~= nil, true)
+tap("MP")
+want("確認画面が開く", selected():find("No, keep it", 1, true) ~= nil, true)
+tap("LP")                              -- No
+want("No なら一覧に戻る", selected():find("Attack : MP", 1, true) ~= nil, true)
+tap("MP")
+tap("down")                            -- Yes
+tap("LP")
+want("消した後も一覧 (エディタは閉じない)", selected():find("Attack : HP", 1, true) ~= nil, true)
+save_and_close()
+want("2 歩になる", steps() and #steps(), 2)
+want("残ったのは LP と HP",
+  steps() and (tostring(steps()[1].button) .. "," .. tostring(steps()[2].button)), "LP,HP")
+
+-- ステップの画面から消す道は今までどおり 2 段戻る (その画面も閉じる)。
+E.open("reversal")
+goto_row("Attack : HP")
+tap("LP")                              -- ステップの画面へ
+goto_row("Remove This Step")
+tap("LP")
+tap("down")                            -- Yes
+tap("LP")
+-- 2 歩中の 2 歩目を消したので、カーソルは同じ位置の + Add Step に乗る。
+want("画面からの削除も一覧へ戻る", selected():find("Add Step", 1, true) ~= nil, true)
+save_and_close()
+want("1 歩になる", steps() and #steps(), 1)
+
+-- 最後の 1 歩は消せない。Remove This Step が無いのと同じ。
+E.open("reversal")
+goto_row("Attack : LP")
+want("1 歩だけのときは説明に出さない", help_line():find("MP: Remove", 1, true), nil)
+tap("MP")
+want("1 歩だけなら何も起きない", selected():find("Attack : LP", 1, true) ~= nil, true)
+save_and_close()
+want("1 歩のまま", steps() and #steps(), 1)
+
 print(fails==0 and "\n全て通った" or ("\n"..fails.." 件 NG"))
 os.exit(fails==0 and 0 or 1)

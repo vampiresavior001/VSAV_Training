@@ -3152,6 +3152,78 @@ function air_dash_attack_ticks_for(_jump, _dash)
 	return _p and _p.atk
 end
 
+-- HOW SOON AN ATTACK CAN FOLLOW A JUMP, PER CHARACTER AND DIRECTION.
+--
+-- NOT MEASURED HERE, UNLIKE EVERY OTHER TABLE IN THIS FILE. These are the
+-- "before attack" column of the jump page in Vampire Savior System Data: the
+-- frames, counted from the start of the jump's pre-motion, during which an
+-- attack cannot come out yet - it comes out on the frame after. Taken whole at
+-- the user's direction (2026-09-25), knowing the note above AIR_DASH_TICKS:
+-- four generalisations about that table, all wrong.
+--
+-- THE PAGE'S FRAMES ARE TICKS. Its pre-motion of 3 agrees with takeoff
+-- measured 2 to 4 ticks after the jump starts (VSAV_MEMORY_NOTES, jump and
+-- dash route section), so there is no frame-to-tick scaling.
+--
+-- ONE IS TAKEN OFF. A jump is a single buttonless entry, so it is held for two
+-- ticks (v158) and the pre-motion starts on the first of them - while a Wait
+-- counts from the last. A press on the page's first attack frame is therefore
+-- a Wait of one less than the page says. That rule is the same for every
+-- character and direction, because the jump's input is.
+--
+-- TWO POINTS CONFIRM IT, measured by the user on characters whose page values
+-- differ: Aulbath forward, page 5, measured 4; Jedah forward, page 6, measured 5
+-- (2026-09-25). The obvious alternative - pre-motion plus one, which also gives
+-- Aulbath's 4 - predicted 4 for Jedah and is wrong. Everything else is the
+-- page's number carried by that rule. A row that turns out wrong in play gets
+-- measured and goes in JUMP_ATTACK_MEASURED, which wins.
+--
+-- Not here: Lilith's high jump (the page has it, but it is the super jump,
+-- which Auto does not resolve yet), Dark Gallon and Oboro (not on the page),
+-- and 0x0B.
+-- In a block of its own: this file's main chunk is at Lua 5.1's limit of 200
+-- active locals, and four more at the top level would not load ("main
+-- function has more than 200 local variables", 2026-09-25). Locals inside
+-- do ... end are released at its end; the global function keeps them.
+do
+	local JUMP_BEFORE_ATTACK = {
+		[0x00] = { name = "Bulleta",   f =  6, n =  6, b =  6 },
+		[0x01] = { name = "Demitri",   f =  6, n =  6, b =  6 },
+		[0x02] = { name = "Gallon",    f =  5, n =  5, b =  5 },
+		[0x03] = { name = "Victor",    f =  6, n =  6, b =  6 },
+		[0x04] = { name = "Zabel",     f =  5, n =  5, b =  5 },
+		[0x05] = { name = "Morrigan",  f =  6, n =  6, b =  6 },
+		[0x06] = { name = "Anakaris",  f = 15, n = 19, b = 15 },
+		[0x07] = { name = "Felicia",   f =  5, n =  5, b =  5 },
+		[0x08] = { name = "Bishamon",  f =  6, n =  6, b =  6 },
+		[0x09] = { name = "Aulbath",   f =  5, n =  5, b =  5 },
+		[0x0A] = { name = "Sasquatch", f =  5, n =  5, b =  5 },
+		[0x0C] = { name = "Q-Bee",     f =  6, n =  6, b =  5 },
+		[0x0D] = { name = "Lei-Lei",   f =  6, n =  6, b =  6 },
+		[0x0E] = { name = "Lilith",    f =  6, n =  6, b =  6 },
+		[0x0F] = { name = "Jedah",     f =  6, n =  6, b =  6 },
+	}
+	local JUMP_INPUT_OFFSET = 1
+	local JUMP_ATTACK_MEASURED = {
+		[0x09] = { ["jump.f"] = 4 },   -- Aulbath, measured by the user, 2026-09-25
+		[0x0F] = { ["jump.f"] = 5 },   -- Jedah, measured by the user, 2026-09-25
+	}
+	local JUMP_DIR = { ["jump.f"] = "f", ["jump.n"] = "n", ["jump.b"] = "b" }
+
+	-- Ticks from a jump to the earliest attack after it, or nil where neither a
+	-- measurement nor the page has a number. Global for the same reason the two
+	-- air dash ones above are.
+	function jump_attack_ticks_for(_jump)
+		local _cid = memory.readbyte(0xFF8B82)
+		local _m = JUMP_ATTACK_MEASURED[_cid]
+		if _m ~= nil and _m[_jump] ~= nil then return _m[_jump] end
+		local _row = JUMP_BEFORE_ATTACK[_cid]
+		local _d = JUMP_DIR[_jump]
+		if _row == nil or _d == nil or _row[_d] == nil then return nil end
+		return _row[_d] - JUMP_INPUT_OFFSET
+	end
+end
+
 -- WHAT AN Auto RESOLVES TO, FOR THE EDITOR'S ROW.
 --
 -- The runner owns the answer; the editor only prints it. Published here rather
@@ -3484,11 +3556,72 @@ end
 
 local function gct_tick(_gc)
 	local _blk = GC_BLOCK[memory.readbyte(P1_BASE + 0x382)]
-	if _blk == nil then gct_reset() return end
+	if _blk == nil then gct_reset() gct.motion = {} return end
 	local _now = globals.p1_tick_seq or 0
 	local _step = memory.readbyte(P1_BASE + _blk + 1)
 	local _prog = memory.readbyte(P1_BASE + _blk)
 	local _was_prog, _was_step = gct.prog or 0, gct.step or 0
+
+	-- WHICH TICK OF THE GUARD POSE'S PERSISTENCE THE BLOCK LANDED ON.
+	--
+	-- Letting go of back does not drop the guard pose at once: it runs on for
+	-- a few ticks, and a hit inside that span is still blocked. Guard cancels
+	-- lean on it - the motion leaves the guard direction and the pose covers
+	-- the gap (user, 2026-09-25). The game keeps it in $07 while $06 is 0x0C:
+	--
+	--     $07 00   the guard direction is held
+	--     $07 02   released, and the pose is persisting
+	--
+	-- Measured on Demitri, 65 blocks: persisting blocks landed 1 to 6 ticks
+	-- in; with the lever left at neutral the pose ran out after 5 to 8; a
+	-- forward lever turned it into a walk at once. Cross-up blocks read 00 -
+	-- the guard direction follows the attacker, not the facing byte - so they
+	-- are held blocks, correctly (VSAV_MEMORY_NOTES, guard pose persistence).
+	--
+	-- The pose ends on the contact tick ($06 leaves 0x0C with $05 set), which
+	-- is a tick before the cancel window opens (the guard row below says
+	-- why), so the count is taken there and kept for the guard row. Dropped
+	-- once the stun is over, so a hit that opened no window cannot hand its
+	-- count to a later block.
+	-- Fields of gct, not locals: this file's main chunk is at the limit.
+	local _s06 = memory.readbyte(P1_BASE + 0x06)
+	local _s05 = memory.readbyte(P1_BASE + 0x05)
+	if _s06 == 0x0C then
+		if memory.readbyte(P1_BASE + 0x07) == 0x02 then
+			if gct.pers_start == nil then gct.pers_start = _now end
+		else
+			gct.pers_start = nil
+		end
+		gct.pers_n = nil
+	elseif gct.pose_prev == 0x0C then
+		if _s05 ~= 0 and gct.pers_start ~= nil then
+			gct.pers_n = (_now - gct.pers_start) % 256
+		else
+			gct.pers_n = nil
+		end
+		gct.pers_start = nil
+	elseif _s05 == 0 then
+		gct.pers_n = nil
+	end
+	gct.pose_prev = _s06
+
+	-- THE TICK THE BLOCK LANDED, FOR THE GUARD ROW.
+	--
+	-- The hit is written into P1 as $05 02, $06 00, $07 00 (0x0182D8 and its
+	-- neighbours, through A1 - code writing some other object), and P1's own
+	-- handler moves $07 on
+	-- the next time P1 runs - loading the block clock as it does. So that
+	-- state is the contact, and this hook sees it for one tick. Only its first
+	-- tick is taken: a hit that was not blocked was once logged holding it for
+	-- two. Dropped once the stun is over, like the count above.
+	local _pre = _s05 == 0x02 and _s06 == 0x00
+		and memory.readbyte(P1_BASE + 0x07) == 0x00
+	if _pre and not gct.pre_prev then
+		gct.contact = _now
+	elseif _s05 == 0 then
+		gct.contact = nil
+	end
+	gct.pre_prev = _pre
 
 	-- WHICH BYTE CARRIES THE STATE, AND WHY IT IS NOT THE STEP NUMBER.
 	--
@@ -3518,6 +3651,32 @@ local function gct_tick(_gc)
 	-- (seq=5576, 02.04 -> 00.06 with the success event).
 	local _took = _prog > _was_prog or _step > _was_step
 
+	-- THE MOTION THAT IS ALIVE RIGHT NOW, WHATEVER THE TRACE IS SHOWING.
+	--
+	-- A finished trace is held on screen until the next attempt, and nothing
+	-- goes into its rows while it is held. The command can still be half way
+	-- through a motion, though: a blocked chain opens a fresh window on every
+	-- hit, so one window can run out mid-motion and the next guard finish it.
+	-- That cancel drew as a single direction and a button (user, 2026-09-25,
+	-- guarding Aulbath's five-hit jump chain) - the directions taken before the
+	-- new guard had gone nowhere, although the input viewer had all of them.
+	--
+	-- So the live motion is followed on its own, from its first direction to
+	-- the tick +0 falls back to 0, and a guard that ends the hold takes it
+	-- over. The copy is taken before this tick is added, so a direction that
+	-- lands on the guard's own tick is recorded once, by the path below.
+	-- A field of gct and not a local: this file's main chunk is at Lua 5.1's
+	-- limit of 200 locals.
+	local _dir_v = _took and gct_numpad() or nil
+	local _carry = {}
+	for _i, _m in ipairs(gct.motion or {}) do _carry[_i] = _m end
+	if _restart then gct.motion = {} end
+	if _took then
+		gct.motion = gct.motion or {}
+		gct.motion[#gct.motion + 1] = { t = _now, v = _dir_v }
+	end
+	if _dropped then gct.motion = {} end
+
 	-- A GUARD THAT LANDS RIGHT AFTER A DEAD COMMAND BELONGS TO THE SAME GO.
 	--
 	-- One input's grace is random, and REATTACH_TICKS is the widest it gets,
@@ -3529,13 +3688,13 @@ local function gct_tick(_gc)
 	-- The expiry becomes a row of its own rather than vanishing, so the rows
 	-- above it are still marked as belonging to the attempt that died. This
 	-- falls through rather than returning, so a direction taken on the same
-	-- tick as the guard is still recorded.
+	-- tick as the guard is still recorded - and the guard row is left to the
+	-- same code as every other guard, so it is placed the same way.
 	if gct.done == "Cmd Expired" and _gc == "p1_gc_begin"
 		and gct.at ~= nil and ((_now - gct.at) % 256) <= REATTACH_TICKS then
 		gct_add("dead", gct.at, gct.done)
 		gct.done, gct.at = nil, nil
-		gct.guard = _now
-		gct_add("guard", _now, nil)
+		gct.guard = nil
 	elseif gct.done == "Cmd Expired" and _restart and gct.guard ~= nil
 		and _gc == "p1_gc_in_progress" then
 		-- A DEAD COMMAND IS NOT THE END WHILE THE GUARD IS STILL OPEN.
@@ -3557,6 +3716,13 @@ local function gct_tick(_gc)
 		-- A finished attempt stays up until the next one starts.
 		if _gc == "p1_gc_begin" or _restart then
 			gct_reset()
+			-- A guard that ends the hold takes the motion still alive into the
+			-- new trace, above the guard - it is the start of this cancel. Not
+			-- one that dies on this very tick. A restart needs nothing here:
+			-- +0 was 0 a tick ago, so the motion was already emptied.
+			if not _dropped then
+				for _, _m in ipairs(_carry) do gct_add("dir", _m.t, _m.v) end
+			end
 		else
 			gct.prog, gct.step = _prog, _step
 			gct_publish()
@@ -3567,11 +3733,43 @@ local function gct_tick(_gc)
 	if gct.done == nil then
 		-- A direction the game took.
 		if _took then
-			gct_add("dir", _now, gct_numpad())
+			gct_add("dir", _now, _dir_v)
 		end
 		if _gc == "p1_gc_begin" and gct.guard == nil then
+			-- THE GUARD ROW SITS AT THE CONTACT, NOT AT THE WINDOW.
+			--
+			-- The window opens a tick after the block lands. This hook runs at
+			-- the top of P1's update (0x022114 reads the input, then 0x0222AC
+			-- dispatches on $04), the hit is written from outside that update,
+			-- and the block clock is loaded further down it by the guard handler
+			-- (0x023960). So a direction taken on the tick the window opened
+			-- came after the block, yet it was drawn above the guard, 0t apart -
+			-- which read as blocking with the lever already forward (user,
+			-- 2026-09-25: G-Persist 5 (0t) under a forward that came the tick
+			-- after the contact).
+			--
+			-- So the row takes the contact tick and moves up past whatever came
+			-- after it, and a tie keeps the direction first. Every other row is
+			-- already in tick order, so this keeps the whole trace in it - a
+			-- command that died between the contact and the window goes below
+			-- the guard, where the drawing counts both from the input before
+			-- them instead of wrapping to 255t. With no contact seen, the
+			-- window's own tick is all there is.
+			--
+			-- gct.guard stays the window's tick: Success and GC Expired count
+			-- from it, as the SUCCESS count in the input viewer does.
 			gct.guard = _now
-			gct_add("guard", _now, nil)
+			local _at = gct.contact or _now
+			gct_add("guard", _at, gct.pers_n)
+			local _rows, _i = gct.rows, #gct.rows
+			while _i > 1 do
+				local _p = _rows[_i - 1]
+				local _d = (_p.t - _at) % 256
+				if _d == 0 or _d > (_now - _at) % 256 then break end
+				_rows[_i - 1], _rows[_i] = _rows[_i], _p
+				_i = _i - 1
+			end
+			gct.pers_n, gct.contact = nil, nil
 		end
 		if _gc == "p1_gc_success" then
 			gct_add("btn", _now, gct_buttons())

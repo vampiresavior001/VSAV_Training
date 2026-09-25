@@ -523,18 +523,34 @@ local GCT_BRACKET = GCT_CH
 -- is written down in VSAV_MEMORY_NOTES; it is not what this threshold is.
 --
 -- So it is a WARNING, not an error: the cancel did come out (user,
--- 2026-09-24). Amber, which is neither the gold of Success nor the red of a
--- failure.
+-- 2026-09-24). Orange, which is neither the gold of Success nor the red of a
+-- failure. It was an amber (#FFA000) at first, and that sat close enough to
+-- Success's gold to be read as it (user, 2026-09-25).
 --
--- THE RULE IS JUST THE NUMBER. Twelve or more is amber wherever it appears,
--- brackets included - carving out exceptions by which row it was made the
--- rule something to look up rather than something to see (user, 2026-09-24).
--- The closing line keeps its own colour: it is a result, not a gap.
+-- Only a gap between two inputs the game took is warned - a guard or an expiry
+-- at either end means the random grace is not what the number measures. The
+-- closing line keeps its own colour: it is a result, not a gap.
 local GCT_WARN_AT = 12
-local GCT_WARN = "#FFA000"
+local GCT_WARN = "#FF7F00"
 local function gct_warn(_n)
 	if _n >= GCT_WARN_AT then return GCT_WARN end
 	return nil
+end
+
+-- THE ARROW BESIDE A WARNED NUMBER GOES ORANGE TOO (user, 2026-09-25).
+--
+-- gui.image is FBNeo's gdoverlay: position, image and an opacity, no colour.
+-- So the orange arrows are their own images, built from the input viewer's
+-- arrows by analysis/make_warn_arrows.py - the white fill recoloured, the
+-- black outline and every transparent pixel copied as they are.
+--
+-- There is no orange 5: the neutral arrow has no white fill. Loaded guarded,
+-- so a missing file costs the arrow its colour and nothing else - the number
+-- beside it still turns orange.
+local img_dir_warn = {}
+for _, _n in ipairs({ 1, 2, 3, 4, 6, 7, 8, 9 }) do
+	local _im = gd.createFromPng("images/" .. _n .. "_dir_warn.png")
+	if _im ~= nil then img_dir_warn[_n] = _im:gdStr() end
 end
 local GCT_BAD = "#FF0000"
 local GCT_OK  = "#FFD700"
@@ -599,7 +615,14 @@ local function draw_gc_command_trace()
 	for _i, _r in ipairs(_t.rows) do
 		local _ry = _y + _i * GCT_ROW_H
 		if _r.k == "guard" then
-			gui.text(_x + 2, _ry + 2, "Guard", "#99EE99")
+			-- A block that landed while the guard pose was persisting - back
+			-- already let go - names the tick of it (user, 2026-09-25). "G-"
+			-- keeps it beside the plain Guard rows and the GC heading; the
+			-- word is the Japanese wiki's own for it. Same length as
+			-- "Cmd Expired", so the bracket column needs no room made.
+			local _label = "Guard"
+			if type(_r.v) == "number" then _label = "G-Persist " .. _r.v end
+			gui.text(_x + 2, _ry + 2, _label, "#99EE99")
 		elseif _r.k == "dead" then
 			-- The command died and a guard came soon enough that the rows above
 			-- are still worth reading. Marked so they are not taken for part of
@@ -608,7 +631,14 @@ local function draw_gc_command_trace()
 		elseif _r.k == "btn" then
 			gct_draw_buttons(_x + 2, _ry, _r.v or {})
 		elseif img_dir ~= nil then
-			gui.image(_x + 2, _ry, img_dir[_r.v or 5])
+			-- The same test the number below makes for this row, so the arrow
+			-- and its number cannot disagree.
+			local _v = _r.v or 5
+			local _img = img_dir[_v]
+			if _last_in ~= nil and gct_warn((_r.t - _last_in) % 256) ~= nil then
+				_img = img_dir_warn[_v] or _img
+			end
+			gui.image(_x + 2, _ry, _img)
 		end
 		-- ONLY AN INPUT THE GAME TOOK CAN BE WARNED (user, 2026-09-24).
 		--

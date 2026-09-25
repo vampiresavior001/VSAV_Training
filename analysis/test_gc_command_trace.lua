@@ -242,6 +242,7 @@ do
 	-- [8] からも触るので、この do の外に出す。
 	calls = {}
 	bad = {}
+	images = {}
 	gui = {
 		text = function(_x, _y, _s, _c)
 			calls[#calls + 1] = { x = _x, y = _y, s = _s, c = _c }
@@ -252,7 +253,9 @@ do
 			end
 			if _c == nil then bad[#bad + 1] = "nil:" .. tostring(_s) end
 		end,
-		image = function() end,
+		image = function(_x, _y, _img)
+			images[#images + 1] = { x = _x, y = _y, img = _img }
+		end,
 		box = function() end, line = function() end, rect = function() end,
 	}
 	memory = { readbyte = function() return 0 end, readword = function() return 0 end,
@@ -265,7 +268,10 @@ do
 	-- hud.lua は tech-hit-inputs を require し、そちらが gd の別の口も叩く。
 	local _img = { gdStr = function() return "" end }
 	gd = {
-		createFromPng = function() return _img end,
+		-- どのファイルを読んだかを gdStr に残す。オレンジの矢印を見分けるため。
+		createFromPng = function(_path)
+			return { gdStr = function() return "png:" .. tostring(_path) end }
+		end,
 		createFromPngStr = function() return _img end,
 		copyResampled = function() end,
 	}
@@ -278,7 +284,7 @@ do
 		return { mark_write = function() end }
 	end
 	img_dir = {}
-	for i = 1, 9 do img_dir[i] = "img" end
+	for i = 1, 9 do img_dir[i] = "dir" .. i end
 	img_no_button, img_L_button, img_M_button, img_H_button = "n", "l", "m", "h"
 	globals = { options = { display_gc_command_trace = true } }
 	hud_mod = dofile("hud.lua")
@@ -470,7 +476,7 @@ do
 			and c.s ~= "GC Command Trace" then by[c.s] = c.c end
 	end
 	want("11t は警告色ではない", by["11t"], "#FFFFFF")
-	want("12t は警告色 (引き次第)", by["12t"], "#FFA000")
+	want("12t は警告色 (引き次第)", by["12t"], "#FF7F00")
 	want("ボタンの 7t は普通", by["7t"], "#FFFFFF")
 	-- 括弧付きはガードを端点に持つ数字で、受付の猶予ではない。引きに救われた
 	-- という読みが成立しないので、12 以上でも警告にしない (本人、2026-09-24)。
@@ -631,4 +637,195 @@ do
 	want("期限切れを行として残す",
 		gsrc:find('gct_add(\"dead\", gct.at, gct.done)', 1, true) ~= nil, true)
 end
+print("")
+print("[10] 警告色はオレンジ。その行の矢印も白い塗りだけオレンジ")
+do
+	-- 琥珀 (#FFA000) は Success の金 (#FFD700) と見分けにくかった (本人、
+	-- 2026-09-25)。gui.image に色の引数は無いので、矢印は色違いの画像
+	-- (analysis/make_warn_arrows.py が作る) に差し替える。
+	calls, bad, images = {}, {}, {}
+	globals.gc_trace = {
+		guard = 30, done = "Success", at = 60,
+		rows = {
+			{ k = "dir", t = 0,  v = 6 },   -- 先頭。数字なし、白
+			{ k = "dir", t = 12, v = 2 },   -- 12t: 数字も矢印もオレンジ
+			{ k = "dir", t = 13, v = 3 },   -- 1t: 白
+			{ k = "guard", t = 30 },        -- (17t): ガードは警告しない
+			{ k = "dir", t = 45, v = 5 },   -- 32t だが 5 に白い塗りは無い
+			{ k = "btn", t = 60,
+				v = { true, false, false, false, false, false } },   -- 15t
+		},
+	}
+	hud_mod.draw_gc_command_trace()
+	local arrows = {}
+	for _, im in ipairs(images) do
+		local s0 = tostring(im.img)
+		if s0:find("^dir") or s0:find("_dir_warn") then arrows[#arrows + 1] = s0 end
+	end
+	want("矢印の並び", table.concat(arrows, " "),
+		"dir6 png:images/2_dir_warn.png dir3 dir5")
+	local by = {}
+	for _, c in ipairs(calls) do
+		if type(c.s) == "string" then by[c.s] = c.c end
+	end
+	want("12t はオレンジ", by["12t"], "#FF7F00")
+	want("1t は白", by["1t"], "#FFFFFF")
+	want("ガードの括弧はオレンジにしない", by["(17t)"], "#FFFFFF")
+	want("中立の 32t も数字はオレンジ", by["32t"], "#FF7F00")
+	want("ボタンの 15t もオレンジ", by["15t"], "#FF7F00")
+	-- 既存の色は変えない。
+	want("Success は金のまま", by["Success"], "#FFD700")
+	want("Success の数字も金のまま", by["30t"], "#FFD700")
+	want("色が nil のまま渡された描画は無い", table.concat(bad, ", "), "")
+
+	-- ガード先行の 1 つ目 (ガードから測る) は、大きくてもオレンジにしない。
+	calls, bad, images = {}, {}, {}
+	globals.gc_trace = {
+		guard = 0, done = nil, at = nil,
+		rows = {
+			{ k = "guard", t = 0 },
+			{ k = "dir", t = 20, v = 4 },
+		},
+	}
+	hud_mod.draw_gc_command_trace()
+	arrows = {}
+	for _, im in ipairs(images) do
+		local s0 = tostring(im.img)
+		if s0:find("^dir") or s0:find("_dir_warn") then arrows[#arrows + 1] = s0 end
+	end
+	want("ガードから測った矢印は白", table.concat(arrows, " "), "dir4")
+
+	-- 切れた後の最初の矢印も同じ。
+	calls, bad, images = {}, {}, {}
+	globals.gc_trace = {
+		guard = 34, done = nil, at = nil,
+		rows = {
+			{ k = "dir",  t = 0,  v = 6 },
+			{ k = "dead", t = 20, v = "Cmd Expired" },
+			{ k = "guard", t = 34 },
+			{ k = "dir",  t = 47, v = 8 },
+		},
+	}
+	hud_mod.draw_gc_command_trace()
+	arrows = {}
+	for _, im in ipairs(images) do
+		local s0 = tostring(im.img)
+		if s0:find("^dir") or s0:find("_dir_warn") then arrows[#arrows + 1] = s0 end
+	end
+	want("切れた後の矢印は白", table.concat(arrows, " "), "dir6 dir8")
+
+	-- 数字の色と矢印の色は同じでなければならない。矢印は生成物なので、
+	-- 生成スクリプトの色と GCT_WARN がずれていないかを見る。
+	local gen = io.open("../analysis/make_warn_arrows.py"):read("*a")
+	local r, g, b = gen:match("WARN = %(0x(%x%x), 0x(%x%x), 0x(%x%x)%)")
+	local hex = hud:match('local GCT_WARN = "#(%x%x%x%x%x%x)"')
+	want("矢印の色と数字の色が一致",
+		r and hex and (r .. g .. b):upper() == hex:upper(), true)
+end
+
+print("")
+print("[11] 持続中のガードは G-Persist と何ティック目かを描く")
+do
+	-- ガード方向を離した後、ポーズの持続中に当たったガード (本人、2026-09-25)。
+	-- 行の値に持続のティックが入っている。入れたままのガードは値なしで Guard。
+	calls, bad, images = {}, {}, {}
+	globals.gc_trace = {
+		guard = 20, done = nil, at = nil,
+		rows = {
+			{ k = "dir",   t = 8,  v = 6 },
+			{ k = "guard", t = 20, v = 3 },
+		},
+	}
+	hud_mod.draw_gc_command_trace()
+	local labels, nums = {}, {}
+	for _, c in ipairs(calls) do
+		if type(c.s) == "string" then
+			labels[c.s] = c
+			if c.s:find("t%)?$") then nums[c.s] = c end
+		end
+	end
+	want("G-Persist 3 と描く", labels["G-Persist 3"] ~= nil, true)
+	want("Guard とは描かない", labels["Guard"], nil)
+	want("括弧の数字は今までどおり", nums["(12t)"] ~= nil, true)
+	-- ラベルと括弧の数字が重ならない (1 文字 4.2px)。
+	local g, n = labels["G-Persist 3"], nums["(12t)"]
+	want("ラベルと数字が重ならない",
+		g ~= nil and n ~= nil and (g.x + #g.s * 4.2) < n.x, true)
+	want("色が nil のまま渡された描画は無い", table.concat(bad, ", "), "")
+
+	calls, bad, images = {}, {}, {}
+	globals.gc_trace.rows[2].v = nil
+	hud_mod.draw_gc_command_trace()
+	labels = {}
+	for _, c in ipairs(calls) do if type(c.s) == "string" then labels[c.s] = c end end
+	want("値が無ければ Guard", labels["Guard"] ~= nil, true)
+
+	-- 2 桁と 3 桁の最悪でも重ならない。
+	calls, bad, images = {}, {}, {}
+	globals.gc_trace = {
+		guard = 130, done = nil, at = nil,
+		rows = {
+			{ k = "dir",   t = 10,  v = 6 },
+			{ k = "guard", t = 130, v = 12 },
+		},
+	}
+	hud_mod.draw_gc_command_trace()
+	labels, nums = {}, {}
+	for _, c in ipairs(calls) do
+		if type(c.s) == "string" then
+			labels[c.s] = c
+			if c.s:find("t%)$") then nums[c.s] = c end
+		end
+	end
+	g, n = labels["G-Persist 12"], nums["(120t)"]
+	want("G-Persist 12 と (120t) も重ならない",
+		g ~= nil and n ~= nil and (g.x + #g.s * 4.2) < n.x, true)
+end
+
+print("")
+print("[12] ガード行が当たったティックにあるとき - 数字は各行の前から、Success は受付から")
+do
+	-- 2026-09-25 の実機の形。当たりは 9、受付と → は 10。ガード行を当たりに
+	-- 置くので → が下に来て 1t。Success は入力履歴の SUCCESS と同じく受付から。
+	calls, bad, images = {}, {}, {}
+	globals.gc_trace = {
+		guard = 10, done = "Success", at = 23,
+		rows = {
+			{ k = "guard", t = 9,  v = 5 },
+			{ k = "dir",   t = 10, v = 6 },
+			{ k = "dir",   t = 15, v = 2 },
+			{ k = "dir",   t = 20, v = 3 },
+			{ k = "btn",   t = 23, v = { true } },
+		},
+	}
+	hud_mod.draw_gc_command_trace()
+	local seq = {}
+	for _, c in ipairs(calls) do
+		if type(c.s) == "string" and c.s ~= "GC Command Trace" then seq[#seq + 1] = c.s end
+	end
+	want("描かれる文字列の順", table.concat(seq, " / "),
+		"G-Persist 5 / 1t / 5t / 5t / 3t / Success / 13t")
+	want("色が nil のまま渡された描画は無い", table.concat(bad, ", "), "")
+
+	-- 当たりと受付の間にコマンドが切れた形。ガードが死んだ印より上なので、
+	-- どちらも前の入力から数え、255t に回り込まない。
+	calls, bad, images = {}, {}, {}
+	globals.gc_trace = {
+		guard = 36, done = nil, at = nil,
+		rows = {
+			{ k = "dir",   t = 10, v = 6 },
+			{ k = "guard", t = 34 },
+			{ k = "dead",  t = 35, v = "Cmd Expired" },
+			{ k = "dir",   t = 36, v = 6 },
+		},
+	}
+	hud_mod.draw_gc_command_trace()
+	seq = {}
+	for _, c in ipairs(calls) do
+		if type(c.s) == "string" and c.s ~= "GC Command Trace" then seq[#seq + 1] = c.s end
+	end
+	want("死んだ印の上のガード", table.concat(seq, " / "),
+		"Guard / (24t) / Cmd Expired / 25t / 1t")
+end
+
 if fails == 0 then print("") print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

@@ -704,6 +704,16 @@ function M.auto_ticks_for(prev, step, prev2)
 		return air_dash_ticks_for(prev.action, step.action)
 	end
 
+	-- Jump into an attack: per character and direction, from a published table
+	-- rather than a measurement - see JUMP_BEFORE_ATTACK in guardCancel for
+	-- where the numbers come from and how few of them are confirmed. Only an
+	-- Attack step: the table's column is about normals, and a special or
+	-- anything else after a jump keeps the airborne state test.
+	if JUMP_ID[prev.action] and step.action == "atk" then
+		if jump_attack_ticks_for == nil then return nil end
+		return jump_attack_ticks_for(prev.action)
+	end
+
 	return nil
 end
 
@@ -1563,10 +1573,25 @@ end
 --     btst D1, ($1a6,A6)       ; already used during this air trip?
 --     bne ...                  ; yes, refuse
 --
--- So there are two conditions and neither is a chain window: the animation
--- frame has to permit it, and that button must not have been spent yet on this
--- trip. $1a6 uses the button byte's own bit numbering - measured on the same
--- recordings, HK leaves 0x40, then LK 0x50, then LP 0x51.
+-- THE RUNNER ASKS "MAY IT PRESS NOW", NOT "WILL IT COME OUT" (user, 2026-09-25).
+--
+-- It used to copy both halves of that - the frame's permission and $1a6, the
+-- buttons already spent this air trip - and refuse whatever either refused.
+-- The second half is gone, for every character. Whether a press becomes an
+-- attack is the game's to decide: Bulleta gets a whiffed jumping MK and then a
+-- second MK out of one jump (user), and Anakaris throws four and five MPs in
+-- one float with $1a6 holding MP's bit the whole time (measured, two floats
+-- by hand). A press the game refuses costs one step; a press the runner
+-- refused cost the rest of the string.
+--
+-- What is left is timing, and either of two signals will do:
+--
+--   * $07 back to 02 - air neutral, the attack before it finished. The air
+--     counterpart of After on the ground. Anakaris's float needs it: bit 1 of
+--     the frame flags is never set anywhere in it, and every repeated MP came
+--     2 to 5 frames after $07 fell back to 02.
+--   * the frame's own permission, bit 1 of ($1c)+1 - earlier than that where
+--     the animation lets another attack in. Measured on Jedah at 25 and 24.
 --
 -- THREE EARLIER ATTEMPTS READ $21 INSTEAD, AND $21 IS ONLY A COPY.
 --
@@ -1578,22 +1603,12 @@ end
 --
 -- Reading ($1c) directly needs no latch. It is the same value, on the same
 -- tick, that the game is about to test.
-local BUTTON_BIT = {
-	LP = 0, MP = 1, HP = 2,
-	LK = 4, MK = 5, HK = 6,
-}
-
-local function air_ready(button)
+local function air_ready()
+	if memory.readbyte(P2_BASE + 0x07) == 0x02 then return true end
 	-- Same validity guard autoguard.lua's cel_ptr uses.
 	local p = memory.readdword(P2_BASE + 0x1C)
 	if p == nil or p < 0x1000 or p >= 0x1000000 then return false end
-	if math.floor(memory.readbyte(p + 1) / 2) % 2 == 0 then return false end
-
-	local b = BUTTON_BIT[button]
-	-- A step with no single button - a motion, a bare direction - has nothing
-	-- in the used mask to check against.
-	if b == nil then return true end
-	return math.floor(memory.readbyte(P2_BASE + 0x1A6) / 2 ^ b) % 2 == 0
+	return math.floor(memory.readbyte(p + 1) / 2) % 2 == 1
 end
 
 local function dummy_free(step)
@@ -1601,15 +1616,15 @@ local function dummy_free(step)
 	if memory.readbyte(P2_BASE + 0x38) == 0 then
 		return memory.readbyte(P2_BASE + 0x06) == 0
 	end
-	return air_ready(step and step.button)
+	return air_ready()
 end
 
 
 -- TOUCHDOWN, FROM THE CLOCK THE REVERSAL ARM ALREADY USES.
 --
 -- Auto (After) asks the wrong question while the dummy is airborne: $38 sends
--- dummy_free down the air_ready branch, which is "may this button come out in
--- the AIR". A grounded follow-up - a crouching normal after a dash attack that
+-- dummy_free down the air_ready branch, which is "may it press now in the
+-- AIR". A grounded follow-up - a crouching normal after a dash attack that
 -- ends in the air - is not asking that, and waiting for the whole landing to
 -- finish is later than the frame the game will take.
 --
@@ -1825,11 +1840,24 @@ local function service_body(defender)
 			-- Morrigan keeps y=floor=40, vy=-135168, ay=-24576, so the predictor
 			-- returns 1 forever (kd_c05_s02, frames 3536..3706). timing_missed
 			-- still requires busy -> free, so this does not skip the normal.
+			--
+			-- NOT IN THE AIR AT ALL, PREDICTION OR NONE (2026-09-25).
+			--
+			-- This let the deadline through in the air when the predictor had
+			-- no answer. Anakaris's float is exactly that - it is not the
+			-- physics ticks_to_landing replays - and once air_ready began
+			-- reading "back in air neutral" as free, the step after his last
+			-- float attack went out five frames above the floor, in the air,
+			-- and nothing came out (user: the attack after landing does not
+			-- come out; reversal_logs_archive/2026-09-25-air-trip, P2 f14957).
+			--
+			-- An airborne dummy always comes down, and landing_ready fires on
+			-- the first grounded tick without needing a prediction; the
+			-- prediction only lets a run-up step start early. So the deadline
+			-- is only for a landing that never comes - a dummy on the ground.
 			local _tm = false
 			if not _lr and timing_missed(step) then
 				_tm = (memory.readbyte(P2_BASE + 0x38) == 0)
-				      or (seq_ticks_to_landing == nil)
-				      or (seq_ticks_to_landing() == nil)
 			end
 			if _lr or _tm then
 				local _dbg = seq_debug
@@ -1851,7 +1879,31 @@ local function service_body(defender)
 		-- its input only when grounded and free; Landing has its own earlier
 		-- branch so its predicted airborne run-up remains unchanged.
 		if step.ground_dash and memory.readbyte(P2_BASE + 0x38) ~= 0 then return end
-		if not dummy_free(step) then return end
+		if not dummy_free(step) then
+			gate_busy_seen = true
+			return
+		end
+		-- IN THE AIR, FREE IS NOT ENOUGH: SOMETHING HAS TO HAVE HAPPENED.
+		--
+		-- After is "once the move the step before made has finished". In the
+		-- air a press can be refused - Anakaris's float stops taking attacks
+		-- before it lands - and then the dummy never leaves air neutral, so it
+		-- stays free, and every After behind it went out on the following
+		-- ticks, refused the same way. The list was used up above the floor and
+		-- nothing was left for after the landing (user, 2026-09-25).
+		--
+		-- So in the air the step waits until the dummy has been busy at least
+		-- once since the step before it fired. A press that took makes it busy
+		-- at once, so a real follow-up is not slowed - the float's repeats and
+		-- Jedah's measured air chain are unchanged. A refused one leaves it
+		-- waiting for the next busy spell, and for a float that ends that is
+		-- the landing ($07 = 04), so the step comes out on the ground.
+		--
+		-- Not on the ground. A refused press there is rare, and waiting for a
+		-- busy spell that never comes would stop the list outright.
+		if memory.readbyte(P2_BASE + 0x38) ~= 0 and not gate_busy_seen then
+			return
+		end
 	else
 		-- Negative means the motion is longer than the wait: there is no way to
 		-- land it on the named tick, so it goes as early as it can.

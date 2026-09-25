@@ -51,9 +51,18 @@ assert(loadstring(region .. NL
 
 local function fresh()
 	gct_reset_fn()
+	-- The guard pose's own state outlives a trace on purpose (it follows the
+	-- character, not the attempt), so a test has to clear it itself.
+	gct_state.pers_start, gct_state.pers_n, gct_state.pose_prev = nil, nil, nil
+	gct_state.contact, gct_state.pre_prev = nil, nil
 	globals.gc_trace = nil
 	mem = {}
 	mem[BASE + 0x382] = 0x09
+end
+
+-- ガードポーズの状態を置く。$06 = 0C がポーズ、$07 = 02 が離した後の持続。
+local function pose(s06, s07, s05)
+	mem[BASE + 0x06], mem[BASE + 0x07], mem[BASE + 0x05] = s06, s07, s05 or 0
 end
 
 -- 1 tick 進める。prog = +0、step = +1、ev = その tick の GC イベント。
@@ -191,6 +200,238 @@ do
 	tick(30, 2, 2, nil)                   -- ずっと後の入れ直し
 	want("新しい試行になる", kinds(), "dir")
 	want("古いガードを引きずらない", gct_state.guard, nil)
+end
+
+print("")
+print("[4d] 連続ガード - 前の受付が切れた後も生きているコマンドは、次のガードへ持ち越す")
+do
+	-- 実機 2026-09-25。オルバスの 5 段チェーンをガード中、1 段目の受付
+	-- (14t) がコマンドの途中で切れ、2 段目のガードでそのまま成立した。
+	-- トレースは Guard -> 最後の 1 方向 -> ボタン だけになり、方向 1 つで
+	-- GC が出たように見えた。入力履歴には → ↓ ↘+P が全部あった。
+	--
+	-- 受付切れの結果を表示している間 (done ~= nil) に入った方向を拾って
+	-- おらず、次のガードで白紙から始めていたため。
+	fresh()
+	tick(1,  0, 0, "p1_gc_begin")         -- 1 段目のガード
+	tick(5,  2, 2, "p1_gc_in_progress")   -- →
+	tick(15, 2, 2, "p1_gc_ended")         -- 1 段目の受付が切れた。コマンドは生きている
+	want("受付切れ", gct_state.done, "GC Expired")
+	tick(18, 2, 4, nil)                   -- ↓ (受付切れの表示中)
+	tick(20, 2, 4, "p1_gc_begin")         -- 2 段目のガード
+	tick(21, 4, 6, "p1_gc_in_progress")   -- ↘
+	tick(22, 0, 6, "p1_gc_success")
+	want("→ ↓ を持ち越してから Guard", kinds(), "dir,dir,guard,dir,btn")
+	want("成立", gct_state.done, "Success")
+	want("ガードは 2 段目", gct_state.guard, 20)
+	want("→ は 1 段目の受付中の時刻", gct_state.rows[1].t, 5)
+	want("↓ は受付切れの表示中の時刻", gct_state.rows[2].t, 18)
+
+	-- 2 段目のガードと同じティックに方向が入っても、1 回しか記録しない。
+	fresh()
+	tick(1,  0, 0, "p1_gc_begin")
+	tick(5,  2, 2, "p1_gc_in_progress")
+	tick(15, 2, 2, "p1_gc_ended")
+	tick(20, 2, 4, "p1_gc_begin")         -- ガードと ↓ が同時
+	want("→ を持ち越し、↓ は 1 回", kinds(), "dir,dir,guard")
+end
+
+print("")
+print("[4e] 持ち越すのは生きているコマンドだけ")
+do
+	-- 受付切れの表示中にコマンドも死んだら、次のガードには何も持ち越さない。
+	fresh()
+	tick(1,  0, 0, "p1_gc_begin")
+	tick(5,  2, 2, "p1_gc_in_progress")
+	tick(15, 2, 2, "p1_gc_ended")
+	tick(18, 0, 2, nil)                   -- コマンドも切れた
+	tick(30, 0, 2, "p1_gc_begin")         -- 次のガード
+	want("Guard から始まる", kinds(), "guard")
+
+	-- 次のガードと同じティックに入れ直した場合は、新しいコマンドだけ。
+	fresh()
+	tick(1,  0, 0, "p1_gc_begin")
+	tick(5,  2, 2, "p1_gc_in_progress")
+	tick(15, 2, 2, "p1_gc_ended")
+	tick(18, 0, 2, nil)
+	tick(30, 2, 2, "p1_gc_begin")         -- ガードと 1 個目の方向が同時
+	want("新しい 1 個目とガード", kinds(), "dir,guard")
+
+	-- 次のガードと同じティックにコマンドが切れたら、持ち越さない。
+	fresh()
+	tick(1,  0, 0, "p1_gc_begin")
+	tick(5,  2, 2, "p1_gc_in_progress")
+	tick(15, 2, 2, "p1_gc_ended")
+	tick(20, 0, 2, "p1_gc_begin")         -- ガードの瞬間にコマンドが切れた
+	want("切れたコマンドは持ち越さない", kinds(), "guard")
+end
+
+print("")
+print("[P] ガード持続の何ティック目で当たったか")
+do
+	-- 実測 (デミトリ 65 回、2026-09-25): ポーズ中 ($06 = 0C) は $07 が 00 なら
+	-- ガード方向を入れている、02 なら離した後の持続。接触のティックに $06 が
+	-- 0C を外れ $05 が立つ。受付 (p1_gc_begin) はその 1 ティック後のこともある。
+	fresh()
+	pose(0x0C, 0x00) tick(1, 0, 0, nil)      -- 後ろを入れてポーズ
+	pose(0x0C, 0x00) tick(2, 0, 0, nil)
+	pose(0x0C, 0x02) tick(3, 0, 0, nil)      -- 離した。持続の始まり
+	pose(0x0C, 0x02) tick(4, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(6, 0, 0, "p1_gc_begin")   -- 3 ティック後に接触
+	want("持続中のガードは Guard 行に 3 を持つ", gct_state.rows[1] and gct_state.rows[1].v, 3)
+
+	-- 受付が 1 ティック遅れても同じ値。
+	fresh()
+	pose(0x0C, 0x00) tick(1, 0, 0, nil)
+	pose(0x0C, 0x02) tick(3, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(6, 0, 0, nil)             -- 接触
+	pose(0x00, 0x02, 0x02) tick(7, 0, 0, "p1_gc_begin")   -- 受付はその次
+	want("受付が 1 ティック遅れても 3", gct_state.rows[1] and gct_state.rows[1].v, 3)
+
+	-- 後ろを入れたままなら数字は無い (いつもの Guard)。めくりもこちら。
+	fresh()
+	pose(0x0C, 0x00) tick(1, 0, 0, nil)
+	pose(0x0C, 0x00) tick(2, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")
+	want("入れたままのガードは数字なし", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	-- 離してから入れ直したら、持続は数え直しではなく消える。
+	fresh()
+	pose(0x0C, 0x02) tick(1, 0, 0, nil)
+	pose(0x0C, 0x00) tick(2, 0, 0, nil)      -- 後ろを入れ直した
+	pose(0x00, 0x02, 0x02) tick(4, 0, 0, "p1_gc_begin")
+	want("入れ直したら持続ではない", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	-- 食らって受付が開かなかった接触の値を、後のガードへ渡さない。
+	fresh()
+	pose(0x0C, 0x02) tick(1, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(4, 0, 0, nil)             -- 接触 (食らい)
+	pose(0x00, 0x00, 0x00) tick(20, 0, 0, nil)            -- 硬直が明けた
+	pose(0x00, 0x02, 0x02) tick(30, 0, 0, "p1_gc_begin")  -- ポーズ無しでガード
+	want("古い持続は使わない", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	-- ポーズが歩きで消えた (接触なし) なら、後のガードに数字は付かない。
+	fresh()
+	pose(0x0C, 0x02) tick(1, 0, 0, nil)
+	pose(0x04, 0x00, 0x00) tick(3, 0, 0, nil)             -- 前に歩いた
+	pose(0x00, 0x02, 0x02) tick(9, 0, 0, "p1_gc_begin")
+	want("歩きで消えたポーズは数えない", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	-- 一度使った値は次のガード行に付かない (連続ガードの 2 発目は硬直中のガード)。
+	fresh()
+	pose(0x0C, 0x02) tick(1, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")   -- 1 発目: 持続 2
+	pose(0x00, 0x02, 0x02) tick(4, 0, 0, "p1_gc_ended")   -- 受付が閉じた
+	pose(0x00, 0x02, 0x02) tick(5, 0, 0, "p1_gc_begin")   -- 2 発目 (まだ硬直中)
+	want("2 発目は数字なし", gct_state.rows[#gct_state.rows] and gct_state.rows[#gct_state.rows].v, nil)
+end
+
+print("")
+print("[C] ガード行は当たったティックに置く。受付が開いたティックではない")
+do
+	-- 当たりは P1 の処理の外から $05 02 / $06 00 / $07 00 として書かれ、受付の
+	-- 時計 ($158 = 14) は P1 自身のガード処理 (0x023960) が次に P1 が動いたとき
+	-- 入れる。このフックは P1 の処理の先頭なので、当たりは受付の 1 ティック前に
+	-- 見える。受付と同じティックに入った → がガードの上に 0t で描かれ、前に
+	-- 入れながらガードしたように読めた (本人、2026-09-25: G-Persist 5 (0t))。
+	local function contact() pose(0x00, 0x00, 0x02) end   -- 当たった直後
+	local function stun() pose(0x00, 0x02, 0x02) end      -- ガード処理が動いた後
+	local function guard_row()
+		for _, r in ipairs(gct_state.rows) do if r.k == "guard" then return r end end
+	end
+
+	-- 実機のスクリーンショットの形。持続 5 で当たり、次のティックに → と受付。
+	fresh()
+	pose(0x0C, 0x00) tick(1, 0, 0, nil)
+	pose(0x0C, 0x02) tick(4, 0, 0, nil)                    -- 離した
+	pose(0x0C, 0x02) tick(8, 0, 0, nil)
+	contact()        tick(9, 0, 0, nil)                    -- 持続 5 で当たった
+	stun()           tick(10, 2, 2, "p1_gc_begin")         -- → と受付が同じティック
+	stun()           tick(15, 2, 4, "p1_gc_in_progress")   -- ↓
+	stun()           tick(20, 4, 6, "p1_gc_in_progress")   -- ↘
+	stun()           tick(23, 0, 6, "p1_gc_success")       -- P
+	want("ガードが → より上", kinds(), "guard,dir,dir,dir,btn")
+	want("ガード行は当たったティック", gct_state.rows[1].t, 9)
+	want("持続は 5 のまま", gct_state.rows[1].v, 5)
+	want("→ は受付のティック", gct_state.rows[2].t, 10)
+	want("Success は受付から数える (入力履歴の SUCCESS と同じ)",
+		gct_state.at - gct_state.guard, 13)
+
+	-- 当たったティックにレバーも入っていたら、同時はレバーが先。
+	fresh()
+	contact() tick(9, 2, 2, nil)                           -- → と当たりが同時
+	stun()    tick(10, 2, 2, "p1_gc_begin")
+	want("同時ならレバーが先", kinds(), "dir,guard")
+	want("ガード行は 9", gct_state.rows[2].t, 9)
+
+	-- 当たる前の方向はガードの上に残る。
+	fresh()
+	stun()    tick(5, 2, 2, nil)
+	contact() tick(9, 2, 2, nil)
+	stun()    tick(10, 2, 4, "p1_gc_begin")
+	want("前の方向 / ガード / 後の方向", kinds(), "dir,guard,dir")
+	want("硬直中の状態は当たりにしない", gct_state.rows[2].t, 9)
+
+	-- 表示中の試行から持ち越した方向も、当たった後のものだけガードの下へ。
+	fresh()
+	tick(1,  0, 0, "p1_gc_begin")
+	tick(5,  2, 2, "p1_gc_in_progress")
+	tick(15, 2, 2, "p1_gc_ended")                          -- 受付切れ。コマンドは生きている
+	tick(18, 2, 4, nil)
+	contact() tick(19, 2, 4, nil)
+	stun()    tick(20, 4, 6, "p1_gc_begin")
+	want("持ち越し 2 つ / ガード / 受付のティックの方向", kinds(), "dir,dir,guard,dir")
+	want("ガード行は 19", gct_state.rows[3].t, 19)
+
+	-- 死んだコマンドの後のガード。死んだ印より上には行かない。
+	fresh()
+	tick(10, 2, 2, nil)
+	tick(20, 0, 2, nil)                                    -- 時間切れ
+	contact() tick(35, 0, 2, nil)
+	stun()    tick(36, 2, 2, "p1_gc_begin")                -- 入れ直しと受付が同時
+	want("死んだ印 / ガード / 入れ直し", kinds(), "dir,dead,guard,dir")
+	want("ガード行は 35", gct_state.rows[3].t, 35)
+
+	-- 当たりと受付の間にコマンドが切れたら、ガードは死んだ印より上。
+	-- 下に置くと、ガードの数字が死んだ印から数えて 255t になる。
+	fresh()
+	tick(10, 2, 2, nil)
+	contact() tick(34, 2, 2, nil)
+	stun()    tick(35, 0, 2, nil)                          -- 当たった次のティックに切れた
+	stun()    tick(36, 2, 2, "p1_gc_begin")
+	want("ティック順: 方向 / ガード / 死んだ印 / 入れ直し", kinds(), "dir,guard,dead,dir")
+
+	-- 当たりが見えなかったら受付のティック。同じティックの方向が先
+	-- (これまで死んだコマンドの後だけガードが先になっていた)。
+	fresh()
+	tick(10, 2, 2, nil)
+	tick(20, 0, 2, nil)
+	stun() tick(36, 2, 2, "p1_gc_begin")
+	want("当たりが無ければ同時扱いでレバーが先", kinds(), "dir,dead,dir,guard")
+	want("ガード行は受付のティック", gct_state.rows[4].t, 36)
+
+	-- 硬直が明けた当たりは、後のガードに使わない。
+	fresh()
+	contact()                 tick(4, 0, 0, nil)
+	pose(0x00, 0x00, 0x00)    tick(20, 0, 0, nil)          -- 明けた
+	stun()                    tick(30, 2, 2, "p1_gc_begin")
+	want("古い当たりは使わない", guard_row() and guard_row().t, 30)
+
+	-- 当たった直後の状態が 2 ティック続いても、最初のティック。
+	fresh()
+	contact() tick(8, 0, 0, nil)
+	contact() tick(9, 0, 0, nil)
+	stun()    tick(10, 2, 2, "p1_gc_begin")
+	want("最初のティック", gct_state.rows[1].t, 8)
+
+	-- 一度使った当たりは次の受付に使わない。
+	fresh()
+	contact() tick(9, 0, 0, nil)
+	stun()    tick(10, 0, 0, "p1_gc_begin")
+	stun()    tick(24, 0, 0, "p1_gc_ended")
+	stun()    tick(25, 0, 0, nil)
+	stun()    tick(26, 2, 2, "p1_gc_begin")
+	want("2 回目の受付は自分のティック", guard_row() and guard_row().t, 26)
 end
 
 print("")

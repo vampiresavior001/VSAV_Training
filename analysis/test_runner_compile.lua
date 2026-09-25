@@ -33,6 +33,9 @@ local function air_pair(jump, dash)
 end
 function air_dash_ticks_for(j,d) local p=air_pair(j,d) return p and p.dash end
 function air_dash_attack_ticks_for(j,d) local p=air_pair(j,d) return p and p.atk end
+-- ジャンプ -> 攻撃の表 (guardCancel の jump_attack_ticks_for) の代役。
+local JUMP_ROW = nil
+function jump_attack_ticks_for(j) return JUMP_ROW and JUMP_ROW[j] end
 
 -- The real make_input_sequence, lifted out of controller.lua so this runs
 -- without the emulator. Taking the real one is the point: a motion whose entry
@@ -289,6 +292,19 @@ do
 	-- スーパージャンプは踏切が別物。実測が無いので借りない。
 	want_auto("スーパージャンプの次は借りない", auto_of("sj.f","air.f"), true, nil)
 	AIR_ROW = nil
+
+	-- ジャンプ -> 攻撃。表 (公開資料の「攻撃前」- 1) があれば数字、無ければ
+	-- 今までどおり状態判定 (2026-09-25)。
+	JUMP_ROW = nil
+	want_auto("ジャンプ->攻撃、表が無ければ状態判定", auto_of("jump.f","atk","none","LP"), true, nil)
+	JUMP_ROW = { ["jump.f"] = 4, ["jump.n"] = 4, ["jump.b"] = 4 }
+	want_auto("ジャンプ->攻撃は表の数字",          auto_of("jump.f","atk","none","LP"), false, 4)
+	want_auto("垂直ジャンプも同じ口",              auto_of("jump.n","atk","none","LP"), false, 4)
+	-- 表の列は通常技の話。必殺技や空中ダッシュは今までの扱いのまま。
+	want_auto("ジャンプ->必殺技は借りない",        auto_of("jump.f","custom","none","LP"), true, nil)
+	want_auto("ジャンプ->空中ダッシュは空中の表",  auto_of("jump.f","air.f"), true, nil)
+	want_auto("スーパージャンプ->攻撃は借りない",  auto_of("sj.f","atk","none","LP"), true, nil)
+	JUMP_ROW = nil
 
 	-- 空中ダッシュの入力は地上ダッシュと同一であること。名前だけの違い。
 	local air = R.compile({version=1,steps={
@@ -670,8 +686,8 @@ end
 
 -- Auto (Landing) - THE TOUCHDOWN, FROM guardCancel's OWN CLOCK.
 --
--- Auto (After) asks air_ready while the dummy is airborne ("may this button
--- come out in the AIR"), which is the wrong question for a grounded follow-up.
+-- Auto (After) asks air_ready while the dummy is airborne ("may it press now
+-- in the AIR"), which is the wrong question for a grounded follow-up.
 -- This one asks the clock the reversal arm already uses. The clock itself is
 -- stubbed here: what is pinned is that the step waits for it and fires on the
 -- arm offset, not the physics, which guardCancel owns and tests elsewhere.

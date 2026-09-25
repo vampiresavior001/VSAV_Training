@@ -862,8 +862,10 @@ local function wait_label(s, i)
 		--
 		-- After a jump, a dash or an air dash it is not the earliest at all,
 		-- and printing the word there promises something the row does not do.
-		-- Those come from a measured table, so when the table has no entry for
-		-- the combination the row says so rather than naming the wrong thing.
+		-- Those come from a table - measured, except a jump into an attack,
+		-- which is a published one (see JUMP_BEFORE_ATTACK in guardCancel) - so
+		-- when the table has no entry for the combination the row says so
+		-- rather than naming the wrong thing.
 		local prev = draft and draft.steps and draft.steps[i - 1]
 		if seq_auto_needs_number ~= nil and seq_auto_needs_number(prev) then
 			return "Auto (Not Measured)"
@@ -2185,7 +2187,10 @@ local function enter()
 		if item.kind == "yes" then
 			table.remove(draft.steps, s.index)
 			table.remove(stack)
-			table.remove(stack)
+			-- From the step's own screen that screen goes too - its step is
+			-- gone. From the list's MP shortcut the list is what is behind the
+			-- question, and popping twice would close the editor.
+			if not s.from_root then table.remove(stack) end
 		else
 			back()
 		end
@@ -2605,6 +2610,22 @@ function M.registerBefore()
 		return
 	end
 
+	-- MP REMOVES THE STEP UNDER THE CURSOR (user, 2026-09-25).
+	--
+	-- A shortcut and nothing more, like MP's tick on the pattern list: Remove
+	-- This Step is on the step's own screen, reachable with the lever and LP.
+	-- It opens the SAME question that row opens, so a stray MP still asks
+	-- first - the saving is the trip into the step and down to its last row.
+	-- Offered only where that row is: not on the last step left.
+	if s.type == "root" and pressed("MP") then
+		local row = items[s.cursor]
+		if row ~= nil and row.kind == "step" and #draft.steps > 1 then
+			push({ type = "confirm", index = row.index, cursor = 1,
+			       crumb = "Remove", from_root = true })
+		end
+		return
+	end
+
 	-- Only the root list runs. Every other screen here is a handful of rows
 	-- long, and a gear it can never reach is a gear that is only in the way.
 	local _fast = (s.type == "root") and #items or 0
@@ -2778,7 +2799,10 @@ function M.guiRegister()
 	if note then gui.text(33, 168, note, text_disabled_color, text_default_border_color) end
 
 	local help = "Up/Down: Select   Right or LP: Enter   Left: Back"
-	if s.type == "patterns" and cur ~= nil and cur.kind == "pattern" then
+	if s.type == "root" and cur ~= nil and cur.kind == "step" and #draft.steps > 1 then
+		-- Named only where MP does something, as on the pattern list.
+		help = "Up/Down: Select   Right or LP: Enter   MP: Remove   Left: Back"
+	elseif s.type == "patterns" and cur ~= nil and cur.kind == "pattern" then
 		-- Named only where it does something. On New or Back it would be a
 		-- button that does nothing, which is worse than no legend at all.
 		help = "Up/Down: Select   Right or LP: Open   MP: Tick   Left: Back"
