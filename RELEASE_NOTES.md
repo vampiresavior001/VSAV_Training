@@ -18,7 +18,8 @@ that leaves the guard direction.
 A block that landed while the pose was persisting now reads **`G-Persist n`**
 instead of `Guard`, where **n is how many ticks after the lever left the guard
 direction the hit landed**. A block with back still held (cross-ups included)
-is a plain `Guard`, as before.
+is a plain `Guard`, as before. **Standing and crouching blocks both count**,
+and a hit that lands on the very tick back is let go reads `G-Persist 0`.
 
 ```
 GC Command Trace

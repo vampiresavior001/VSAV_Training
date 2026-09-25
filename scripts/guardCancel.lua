@@ -3567,14 +3567,26 @@ local function gct_tick(_gc)
 	-- Letting go of back does not drop the guard pose at once: it runs on for
 	-- a few ticks, and a hit inside that span is still blocked. Guard cancels
 	-- lean on it - the motion leaves the guard direction and the pose covers
-	-- the gap (user, 2026-09-25). The game keeps it in $07 while $06 is 0x0C:
+	-- the gap (user, 2026-09-25). The game keeps it in $07 while $06 is 0x0C
+	-- (the handler is 0x022FDA, one branch per value):
 	--
-	--     $07 00   the guard direction is held
-	--     $07 02   released, and the pose is persisting
+	--     $07 00   standing, the guard direction is held
+	--     $07 02   standing, released, and the pose is persisting
+	--     $07 04   crouching, the guard direction is held
+	--     $07 06   crouching, released, and the pose is persisting
+	--     $07 08   the pose's first tick, before it picks 00 or 04
+	--
+	-- Only 02 was counted at first, so a crouching block never read as
+	-- persisting (user, 2026-09-25: "does G-Persist show on a crouch
+	-- guard?"). No log had caught 06 - every crouch guard in them was hit
+	-- while still held - so it comes from the ROM: 04 steps to 06 exactly
+	-- where 00 steps to 02.
 	--
 	-- Measured on Demitri, 65 blocks: persisting blocks landed 1 to 6 ticks
-	-- in; with the lever left at neutral the pose ran out after 5 to 8; a
-	-- forward lever turned it into a walk at once. Cross-up blocks read 00 -
+	-- in; with the lever left at neutral the pose ran out after 5 to 8. Letting
+	-- go of back steps into persisting first, whatever the lever; from there
+	-- a lever that is only forward - not down-forward - walks (0x027122).
+	-- Cross-up blocks read 00 -
 	-- the guard direction follows the attacker, not the facing byte - so they
 	-- are held blocks, correctly (VSAV_MEMORY_NOTES, guard pose persistence).
 	--
@@ -3587,13 +3599,33 @@ local function gct_tick(_gc)
 	local _s06 = memory.readbyte(P1_BASE + 0x06)
 	local _s05 = memory.readbyte(P1_BASE + 0x05)
 	if _s06 == 0x0C then
-		if memory.readbyte(P1_BASE + 0x07) == 0x02 then
+		local _s07 = memory.readbyte(P1_BASE + 0x07)
+		if _s07 == 0x02 or _s07 == 0x06 then
 			if gct.pers_start == nil then gct.pers_start = _now end
 		else
 			gct.pers_start = nil
 		end
 		gct.pers_n = nil
 	elseif gct.pose_prev == 0x0C then
+		-- A PERSISTENCE THAT BEGAN AND WAS HIT BETWEEN TWO LOOKS.
+		--
+		-- This hook runs at the top of P1's update, before the pose handler.
+		-- Letting go of back on the tick before the hit turns the pose to
+		-- persisting further down that same update, and the hit is written
+		-- after it - as $05 02 $06 00 $07 00, over the 02 this never saw. It
+		-- read as a plain Guard although back was already let go (user,
+		-- 2026-09-25: ← held 4, then neutral, blocked on the first neutral
+		-- tick).
+		--
+		-- The pose tests bit 0 of $12B, the facing-corrected lever, to stay
+		-- held (0x027694; $3B2 skips the test). By this hook that word has
+		-- moved to $12C (0x022120), so $12D is the very lever the pose last
+		-- tested. Clear there means it stepped to persisting: tick 0.
+		if _s05 ~= 0 and gct.pers_start == nil
+			and memory.readbyte(P1_BASE + 0x3B2) == 0
+			and memory.readbyte(P1_BASE + 0x12D) % 2 == 0 then
+			gct.pers_start = _now
+		end
 		if _s05 ~= 0 and gct.pers_start ~= nil then
 			gct.pers_n = (_now - gct.pers_start) % 256
 		else

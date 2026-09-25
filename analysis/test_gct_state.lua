@@ -58,6 +58,9 @@ local function fresh()
 	globals.gc_trace = nil
 	mem = {}
 	mem[BASE + 0x382] = 0x09
+	-- The last lever the guard pose tested (facing-corrected): back, as it is
+	-- while a guard is held. A test that lets go sets it itself.
+	mem[BASE + 0x12D] = 0x01
 end
 
 -- ガードポーズの状態を置く。$06 = 0C がポーズ、$07 = 02 が離した後の持続。
@@ -316,6 +319,72 @@ do
 	pose(0x04, 0x00, 0x00) tick(3, 0, 0, nil)             -- 前に歩いた
 	pose(0x00, 0x02, 0x02) tick(9, 0, 0, "p1_gc_begin")
 	want("歩きで消えたポーズは数えない", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	-- しゃがみガード。$07 は 04 が入れている、06 が離した後の持続 (ROM 0x022FDA)。
+	-- 最初は 02 だけを見ていて、しゃがみの持続が数えられていなかった。
+	fresh()
+	pose(0x0C, 0x04) tick(1, 0, 0, nil)      -- 下後ろを入れてしゃがみガード
+	pose(0x0C, 0x06) tick(3, 0, 0, nil)      -- 離した。しゃがみの持続
+	pose(0x0C, 0x06) tick(4, 0, 0, nil)
+	pose(0x00, 0x00, 0x02) tick(7, 0, 0, nil)             -- 4 ティック後に接触
+	pose(0x00, 0x02, 0x02) tick(8, 0, 0, "p1_gc_begin")
+	want("しゃがみの持続も数える", gct_state.rows[1] and gct_state.rows[1].v, 4)
+
+	fresh()
+	pose(0x0C, 0x04) tick(1, 0, 0, nil)
+	pose(0x0C, 0x04) tick(2, 0, 0, nil)
+	pose(0x00, 0x00, 0x02) tick(3, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(4, 0, 0, "p1_gc_begin")
+	want("しゃがみで入れたままなら数字なし", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	-- 立ちとしゃがみを入れ替えても (00 <-> 04) 入れている間は持続ではない。
+	fresh()
+	pose(0x0C, 0x02) tick(1, 0, 0, nil)
+	pose(0x0C, 0x04) tick(2, 0, 0, nil)      -- しゃがみで入れ直した
+	pose(0x0C, 0x06) tick(4, 0, 0, nil)      -- また離した
+	pose(0x00, 0x00, 0x02) tick(6, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(7, 0, 0, "p1_gc_begin")
+	want("入れ直した後の持続から数え直す", gct_state.rows[1] and gct_state.rows[1].v, 2)
+
+	-- 離した次の処理で持続に入り、その直後に当たった (持続 0)。フックは P1 の処理の
+	-- 先頭なので $07 = 02 を一度も見ないまま当たりで上書きされる。ポーズが最後に
+	-- 見たレバー ($12D、向き補正済み) の bit0 = 後ろ で判定する (ROM 0x027694)。
+	-- 実機 2026-09-25: ← 4 のあとニュートラル最初のティックでガード、Guard (6t) と出ていた。
+	fresh()
+	pose(0x0C, 0x00) tick(1, 0, 0, nil)      -- 後ろを入れている
+	mem[BASE + 0x12D] = 0x00                 -- 最後に処理したレバーは後ろではない
+	pose(0x00, 0x00, 0x02) tick(2, 0, 0, nil)             -- 当たった
+	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")
+	want("離した直後の当たりは持続 0", gct_state.rows[1] and gct_state.rows[1].v, 0)
+
+	fresh()
+	pose(0x0C, 0x00) tick(1, 0, 0, nil)
+	mem[BASE + 0x12D] = 0x01                 -- 後ろのまま
+	pose(0x00, 0x00, 0x02) tick(2, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")
+	want("後ろのままなら数字なし", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	fresh()
+	pose(0x0C, 0x04) tick(1, 0, 0, nil)      -- しゃがみで入れている
+	mem[BASE + 0x12D] = 0x05                 -- 下後ろのまま
+	pose(0x00, 0x00, 0x02) tick(2, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")
+	want("下後ろのままでも数字なし", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	fresh()
+	pose(0x0C, 0x00) tick(1, 0, 0, nil)
+	mem[BASE + 0x12D], mem[BASE + 0x3B2] = 0x00, 0x01   -- $3B2: ポーズがレバーを見ない
+	pose(0x00, 0x00, 0x02) tick(2, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")
+	want("$3B2 が立っていたら判定しない", gct_state.rows[1] and gct_state.rows[1].v, nil)
+
+	-- 持続がすでに見えていたら、その始まりから数える (上書きしない)。
+	fresh()
+	pose(0x0C, 0x02) tick(1, 0, 0, nil)
+	mem[BASE + 0x12D] = 0x00
+	pose(0x00, 0x00, 0x02) tick(4, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(5, 0, 0, "p1_gc_begin")
+	want("見えていた持続は始まりから", gct_state.rows[1] and gct_state.rows[1].v, 3)
 
 	-- 一度使った値は次のガード行に付かない (連続ガードの 2 発目は硬直中のガード)。
 	fresh()
