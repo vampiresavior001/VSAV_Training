@@ -1,4 +1,6 @@
-# VSAV Training Mode - Fightcade 2 
+# VSAV_Training - The Warlord's Secret
+
+See what the Warlord sees, and practice what the Warlord practices, in VSAV training mode for Fightcade 2.
 
 ## About
 A training mode for VSAV. **You must supply your own ROM!** 

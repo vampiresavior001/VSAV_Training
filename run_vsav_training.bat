@@ -8,7 +8,7 @@ rem somewhere else used to fail with "fcadefbneo.exe was not found", which says
 rem nothing about the actual cause. The probe launchers under analysis\ have
 rem always done this.
 cd /d "%~dp0"
-echo STARTING Training Mode for VSAV (scripts = v11.7.2)
+echo STARTING Training Mode for VSAV
 echo Make sure you have vsavj.zip in the 'roms' folder
 start fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs %cd%\scripts\vsav_training_master_script.lua
 exit
