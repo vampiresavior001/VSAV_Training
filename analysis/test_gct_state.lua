@@ -54,7 +54,7 @@ local function fresh()
 	-- The guard pose's own state outlives a trace on purpose (it follows the
 	-- character, not the attempt), so a test has to clear it itself.
 	gct_state.pers_start, gct_state.pers_n, gct_state.pose_prev = nil, nil, nil
-	gct_state.contact, gct_state.pre_prev = nil, nil
+	gct_state.contact, gct_state.pre_prev, gct_state.bar_mark = nil, nil, nil
 	globals.gc_trace = nil
 	mem = {}
 	mem[BASE + 0x382] = 0x09
@@ -501,6 +501,46 @@ do
 	stun()    tick(25, 0, 0, nil)
 	stun()    tick(26, 2, 2, "p1_gc_begin")
 	want("2 回目の受付は自分のティック", guard_row() and guard_row().t, 26)
+end
+
+print("")
+print("[M] 画面下の帯へ渡す、当たったティックの印")
+do
+	-- 帯の GC の印は受付が開いたティックで、ガードの判定はその 1 ティック前。
+	-- 受付が開いたティックに「当たったティックと持続」を渡し、帯が 1 ティック前で
+	-- 列を分けて印を出す (inputHistory の mark_guard_column)。
+	fresh()
+	pose(0x0C, 0x02) tick(3, 0, 0, nil)
+	pose(0x00, 0x00, 0x02) tick(8, 0, 0, nil)             -- 持続 5 で当たった
+	want("当たったティックにはまだ渡さない", gct_state.bar_mark, nil)
+	pose(0x00, 0x02, 0x02) tick(9, 0, 0, "p1_gc_begin")
+	local m = gct_state.bar_mark
+	want("受付のティックに渡す", m ~= nil, true)
+	want("当たったティック", m and m.seq, 8)
+	want("持続", m and m.pers, 5)
+
+	fresh()
+	pose(0x0C, 0x00) tick(1, 0, 0, nil)
+	pose(0x00, 0x00, 0x02) tick(2, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")
+	want("入れたままなら持続なし", gct_state.bar_mark and gct_state.bar_mark.pers, nil)
+	want("それでも印は渡す", gct_state.bar_mark and gct_state.bar_mark.seq, 2)
+
+	-- 当たりが見えなければ渡さない (受付の列そのものに印を重ねない)。
+	fresh()
+	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")
+	want("当たりが無ければ nil", gct_state.bar_mark, nil)
+
+	-- トレースがガードの行を足さない受付 (同じ試行の 2 回目) でも、帯には渡す。
+	fresh()
+	pose(0x00, 0x00, 0x02) tick(1, 0, 0, nil)
+	pose(0x00, 0x02, 0x02) tick(2, 0, 0, "p1_gc_begin")
+	pose(0x00, 0x02, 0x02) tick(5, 2, 2, "p1_gc_in_progress")
+	pose(0x00, 0x02, 0x02) tick(16, 2, 2, "p1_gc_ended")
+	pose(0x00, 0x02, 0x02) tick(17, 2, 2, nil)
+	pose(0x00, 0x00, 0x02) tick(18, 2, 4, nil)             -- 硬直中の 2 発目
+	pose(0x00, 0x02, 0x02) tick(19, 2, 4, "p1_gc_begin")
+	want("2 回目の受付にも渡す", gct_state.bar_mark and gct_state.bar_mark.seq, 18)
 end
 
 print("")

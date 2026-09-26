@@ -3655,6 +3655,16 @@ local function gct_tick(_gc)
 	end
 	gct.pre_prev = _pre
 
+	-- THE SAME TICK, FOR THE BAR ALONG THE BOTTOM (mark_guard_column in
+	-- inputHistory.lua). The hook hands it over with this tick's column.
+	-- Taken here, ahead of the trace's own bookkeeping below: the bar marks
+	-- every window that opens, the trace draws one guard per attempt, and the
+	-- trace clears both fields once it has used them.
+	if _gc == "p1_gc_begin" then
+		gct.bar_mark = gct.contact ~= nil
+			and { seq = gct.contact, pers = gct.pers_n } or nil
+	end
+
 	-- WHICH BYTE CARRIES THE STATE, AND WHY IT IS NOT THE STEP NUMBER.
 	--
 	-- +0 is the handler the command sits in: 0 waiting for a first
@@ -3923,11 +3933,15 @@ memory.registerexec(0x0221CC, function()
 				local _q = globals.p1_tick_inputs
 				if _q == nil then _q = {}; globals.p1_tick_inputs = _q end
 				if #_q < 64 then
+					-- mark: the tick the block landed on, carried by the column
+					-- of the tick the window opened (gct_tick).
 					table.insert(_q, { dir = _dir, btn = _btn,
-						seq = globals.p1_tick_seq, gc = _gc, gct = _gct })
+						seq = globals.p1_tick_seq, gc = _gc, gct = _gct,
+						mark = gct.bar_mark })
 				end
 			end
 		end
+		gct.bar_mark = nil
 		return
 	end
 

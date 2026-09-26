@@ -6,6 +6,36 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.14.1
+
+### The input viewer's bar marks the tick the block landed
+
+The cancel window opens **one tick after** the block lands. The bar's `GC`
+label sits on the tick the window opened, so **that column read as the guard
+tick**, and the tick you actually blocked on was buried inside a longer column
+such as `IDLE 6`.
+
+The tick the block landed on is now **a column of its own**, marked one to the
+left of `GC`:
+
+- **`G`** - a block with back held
+- **`GP n`** - a block that landed on tick n of the guard pose's persistence
+  (the same number as `G-Persist n` in the GC Command Trace)
+
+```
+Before                        v11.7.14.1
+                GC                            GP5   GC
+  <- 6  IDLE 6  -> 1            <- 6  IDLE 5  IDLE 1  -> 1
+```
+
+- **The lever in the marked column is the one the block was judged on** - the
+  pose had just processed it when the attack arrived
+- A hit leaves the bar as it was
+- Shown while **`Show GC Trainer`** on the `Display` tab is on (default on),
+  and kept even with `Hide Negative Edge Inputs` on
+
+---
+
 ## v11.7.14
 
 ### GC Command Trace: which tick of the guard persistence you blocked on

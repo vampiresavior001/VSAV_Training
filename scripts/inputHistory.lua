@@ -651,6 +651,52 @@ function update_input_history(_history, _prefix, _input, isEvent, event, _raw)
 
 end
 
+-- THE TICK THE BLOCK WAS DECIDED ON, AS A COLUMN OF ITS OWN (user, 2026-09-26).
+--
+-- The GC label sits on the tick the window opened, and that is one tick after
+-- the block was decided: the hit is written between two of P1's updates, and
+-- the window is loaded by P1's guard handler on the next one (VSAV_MEMORY_NOTES,
+-- the order of the hit and the GC window). Taking the label's column for the
+-- guard tick was the natural misreading, and the tick itself was often buried
+-- in a longer column - IDLE 6 with the block on its last tick.
+--
+-- So the tick the block landed on is split off and marked: G for a block with
+-- back held, GP and the tick for one that landed while the pose persisted -
+-- what the GC Command Trace's guard row says. Whether a contact was a block is
+-- only known once the window opens, so the split is made then, one tick back.
+-- A hit leaves the bar as it was. Only while the GC band itself is on.
+--
+-- The split-off copy continues its column: nothing was pressed or let go on
+-- that tick, and a label that marks a column's first tick hands on the state
+-- that follows it.
+local GUARD_MARK_NEXT = {
+  p1_gc_begin = "p1_gc_in_progress", p1_gc_ended = "p1_gc_none",
+  p1_gc_success = "p1_gc_none",
+  p1_pb_begin = "p1_pb_in_progress", p1_pb_ended = "p1_pb_none",
+}
+function mark_guard_column(_history, _mark)
+  if _mark == nil or _mark.seq == nil then return end
+  if not (globals.options and globals.options.show_gc_trainer == true) then return end
+  local _last = _history[#_history]
+  if _last == nil or _last.type ~= nil or _last.frame == nil then return end
+  if _last.frame == _mark.seq then
+    _last.gc_guard = _mark
+  elseif _last.frame < _mark.seq then
+    local _copy = {}
+    for _k, _v in pairs(_last) do _copy[_k] = _v end
+    _copy.frame = _mark.seq
+    _copy.pressed = nil
+    if _last.released ~= nil then
+      _copy.released = { false, false, false, false, false, false }
+    end
+    _copy.gc_ticks = nil
+    _copy.gc_event = GUARD_MARK_NEXT[_last.gc_event] or _last.gc_event
+    _copy.pb_event = GUARD_MARK_NEXT[_last.pb_event] or _last.pb_event
+    _copy.gc_guard = _mark
+    table.insert(_history, _copy)
+  end
+end
+
 function draw_input_history_entry(_entry, _x, _y, color, step)
   if _entry and _entry.type then
     if _entry.gc_event == "p1_gc_begin" then
@@ -694,7 +740,14 @@ function draw_input_history_entry(_entry, _x, _y, color, step)
 		end
 	end
 
-	if globals.options.show_gc_trainer == true then 
+	if globals.options.show_gc_trainer == true then
+		-- The guard tick (mark_guard_column). The trace's guard-row green, so the
+		-- two read as the same thing; at most four glyphs, which fits the
+		-- narrowest column and stops short of the GC label next to it.
+		if _entry.gc_guard ~= nil then
+			local _p = _entry.gc_guard.pers
+			gui.text(_x + 1, _y - 9, _p ~= nil and ("GP" .. _p) or "G", "#99EE99")
+		end
 		if _entry.gc_event == "p1_gc_begin" then
 			gui.text(_x + 1 , _y - 9, "GC", "#00FF00")
 			gui.box(_x + 10, _y - 9, _x + step - 1, _y - 4, "#99EE9977", "#99EE9977")
@@ -790,7 +843,12 @@ function remove_nedge_events(_history)
 			-- game state event, append and ignore
 			table.insert(cleaned_history, current_entry)
 		elseif (current_entry.gc_event ~= "p1_gc_none") or (
-			current_entry.pb_event ~= "p1_pb_none") then
+			current_entry.pb_event ~= "p1_pb_none")
+			-- The guard tick's own column (mark_guard_column) is the same
+			-- direction as the one it was split from and presses nothing, so
+			-- this filter - on by default - threw it away, mark and all (user,
+			-- 2026-09-26: no G/GP ever showed on hardware).
+			or current_entry.gc_guard ~= nil then
 			table.insert(cleaned_history, current_entry)
 			-- if gc/pb occurs, display even if no new button presses
 			last_direction = current_entry.direction
@@ -1160,6 +1218,9 @@ local inpHistoryModule = {
                     -- nil on every tick but the one the cancel came out
                     -- on, which is how the label clears itself.
                     globals.gc_ticks = _raw.gct
+                    -- Before this tick's column goes in, so the column it
+                    -- splits is still the last one.
+                    mark_guard_column(input_history[1], _raw.mark)
                     update_input_history(input_history[1], "P1", _input, false, nil, _raw)
                 end
                 globals.p1_tick_inputs = {}
