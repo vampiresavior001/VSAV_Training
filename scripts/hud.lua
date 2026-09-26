@@ -210,8 +210,9 @@ local function draw_pb_counter()
 		-- grant: the player cannot see the grant, so carrying on is not a
 		-- mistake and PB Count keeps counting it. PAST the fourteen nothing can
 		-- be bought, and that is the habit this shows. The bracket is how far
-		-- past the window the LAST of them landed; the tally stops sixty ticks
-		-- out so holding the buttons down cannot make it climb forever.
+		-- past the window the LAST of them landed. The tally runs for fourteen
+		-- ticks past the window - the same fourteen as the window itself - so
+		-- holding the buttons down cannot make it climb forever.
 		local _over = globals.timers.p1_pb_latemash or 0
 		local _late = globals.timers.p1_pb_latemash_late or 0
 		local _omtxt = "LateMash: " .. _over

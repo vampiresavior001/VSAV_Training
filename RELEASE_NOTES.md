@@ -6,6 +6,19 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.15.2
+
+### LateMash counts for fourteen ticks
+
+**`LateMash`** in `Show PB Counter` now counts the buttons pressed in the
+**fourteen ticks** after the window closes (it was sixty) - **the same
+fourteen as the push block window itself**.
+
+- `(+Nt)` goes up to `+14t`. Presses from the fifteenth tick on are not counted
+- Inside the window it still stays at 0, however much you press
+
+---
+
 ## v11.7.15.1
 
 ### Pit of Blame can be Random

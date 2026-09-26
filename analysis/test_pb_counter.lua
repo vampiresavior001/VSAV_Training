@@ -328,15 +328,15 @@ lg(30) ; press(P1, 0) ; om_tick()
 want("押さなければ増えない", timers.p1_pb_latemash, 4)
 want("押さなければ遅れも動かない", timers.p1_pb_latemash_late, 2)
 
--- 60 ティックを超えたら追うのをやめる。押しっぱなしで伸び続けないこと。
+-- 受付と同じ 14 ティックを超えたら追うのをやめる。押しっぱなしで伸び続けないこと。
 -- 窓は lg 10..23 (開いた lg + 長さ 14)。外の 1 ティック目が lg 24 なので、
--- +60t は lg 83、+61t は lg 84。
-lg(83) ; press(P1, 0x01) ; om_tick()
-want("60t ちょうどは数える", timers.p1_pb_latemash, 5)
-want("遅れは 60t", timers.p1_pb_latemash_late, 60)
-lg(84) ; press(P1, 0x01) ; om_tick()
-want("61t は数えない", timers.p1_pb_latemash, 5)
-want("遅れも 60t で止まる", timers.p1_pb_latemash_late, 60)
+-- +14t は lg 37、+15t は lg 38。
+lg(37) ; press(P1, 0x01) ; om_tick()
+want("14t ちょうどは数える", timers.p1_pb_latemash, 5)
+want("遅れは 14t", timers.p1_pb_latemash_late, 14)
+lg(38) ; press(P1, 0x01) ; om_tick()
+want("15t は数えない", timers.p1_pb_latemash, 5)
+want("遅れも 14t で止まる", timers.p1_pb_latemash_late, 14)
 
 -- 窓が張り直されたら、そこから数え直す。多段ガードは 0x023966 で再武装する。
 lg(100) ; ram[P1 + 0x1AB] = 14 ; press(P1, 0) ; om_tick()

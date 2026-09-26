@@ -207,7 +207,10 @@ end
 -- block's guard stun is eleven ticks and the exit clears $1ab (0x024AF6)
 -- before it can count down, so the zero never arrives on its own - waiting for
 -- it would miss every light block (measured, see the note at the top).
-local LATEMASH_CAP = 60         -- ticks past the window end (user, 2026-09-23)
+-- THE SAME FOURTEEN AS THE WINDOW. After the window closes, LateMash counts
+-- for as many ticks as the push block window itself lasts (user, 2026-09-26;
+-- was 60).
+local LATEMASH_CAP = 14         -- ticks past the window end
 local om_subscribed = false
 local om = {
     [0xFF8400] = { n = 0, late = 0, open_lg = nil, len = 0, was = 0 },
