@@ -281,7 +281,7 @@ do
 	pose(0x0C, 0x02) tick(3, 0, 0, nil)      -- 離した。持続の始まり
 	pose(0x0C, 0x02) tick(4, 0, 0, nil)
 	pose(0x00, 0x02, 0x02) tick(6, 0, 0, "p1_gc_begin")   -- 3 ティック後に接触
-	want("持続中のガードは Guard 行に 3 を持つ", gct_state.rows[1] and gct_state.rows[1].v, 3)
+	want("持続中のガードは Guard 行に 4 を持つ (離したティックが 1)", gct_state.rows[1] and gct_state.rows[1].v, 4)
 
 	-- 受付が 1 ティック遅れても同じ値。
 	fresh()
@@ -289,7 +289,7 @@ do
 	pose(0x0C, 0x02) tick(3, 0, 0, nil)
 	pose(0x00, 0x02, 0x02) tick(6, 0, 0, nil)             -- 接触
 	pose(0x00, 0x02, 0x02) tick(7, 0, 0, "p1_gc_begin")   -- 受付はその次
-	want("受付が 1 ティック遅れても 3", gct_state.rows[1] and gct_state.rows[1].v, 3)
+	want("受付が 1 ティック遅れても 4", gct_state.rows[1] and gct_state.rows[1].v, 4)
 
 	-- 後ろを入れたままなら数字は無い (いつもの Guard)。めくりもこちら。
 	fresh()
@@ -328,7 +328,7 @@ do
 	pose(0x0C, 0x06) tick(4, 0, 0, nil)
 	pose(0x00, 0x00, 0x02) tick(7, 0, 0, nil)             -- 4 ティック後に接触
 	pose(0x00, 0x02, 0x02) tick(8, 0, 0, "p1_gc_begin")
-	want("しゃがみの持続も数える", gct_state.rows[1] and gct_state.rows[1].v, 4)
+	want("しゃがみの持続も数える", gct_state.rows[1] and gct_state.rows[1].v, 5)
 
 	fresh()
 	pose(0x0C, 0x04) tick(1, 0, 0, nil)
@@ -344,9 +344,9 @@ do
 	pose(0x0C, 0x06) tick(4, 0, 0, nil)      -- また離した
 	pose(0x00, 0x00, 0x02) tick(6, 0, 0, nil)
 	pose(0x00, 0x02, 0x02) tick(7, 0, 0, "p1_gc_begin")
-	want("入れ直した後の持続から数え直す", gct_state.rows[1] and gct_state.rows[1].v, 2)
+	want("入れ直した後の持続から数え直す", gct_state.rows[1] and gct_state.rows[1].v, 3)
 
-	-- 離した次の処理で持続に入り、その直後に当たった (持続 0)。フックは P1 の処理の
+	-- 離した次の処理で持続に入り、その直後に当たった (持続 1 ティック目。旧 G-Persist 0)。フックは P1 の処理の
 	-- 先頭なので $07 = 02 を一度も見ないまま当たりで上書きされる。ポーズが最後に
 	-- 見たレバー ($12D、向き補正済み) の bit0 = 後ろ で判定する (ROM 0x027694)。
 	-- 実機 2026-09-25: ← 4 のあとニュートラル最初のティックでガード、Guard (6t) と出ていた。
@@ -355,7 +355,7 @@ do
 	mem[BASE + 0x12D] = 0x00                 -- 最後に処理したレバーは後ろではない
 	pose(0x00, 0x00, 0x02) tick(2, 0, 0, nil)             -- 当たった
 	pose(0x00, 0x02, 0x02) tick(3, 0, 0, "p1_gc_begin")
-	want("離した直後の当たりは持続 0", gct_state.rows[1] and gct_state.rows[1].v, 0)
+	want("離した直後の当たりは持続 1 ティック目", gct_state.rows[1] and gct_state.rows[1].v, 1)
 
 	fresh()
 	pose(0x0C, 0x00) tick(1, 0, 0, nil)
@@ -384,7 +384,7 @@ do
 	mem[BASE + 0x12D] = 0x00
 	pose(0x00, 0x00, 0x02) tick(4, 0, 0, nil)
 	pose(0x00, 0x02, 0x02) tick(5, 0, 0, "p1_gc_begin")
-	want("見えていた持続は始まりから", gct_state.rows[1] and gct_state.rows[1].v, 3)
+	want("見えていた持続は始まりから", gct_state.rows[1] and gct_state.rows[1].v, 4)
 
 	-- 一度使った値は次のガード行に付かない (連続ガードの 2 発目は硬直中のガード)。
 	fresh()
@@ -409,19 +409,19 @@ do
 		for _, r in ipairs(gct_state.rows) do if r.k == "guard" then return r end end
 	end
 
-	-- 実機のスクリーンショットの形。持続 5 で当たり、次のティックに → と受付。
+	-- 実機のスクリーンショットの形。持続 6 ティック目 (旧 G-Persist 5) で当たり、次のティックに → と受付。
 	fresh()
 	pose(0x0C, 0x00) tick(1, 0, 0, nil)
 	pose(0x0C, 0x02) tick(4, 0, 0, nil)                    -- 離した
 	pose(0x0C, 0x02) tick(8, 0, 0, nil)
-	contact()        tick(9, 0, 0, nil)                    -- 持続 5 で当たった
+	contact()        tick(9, 0, 0, nil)                    -- 持続 6 ティック目で当たった
 	stun()           tick(10, 2, 2, "p1_gc_begin")         -- → と受付が同じティック
 	stun()           tick(15, 2, 4, "p1_gc_in_progress")   -- ↓
 	stun()           tick(20, 4, 6, "p1_gc_in_progress")   -- ↘
 	stun()           tick(23, 0, 6, "p1_gc_success")       -- P
 	want("ガードが → より上", kinds(), "guard,dir,dir,dir,btn")
 	want("ガード行は当たったティック", gct_state.rows[1].t, 9)
-	want("持続は 5 のまま", gct_state.rows[1].v, 5)
+	want("持続は 6 (離したティックが 1)", gct_state.rows[1].v, 6)
 	want("→ は受付のティック", gct_state.rows[2].t, 10)
 	want("Success は受付から数える (入力履歴の SUCCESS と同じ)",
 		gct_state.at - gct_state.guard, 13)
@@ -511,13 +511,13 @@ do
 	-- 列を分けて印を出す (inputHistory の mark_guard_column)。
 	fresh()
 	pose(0x0C, 0x02) tick(3, 0, 0, nil)
-	pose(0x00, 0x00, 0x02) tick(8, 0, 0, nil)             -- 持続 5 で当たった
+	pose(0x00, 0x00, 0x02) tick(8, 0, 0, nil)             -- 持続 6 ティック目で当たった
 	want("当たったティックにはまだ渡さない", gct_state.bar_mark, nil)
 	pose(0x00, 0x02, 0x02) tick(9, 0, 0, "p1_gc_begin")
 	local m = gct_state.bar_mark
 	want("受付のティックに渡す", m ~= nil, true)
 	want("当たったティック", m and m.seq, 8)
-	want("持続", m and m.pers, 5)
+	want("持続", m and m.pers, 6)
 
 	fresh()
 	pose(0x0C, 0x00) tick(1, 0, 0, nil)

@@ -791,7 +791,7 @@ do
 	globals.gc_trace = {
 		guard = 10, done = "Success", at = 23,
 		rows = {
-			{ k = "guard", t = 9,  v = 5 },
+			{ k = "guard", t = 9,  v = 6 },
 			{ k = "dir",   t = 10, v = 6 },
 			{ k = "dir",   t = 15, v = 2 },
 			{ k = "dir",   t = 20, v = 3 },
@@ -804,7 +804,7 @@ do
 		if type(c.s) == "string" and c.s ~= "GC Command Trace" then seq[#seq + 1] = c.s end
 	end
 	want("描かれる文字列の順", table.concat(seq, " / "),
-		"G-Persist 5 / 1t / 5t / 5t / 3t / Success / 13t")
+		"G-Persist 6 / 1t / 5t / 5t / 3t / Success / 13t")
 	want("色が nil のまま渡された描画は無い", table.concat(bad, ", "), "")
 
 	-- 当たりと受付の間にコマンドが切れた形。ガードが死んだ印より上なので、

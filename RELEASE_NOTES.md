@@ -6,6 +6,29 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.14.2
+
+### Guard persistence is counted from 1
+
+**`G-Persist n`** in the GC Command Trace and **`GP n`** in the input viewer's
+bar say **which tick** of the guard pose's persistence the block landed on.
+Like an attack's active frames, **the tick back is let go is now tick 1**.
+
+**The numbers read one higher than before** (`G-Persist 0` -> `G-Persist 1`,
+`GP5` -> `GP6`). A `0` read as "no persistence at all". In the bar, the IDLE
+ticks from letting go of back up to and including the marked column now add up
+to n.
+
+```
+                GP6   GC
+  <- 6  IDLE 5  IDLE 1  -> 1
+```
+
+The bracketed numbers (`(2t)` and so on) are **gaps** between inputs, so they
+are unchanged - `0t` still means the same tick.
+
+---
+
 ## v11.7.14.1
 
 ### The input viewer's bar marks the tick the block landed

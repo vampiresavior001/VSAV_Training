@@ -78,10 +78,10 @@ print("-- IDLE の途中で当たった: 当たったティックで列が分か
 a_frame({ { dir = 0x02, seq = 200 } })                    -- ← (後ろ)
 a_frame({ { dir = 0x00, seq = 206, gc = "p1_gc_none" } }) -- 離した
 local before = #hist()
-a_frame({ { dir = 0x01, seq = 212, gc = "p1_gc_begin", mark = { seq = 211, pers = 5 } } })
+a_frame({ { dir = 0x01, seq = 212, gc = "p1_gc_begin", mark = { seq = 211, pers = 6 } } })
 local split = find_frame(211)
 want("当たったティックの列ができた", split ~= nil, true)
-want("その列は印を持つ", split and split.gc_guard and split.gc_guard.pers, 5)
+want("その列は印を持つ", split and split.gc_guard and split.gc_guard.pers, 6)
 want("その列は IDLE のまま", split and split.direction, 5)
 want("受付の列は別", find_frame(212) and find_frame(212).gc_event, "p1_gc_begin")
 want("列は 2 本増えた (分けた列と受付の列)", #hist() - before >= 2, true)
@@ -101,9 +101,9 @@ print("-- 分けた列の中身")
 -- ボタンを押したまま当たった: 押した瞬間ではないので pressed は持ち越さない。
 a_frame({ { dir = 0x00, btn = 0x04, seq = 400, gc = "p1_gc_none" } })
 local held = find_frame(400)
-a_frame({ { dir = 0x00, btn = 0x04, seq = 405, gc = "p1_gc_begin", mark = { seq = 404, pers = 0 } } })
+a_frame({ { dir = 0x00, btn = 0x04, seq = 405, gc = "p1_gc_begin", mark = { seq = 404, pers = 1 } } })
 local c = find_frame(404)
-want("持続 0 も印になる", c and c.gc_guard and c.gc_guard.pers, 0)
+want("持続 1 ティック目も印になる", c and c.gc_guard and c.gc_guard.pers, 1)
 want("押した印は持ち越さない", c and c.pressed, nil)
 want("ボタンは押したまま", c and c.buttons[3], held and held.buttons[3])
 want("受付の状態は持ち越さない", c and c.gc_event, "p1_gc_none")
@@ -130,11 +130,11 @@ local function draw_one(e)
 	end
 end
 local t5 = draw_one(split)
-want("GP5 と出る", t5 and t5.s, "GP5")
+want("GP6 と出る", t5 and t5.s, "GP6")
 want("色はトレースのガードの行と同じ", t5 and t5.c, "#99EE99")
 want("帯の高さ", t5 and t5.y, 200 - 9)
 want("入れたままは G", draw_one(own) and draw_one(own).s, "G")
-want("持続 0 は GP0", draw_one(c) and draw_one(c).s, "GP0")
+want("持続 1 ティック目は GP1", draw_one(c) and draw_one(c).s, "GP1")
 -- いちばん細い列 (方向だけ、18px) に収まり、隣の列の GC に掛からない。
 want("4 文字まで (GP12)", #("GP12") * 4.2 + 1 < 18, true)
 globals.options.show_gc_trainer = false

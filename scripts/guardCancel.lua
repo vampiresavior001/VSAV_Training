@@ -3620,14 +3620,22 @@ local function gct_tick(_gc)
 		-- The pose tests bit 0 of $12B, the facing-corrected lever, to stay
 		-- held (0x027694; $3B2 skips the test). By this hook that word has
 		-- moved to $12C (0x022120), so $12D is the very lever the pose last
-		-- tested. Clear there means it stepped to persisting: tick 0.
+		-- tested. Clear there means it stepped to persisting: its first tick.
 		if _s05 ~= 0 and gct.pers_start == nil
 			and memory.readbyte(P1_BASE + 0x3B2) == 0
 			and memory.readbyte(P1_BASE + 0x12D) % 2 == 0 then
 			gct.pers_start = _now
 		end
+		-- COUNTED FROM 1, LIKE AN ATTACK'S ACTIVE FRAMES (user, 2026-09-26).
+		--
+		-- The number answers "on which tick of the persistence did the block
+		-- land", an ordinal. By the time a hit lands on the tick back was let
+		-- go, the pose has already run one tick as persisting - that is tick 1.
+		-- Counted from 0 it read G-Persist 0, which looks like no persistence
+		-- at all. It also makes the bar add up: the IDLE ticks from letting go
+		-- up to and including the marked column come to n.
 		if _s05 ~= 0 and gct.pers_start ~= nil then
-			gct.pers_n = (_now - gct.pers_start) % 256
+			gct.pers_n = (_now - gct.pers_start) % 256 + 1
 		else
 			gct.pers_n = nil
 		end
