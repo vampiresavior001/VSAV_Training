@@ -665,5 +665,36 @@ want("1 歩だけなら何も起きない", selected():find("Attack : LP", 1, tr
 save_and_close()
 want("1 歩のまま", steps() and #steps(), 1)
 
+print("[F] Guard Action Frequency が None なら、動かないことを画面に出す")
+-- None (1) はくじで毎回外れるので、ステップは一度も出ない。画面に何も出て
+-- いなかったため、しゃがみのパターンをランナーの中まで追ってから、ロガーの gc_roll で
+-- 気付いた (本人、2026-09-26)。案内の下の空き行 (y=194) に出す。
+do
+  local function warn_line()
+    local got = nil
+    gui.text=function(x,y,t,c)
+      if y==194 then got={ t=t, c=c, x=x } end
+    end
+    E.guiRegister()
+    gui.text=function() end
+    return got
+  end
+  E.open("reversal")
+  training_settings.gc_freq = 1
+  local w = warn_line()
+  want("None なら出る", w ~= nil and w.t:find("Guard Action Frequency is None", 1, true) ~= nil, true)
+  want("どこで直すかも書く", w ~= nil and w.t:find("Dummy tab", 1, true) ~= nil, true)
+  want("橙で出す", w and w.c, "#FF7F00")
+  want("枠に収まる (81 文字まで)", w ~= nil and #w.t <= 81, true)
+  for _, v in ipairs({ 2, 3, 4, 5 }) do
+    training_settings.gc_freq = v
+    want("頻度 " .. v .. " では出ない", warn_line(), nil)
+  end
+  training_settings.gc_freq = nil
+  want("設定が無ければ出ない", warn_line(), nil)
+  goto_row("Back Without Saving")
+  tap("LP")
+end
+
 print(fails==0 and "\n全て通った" or ("\n"..fails.." 件 NG"))
 os.exit(fails==0 and 0 or 1)

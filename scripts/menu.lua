@@ -1617,7 +1617,7 @@ return {
             lilith_gps_menu_item,
             lei_lei_stun_menu_item,
             list_menu_item("Tech Throws", training_settings, "p2_throw_tech", p2_throw_tech_chance, 5, "How often the dummy escapes a throw.\nRolled once per throw, not per frame - a roll every frame would come out as\n100% whatever this said, which is what Guard Action Frequency used to do.\nNone leaves the throw alone."),
-            list_menu_item("Guard", training_settings, "guard", guard,1, "Push Block (All ...) guards like All Guard and pushes, at that strength,\nwithout needing Guard Action Type - so that stays free for what you test next.\nAuto Guard writes the game's own guard flag, so it blocks everything,\nincluding unblockable setups.\nStand Block holds Back while an attack is in range; All Guard adds down, so\nlows are covered too. Both use the game's proximity check - projectiles too."),
+            list_menu_item("Guard", training_settings, "guard", guard,1, "Push Block (All ...) guards like All Guard and pushes, at that strength,\nwithout needing Guard Action Type - so that stays free for what you test next.\nAuto Guard writes the game's own guard flag and blocks even unblockable setups.\nStand Block holds Back while an attack is in range, by the game's own proximity\ncheck - projectiles too. All Guard also picks the height each hit needs: down\nfor lows, standing for overheads and jump attacks, the Pose for everything else."),
             -- integer_menu_item("# Guard Frames", training_settings, "p2_refill_timer", 0, 20, false, 0, nil, "This timer controls when the life meter will be refilled.\nOccurs this many seconds after being hit"),
 
             p2_block_chance_menu_item,

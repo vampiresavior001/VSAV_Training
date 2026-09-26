@@ -135,39 +135,39 @@ end
 
 local HEAD="REVERSAL ACTION STEPS: Morrigan"
 
-print("[1] detail の行 - Action / parts / Wait の順、Start はどこにも出ない")
+print("[1] detail の行 - Wait / Action / parts の順、カーソルは Action、Start はどこにも出ない")
 open(0x05,{{action="atk",lever="none",button="LP",wait=-1}})
 tap("LP")
 rows_eq("Attack Neutral + LP",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Attack  >",
   "     Direction : Neutral  >",
   "     Button : LP  >",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 open(0x05,{{action="custom",lever="DPF",button="HP",wait=-1}})
 tap("LP")
 rows_eq("Custom DPF + HP",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Custom  >",
   "     Motion : DPF  >",
   "     Button : HP  >",
   "     Hold : No",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 open(0x05,{{action="dash.f",wait=-1}})
 tap("LP")
 rows_eq("Dash Forward",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Dash Forward  >",
   "     Hold : No",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 open(0x05,{{action="dashc.f",wait=-1},{action="atk",lever="none",button="HP",wait=-1}})
 tap("LP")
 rows_eq("Dash Forward Cancel - Hold 行は出ない",{
-  ">  Action : Dash Forward Cancel  >",
   "   Wait : Auto (Fastest)  >",
+  ">  Action : Dash Forward Cancel  >",
   "   Move Step : 1 / 2  >",
   "   Remove This Step  >",
   "   Back"})
@@ -175,19 +175,19 @@ rows_eq("Dash Forward Cancel - Hold 行は出ない",{
 open(0x05,{{action="crouch.d",wait=-1}})
 tap("LP")
 rows_eq("Crouch Neutral",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Crouch Neutral  >",
   "     Hold : No",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 print("[2] 2 歩目の Wait - ダッシュの次は数値に解決する")
 open(0x05,{{action="dash.f",wait=-1},{action="atk",lever="none",button="LK",wait=-1}})
 tap("down") tap("LP")
 rows_eq("Dash の次の Attack",{
+  "   Wait : Auto (11)  >",
   ">  Action : Attack  >",
   "     Direction : Neutral  >",
      "     Button : LK  >",
-     "   Wait : Auto (11)  >",
      "   Move Step : 2 / 2  >",
   "   Remove This Step  >",
   "   Back"})
@@ -241,11 +241,12 @@ tap("down") tap("LP")
 title_eq("pick 方向", HEAD.."  >  STEP 1  >  Direction")
 tap("left") tap("down") tap("LP")
 title_eq("pick ボタン", HEAD.."  >  STEP 1  >  Button")
-tap("left") tap("down") tap("LP")
+-- Wait は詳細画面の一番上。部品の下からは名前で探して回り込む。
+tap("left") goto_row("Wait :") tap("LP")
 title_eq("wait",     HEAD.."  >  STEP 1  >  Wait")
 -- Wait 画面の Left は「値を減らす」なので、抜けるのは下の Back 行から。
 tap("down") tap("LP")
-tap("down") tap("LP")
+goto_row("Move Step") tap("LP")
 title_eq("order",    HEAD.."  >  STEP 1  >  Move Step")
 print("  (Order は Wait と同じ形。左右で動かし、抜けるのは Back 行から)")
 tap("right")
@@ -304,20 +305,20 @@ print("[6b] Hold 行は「保持できる方向がある」ときだけ出る")
 open(0x05,{{action="atk",lever="down-back",button="LP",wait=-1}})
 tap("LP")
 rows_eq("Attack Down Back + LP",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Attack  >",
   "     Direction : Down Back  >",
   "     Button : LP  >",
   "     Hold : No",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 open(0x05,{{action="atk",lever="none",button="LP",wait=-1}})
 tap("LP")
 rows_eq("Attack Neutral + LP - 保持するものが無い",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Attack  >",
   "     Direction : Neutral  >",
   "     Button : LP  >",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 -- DPF の最後のエントリは {down,forward,HP} なので、方向で終わっている。
@@ -327,31 +328,31 @@ rows_eq("Attack Neutral + LP - 保持するものが無い",{
 open(0x05,{{action="custom",lever="DPF",button="HP",wait=-1}})
 tap("LP")
 rows_eq("Custom DPF - 最後が方向なので付く",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Custom  >",
   "     Motion : DPF  >",
   "     Button : HP  >",
   "     Hold : No",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 open(0x05,{{action="custom",lever="down-back",button="HP",wait=-1}})
 tap("LP")
 rows_eq("Custom Down Back - 素の方向なので出る",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Custom  >",
   "     Motion : Down Back  >",
   "     Button : HP  >",
   "     Hold : No",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 open(0x05,{{action="atk",lever="down-back",button="LP",hold=true,wait=-1}})
 tap("LP")
 rows_eq("Hold : Yes",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Attack  >",
   "     Direction : Down Back  >",
   "     Button : LP  >",
   "     Hold : Yes",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 -- 移動系にも付く。「Stand Forward を Hold して、次のステップの Wait を 15 に
@@ -359,24 +360,24 @@ rows_eq("Hold : Yes",{
 open(0x05,{{action="dash.f",wait=-1}})
 tap("LP")
 rows_eq("Dash Forward - 名前付きアクションにも付く",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Dash Forward  >",
   "     Hold : No",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 open(0x05,{{action="walk.f",hold=true,wait=-1}})
 tap("LP")
 rows_eq("Stand Forward - 15 ティック歩く指定の土台",{
+  "   Wait : Auto (Fastest)  >",
   ">  Action : Stand Forward  >",
   "     Hold : Yes",
-  "   Wait : Auto (Fastest)  >",
   "   Back"})
 
 open(0x05,{{action="neutral",wait=-1}})
 tap("LP")
 rows_eq("Stand Neutral - 保持するものが無い",{
-  ">  Action : Stand Neutral  >",
   "   Wait : Auto (Fastest)  >",
+  ">  Action : Stand Neutral  >",
   "   Back"})
 
 print("[7] 一覧の行 - 1 歩目にも Auto (Fastest) が出て、詳細と同じ語を使う")
@@ -388,7 +389,7 @@ rows_eq("一覧",{
   ">  1  Auto (Fastest)  Dash : Forward  >",
    "   2  Auto (11)  Attack : MP  >",
   "   3  Auto (After)  Attack : Down Back + LP  >",
-  "   4  3 Ticks  Attack : Down Back + LP  >",
+  "   4  +3t  Attack : Down Back + LP  >",
   "   + Add Step  >",
   "   Save",
   "   Back Without Saving",
@@ -539,8 +540,8 @@ rows_eq("(Hold) 付きの一覧",{
   ">  1  Auto (Fastest)  Dash : Forward  >",
    "   2  Auto (11)  Attack : Down Back (Hold) + LP  >",
   "   3  Auto (After)  Attack : Down Back + LP  >",
-  "   4  3 Ticks  Stand : Forward (Hold)  >",
-  "   5  2 Ticks  Attack : Forward + PPP  >",
+  "   4  +3t  Stand : Forward (Hold 2t)  >",
+  "   5  +2t  Attack : Forward + PPP  >",
   "   + Add Step  >",
   "   Save",
   "   Back Without Saving",
@@ -549,14 +550,65 @@ rows_eq("(Hold) 付きの一覧",{
 -- 詳細画面には Hold 行があるので、そちらには (Hold) を出さない。
 tap("down") tap("LP")
 rows_eq("詳細では二重に言わない",{
+  "   Wait : Auto (11)  >",
   ">  Action : Attack  >",
   "     Direction : Down Back  >",
   "     Button : LP  >",
   "     Hold : Yes",
-  "   Wait : Auto (11)  >",
   "   Move Step : 2 / 5  >",
   "   Remove This Step  >",
   "   Back"})
+
+print("[7c] 一覧の Wait はずれ (+Nt)、Hold には続く長さを添える")
+-- 「30 Ticks  Crouch : Neutral (Hold)」が 30 ティックしゃがむと読まれ、実際は
+-- 次のステップの 1 ティックでしゃがみが終わっていた (本人、2026-09-26)。
+-- Wait は前からのずれとして +Nt と書き、Hold の長さ (次のステップの Wait) を
+-- Hold のステップ側に出す。
+open(0x05,{{action="crouch.d",hold=true,wait=30},
+           {action="neutral",wait=1}})
+rows_eq("間違えた設定は、しゃがみが 1 ティックだと分かる",{
+  ">  1  +30t  Crouch : Neutral (Hold 1t)  >",
+  "   2  +1t  Stand : Neutral  >",
+  "   + Add Step  >",
+  "   Save",
+  "   Back Without Saving",
+  "   Clear All Steps"})
+open(0x05,{{action="crouch.d",hold=true,wait=0},
+           {action="neutral",wait=60}})
+rows_eq("直した設定は 60 ティックしゃがむと読める",{
+  ">  1  Auto (Fastest)  Crouch : Neutral (Hold 60t)  >",
+  "   2  +60t  Stand : Neutral  >",
+  "   + Add Step  >",
+  "   Save",
+  "   Back Without Saving",
+  "   Clear All Steps"})
+-- 次のステップが Auto (条件) なら長さは実行時に決まる。最後のステップには
+-- 終わらせる次のステップが無い。どちらも (Hold) のまま。
+open(0x05,{{action="walk.b",hold=true,wait=0},
+           {action="atk",lever="none",button="LP",wait=-1},
+           {action="crouch.d",hold=true,wait=5}})
+rows_eq("長さが決まらないときは (Hold) のまま",{
+  ">  1  Auto (Fastest)  Stand : Back (Hold)  >",
+  "   2  Auto (After)  Attack : LP  >",
+  "   3  +5t  Crouch : Neutral (Hold)  >",
+  "   + Add Step  >",
+  "   Save",
+  "   Back Without Saving",
+  "   Clear All Steps"})
+-- 詳細画面は Wait が一番上。数字は「Wait :」の後ろなので Ticks のまま。
+open(0x05,{{action="crouch.d",hold=true,wait=30},{action="neutral",wait=1}})
+tap("LP")
+rows_eq("詳細は Wait が先、カーソルは Action",{
+  "   Wait : 30 Ticks  >",
+  ">  Action : Crouch Neutral  >",
+  "     Hold : Yes",
+  "   Move Step : 1 / 2  >",
+  "   Remove This Step  >",
+  "   Back"})
+-- 新しいステップもカーソルは Action に乗る。作るときに先に決めるのは「何を」。
+open(0x05,{{action="atk",lever="none",button="LP",wait=-1}})
+goto_row("Add Step") tap("LP")
+eq("Add Step で開いた詳細のカーソルは Action", selected():find("Action :", 1, true) ~= nil, true)
 
 print("[8] 一覧の最長行がパネルに収まる")
 -- 16 歩目 + Auto (Recovered) + 最長のアクション名(Custom の最長モーションと

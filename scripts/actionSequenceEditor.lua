@@ -1219,13 +1219,44 @@ end
 --
 -- Widths are measured from the list being drawn rather than fixed, so a list of
 -- short waits does not carry a gap sized for Auto (Not Measured).
+-- THE LIST SAYS WHEN, IN A FORM THAT CANNOT BE READ AS HOW LONG.
+--
+-- "30 Ticks  Crouch : Neutral (Hold)" was read as thirty ticks of crouching
+-- (user, 2026-09-26). The number is the gap in front of the step - from the
+-- trigger on step one, from the step before on every other - so the list
+-- writes it as an offset, +30t. The detail screen keeps "Wait : 30 Ticks",
+-- where the word Wait beside it already says which it is. An Auto is a
+-- condition rather than a count, and stays as it is.
+local function list_wait_label(s, i)
+	local w = wait_label(s, i)
+	local n = w:match("^(%d+) Ticks$")
+	if n ~= nil then return "+" .. n .. "t" end
+	return w
+end
+
+-- HOW LONG A HOLD LASTS, WHERE THAT IS KNOWN.
+--
+-- A hold ends when the next step starts, so its length is the next step's
+-- wait - which is exactly what nothing on the held step's row said. Shown
+-- when that wait is a count. Under an Auto the length is decided at run time,
+-- and on the last step there is no next step to end it.
+local function hold_mark(s, i)
+	if not (s.hold and can_hold(s)) then return "" end
+	local nx = draft and draft.steps and draft.steps[i + 1]
+	if nx ~= nil then
+		local n = wait_label(nx, i + 1):match("^(%d+) Ticks$")
+		if n ~= nil then return " (Hold " .. n .. "t)" end
+	end
+	return " (Hold)"
+end
+
 local function step_label(s, i, num_w, wait_w)
 	-- Hold is shown here and nowhere else in the list. A charge is built by
 	-- several steps in a row holding, and whether that chain is unbroken is a
 	-- property of the LIST - reading it one step at a time is how a missing
 	-- Hold in the middle goes unnoticed.
-	local mark = (s.hold and can_hold(s)) and " (Hold)" or ""
-	local n, w = tostring(i), wait_label(s, i)
+	local mark = hold_mark(s, i)
+	local n, w = tostring(i), list_wait_label(s, i)
 	return n .. string.rep(" ", (num_w or #n) - #n + 2)
 	    .. w .. string.rep(" ", (wait_w or #w) - #w + 2)
 	    .. action_label(s, mark)
@@ -1238,7 +1269,7 @@ local function root_items()
 	-- screen. Measured in handoff_v11.5_action_steps.md.
 	local num_w, wait_w = 0, 0
 	for i, s in ipairs(draft.steps) do
-		local n, w = #tostring(i), #wait_label(s, i)
+		local n, w = #tostring(i), #list_wait_label(s, i)
 		if n > num_w then num_w = n end
 		if w > wait_w then wait_w = w end
 	end
@@ -1271,8 +1302,18 @@ local function detail_items(i)
 	-- THE ACTION AND ITS PARTS STAY TOGETHER.
 	--
 	-- Wait used to sit between them, so the indented Direction and Button rows
-	-- read as if they belonged to Wait. They belong to Action; Wait is the
-	-- other question this step answers, and it comes after.
+	-- read as if they belonged to Wait. They belong to Action.
+	--
+	-- WAIT COMES FIRST: WHEN, THEN WHAT (user, 2026-09-26).
+	--
+	-- It sat below the action, straight under "Hold : Yes", and the two read
+	-- as one sentence - hold for 30 ticks - when the wait is the gap in front
+	-- of this step and the hold lasts until the NEXT step's wait runs out. A
+	-- crouch was set up that way and never showed. On top, the screen reads in
+	-- the order things happen and in the order the list row already reads.
+	-- The cursor still opens on Action (row 2, where the two pushes of this
+	-- screen put it), because picking what the step does is what a new step
+	-- needs first, and it is where LP landed before Wait moved up.
 	-- THE ROW SHOWS WHAT ITS OWN SCREEN CHOOSES.
 	--
 	-- Opening Action picks a group, and for an assembled step that is all it
@@ -1280,7 +1321,16 @@ local function detail_items(i)
 	-- "Attack LP" here would say the button twice. A named action has no rows
 	-- below it, so there the whole name belongs on this line.
 	local head = group_name_of(s)
+	-- "Wait", and it stays "Wait".
+	--
+	-- This was briefly "Start", because the screen it opened was headed WHEN DOES
+	-- IT START? and beside that question "Wait : Auto (Fastest)" reads as waiting
+	-- for the fastest. The question was the fault: a screen that asks something
+	-- makes its row answer, and the row's name drifts. The headings are locations
+	-- now (see guiRegister), so this is the noun it always was - the wait - and
+	-- Auto (Fastest) is its value.
 	local a = {
+		{ label = "Wait : " .. wait_label(s, i), kind = "wait", child = true },
 		{ label = "Action : " .. (head or action_label(s, "", " ")),
 		  kind = "action", child = true },
 	}
@@ -1307,15 +1357,6 @@ local function detail_items(i)
 		a[#a + 1] = { label = "  Hold : " .. (s.hold and "Yes" or "No"),
 		              kind = "hold" }
 	end
-	-- "Wait", and it stays "Wait".
-	--
-	-- This was briefly "Start", because the screen it opened was headed WHEN DOES
-	-- IT START? and beside that question "Wait : Auto (Fastest)" reads as waiting
-	-- for the fastest. The question was the fault: a screen that asks something
-	-- makes its row answer, and the row's name drifts. The headings are locations
-	-- now (see guiRegister), so this is the noun it always was - the wait - and
-	-- Auto (Fastest) is its value.
-	a[#a + 1] = { label = "Wait : " .. wait_label(s, i), kind = "wait", child = true }
 	-- What to do with the step, kept apart from what the step does.
 	if #draft.steps > 1 then
 		a[#a + 1] = { label = "Move Step : " .. tostring(i) .. " / " .. tostring(#draft.steps),
@@ -2059,10 +2100,10 @@ local function enter()
 
 	elseif s.type == "root" then
 		if item.kind == "step" then
-			push({ type = "detail", index = item.index, cursor = 1 })
+			push({ type = "detail", index = item.index, cursor = 2 })   -- on Action
 		elseif item.kind == "add" then
 			table.insert(draft.steps, added_step())
-			push({ type = "detail", index = #draft.steps, cursor = 1 })
+			push({ type = "detail", index = #draft.steps, cursor = 2 })   -- on Action
 		elseif item.kind == "save" then
 			save_draft()
 			leave_root()
@@ -2824,6 +2865,19 @@ function M.guiRegister()
 		help = "Up/Down: Select   Right or LP: Toggle   Left: Back"
 	end
 	gui.text(33, 181, help, text_disabled_color, text_default_border_color)
+
+	-- A LIST THAT CANNOT RUN SAYS SO (user, 2026-09-26).
+	--
+	-- Guard Action Frequency None (1) rolls every guard action away, so the
+	-- steps never go out and nothing on this screen said why: a crouch pattern
+	-- was chased through the runner before the logger's gc_roll showed the
+	-- roll. training_settings is what globals.options is, and the
+	-- only thing this file already reads. Below the legend, the one free line.
+	if training_settings ~= nil and training_settings.gc_freq == 1 then
+		gui.text(33, 194,
+			"Guard Action Frequency is None, so this never runs (Dummy tab).",
+			"#FF7F00", text_default_border_color)
+	end
 
 	-- ON THE PICTURE NOW. registerBefore waits for this before it opens
 	-- anything that blocks, so the notice is up before the emulator stops.

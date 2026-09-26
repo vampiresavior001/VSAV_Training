@@ -6,6 +6,61 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.15
+
+### All Guard blocks at the height each attack needs
+
+`All Guard` used to crouch only when the attacker's "crouching normal" flag was
+set. So the dummy **crouched under specials a standing guard takes**, and with
+a crouching `Pose` **overheads went straight through**.
+
+It now reads what the game itself checks in its hit routine - whether the
+attack can be blocked standing, crouching, or either - and picks the height
+from that.
+
+| Attack | Dummy |
+|---|---|
+| Low | Crouches, whatever the `Pose` |
+| Overhead or jump attack | Stands, even from a crouching `Pose` |
+| Blockable either way | Keeps the `Pose` |
+
+- `Push Block (All ...)` behaves the same. `Stand Block` is unchanged
+- Projectiles and other objects are read the same way
+- Fixed: while you played P2 with the dummy on P1, the dummy's crouch pressed
+  your own down
+
+### GC Command Trace: a late button turns its empty dots orange
+
+On a button row with a gap of `12t` or more, only the number at the far end
+turned orange, and a late button was easy to miss. Like the arrows, **the empty
+dots now turn orange**; the pressed ones keep their strength colour.
+
+### Action Steps read the way they run
+
+`30 Ticks  Crouch : Neutral (Hold)` read as "crouch for thirty ticks". It meant
+"crouch thirty ticks in, and hold until the next step".
+
+- **The list writes a numbered Wait as `+30t`** - the gap from the step before
+  (from the trigger on step one). `Auto (...)` conditions are unchanged
+- **A Hold shows how long it lasts** when the next step's Wait is a number:
+  `Crouch : Neutral (Hold 60t)`
+- **The step screen puts `Wait` on top**, so it reads "when, then what". The
+  cursor still opens on `Action`
+
+```
+1  Auto (Fastest)  Crouch : Neutral (Hold 60t)
+2  +60t            Stand : Neutral
+```
+
+### A setting that stops the steps from running now says so
+
+With `Guard Action Frequency` at `None`, every guard action is rolled away and
+the steps never go out. While it is, the Action Steps and Action Patterns
+screens show `Guard Action Frequency is None, so this never runs (Dummy tab).`
+in orange along the bottom.
+
+---
+
 ## v11.7.14.2
 
 ### Guard persistence is counted from 1

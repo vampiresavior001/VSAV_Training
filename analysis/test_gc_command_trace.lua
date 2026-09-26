@@ -828,4 +828,78 @@ do
 		"Guard / (24t) / Cmd Expired / 25t / 1t")
 end
 
+print("")
+print("[13] 遅れたボタンは、押していない点をオレンジにする。押した点の色はそのまま")
+do
+	-- 矢印は白い塗りをオレンジにして警告する。ボタンでそれに当たるのは空きの点で、
+	-- 押した点は強さの色なので残す。先に試したオレンジの枠は、トレースの中で
+	-- ひとつだけの四角になり、選択中のカーソルに見えた (本人、2026-09-26)。
+	local warn_dot = "png:images/no_button_warn.png"
+	local boxes = {}
+	local was_box = gui.box
+	gui.box = function(x1, y1, x2, y2, fill, line) boxes[#boxes + 1] = line end
+	local function dots()
+		local out = {}
+		for _, im in ipairs(images) do
+			local s0 = tostring(im.img)
+			if s0 == warn_dot then s0 = "W" end
+			if s0 == "n" or s0 == "l" or s0 == "m" or s0 == "h" or s0 == "W" then
+				out[#out + 1] = s0
+			end
+		end
+		return table.concat(out, "")
+	end
+	local function draw(rows)
+		calls, bad, images, boxes = {}, {}, {}, {}
+		globals.gc_trace = { guard = rows[1].t, done = nil, at = nil, rows = rows }
+		hud_mod.draw_gc_command_trace()
+	end
+
+	-- 右下から 12t 遅れた LP + HP。点は列ごとに上・下 (上L 下L 上M 下M 上H 下H) の順に描く。
+	draw({
+		{ k = "guard", t = 5 },
+		{ k = "dir",   t = 10, v = 3 },
+		{ k = "btn",   t = 22, v = { true, false, true, false, false, false } },
+	})
+	want("空きの点はオレンジ、押した点はそのまま", dots(), "lWWWhW")
+	local num
+	for _, c in ipairs(calls) do if c.s == "12t" then num = c end end
+	want("数字もオレンジ (同じ判定)", num and num.c, "#FF7F00")
+	local framed = 0
+	for _, l in ipairs(boxes) do if l == "#FF7F00" then framed = framed + 1 end end
+	want("枠は描かない", framed, 0)
+
+	-- 中ボタンを押しても中の色のまま (空きだけがオレンジ)。
+	draw({
+		{ k = "guard", t = 5 },
+		{ k = "dir",   t = 10, v = 3 },
+		{ k = "btn",   t = 30, v = { false, true, false, false, true, false } },
+	})
+	want("中ボタンは中の色", dots(), "WWmmWW")
+
+	-- 11t なら空きの点はいつもの灰色。
+	draw({
+		{ k = "guard", t = 5 },
+		{ k = "dir",   t = 10, v = 3 },
+		{ k = "btn",   t = 21, v = { false, false, true, false, false, false } },
+	})
+	want("11t はいつもの点", dots(), "nnnnhn")
+
+	-- ガードから数えたボタン (前に入力が無い) は警告しない。数字と同じ。
+	draw({
+		{ k = "guard", t = 5 },
+		{ k = "btn",   t = 30, v = { true } },
+	})
+	want("ガードから数えたボタンはいつもの点", dots(), "lnnnnn")
+
+	-- 絵は生成物。矢印と同じスクリプトが同じ色で作る。
+	local gen = io.open("../analysis/make_warn_arrows.py"):read("*a")
+	want("生成スクリプトが空きの点も作る",
+		gen:find('recolour("no_button.png", "no_button_warn.png"', 1, true) ~= nil, true)
+	local f = io.open("images/no_button_warn.png", "rb")
+	want("絵が配布物の中にある", f ~= nil, true)
+	if f then f:close() end
+	gui.box = was_box
+end
+
 if fails == 0 then print("") print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

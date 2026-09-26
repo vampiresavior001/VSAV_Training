@@ -552,6 +552,12 @@ for _, _n in ipairs({ 1, 2, 3, 4, 6, 7, 8, 9 }) do
 	local _im = gd.createFromPng("images/" .. _n .. "_dir_warn.png")
 	if _im ~= nil then img_dir_warn[_n] = _im:gdStr() end
 end
+-- The empty button dot, orange, for a late button (gct_draw_buttons). Kept in
+-- the same table so this file's main chunk takes no new local.
+do
+	local _im = gd.createFromPng("images/no_button_warn.png")
+	if _im ~= nil then img_dir_warn.no_button = _im:gdStr() end
+end
 local GCT_BAD = "#FF0000"
 local GCT_OK  = "#FFD700"
 -- A COLOUR ALWAYS, NEVER nil. The row numbers ask for no particular colour,
@@ -566,14 +572,22 @@ end
 local function gct_num(_x, _y, _n, _r, _c)
 	gct_at(_x, _y, tostring(_n) .. "t", _r, _c)
 end
-local function gct_draw_buttons(_x, _y, _b)
+-- A LATE BUTTON WARNS THE WAY AN ARROW DOES (user, 2026-09-26).
+--
+-- The arrow's white fill turns orange and its outline stays. The button's
+-- counterpart is the empty dots: they turn orange, and the pressed ones keep
+-- their colour, because that colour is which strength was pressed. An orange
+-- frame round the dots was tried first and looked out of place - the only box
+-- in the trace, reading like a selection cursor rather than a warning.
+local function gct_draw_buttons(_x, _y, _b, _late)
 	if img_no_button == nil then return end
 	local _img = { img_L_button, img_M_button, img_H_button }
+	local _empty = (_late and img_dir_warn.no_button) or img_no_button
 	for _i = 1, 3 do
 		gui.image(_x + (_i - 1) * 5, _y,
-			(_b[_i] and _img[_i]) or img_no_button)
+			(_b[_i] and _img[_i]) or _empty)
 		gui.image(_x + (_i - 1) * 5, _y + 5,
-			(_b[_i + 3] and _img[_i]) or img_no_button)
+			(_b[_i + 3] and _img[_i]) or _empty)
 	end
 end
 
@@ -629,7 +643,10 @@ local function draw_gc_command_trace()
 			-- the attempt that follows.
 			gui.text(_x + 2, _ry + 2, tostring(_r.v), GCT_BAD)
 		elseif _r.k == "btn" then
-			gct_draw_buttons(_x + 2, _ry, _r.v or {})
+			-- The number's own test, as for the arrows below, so the dots and
+			-- the number cannot disagree.
+			gct_draw_buttons(_x + 2, _ry, _r.v or {},
+				_last_in ~= nil and gct_warn((_r.t - _last_in) % 256) ~= nil)
 		elseif img_dir ~= nil then
 			-- The same test the number below makes for this row, so the arrow
 			-- and its number cannot disagree.

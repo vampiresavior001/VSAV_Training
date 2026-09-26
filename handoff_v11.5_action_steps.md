@@ -1502,3 +1502,24 @@ v11.7.14 の G-Persist は `$07` = `02` (立ちの持続) しか見ておらず�
 **未調査**: 持続 0 の実機の 1 枚では、トレースの `→` が入力履歴の `→ 3` の 2 列目に
 あった (→ から ↓ まで、履歴 7、トレース 6t)。前の 1 枚では 1 列目だった。ゲームが
 → を受け付けたのが 1 ティック後だった、と読んでいるが理由は見ていない。
+
+## アクションステップの Wait と Hold の見せ方、頻度 None の警告 (2026-09-26)
+
+**「しゃがまない」の原因は Guard Action Frequency が None だった。**くじで毎回外れて
+ステップが一度も出ていなかった。ランナーやコンパイルを追ったが、答えは Knockdown
+Logger の `gc_roll` (値 0、`gc_freq` = 1) にあった。**ステップが出ないときは、まず
+Knockdown Logger を 1 回取って `gc_roll` と `seq_queued` を見る。**編集画面の一番下に
+`Guard Action Frequency is None, so this never runs (Dummy tab).` を出すようにした。
+
+もう一つ、設定の読み違いもあった。`30 Ticks  Crouch : Neutral (Hold)` + `1 Ticks  Stand`
+は「30 ティックしゃがむ」ではなく「30 ティック後にしゃがみ、1 ティック後に立つ」。
+Wait はそのステップの前の待ちで、Hold は次のステップが始まるまで。表示を直した:
+
+- 一覧の数字の Wait は `+30t` (前からのずれ)。Auto の条件はそのまま
+- Hold のステップに続く長さを添える: `Crouch : Neutral (Hold 1t)`。次が Auto の条件か
+  最後のステップなら長さは決まらないので `(Hold)` のまま
+- 詳細画面は Wait を一番上に (「Hold : Yes」の直下に Wait があると「30 ティック
+  押し続ける」と読めた)。開いたときのカーソルは今までどおり Action
+
+保存データの形は変えていない。表示だけ。テスト: `test_editor_rows.lua` [1] [7c]、
+`test_editor_ops.lua` [F]。

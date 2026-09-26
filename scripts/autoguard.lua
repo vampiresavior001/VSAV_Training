@@ -125,6 +125,83 @@ local function attack_reaches(me, foe)
     return d >= 0 and d < 0x100
 end
 
+-- WHICH HEIGHT THE NEXT HIT CAN BE BLOCKED AT (0x018352..0x0183EA).
+--
+-- All Guard used to add down whenever the attacker's $100 read 2 - a flag for
+-- a crouching NORMAL. It is not a property of the attack, so the dummy
+-- crouched under specials that a standing guard takes, and a crouching Pose
+-- stayed down through overheads, which then hit (user, 2026-09-26).
+--
+-- The game decides it in the hit routine, from the hit's box entry ($8c table,
+-- the cel's $0a, 32 bytes apart - the same table attack_reaches reads) and the
+-- defender's $121 (1 while the guard is crouching):
+--
+--     standing  fails on $17 = 02 03 38 39                        -> "low"
+--     crouching fails on $17 = 2C 37 42 48 4A 4D                  -> "high"
+--               and on $17 = 00 01 from an airborne attacker that
+--               is not an object ($08 = 0) and has $ad clear       -> "high"
+--
+-- Anything else blocks either way ("mid"). The cels are walked the way
+-- attack_reaches walks them, and the first one with a box is the hit to come.
+-- nil when nothing readable is there.
+local GUARD_LOW  = { [0x02] = true, [0x03] = true, [0x38] = true, [0x39] = true }
+local GUARD_HIGH = { [0x2C] = true, [0x37] = true, [0x42] = true, [0x48] = true,
+                     [0x4A] = true, [0x4D] = true }
+
+local function attack_height(obj)
+    local a0 = cel_ptr(obj)
+    if a0 == nil then return nil end
+    local tbl = memory.readdword(obj + 0x8C)
+    if tbl == nil or tbl < 0x1000 or tbl >= 0x1000000 then return nil end
+    for _ = 1, 24 do
+        local idx = memory.readbyte(a0 + 0x0A)
+        if idx ~= 0 then
+            local t = memory.readbyte(tbl + idx * 32 + 0x17)
+            if GUARD_LOW[t] then return "low" end
+            if GUARD_HIGH[t] then return "high" end
+            if (t == 0x00 or t == 0x01)
+               and memory.readbyte(obj + 0x38) ~= 0
+               and memory.readbyte(obj + 0x08) == 0
+               and memory.readbyte(obj + 0xAD) == 0 then
+                return "high"
+            end
+            return "mid"
+        end
+        if memory.readbyte(a0 + 0x01) % 0x100 >= 0x40 then break end
+        a0 = a0 + 0x18
+    end
+    return nil
+end
+
+-- The attacker and every hostile object showing an attack cel (the objects
+-- hostile_object_active counts). One side needing low and another high cannot
+-- both be met, so that - like nothing at all - leaves it to the Pose.
+local function guard_height(me, foe)
+    local low, high = false, false
+    local function take(h)
+        if h == "low" then low = true elseif h == "high" then high = true end
+    end
+    if memory.readbyte(foe + 0x105) ~= 0 or memory.readbyte(foe + 0x154) ~= 0 then
+        take(attack_height(foe))
+    end
+    local mine = memory.readbyte(me + 0x70)
+    for i = 0, OBJ_COUNT - 1 do
+        local o = OBJ_BASE + i * OBJ_STRIDE
+        if memory.readbyte(o) == 1
+           and memory.readbyte(o + 0x01) ~= 0
+           and memory.readbyte(o + 0xA2) == 0
+           and memory.readbyte(o + 0x70) ~= mine then
+            local c = cel_ptr(o)
+            if c ~= nil and memory.readbyte(c + 0x17) < 0x80 then
+                take(attack_height(o))
+            end
+        end
+    end
+    if low and not high then return "low" end
+    if high and not low then return "high" end
+    return nil
+end
+
 -- Which branch decided, so a single recording says where a whiffed move is
 -- still being treated as a threat instead of leaving it to be guessed.
 prox_why   = nil
@@ -211,12 +288,6 @@ function dummy_guard(cur_keys,player_objects)
     -- attack - but the dead call still drew a random number sixty times a
     -- second out of the one generator Guard Action Frequency and Use Random
     -- Recording Slot also draw from.
-    -- 0x100 	Standing or crouching normal-attack indicator. 2 = crouch
-    local p1_is_crouch_attack = memory.readbyte(0xFF8400 + 0x100) == 2 
-    if globals.dummy.p1_status_2 == "Jump" then
-        p1_is_crouch_attack = false
-    end
-    -- print("is crouch?", p1_is_crouch_attack)
     local p1_x_pos = memory.readword(0xFF8400 + 0x10)
 	local p2_x_pos = memory.readword(0xFF8800 + 0x10)
     local p1_proj  = memory.readword(0xFF8400 + 0x149)
@@ -305,8 +376,20 @@ function dummy_guard(cur_keys,player_objects)
     -- thing arrives.
     if current_block_chance == true and attack_flag and close_enough then
         cur_keys[ away_btn ] = true
-        if p1_is_crouch_attack and globals.options.guard >= 0x04 then
-            cur_keys["P2 Down"] = true
+        -- All Guard, and the Push Block entries that guard like it: the height
+        -- the hit needs, over the Pose. A crouching Pose stands for an
+        -- overhead; any Pose crouches for a low; otherwise the Pose decides
+        -- (guard_height). Stand Block (2) is left as it was.
+        -- The dummy's own down: this used to be "P2 Down" whichever side the
+        -- dummy was, which pressed the user's down while they played P2.
+        if globals.options.guard >= 0x04 then
+            local down_btn = globals.controlling_p1 and "P2 Down" or "P1 Down"
+            local need = guard_height(me, foe)
+            if need == "low" then
+                cur_keys[down_btn] = true
+            elseif need == "high" then
+                cur_keys[down_btn] = false
+            end
         end
         if not is_blocking then
             block_started_frame = emu.framecount()
