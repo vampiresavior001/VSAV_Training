@@ -1285,11 +1285,14 @@ local _pit_of_blame_type = {
     "None",
     "Normal",
     "ES",
+    -- Appended: stored as an index.
+    "Random",
 }
 local pit_of_blame_item = list_menu_item("Pit of Blame", training_settings, "pit_of_blame", _pit_of_blame_type, 1, {
   "Off.",
   "Anakaris swallows a follow-up hit while the opponent is down.\nOne kick.",
   "The ES version. Two kicks.\nCosts meter, and is the one that catches more.",
+  "None, Normal or ES, picked at random once per knockdown - so whether it comes\nat all is part of the guess.",
 })
 pit_of_blame_item.is_disabled = function()
 	-- $382 is the character id the rest of the tool reads P2 by. 0x06 is

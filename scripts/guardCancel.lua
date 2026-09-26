@@ -1849,7 +1849,9 @@ local pit_of_blame_frames        = -1
 local pit_of_blame_prev_hits     = 0
 local pit_of_blame_ground_y      = 0
 -- Result of this knockdown's Guard Action Frequency roll. This trigger sits
--- ahead of the roll in guardCancelCheck, so it has to take its own.
+-- ahead of the roll in guardCancelCheck, so it has to take its own. false when
+-- the roll said no; otherwise the Pit of Blame row's value for this knockdown
+-- (1 None, 2 Normal, 3 ES), with Random already drawn.
 local pit_of_blame_roll   = false
 
 -- Strength dropdown (Light/Medium/Heavy/ES) mapped onto kicks. get_p2_reversal_strength
@@ -6398,6 +6400,18 @@ local function service_held_reversal()
 	if memory.readbyte(0xFF8009) == 4 and _hurt_or_block and not pit_of_blame_armed then
 		pit_of_blame_armed = true
 		pit_of_blame_roll = shouldGC()
+		-- RANDOM PICKS ONE OF THE THREE, ONCE PER KNOCKDOWN (user, 2026-09-26).
+		--
+		-- None, Normal or ES - None included, so whether it comes at all is part
+		-- of the guess. Drawn here beside the frequency roll and for the same
+		-- reason: once per attempt, never per frame. Kept in pit_of_blame_roll
+		-- because this file's main chunk has no local to spare: false when the
+		-- frequency said no, otherwise the row's value this knockdown runs with.
+		if pit_of_blame_roll then
+			local _pob = (training_settings and training_settings.pit_of_blame) or 1
+			if _pob == 4 then _pob = math.random(3) end
+			pit_of_blame_roll = _pob
+		end
 		-- Y where the dummy stood (or crouched) right before any launch, so
 		-- the rise check below is relative to THIS hit, not a fixed
 		-- absolute value.
@@ -6440,7 +6454,9 @@ local function service_held_reversal()
 				-- Its own strength, too. The Character Specific route reads the
 				-- Strength dropdown, which belongs to the reversal; the row is
 				-- its own setting and says Normal or ES outright.
-				local _pob = (training_settings and training_settings.pit_of_blame) or 1
+				-- The row's value as resolved at arming - Random already drawn
+				-- (training_settings.pit_of_blame, read there).
+				local _pob = tonumber(pit_of_blame_roll) or 1
 				local _via_row = _pob ~= 1
 				local _via_cs  = globals.dummy.guard_action == 'Character Specific Reversal'
 				                 and move_is_pit_of_blame()

@@ -6,6 +6,19 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.15.1
+
+### Pit of Blame に Random を追加しました
+
+ダミーがアナカリスのときの `Dummy` タブの **`Pit of Blame`** に、**`Random`** を足しました。
+ダウンを取るたびに、`None`（使わない）・`Normal`・`ES` の 3 つから 1 つを選びます。
+**使ってくるかどうかも読み合いに入ります。**
+
+- 選ぶのはダウン 1 回につき 1 回です
+- `Guard Action Frequency` で外れたときは、今までどおり使いません
+
+---
+
 ## v11.7.15
 
 ### All Guard が、攻撃に合った高さでガードするようになりました

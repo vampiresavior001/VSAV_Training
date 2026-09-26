@@ -108,8 +108,9 @@ local default_training_settings = {
   -- Game ticks from the last step to the next pass's first one. -1 is Auto,
   -- the same promise a step's own Wait makes.
   action_steps_loop_wait = -1,
-  -- Pit of Blame. 1 = None, 2 = Normal, 3 = ES - list_menu_item indices, not
-  -- values. The row only appears while the dummy is Anakaris.
+  -- Pit of Blame. 1 = None, 2 = Normal, 3 = ES, 4 = Random (one of the three
+  -- per knockdown) - list_menu_item indices, not values. The row only appears
+  -- while the dummy is Anakaris.
   pit_of_blame = 1,
   loop_interval_before_frames = 0,
   loop_interval_after_frames = 0,

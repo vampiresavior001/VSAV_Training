@@ -6,6 +6,19 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.15.1
+
+### Pit of Blame can be Random
+
+With Anakaris as the dummy, the **`Pit of Blame`** row on the `Dummy` tab now
+has **`Random`**. Each knockdown picks one of `None` (not used), `Normal` and
+`ES`, so **whether it comes at all is part of the guess.**
+
+- The pick is made once per knockdown
+- When `Guard Action Frequency` rolls it away, it is not used, as before
+
+---
+
 ## v11.7.15
 
 ### All Guard blocks at the height each attack needs

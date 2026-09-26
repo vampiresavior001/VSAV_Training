@@ -132,8 +132,9 @@ ram[0xFF8B82] = 0x06
 -- 置き場所はループ行の下。二つはどちらも「リストとは別の、繰り返しの話」で
 -- 並べて読む。
 want("行はループの下", pobat > loopat, true)
--- 選べるのは 3 つだけ。
-want("None / Normal / ES の 3 つ", #pob.list, 3)
+-- None / Normal / ES と、その 3 つから選ぶ Random (本人、2026-09-26)。
+want("None / Normal / ES / Random の 4 つ", #pob.list, 4)
+want("Random は最後 (保存は番号なので足すのは末尾だけ)", pob.list[4], "Random")
 want("既定は None", pob.list[training_settings.pit_of_blame or 1], "None")
 
 -- 発火側の配線。行が非 None なら、ガードアクションが何であっても出す。
@@ -141,8 +142,17 @@ want("既定は None", pob.list[training_settings.pit_of_blame or 1], "None")
 do
   local gc = io.open("guardCancel.lua"):read("*a")
   local blk = gc:match("TWO WAYS IN, ONE TRIGGER%.(.-)\n\t\t\tend")
-  want("行を見ている",
-       blk ~= nil and blk:find("training_settings.pit_of_blame", 1, true) ~= nil, true)
+  -- 行の値は、頻度のロールと同じところで 1 回だけ読み、Random ならそこで引く。
+  -- 発火側はその値を使う。毎フレーム引くと 3 つ全部が混ざる。
+  want("発火側は、アームで決めた値を使う",
+       blk ~= nil and blk:find("tonumber(pit_of_blame_roll)", 1, true) ~= nil, true)
+  local arm = gc:match("pit_of_blame_roll = shouldGC%(%)(.-)pit_of_blame_ground_y")
+  want("アームで行を読む",
+       arm ~= nil and arm:find("training_settings.pit_of_blame", 1, true) ~= nil, true)
+  want("Random (4) はアームで 3 つから引く",
+       arm ~= nil and arm:find("if _pob == 4 then _pob = math.random(3) end", 1, true) ~= nil, true)
+  want("頻度が外れたら引かない",
+       arm ~= nil and arm:find("if pit_of_blame_roll then", 1, true) ~= nil, true)
   -- 条件そのもの。値を計算していても、条件に入っていなければ意味が無い。
   want("行と Character Specific のどちらでも開く",
        blk ~= nil and blk:find("(_via_row or _via_cs)", 1, true) ~= nil, true)
