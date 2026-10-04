@@ -6,6 +6,31 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.21.3
+
+### 修正：隠れている行の設定が効いていた
+
+行が表示されていないのに効き続ける設定が3つあり、以前の練習で残した値がダミーの動きを変えていました。
+
+- `Reversal/Counter Button Lever`（Specifiedのときだけ表示）が、Action Steps・Action Patternsでも方向を
+  置き換えていました。`Neutral` のまま残っていると、ダッシュの2回目の入力が消え、チュートリアルの
+  Short LPがダッシュせずに前へ歩いていました
+- `Pit of Blame`（アナカリスのときだけ表示）が、どのキャラクターでも発動していました。Randomのまま
+  残っていると、サスカッチを浮かせるたびに約22 Tick後、アナカリス用の昇竜コマンド＋キックが入っていました
+- Action Steps・Action Patternsを選んでいて実行するものがないとき（一覧が空、またはチェックしたパターンが
+  ない）、Specifiedのモーションとボタンを代わりに出していました。マニュアルのとおり、何もしないようにしました
+
+### マニュアル
+
+- チュートリアルは同梱の `Short LP` を取り込むところから始め、Action Stepsで自分で作る手順は応用の
+  折りたたみにしました。ステップ2に、取り込み後のDummyタブの画像を足しました
+- Runaheadは、メニューの `Video > Runahead` で `Disabled` を確かめる案内にしました。赤い警告は再実行
+  されたTickからの推定で、起動直後には出ません
+- READMEを短くし、最速で反撃させる設定、GC StatsとAGの練習の案内と詳しい説明の分け方、Copy・Button
+  Wait・タイミングを変える練習の説明を直しました
+
+---
+
 ## v11.7.21.2
 
 ### Button Wait と、ボタンの Random Delay

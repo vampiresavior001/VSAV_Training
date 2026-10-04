@@ -6,6 +6,36 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.21.3
+
+### Fix: settings on hidden rows no longer act
+
+Three settings kept working while their rows were hidden, so a value left over
+from an earlier session changed what the dummy did:
+
+- `Reversal/Counter Button Lever` (shown for Specified only) also replaced the
+  direction in Action Steps and Action Patterns. Left on `Neutral`, it took the
+  second tap out of a dash: the tutorial's Short LP walked forward instead of
+  dashing
+- `Pit of Blame` (shown for Anakaris only) fired for any dummy. Left on Random,
+  it put his DPF + kick on Sasquatch about 22 Ticks after each launch
+- With Action Steps or Action Patterns selected but nothing to run (an empty
+  list, or no pattern ticked), the dummy used the Specified motion and button
+  instead. It now does nothing, as the manual says
+
+### Manual
+
+- The tutorial starts by importing the included `Short LP` pattern; building
+  it in Action Steps is an optional section. Step 2 has a screenshot of the
+  Dummy tab after the import
+- Runahead: check `Video > Runahead` for `Disabled` in the menu. The red warning
+  is inferred from re-run Ticks and does not appear right after launch
+- Shorter README, clearer settings for the fastest response, GC Stats and PB
+  guidance separated from reference details, and fixes to the Copy, Button
+  Wait and timing-drill explanations
+
+---
+
 ## v11.7.21.2
 
 ### Button Wait, and a Random Delay on the button

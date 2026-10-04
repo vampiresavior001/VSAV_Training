@@ -1344,8 +1344,11 @@ end
 
 local function ga_sequence(_stick, _button, _delay_type, _delay)
 	if globals.dummy.guard_action == 'sequence' then
-		local _seq = actionSequenceRunnerModule.arm("reversal")
-		if _seq ~= nil then return _seq end
+		-- NOTHING TO RUN IS NOTHING (v11.7.21.3). An empty Action Steps list or
+		-- no pattern ticked used to fall through to the Specified motion and
+		-- button below - rows hidden on these types, so the dummy did whatever
+		-- a Specified session last left there (an up-forward HK, say).
+		return actionSequenceRunnerModule.arm("reversal")
 	end
 	return make_input_sequence(_stick, _button, _delay_type, _delay)
 end
@@ -2196,6 +2199,14 @@ local BUTTON_LEVER_DIR = {
 -- that is a different thing wearing the same clothes.
 local function button_lever_bits()
 	if globals == nil or globals.options == nil then return nil end
+	-- SPECIFIED ONLY (v11.7.21.3). The row is shown for Reversal / Counter
+	-- Attack - Specified alone (menu.lua check_for_counter_attack_disabled);
+	-- an Action Steps step carries its own Direction. Read here anyway, a
+	-- Neutral left over from Specified replaced a dash step's second tap with
+	-- nothing and the dash never came out (user, 2026-10-04: Short LP walked
+	-- instead of dashing; kd_c0A press_defer lever 0).
+	local _ga = globals.dummy and globals.dummy.guard_action
+	if _ga ~= 'reversal' and _ga ~= 'counter' then return nil end
 	local _i = globals.options.counter_attack_lever
 	if _i == nil or _i <= 1 then return nil end
 	if _i == 2 then return 0 end
@@ -6554,7 +6565,14 @@ local function service_held_reversal()
 		pit_of_blame_air_seen = false
 		pit_of_blame_frames = -1
 	end
-	if memory.readbyte(0xFF8009) == 4 and _hurt_or_block and not pit_of_blame_armed then
+	-- ANAKARIS ONLY (v11.7.21.3). The Pit of Blame row is shown for him alone
+	-- (menu.lua, $382 == 0x06), but this armed for any dummy, so a Random left
+	-- over from an Anakaris session put his DPF+K on Sasquatch 22 Ticks after
+	-- every launch - LK, MK+HK or nothing, as Random picks (user, 2026-10-04;
+	-- kd_c0A p2_inp 0x0200 0x0400 0x0610/0x0660). The Character Specific route
+	-- needs him too: move_is_pit_of_blame is one of his moves.
+	if memory.readbyte(0xFF8009) == 4 and _hurt_or_block and not pit_of_blame_armed
+	   and memory.readbyte(0xFF8B82) == 0x06 then
 		pit_of_blame_armed = true
 		pit_of_blame_roll = shouldGC()
 		-- RANDOM PICKS ONE OF THE THREE, ONCE PER KNOCKDOWN (user, 2026-09-26).
@@ -7807,7 +7825,12 @@ function GA.rsw_defer()
 	end
 	-- button_lever_bits(), as names: the walker turns names into bits on the
 	-- tick it writes them, when the facing is known.
+	-- Specified only, as button_lever_bits: a sequence's steps have their own
+	-- Direction, and the hidden row must not overrule it.
 	local _li = globals.options and globals.options.counter_attack_lever
+	if _ga == 'sequence' then
+		_li = nil
+	end
 	if _li == 2 then
 		_o.lever = {}
 	elseif type(_li) == "number" and _li > 2 then
@@ -7817,9 +7840,9 @@ function GA.rsw_defer()
 	if _ga == 'sequence' then
 		_done = actionSequenceRunnerModule.arm_deferred("reversal", _o)
 	end
-	if not _done then
-		-- Specified, or a sequence with nothing to compile: the list the arm
-		-- would have queued (ga_sequence's fallback).
+	if not _done and _ga ~= 'sequence' then
+		-- Specified: the list the arm would have queued. A sequence with
+		-- nothing to compile queues nothing (ga_sequence, v11.7.21.3).
 		local _mk = make_input_sequence(GA.stick(), GA.button(), "", 0)
 		if _mk ~= nil and #_mk > 0 then
 			_done = actionSequenceRunnerModule.arm_oneshot(_ga, _mk, _o)
