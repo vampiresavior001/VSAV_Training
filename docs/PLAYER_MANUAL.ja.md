@@ -277,6 +277,8 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 
 **確認：ショートダッシュ小Pで反撃してくれば準備完了です。次はAGかGCのどちらかを試してみましょう。**
 
+この反撃は、被弾後や起き上がりもきっかけになります。最初はガードさせて確かめると条件を揃えやすくなります。
+
 <details>
 <summary>応用：同じ動きをAction Stepsで自分で作る</summary>
 
@@ -312,8 +314,6 @@ Waitの一覧の下には、選択肢の説明が出ます。1ステップ目の
 保存すると、Dummyタブに`Reversal Action Steps : Sasquatch : 2 steps`と表示されます。
 
 ![Save後のDummyタブ。Reversal Action Steps : Sasquatch : 2 steps](images/tut_steps_saved.png)
-
-このタイプは被弾後や起き上がりも反撃のきっかけになります。最初はガードさせて確かめると条件を揃えやすくなります。
 
 </details>
 

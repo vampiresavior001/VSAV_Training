@@ -278,6 +278,8 @@ Close the menu, make Sasquatch block a ground attack from P1, then immediately b
 
 **Check: Setup is complete when the dummy responds with short-dash LP. Try either PB or GC next.**
 
+This response can also trigger after the dummy is hit or wakes up. Start with a blocked attack to keep the situation consistent.
+
 <details>
 <summary>Optional: Build the same action in Action Steps</summary>
 
@@ -313,8 +315,6 @@ The line below the Wait list describes the selected option. For step one, `Auto 
 After saving, the Dummy tab shows `Reversal Action Steps : Sasquatch : 2 steps`.
 
 ![After Save, the Dummy tab reads Reversal Action Steps : Sasquatch : 2 steps](images/tut_steps_saved.png)
-
-This response can also trigger after the dummy is hit or wakes up. Start with a blocked attack to keep the situation consistent.
 
 </details>
 
