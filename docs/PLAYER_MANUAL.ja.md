@@ -272,6 +272,8 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 
 取り込んだパターンは保存済みです。ステップ6の保存操作は不要です。
 
+![取り込み後のDummyタブ。Reversal Action Patterns : Sasquatch : 1 saved, 1 ticked](images/tut_patterns_imported.png)
+
 <a id="tutorial-check"></a>
 メニューを閉じ、P1でサスカッチに地上の技をガードさせてから、すぐにガードしてください。
 

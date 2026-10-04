@@ -273,6 +273,8 @@ Keep Sasquatch as the dummy, as set in Step 1.
 
 The imported pattern is already saved. You do not need the save procedure in Step 6.
 
+![The Dummy tab after the import: Reversal Action Patterns : Sasquatch : 1 saved, 1 ticked](images/tut_patterns_imported.png)
+
 <a id="tutorial-check"></a>
 Close the menu, make Sasquatch block a ground attack from P1, then immediately block his response.
 
