@@ -6,6 +6,25 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.22
+
+### 新機能：Frame Meter
+
+- Displayタブの末尾に `Frame Meter`（初期値はOFF）を足しました。画面の下に両プレイヤーの状態を
+  1 Tickごとに1マスずつ並べ、直前の行動の Startup / Total / Recovery / Advantage を表示します。
+  マニュアルの[11.6 Frame Meter](PLAYER_MANUAL.ja.md#frame-meter)を見てください
+- ONにすると、そのすぐ下に `Show Throw Invulnerability`・`Show Movement Data`・`Show P1 Inputs`・
+  `Log Hitstop Frames` の4行が開きます。どれも初期値はOFFです
+- tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter)から取り込みました。
+  Tick Dataとは数え方が違います。数値は実機で照合していません
+
+### 変更
+
+- Displayタブの `Show Pushbox Distance` を `Pushbox Distance` に改名しました。メニューの2列目に
+  はみ出さないようにするためです。保存した設定はそのまま使えます
+
+---
+
 ## v11.7.21.3
 
 ### 修正：隠れている行の設定が効いていた

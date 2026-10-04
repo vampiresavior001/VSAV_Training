@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.21.3／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.22／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [設定済みならAG・GCの実践へ](#sasquatch-ag-tutorial) · [対象環境・確認範囲](#verification-scope)
 
@@ -1023,13 +1023,14 @@ AGを `Guard` 側で設定することで、`Guard Action Type` を反撃用に�
 
 | ティックで見るもの | 表示フレームで見るもの |
 |---|---|
-| Tick Data、Action Timeline | 記録・再生、記録の `Loop Interval (Frames)` |
+| Tick Data、Action Timeline、Frame Meter | 記録・再生、記録の `Loop Interval (Frames)` |
 | Action StepsのWait、Loop Wait、Random Start Wait、Button Wait、Random Delay | Show Jump In Trainer |
 | AG／GCの受付と履歴 | Show Dashes Interval、Show Dash Time |
 | Air Guard Gaps、Frame Trap Trainer | Dash Attack Cancel／Attack Dash Gap Trainer |
 
 数値を比べる前に、測定対象・ゲーム速度・単位を揃えます。
 
+<a id="tick-data"></a>
 ### 11.2 Tick Data
 
 従来のFrame Dataは表示フレーム単位の測定だったため、ターボ時には測定値が安定しませんでした。本フォークの**Tick Data**は内部フレーム単位で測定し、ターボフレームによる数値の揺れを抑えています。さらに、**発生・持続・戻り・有利不利の数え方・考え方を攻略サイトのフレームデータに合わせています**。個々の掲載値との一致を保証するものではなく、比較時には技の条件や数え方も確認してください。
@@ -1141,6 +1142,36 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | `Show Short Hop Counter (Sas)` | サスカッチのショートホップの連続回数 |
 | `Show Bishamon UBK Trainer` | ビシャモンの対応技について、P2の立ち・しゃがみのガード不能距離を補助表示 |
 
+<a id="frame-meter"></a>
+### 11.6 Frame Meter
+
+`Display` タブの末尾にある `Frame Meter = yes` にすると、画面の下に両プレイヤーの状態が1 Tickごとに1マスずつ並びます。ONにすると、その下に次の表の4行が開きます。上の段がP1、下の段がP2です。メーターの上にP1、下にP2の `Startup / Total / Recovery / Advantage` を表示します。
+
+| マスの色 | 状態 |
+|---|---|
+| 緑 | 攻撃の発生まで |
+| 赤 | 攻撃判定が出ている |
+| 青 | 戻り |
+| 黄 | やられ・ガード硬直 |
+| オレンジ | 飛び道具が出ている |
+| 白 | 無敵 |
+| 赤紫 | 投げ無敵（`Show Throw Invulnerability` がONのとき） |
+| 水色 | ジャンプ・ダッシュ（`Show Movement Data` がONのとき） |
+| 暗い灰色 | 何もしていない |
+
+両プレイヤーが5 Tick続けて何もしていないと、メーターは止まります。止まっている間に下後ろか下前を押し続けると、記録を前後にスクロールできます。次の動きが始まると、新しく記録し直します。
+
+| 子の行 | 内容 |
+|---|---|
+| `Show Throw Invulnerability` | 投げ無敵のTickを表示する |
+| `Show Movement Data` | ジャンプ・ダッシュを表示する。OFFでは攻撃とやられ・ガードだけ |
+| `Show P1 Inputs` | P1（自分）の入力を、変わったTickごとにメーターの上へ表示する |
+| `Log Hitstop Frames` | ヒットストップ（着弾フリーズ）の間も記録する。OFFではその間を飛ばす |
+
+数え方は[Tick Data](#tick-data)とは別です。数字を比べるときは、両方の数え方を確認してください。本書では、Frame Meterの数値を実機で照合していません。
+
+Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter)から取り込みました。
+
 <a id="12-options"></a>
 ## 12. 表示とゲーム設定を調整する
 
@@ -1154,7 +1185,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | `Movelist` | キャラクターの技表 |
 | `Display Hitboxes` | 当たり判定の表示 |
 | `Display Pushbox X Center` | 押し合い判定の中心表示。HitboxesをONにすると選べる |
-| `Show Pushbox Distance` | 二人の距離。横方向のみ／縦横・三角形の表示 |
+| `Pushbox Distance` | 二人の距離。横方向のみ／縦横・三角形の表示 |
 | `Show Damage Calc (on P2)` | P2が受けたダメージの表示 |
 | `Recording GUI` | 記録状態の表示 |
 | `Show Scrolling Input` | 画面下の自分の入力履歴 |
@@ -1162,6 +1193,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | `Show Button Releases` | ボタンを離した印を表示 |
 | `Hide Negative Edge Inputs` | 新しい入力のない列を省略。ボタンを離した専用の印は消さない |
 | `Show P2 Inputs` | 右側のダミー入力表示 |
+| `Frame Meter` | 両プレイヤーの状態を1 Tickごとに並べる帯。ONにすると下に4行が開く（[11.6](#frame-meter)） |
 
 親項目がOFFのときは、その子項目が隠れます。GC入力帯は `Show Scrolling Input`、一部の補助表示は `HUD (Life / Meter)` も必要です。
 
@@ -1261,7 +1293,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新・整合性確認日：2026-10-03（エミュレーター上の操作確認は含みません）。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.21.3（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.22（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

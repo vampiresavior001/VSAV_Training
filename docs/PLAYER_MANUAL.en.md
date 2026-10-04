@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.21.3 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.22 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [Start with installation](#02-install) · [Already set up? Try the PB / GC drill](#sasquatch-pb-tutorial) · [Scope and verification](#verification-scope)
 
@@ -1025,13 +1025,14 @@ At Turbo 3, some displayed frames contain two Ticks of game processing. You cann
 
 | Measured in Ticks | Measured in displayed frames |
 |---|---|
-| Tick Data, Action Timeline | Recording/playback and recording `Loop Interval (Frames)` |
+| Tick Data, Action Timeline, Frame Meter | Recording/playback and recording `Loop Interval (Frames)` |
 | Action Steps Wait, Loop Wait, Random Start Wait, Button Wait, Random Delay | Show Jump In Trainer |
 | PB/GC windows and histories | Show Dashes Interval, Show Dash Time |
 | Air Guard Gaps, Frame Trap Trainer | Dash Attack Cancel / Attack Dash Gap Trainer |
 
 Match the measured side, game speed and units before comparing numbers.
 
+<a id="tick-data"></a>
 ### 11.2 Tick Data
 
 The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. This fork’s **Tick Data** measures internal frames to avoid variation caused by turbo frames. Its **counting conventions for startup, active time, recovery and frame advantage are aligned with those used by strategy sites**. This does not guarantee a match with every published value; check move conditions and counting conventions when comparing results.
@@ -1143,6 +1144,36 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 | `Show Short Hop Counter (Sas)` | Consecutive Sasquatch short hops |
 | `Show Bishamon UBK Trainer` | Standing/crouching unblockable-range aid on P2 for the supported Bishamon moves |
 
+<a id="frame-meter"></a>
+### 11.6 Frame Meter
+
+With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the four rows in the table below under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
+
+| Tile colour | State |
+|---|---|
+| Green | Startup |
+| Red | Attack box out |
+| Blue | Recovery |
+| Yellow | Hit or block stun |
+| Orange | Projectile out |
+| White | Invulnerable |
+| Red-purple | Throw invulnerable (with `Show Throw Invulnerability` ON) |
+| Light blue | Jump or dash (with `Show Movement Data` ON) |
+| Dark grey | Doing nothing |
+
+When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
+
+| Child row | What it does |
+|---|---|
+| `Show Throw Invulnerability` | Marks throw-invulnerable Ticks |
+| `Show Movement Data` | Shows jumps and dashes. Off: attacks and hit or block stun only |
+| `Show P1 Inputs` | Draws P1's (your) inputs above the meter on each Tick they change |
+| `Log Hitstop Frames` | Keeps logging through hitstop (impact freeze). Off: those Ticks are skipped |
+
+It counts differently from [Tick Data](#tick-data). Check how each counts before comparing numbers. The Frame Meter's numbers were not checked against the game for this manual.
+
+The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
+
 <a id="12-options"></a>
 ## 12. Display and game settings
 
@@ -1156,7 +1187,7 @@ Enable only the readouts you need under `Display`.
 | `Movelist` | Character move list |
 | `Display Hitboxes` | Hitbox display |
 | `Display Pushbox X Center` | Pushbox center; available when Hitboxes is enabled |
-| `Show Pushbox Distance` | Character spacing: horizontal only, or horizontal/vertical/triangle |
+| `Pushbox Distance` | Character spacing: horizontal only, or horizontal/vertical/triangle |
 | `Show Damage Calc (on P2)` | Damage taken by P2 |
 | `Recording GUI` | Recording status |
 | `Show Scrolling Input` | Your input history at the bottom |
@@ -1164,6 +1195,7 @@ Enable only the readouts you need under `Display`.
 | `Show Button Releases` | Marks button releases |
 | `Hide Negative Edge Inputs` | Omits columns with no new input; does not remove dedicated release markers |
 | `Show P2 Inputs` | Dummy inputs on the right |
+| `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Turning it on opens four more rows under it ([11.6](#frame-meter)) |
 
 Child options are hidden when their parent is OFF. The GC input bar requires `Show Scrolling Input`; some other readouts require `HUD (Life / Meter)`.
 
@@ -1263,7 +1295,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated and checked for consistency: 2026-10-03. This does not include testing the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.21.3; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.22; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

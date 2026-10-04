@@ -78,6 +78,9 @@ local stageSelectModule  = require "./scripts/stage-select"
 local stageDataModule    = require "./scripts/stage-data"
 local vsavTestMenuModule = require "./scripts/vsav-test-menu"
 local soundModule        = require "./scripts/sound"
+-- Frame Meter (end of the Display tab), from tirsod/VSAV_FrameMeter. Required at
+-- start-up like the rest: a first require in mid-run fails in FBNeo.
+local frameMeterModule   = require "./scripts/framemeter"
 
 -- this module provides clocks and game data from memory
 -- data and clock signals are provided every tick
@@ -417,6 +420,7 @@ emu.registerstart(function()
 	cps2HitboxModule.registerStart(globals)
 	macroLuaModule.registerStart()
 	debugKnockdownModule.registerStart()
+	frameMeterModule.registerStart()
 
 end)
 
@@ -954,6 +958,7 @@ while true do
 		cps2HitboxModule.guiRegister(globals.options.display_hitbox_default, use_hb_config)
 		vsavScriptModule.runCheats()
 		timersModule.guiRegister()
+		frameMeterModule.guiRegister()
 		-- RECORDING WIZARD: while it is active the wizard owns the screen and
 		-- the inputs - the normal menu neither draws nor listens.
 		if globals.recordingWizard ~= nil and globals.recordingWizard.is_active() then

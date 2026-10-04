@@ -87,6 +87,13 @@ local default_training_settings = {
   show_mash_timer = false,
   show_pursuit_indicator = false,
   show_invuln_timer = false,
+  -- Frame Meter (end of the Display tab), from tirsod/VSAV_FrameMeter. All OFF,
+  -- Show Movement Data included (user, 2026-10-04).
+  display_frame_meter = false,
+  fm_no_throw = false,
+  fm_movement_data = false,
+  fm_input_p1 = false,
+  fm_hitstop = false,
   display_airdash_trainer = 0,
   show_x_distance = 1,
   display_dash_interval_trainer = false,

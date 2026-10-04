@@ -1851,7 +1851,10 @@ return {
         checkbox_menu_item("Movelist", training_settings, "display_movelist", false,"Shows a character specific move list"),
         checkbox_menu_item("Display Hitboxes", training_settings, "display_hitbox_default",1, "Display hitboxes for P1 and P2"),
         child_of("display_hitbox_default", checkbox_menu_item("Display Pushbox X Center", training_settings, "display_pushbox_axis", false, "Display the x center of the pushbox")),
-        list_menu_item("Show Pushbox Distance", training_settings, "show_x_distance", { "Off", "X Only", "X,Y,Triangle"},1,"Gives a numerical / visual representation of the distances between characters"),
+        -- "Show" dropped (2026-10-04): with the Frame Meter rows at the end of
+        -- the tab, "< Show Pushbox Distance : X,Y,Triangle >" ran 10px into the
+        -- second column on the same line (test_menu_layout).
+        list_menu_item("Pushbox Distance", training_settings, "show_x_distance", { "Off", "X Only", "X,Y,Triangle"},1,"Gives a numerical / visual representation of the distances between characters"),
         checkbox_menu_item("Show Damage Calc (on P2)", training_settings, "show_damage_calc", false, "This shows a damage calculation.\nDamage calculations are recalculated on hit"),
         checkbox_menu_item("Recording GUI", training_settings, "display_recording_gui", false, "Shows the current recording staet"),
         checkbox_menu_item("Show Scrolling Input", training_settings, "show_scrolling_input",1, "The input bar along the bottom of the screen: YOUR inputs, newest at the right.\nShow P2 Inputs is the same thing for the dummy, down the right edge.\nThe four rows under this one all draw into this bar and come off with it."),
@@ -1861,6 +1864,15 @@ return {
         child_of("show_scrolling_input", checkbox_menu_item("Show GC Trainer", training_settings, "show_gc_trainer", true,"This option shows the GC window in the input viewer.\nThe Green GC shows when the window begins,\nand Red when it is performed or ends.\nG / GP n on the tick before it: the block landed there\n(GP n: tick n of the persistence, the tick back is let go being 1).")),
         checkbox_menu_item("Show P2 Inputs", training_settings, "display_p2_inputs", 1, "The dummy's inputs, as icons down the right edge of the screen.\nShow Scrolling Input above is the same thing for YOUR side, along the bottom.\nThis used to come off only with the whole HUD."),
         child_of("display_hud", checkbox_menu_item("Show Character Specific", training_settings, "display_char_specific", false, "Two readouts that exist for one character each, from before this menu had rows\nfor them: Anakaris's swallowed projectile, and Aulbath's Direct Scissors with\nits command lighting up green as 2,2 + PP goes in.\nNothing on screen says what either one is, which is why they ship off.\nPart of the HUD row above - it comes off with that as well.")),
+        -- FRAME METER (2026-10-04), from tirsod/VSAV_FrameMeter. framemeter.lua
+        -- is his file with the local changes marked; these rows are the hook.
+        -- Last on the tab (before Reset Tab), so its four rows open right under
+        -- it and push nothing else around (user, 2026-10-04).
+        checkbox_menu_item("Frame Meter", training_settings, "display_frame_meter", false, "Both players, one tile per game Tick, along the bottom: green startup, red\nactive, blue recovery, yellow hurt, orange projectile, white invulnerable.\nStartup / Total / Recovery / Advantage of the last action: P1 above, P2 below.\nOnce it stops, hold down-back or down-forward to scroll it."),
+        child_of("display_frame_meter", checkbox_menu_item("Show Throw Invulnerability", training_settings, "fm_no_throw", false, "Marks the Ticks a character cannot be thrown ($143) on the Frame Meter.")),
+        child_of("display_frame_meter", checkbox_menu_item("Show Movement Data", training_settings, "fm_movement_data", false, "Puts jumps and dashes on the Frame Meter. Off: attacks and reactions only.")),
+        child_of("display_frame_meter", checkbox_menu_item("Show P1 Inputs", training_settings, "fm_input_p1", false, "Draws YOUR inputs over the P1 row of the Frame Meter, one icon per change.")),
+        child_of("display_frame_meter", checkbox_menu_item("Log Hitstop Frames", training_settings, "fm_hitstop", false, "Keeps the Frame Meter running through hitstop (impact freeze). Off: those\nTicks are left out, so the meter shows only Ticks where something moves.")),
         reset_tab_item("Display"),
       }
     },

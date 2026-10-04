@@ -6,6 +6,27 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.22
+
+### New: Frame Meter
+
+- `Frame Meter`, the last row on the Display tab (off by default), draws both
+  players' states along the bottom of the screen, one tile per Tick, with the
+  Startup / Total / Recovery / Advantage of each player's last action. See
+  [11.6 Frame Meter](PLAYER_MANUAL.en.md#frame-meter) in the manual
+- Turning it on opens four rows right under it: `Show Throw Invulnerability`,
+  `Show Movement Data`, `Show P1 Inputs` and `Log Hitstop Frames`. All start off
+- It comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
+  It counts differently from Tick Data, and its numbers have not been checked
+  against the game
+
+### Changed
+
+- `Show Pushbox Distance` on the Display tab is now `Pushbox Distance`, so it
+  no longer runs into the menu's second column. The saved setting carries over
+
+---
+
 ## v11.7.21.3
 
 ### Fix: settings on hidden rows no longer act
