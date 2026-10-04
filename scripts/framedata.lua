@@ -111,6 +111,8 @@ local function on_tick(tick)
   -- same one twice, and cost a second pass over the RAM for nothing.
   local snapshot = vsav.capture(tick)
   tickData.update(snapshot)
+  -- Timeline Cut (Free Ticks), read every tick like the side above.
+  actionRoute.set_gap(globals.options ~= nil and globals.options.mo_route_gap or nil)
   actionRoute.update(snapshot)
 end
 

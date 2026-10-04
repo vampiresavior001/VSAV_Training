@@ -83,6 +83,7 @@ local input_images = {
 -- [4] = Timers, player 2
 -- [5] = Inputs, player 1 only
 -- [6] = Inputs, player 2 (Not implemented)
+-- [7] = Displayed frame each tick was logged in (VSAV_Training: 120Hz ticks)
 -- breakdown_log[] shows number of grouped frames counted @ specific positions 
 -- [1] = Player 1
 -- [2] = Player 2
@@ -92,7 +93,7 @@ local state_log = {}
 local breakdown_log = {{},{},true}
 
 local function reset_state_log()
-	state_log = {{},{},{},{},{},{}}
+	state_log = {{},{},{},{},{},{},{}} -- VSAV_Training: [7]
 	breakdown_log = {{},{},true}
 end
 reset_state_log()
@@ -446,6 +447,8 @@ local function log_player_state(tick)
 		if p == 2 then op = 1 end
 		if player[op].pbsuccess > 0 and player[op].pbsuccess <= 3 then state_log[p+2][log_position] = 2 end
 	end
+	-- VSAV_Training: the displayed frame this tick ran in (see second_of_pair).
+	state_log[7][log_position] = emu.framecount()
 	log_position = (log_position + 1) % log_length
 end
 
@@ -587,6 +590,48 @@ local function refresh_meter()
 	end
 end
 
+-- VSAV_Training: 120HZ TICKS. At turbo the game runs four Ticks in three
+-- displayed frames, so one frame in three carries two Ticks, each on screen for
+-- half a frame. state_log[7] holds the displayed frame each logged tick ran
+-- in; two neighbours with the same frame are such a pair. At normal speed
+-- every frame holds one tick and nothing is marked.
+--
+-- One black dot each side of the border the pair shares, on the third of
+-- the fill's six rows: the arms of a "+" whose upright is that border. The
+-- fourth row read as below the middle (user, 2026-10-04: 1ドット上で). Only on a tile that is
+-- doing something - idle tiles are black already, and an idle tile in the
+-- previous block is not drawn at all, so a dot there would land on the game
+-- (user, 2026-10-04: 黒で左右に1ドット). Tried before and dropped, all on
+-- 2026-10-04: a paler tile (striped, and pale red read as another state), a
+-- dot in each tile (noisy), a white mark on the border (white too loud), the
+-- border filled in the tiles' own colour (the user settled on the dots).
+local FM_120HZ_DOT = "#000000FF"
+local function fm_idle(st) return st == nil or st == 0 or st == 1 end
+-- True when tick i ran in the same displayed frame as tick i-1, wrap included.
+local function second_of_pair(frames, i, n)
+	local f = frames[i]
+	if f == nil then return false end
+	local prev = i - 1
+	if prev < 0 then prev = prev + n end
+	return frames[prev] == f
+end
+-- Called after tile i is drawn at (x, y). Tiles are 5x8 at a 4px pitch, so
+-- column x is the border tile i shares with tile i-1 on its left. Not on the
+-- first tile of a run: tile i-1 is drawn elsewhere (the far end, or the gap
+-- before the previous block), so there is no shared border. x - 1 is the
+-- last fill column of tile i-1, x + 1 the first of tile i.
+local function mark_120hz(player, i, x, y, first_of_run)
+	if first_of_run or not second_of_pair(state_log[7], i, log_length) then return end
+	local prev = i - 1
+	if prev < 0 then prev = prev + log_length end
+	if not fm_idle(state_log[player][prev]) then
+		gui.box(x - 1, y + 3, x - 1, y + 3, FM_120HZ_DOT, FM_120HZ_DOT)
+	end
+	if not fm_idle(state_log[player][i]) then
+		gui.box(x + 1, y + 3, x + 1, y + 3, FM_120HZ_DOT, FM_120HZ_DOT)
+	end
+end
+
 -- Draws the meter to the screen, using the data from the logged states and inputs.
 local function draw_meter()
     drawX = 8 + meter_anchor.widget_x_offset + meter_anchor.shake
@@ -666,6 +711,7 @@ local function draw_meter()
 
 			-- Draws the frame's rectangle
 			gui.image(drawX + xx, drawY + (10*player) + relY, image)
+			mark_120hz(player, log_ind, drawX + xx, drawY + (10*player) + relY, offset == 0) -- VSAV_Training
 
 			-- Draws the frame's overlay
 			local overlay = nil
@@ -713,7 +759,8 @@ local function draw_meter()
 
 		for player = 1, 2 do -- Draw meter for each chara
 			local xx = drawX
-			for offset = ((log_position%log_drawn)-meter_anchor.scroll)+2, log_drawn - 1 do
+			local run_start = ((log_position%log_drawn)-meter_anchor.scroll)+2 -- VSAV_Training
+			for offset = run_start, log_drawn - 1 do
 				local i = (block_start + offset) % log_length
 				xx = (i%log_drawn) * 4
 
@@ -725,6 +772,7 @@ local function draw_meter()
 				if state_entry and state_entry[2] ~= nil then
 					image = state_entry[2]
 					gui.image(drawX + xx, drawY + (10*player), image)
+					mark_120hz(player, log_ind, drawX + xx, drawY + (10*player), offset == run_start) -- VSAV_Training
 				end
 			end
 		end
@@ -861,6 +909,8 @@ local frameMeterModule = {
 
 		print("not prepared for " .. emu.romname() .. " frame data")
 	end,
+    -- VSAV_Training: for analysis/test_framemeter.lua.
+    ["second_of_pair"] = second_of_pair,
     ["guiRegister"] = function()
 		if (globals.options.display_frame_meter) then
 			if (not meter_anchor.exploded) then

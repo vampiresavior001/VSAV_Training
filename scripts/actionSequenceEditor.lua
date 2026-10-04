@@ -40,7 +40,7 @@
 --
 -- STORED AS STRINGS, NOT INDICES.
 --
--- The existing Reversal/Counter Input Motion is stored as an INDEX into a list
+-- The existing Input Motion row (Dummy tab) is stored as an INDEX into a list
 -- in menu.lua, so three files have to agree about what index 20 is - menu.lua's
 -- list, dummyState.lua's index-to-string chain, and make_input_sequence in
 -- controller.lua. That has broken twice and needs a settings migration every

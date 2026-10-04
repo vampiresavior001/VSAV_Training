@@ -129,6 +129,10 @@ end
 -- itself with gui.text swapped for a capture, selected (which adds "< " and
 -- " >") and holding the widest value it can hold. That way a row type nobody
 -- thought about is measured the same as a checkbox.
+--
+-- Where it starts is taken too: the x the row hands gui.text when drawn at 0
+-- (a row that shifts itself), plus the indent the draw loop adds through
+-- menu_row_x - the same function, so a child row is measured where it is drawn.
 local col_x2 = num("then _menu_x_interval = (%d+) else", "2 列目までの距離")
 local col_x1 = box_left + num("local _menu_x = _menu_box_left %+ (%d+)", "1 列目の x")
 
@@ -150,17 +154,17 @@ local function widest(_e)
 			training_settings[_e.property_name] = true
 		end
 	end
-	local got = nil
-	gui.text = function(_x, _y, _t) if got == nil then got = tostring(_t) end end
+	local got, got_x = nil, 0
+	gui.text = function(_x, _y, _t) if got == nil then got, got_x = tostring(_t), _x end end
 	local ok = pcall(function() _e:draw(0, 0, true) end)
 	gui.text = real_text
 	if _e.property_name ~= nil then training_settings[_e.property_name] = keep end
 	if not ok or got == nil then return nil end
-	return #got * char_w
+	return got_x + #got * char_w
 end
 
 local measured = 0
-for _, tab in ipairs(menu) do
+local function check_widths(tab, label)
 	-- Only the rows that are actually drawn, in the order they are drawn, so
 	-- the index is the one the draw loop would use.
 	local shown = {}
@@ -173,7 +177,7 @@ for _, tab in ipairs(menu) do
 		local w = widest(e)
 		if w ~= nil then
 			measured = measured + 1
-			local x = (idx > col_break) and (col_x1 + col_x2) or col_x1
+			local x = menu_row_x(e, (idx > col_break) and (col_x1 + col_x2) or col_x1)
 			if x + w > box_right then
 				wide[#wide + 1] = e.name .. " (右端 " .. (x + w) .. ")"
 			end
@@ -185,8 +189,31 @@ for _, tab in ipairs(menu) do
 			end
 		end
 	end
-	want(tab.name .. ": 行が横にはみ出さない", #wide, 0)
+	want(label .. ": 行が横にはみ出さない", #wide, 0)
 	for _, m in ipairs(wide) do print("       " .. m) end
+end
+for _, tab in ipairs(menu) do check_widths(tab, tab.name) end
+
+-- THE DUMMY TAB UNDER EVERY GUARD ACTION, NOT ONLY THE SHIPPED ONE.
+--
+-- A fresh install draws six of its rows. Everything Guard Action Type opens
+-- is indented under it (2026-10-04), which costs each of those rows 8px, and
+-- none of them is drawn at the default - so each value is drawn here once.
+do
+	local dummy = nil
+	for _, tab in ipairs(menu) do if tab.name == "Dummy" then dummy = tab end end
+	local gat = nil
+	for _, e in ipairs(dummy.entries) do
+		if e.property_name == "guard_action" then gat = e end
+	end
+	want("Dummy に Guard Action Type がある", gat ~= nil, true)
+	local keep_ga, keep_g = training_settings.guard_action, training_settings.guard
+	for ga = 1, #gat.list do
+		training_settings.guard_action = ga
+		training_settings.guard = 4 -- All Guard: Random Guard % is drawn too
+		check_widths(dummy, "Dummy (" .. tostring(gat.list[ga]) .. ")")
+	end
+	training_settings.guard_action, training_settings.guard = keep_ga, keep_g
 end
 print(("  -- 幅を測れた行 %d 件"):format(measured))
 want("ほとんどの行を測れた", measured >= 60, true)

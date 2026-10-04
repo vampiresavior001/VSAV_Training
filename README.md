@@ -6,7 +6,7 @@ English | [日本語](README.ja.md)
 
 **A training mode for Fightcade 2 / FBNeo that reproduces opponent actions with internal-frame (Tick) precision, so you can test your offense and practice your defense.** Detailed displays of your inputs and their timing help you see why an attempt succeeded or failed and adjust your timing.
 
-This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.22**.
+This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.22.1**.
 
 **[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [First PB / GC drill](#first-pb-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 

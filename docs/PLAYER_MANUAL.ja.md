@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.22／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.22.1／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [設定済みならAG・GCの実践へ](#sasquatch-ag-tutorial) · [対象環境・確認範囲](#verification-scope)
 
@@ -206,6 +206,8 @@ P1だけでなくP2側のゲーム入力も設定してください。入力が�
 LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 
 一覧の端を越えて上下へ移動すると、タブ選択へ戻ります。MPの意味は画面ごとに異なり、Action Patternsでは使用チェックの切り替え、記録確認では記録し直しになります。画面下の操作案内を優先してください。
+
+字下げされた行は、すぐ上の一段浅い行（親）の設定です。多くは親の値によって表示されたり消えたりします（例：`Frame Meter = yes` で、その下に字下げした4行が開く）。
 
 `Display`、`Trainer`、`Analysis` の `Reset This Tab` は、そのタブの設定をまとめて初期化します。確認画面が開き、初期選択は `Cancel` です。親設定がOFFで隠れている子項目も初期化されます。
 
@@ -519,9 +521,9 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 1. `Guard = All Guard`、`Random Guard % = 100%`。
 2. `Guard Action Type = Reversal - Specified`。
 3. `Random Guard Action % = 100%`、`Random Start Wait = 0`。
-4. `Reversal/Counter Input Motion = None`。
-5. `Reversal/Counter Button = LP`。
-6. `Reversal/Counter Button Lever = Neutral`、`Button Wait = 0`、`Random Delay = 0`。
+4. `Input Motion = None`。
+5. `Button = LP`。
+6. `Button Lever = Neutral`、`Button Wait = 0`、`Random Delay = 0`。
 7. 攻撃をガードさせ、硬直後の弱Pに自分の連係が勝てるか試します。
 
 しゃがみ技は対応する下方向を指定します。必殺技なら `Input Motion` とボタンをその技に合わせます。ボタンを押す時期を遅らせる・ばらつかせる方法は[4.4](#dummy-button-timing)を参照してください。
@@ -533,7 +535,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 
 | 項目 | 内容 |
 |---|---|
-| `Reversal/Counter Button Lever` | ボタンを押す瞬間のレバー。`As Is` はモーションの最後の方向のまま（ダッシュならダッシュ攻撃）、`Neutral` は方向を離す |
+| `Button Lever` | ボタンを押す瞬間のレバー。`As Is` はモーションの最後の方向のまま（ダッシュならダッシュ攻撃）、`Neutral` は方向を離す |
 | `Button Wait` | モーションの後、ボタンを押すまでの待ち。単位はTickで、上限は60。`Auto` はダッシュのときだけ選べ、キャラクターごとの攻撃タイミングを使う |
 | `Random Delay` | `Button Wait` の下に字下げして出る行。反撃やカウンタのたびに0から設定値までの乱数を引き直し、`Button Wait` に足す（0〜60、0は使わない） |
 
@@ -1084,7 +1086,7 @@ AGを `Guard` 側で設定することで、`Guard Action Type` を反撃用に�
 
 `Trainer > Tick Data = yes`で、技の数値の下に緑色の履歴が表示されます。開始を1tとする時刻表示なので、出来事の間隔は差で読みます。画像の`20t Demon Cradle`から`23t Guard`までは3 Tick間隔で、技の開始を含めると4ティック目です。`Total 45t`は技の測定値、`65t Free`は履歴の開始から数えて再び行動可能になったTickで、測定範囲が異なります。
 
-ニュートラルで行動可能な状態が続き、その状態の開始から10 Tick経過すると履歴が確定します。終了の`Free`はその待ち時間の末尾ではなく、最初に行動可能になったTickを示します。長いニュートラルの待ちを挟むセットプレイは履歴が分かれるため、全体が一続きか確認してください。歩き続けている間は、この終了条件には入りません。
+ニュートラルで行動可能な状態が続き、その状態の開始から10 Tick経過すると履歴が確定します。この長さは、`Tick Data` の下に字下げして出る `Timeline Cut (Free Ticks)` で0〜60 Tickに変えられます（0は最初に行動可能になったTickで確定）。終了の`Free`はその待ち時間の末尾ではなく、最初に行動可能になったTickを示します。長いニュートラルの待ちを挟むセットプレイは履歴が分かれます。一続きで見たいときは `Timeline Cut (Free Ticks)` を待ちより長くしてください。歩き続けている間は、この終了条件には入りません。
 
 Tick Dataの緑の `ACTION TIMELINE` は、ひとつの行動を同じ時計で追った表示です。たとえば `1t PreJump > 4t Air > 10t MP` は、ジャンプ移行・空中・MPが、それぞれ何ティック目に起きたかを示します。数値を順番に足す表示ではありません。
 
@@ -1145,7 +1147,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 <a id="frame-meter"></a>
 ### 11.6 Frame Meter
 
-`Display` タブの末尾にある `Frame Meter = yes` にすると、画面の下に両プレイヤーの状態が1 Tickごとに1マスずつ並びます。ONにすると、その下に次の表の4行が開きます。上の段がP1、下の段がP2です。メーターの上にP1、下にP2の `Startup / Total / Recovery / Advantage` を表示します。
+`Display` タブの末尾にある `Frame Meter = yes` にすると、画面の下に両プレイヤーの状態が1 Tickごとに1マスずつ並びます。ONにすると、その下に次の表の4行が字下げして開きます。上の段がP1、下の段がP2です。メーターの上にP1、下にP2の `Startup / Total / Recovery / Advantage` を表示します。
 
 | マスの色 | 状態 |
 |---|---|
@@ -1158,6 +1160,8 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | 赤紫 | 投げ無敵（`Show Throw Invulnerability` がONのとき） |
 | 水色 | ジャンプ・ダッシュ（`Show Movement Data` がONのとき） |
 | 暗い灰色 | 何もしていない |
+
+**境目の左右に黒い点が付いた2マスは120HzのTickです。** ターボでは表示3フレームの間に4 Tick進むため、3フレームに1回、1つの表示フレームで2 Tick進みます。その2 Tickは画面に半分ずつしか映らないので、2マスの間の境目をはさんで、それぞれのマスの中ほどの高さに黒い点を1つずつ付けます。何もしていないマスには付けません。ノーマル（`Game Speed = 0`）では付きません。
 
 両プレイヤーが5 Tick続けて何もしていないと、メーターは止まります。止まっている間に下後ろか下前を押し続けると、記録を前後にスクロールできます。次の動きが始まると、新しく記録し直します。
 
@@ -1293,7 +1297,7 @@ Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_Fr
 - 文書更新・整合性確認日：2026-10-03（エミュレーター上の操作確認は含みません）。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.22（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.22.1（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

@@ -5,7 +5,7 @@
 --
 -- THE BUTTON LEVER ROW IS SPECIFIED'S ALONE.
 --
--- Reversal/Counter Button Lever is shown only for Reversal / Counter Attack -
+-- Button Lever is shown only for Reversal / Counter Attack -
 -- Specified. It was read for every guard action anyway, so a Neutral left over
 -- from a Specified session turned an Action Patterns dash step's second tap
 -- into nothing: the tutorial's Short LP walked forward instead of dashing

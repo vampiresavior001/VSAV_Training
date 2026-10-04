@@ -379,7 +379,10 @@ training_settings.gc_delay = -1
 training_settings.button_random_delay = 0
 local t, x = drawn(brd)
 eq("0 は 0", t, "Random Delay : 0")
-eq("字下げ 8px (2 文字)", x, 8)
+-- The indent is the draw loop's now (menu_row_x, 2026-10-04): the row draws
+-- where it is told, and sits one level (8px, 2 文字) deeper than Button Wait.
+eq("自分では字下げしない", x, 0)
+eq("Button Wait より 8px (2 文字) 深い", menu_row_x(brd, 0) - menu_row_x(bw, 0), 8)
 training_settings.button_random_delay = 5
 eq("0-N で出す", drawn(brd, true), "< Random Delay : 0-5 >")
 training_settings.button_random_delay = 59

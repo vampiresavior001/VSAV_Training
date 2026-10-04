@@ -1535,7 +1535,7 @@ end
 --             one's Wait in a sequence
 --   hold_dir  whether the direction stays down while the button waits
 --   rev       a dash cancel's reverse direction (Specified only)
---   lever     the Reversal/Counter Button Lever row, as names, or nil
+--   lever     the Button Lever row (Dummy tab), as names, or nil
 --   auto_dash the dash motion's name when Guard Action Delay is Auto
 --             (Specified only) - see DASH_ACTION_ID
 --   delay_extra  with auto_dash, the button's Random Delay draw (v11.7.21.2),

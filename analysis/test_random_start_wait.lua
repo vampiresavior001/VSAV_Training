@@ -466,7 +466,9 @@ eq("tick walker の門は owns", gsrc:find("or not actionSequenceRunnerModule.ow
 eq("guard_action ~= 'sequence' の門が残っていない",
 	count(gsrc, "guard_action ~= 'sequence'"), 0)
 local menu = slurp("menu.lua")
-eq("行は 2 つ (Dummy と Recording)", count(menu, "random_start_wait_item,"), 2)
+-- Dummy's is indented under Guard Action Type: indent(1, ..._item),
+eq("行は 2 つ (Dummy と Recording)",
+	count(menu, "random_start_wait_item,") + count(menu, "random_start_wait_item),"), 2)
 eq("上限 60", menu:find('"random_start_wait", 0, 60,', 1, true) ~= nil, true)
 local cfg = slurp("config.lua")
 eq("既定は 0 (オフ)", cfg:find("random_start_wait = 0,", 1, true) ~= nil, true)

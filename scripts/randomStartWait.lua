@@ -45,8 +45,8 @@ end
 
 -- RANDOM DELAY ON THE BUTTON (v11.7.21.2).
 --
--- Reversal / Counter Attack - Specified only: the row under Reversal/Counter
--- Button Wait. Unlike the start wait above it moves nothing but the button -
+-- Reversal / Counter Attack - Specified only: the row under Button Wait.
+-- Unlike the start wait above it moves nothing but the button -
 -- the motion still goes in at once - so a dash or jump attack is pressed at a
 -- different point of the dash or jump each time. Same range, same clamp, same
 -- draw; it lives here so the two random timings read the same way.

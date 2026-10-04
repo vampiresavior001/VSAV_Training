@@ -1070,11 +1070,11 @@ local gc_button_menu_item = list_menu_item("Guard Cancel Button", training_setti
       "The button the dummy presses for the guard cancel.\nThree Punch and Three Kick are the two button-pair guard cancels.")
 gc_button_menu_item.is_disabled = check_for_gc_disabled
 
-local counter_attack_stick_menu_item = list_menu_item("Reversal/Counter Input Motion", training_settings, "counter_attack_stick", counter_attack_stick, 1, "The motion to be input on reversal or counters.\nPlaced by the tick hook so the last entry lands on the actionable Tick,\nwhichever motion is chosen - it is no longer late by the number of inputs.")
+local counter_attack_stick_menu_item = list_menu_item("Input Motion", training_settings, "counter_attack_stick", counter_attack_stick, 1, "The motion to be input on reversal or counters.\nPlaced by the tick hook so the last entry lands on the actionable Tick,\nwhichever motion is chosen - it is no longer late by the number of inputs.")
 counter_attack_stick_menu_item.is_disabled = check_for_counter_attack_disabled
 
-local counter_attack_button_menu_item = list_menu_item("Reversal/Counter Button", training_settings, "counter_attack_button", counter_attack_button, 1, "In general the strength of move used\nIf stick is set to none this can be used as a counterpoke")
-local counter_attack_lever_menu_item = list_menu_item("Reversal/Counter Button Lever", training_settings, "counter_attack_lever", counter_attack_lever, 1, "The lever held at the moment the BUTTON goes in. The motion itself is untouched.\nAs Is keeps whatever the motion ended on - for a dash that is the dash attack.\nNeutral releases it, which is how a dash-neutral normal comes out.\nOn a dash cancel this replaces the reverse direction, so the cancel will not\nhappen.")
+local counter_attack_button_menu_item = list_menu_item("Button", training_settings, "counter_attack_button", counter_attack_button, 1, "In general the strength of move used\nIf stick is set to none this can be used as a counterpoke")
+local counter_attack_lever_menu_item = list_menu_item("Button Lever", training_settings, "counter_attack_lever", counter_attack_lever, 1, "The lever held at the moment the BUTTON goes in. The motion itself is untouched.\nAs Is keeps whatever the motion ended on - for a dash that is the dash attack.\nNeutral releases it, which is how a dash-neutral normal comes out.\nOn a dash cancel this replaces the reverse direction, so the cancel will not\nhappen.")
 counter_attack_button_menu_item.is_disabled = check_for_counter_attack_disabled
 counter_attack_lever_menu_item.is_disabled = check_for_counter_attack_disabled
 
@@ -1169,10 +1169,10 @@ end
 
 -- RANDOM DELAY ON THE BUTTON (v11.7.21.2; user: press dash attacks and jump
 -- attacks later). A fresh 0..N on top of the row above for every reversal or
--- counter; the motion is not moved. Indented under that row, the way the step
--- editor puts its Random Delay under Wait, and written 0-N like Random Start
--- Wait. Specified only: Push Block reads the row above too, but nothing asked
--- for its presses to wander.
+-- counter; the motion is not moved. Indented under that row (indent 2 in
+-- get_menu), the way the step editor puts its Random Delay under Wait, and
+-- written 0-N like Random Start Wait. Specified only: Push Block reads the
+-- row above too, but nothing asked for its presses to wander.
 local button_random_delay_item = integer_menu_item("Random Delay", training_settings,
       "button_random_delay", 0, 60, false, 0, nil,
       "A random 0 to this many Ticks on top of the Button Wait above, drawn again\nfor every reversal or counter. 0 is off. The motion still goes in at once and\nonly the button moves, so a dash or jump attack lands at a different point.\nToo late and the game decides: a special's motion is kept 14-19 Ticks, then a\nnormal comes out; once a dash or jump is over there is no dash or jump attack.")
@@ -1185,7 +1185,7 @@ function button_random_delay_item:draw(_x, _y, _selected)
   end
   local _v = tonumber(self.object[self.property_name]) or 0
   local _label = (_v > 0) and ("0-" .. _v) or "0"
-  gui.text(_x + 8, _y, _prefix .. self.name .. " : " .. _label .. _suffix, _c,
+  gui.text(_x, _y, _prefix .. self.name .. " : " .. _label .. _suffix, _c,
            text_default_border_color)
 end
 button_random_delay_item.is_disabled = function()
@@ -1526,6 +1526,29 @@ enable_slot_5_menu_item.is_disabled = is_random_playback_on
 -- parent that is not actually running.
 local function child_of(_parent_property, _item)
   _item.is_disabled = function() return training_settings[_parent_property] ~= true end
+  _item.indent = 1
+  return _item
+end
+
+-- A ROW THAT BELONGS TO THE ROW ABOVE IS INDENTED UNDER IT (user, 2026-10-04).
+--
+-- The Frame Meter's four rows opened under it and read as four more switches
+-- on the tab; nothing said they were its. Same for every row that appears
+-- because of the row above it, on every tab. One level is two characters, the
+-- step editor's "  Random Delay". Two levels is a row that belongs to a child:
+-- Random Delay under Button Wait, Loop Wait under Loop Steps.
+--
+-- A FIELD, NOT A WRAPPED draw(). get_menu() runs every frame over rows that
+-- live outside it, so a wrapper would stack one more indent per frame. The
+-- draw loop reads the field through menu_row_x, and so does test_menu_layout,
+-- so the width it measures is the one on screen. test_menu_children pins
+-- which rows are indented and that each sits under its parent.
+local MENU_INDENT_PX = 8
+function menu_row_x(_entry, _column_x)
+  return _column_x + (_entry.indent or 0) * MENU_INDENT_PX
+end
+local function indent(_level, _item)
+  _item.indent = _level
   return _item
 end
 
@@ -1711,11 +1734,11 @@ return {
           checkbox_menu_item("Reset Distance Each Loop", training_settings, "restore_recorded_position", 0, "Puts both characters back to the distance the recording was made from, at the\nstart of every loop. Without it the two drift apart over the passes and the\nsetup you were practising stops happening.\nOnly works on recordings made from v11.4.1 on - the distance is stored in the\nrecording itself.\nNot used with Use Savestate Upon Recording, which restores everything anyway."),
           checkbox_menu_item("Use Savestate Upon Recording", training_settings, "use_recording_savestate", 0, "BETA! EXPERIMENTAL! (But works!)\nCreates a savestate when you hit record, and loads it before playback.\nUse this for timing sensitive training. VERY USEFUL!!!!"),
           checkbox_menu_item("Use Random Recording Slot", training_settings, "random_playback", 0, "This can be used in two ways:\n 1) Random playback file on reversal\n 2) Using looped playback mode a random playback file will be \n    played back when the current recording ends"),
-          enable_slot_1_menu_item,
-          enable_slot_2_menu_item,
-          enable_slot_3_menu_item,
-          enable_slot_4_menu_item,
-          enable_slot_5_menu_item,
+          indent(1, enable_slot_1_menu_item),
+          indent(1, enable_slot_2_menu_item),
+          indent(1, enable_slot_3_menu_item),
+          indent(1, enable_slot_4_menu_item),
+          indent(1, enable_slot_5_menu_item),
           { name = "Recording Wizard",
             draw = function(_self, _x, _y, _selected)
               local _c = text_default_color
@@ -1761,7 +1784,7 @@ return {
             with_warning(list_menu_item("Guard", training_settings, "guard", guard,1, "Push Block (All ...) guards like All Guard and pushes, at that strength,\nwithout needing Guard Action Type - so that stays free for what you test next.\nAuto Guard writes the game's own guard flag and blocks even unblockable setups.\nStand Block holds Back while an attack is in range, by the game's own proximity\ncheck - projectiles too. All Guard also picks the height each hit needs: down\nfor lows, standing for overheads and jump attacks, the Pose for everything else."), block_rate_warning),
             -- integer_menu_item("# Guard Frames", training_settings, "p2_refill_timer", 0, 20, false, 0, nil, "This timer controls when the life meter will be refilled.\nOccurs this many seconds after being hit"),
 
-            p2_block_chance_menu_item,
+            indent(1, p2_block_chance_menu_item),
             with_warning(list_menu_item("Guard Action Type", training_settings, "guard_action", guard_action_type, 1, {
               --1 "None",
               --2 "Guard Cancel",
@@ -1788,23 +1811,25 @@ return {
               "Runs one of the patterns ticked in 'Reversal Action Patterns'.\nWith several ticked, one is picked at random each time.\nRandom Guard Action % decides whether it runs at all.",
 
             }, "Use this to set up various counter attacks."), action_rate_warning),
-            guard_action_frequency_menu_item,
-            dummy_random_start_wait_item,
-            counter_attack_stick_menu_item,
-            counter_attack_button_menu_item,
-            counter_attack_lever_menu_item,
-            gc_button_menu_item,
-            pb_button_menu_item,
-            pb_rev_button_menu_item,
-            guard_action_delay_menu_item,
-            button_random_delay_item,
-            gc_input_delay_menu_item,
-            p2_reversal_list_menu_item,
-            p2_reversal_strength_menu_item,
-            reversal_action_patterns_item,
-            reversal_action_steps_item,
-            action_steps_loop_switch,
-            action_steps_loop_wait_item,
+            -- Everything from here to Loop Wait is opened by Guard Action Type.
+            -- Pit of Blame is not: it is Anakaris's, alongside any guard action.
+            indent(1, guard_action_frequency_menu_item),
+            indent(1, dummy_random_start_wait_item),
+            indent(1, counter_attack_stick_menu_item),
+            indent(1, counter_attack_button_menu_item),
+            indent(1, counter_attack_lever_menu_item),
+            indent(1, gc_button_menu_item),
+            indent(1, pb_button_menu_item),
+            indent(1, pb_rev_button_menu_item),
+            indent(1, guard_action_delay_menu_item),
+            indent(2, button_random_delay_item),
+            indent(1, gc_input_delay_menu_item),
+            indent(1, p2_reversal_list_menu_item),
+            indent(1, p2_reversal_strength_menu_item),
+            indent(1, reversal_action_patterns_item),
+            indent(1, reversal_action_steps_item),
+            indent(1, action_steps_loop_switch),
+            indent(2, action_steps_loop_wait_item),
             pit_of_blame_item,
         }
     },
@@ -1848,6 +1873,9 @@ return {
 
         checkbox_menu_item("HUD (Life / Meter)", training_settings, "display_hud", true, "Red and white life for both players at the top of the screen, the meter, and\nthe character specific readouts - curse, Dark Force timer.\nTech hit has its own row under this one.\nThe trainers and the input bar are not part of this; they have their own rows."),
         child_of("display_hud", checkbox_menu_item("Show Tech Hit Mash", training_settings, "display_tech_hit", false, "Timer and Mash under the characters while the tech hit window is open - the\nraw $1AB and $170, straight from the game.\nShow PB Counter on this tab reads the same two bytes and draws them as a\nhistory, so this is the same information twice.\nPart of the HUD row above - it comes off with that as well.")),
+        -- Moved up from below Show P2 Inputs (2026-10-04): indented, a child
+        -- has to sit under its parent or the indent points at the wrong row.
+        child_of("display_hud", checkbox_menu_item("Show Character Specific", training_settings, "display_char_specific", false, "Two readouts that exist for one character each, from before this menu had rows\nfor them: Anakaris's swallowed projectile, and Aulbath's Direct Scissors with\nits command lighting up green as 2,2 + PP goes in.\nNothing on screen says what either one is, which is why they ship off.\nPart of the HUD row above - it comes off with that as well.")),
         checkbox_menu_item("Movelist", training_settings, "display_movelist", false,"Shows a character specific move list"),
         checkbox_menu_item("Display Hitboxes", training_settings, "display_hitbox_default",1, "Display hitboxes for P1 and P2"),
         child_of("display_hitbox_default", checkbox_menu_item("Display Pushbox X Center", training_settings, "display_pushbox_axis", false, "Display the x center of the pushbox")),
@@ -1863,12 +1891,11 @@ return {
         child_of("show_scrolling_input", checkbox_menu_item("Hide Negative Edge Inputs", training_settings, "skip_nedge_displays", true, "Hides the columns that carry nothing new: same direction as the one before and\nno button newly pressed - the clutter a release leaves behind.\nNot the release marker itself. Show Button Releases above owns that, and this\nrow leaves those columns alone.")),
         child_of("show_scrolling_input", checkbox_menu_item("Show GC Trainer", training_settings, "show_gc_trainer", true,"This option shows the GC window in the input viewer.\nThe Green GC shows when the window begins,\nand Red when it is performed or ends.\nG / GP n on the tick before it: the block landed there\n(GP n: tick n of the persistence, the tick back is let go being 1).")),
         checkbox_menu_item("Show P2 Inputs", training_settings, "display_p2_inputs", 1, "The dummy's inputs, as icons down the right edge of the screen.\nShow Scrolling Input above is the same thing for YOUR side, along the bottom.\nThis used to come off only with the whole HUD."),
-        child_of("display_hud", checkbox_menu_item("Show Character Specific", training_settings, "display_char_specific", false, "Two readouts that exist for one character each, from before this menu had rows\nfor them: Anakaris's swallowed projectile, and Aulbath's Direct Scissors with\nits command lighting up green as 2,2 + PP goes in.\nNothing on screen says what either one is, which is why they ship off.\nPart of the HUD row above - it comes off with that as well.")),
         -- FRAME METER (2026-10-04), from tirsod/VSAV_FrameMeter. framemeter.lua
         -- is his file with the local changes marked; these rows are the hook.
         -- Last on the tab (before Reset Tab), so its four rows open right under
         -- it and push nothing else around (user, 2026-10-04).
-        checkbox_menu_item("Frame Meter", training_settings, "display_frame_meter", false, "Both players, one tile per game Tick, along the bottom: green startup, red\nactive, blue recovery, yellow hurt, orange projectile, white invulnerable.\nStartup / Total / Recovery / Advantage of the last action: P1 above, P2 below.\nOnce it stops, hold down-back or down-forward to scroll it."),
+        checkbox_menu_item("Frame Meter", training_settings, "display_frame_meter", false, "Both players, one tile per game Tick, along the bottom: green startup, red\nactive, blue recovery, yellow hurt, orange projectile, white invulnerable.\nStartup / Total / Recovery / Advantage of the last action: P1 above, P2 below.\nA black dot each side of a border: those two Ticks shared one frame (turbo).\nOnce it stops, hold down-back or down-forward to scroll it."),
         child_of("display_frame_meter", checkbox_menu_item("Show Throw Invulnerability", training_settings, "fm_no_throw", false, "Marks the Ticks a character cannot be thrown ($143) on the Frame Meter.")),
         child_of("display_frame_meter", checkbox_menu_item("Show Movement Data", training_settings, "fm_movement_data", false, "Puts jumps and dashes on the Frame Meter. Off: attacks and reactions only.")),
         child_of("display_frame_meter", checkbox_menu_item("Show P1 Inputs", training_settings, "fm_input_p1", false, "Draws YOUR inputs over the P1 row of the Frame Meter, one icon per change.")),
@@ -1881,6 +1908,10 @@ return {
       entries = {
         checkbox_menu_item("Tick Data", training_settings, "mo_enable_frame_data", false, "Startup, active, recovery, advantage, total, hitstun, hitfreeze - in Ticks.\nThe first three come from the ATTACK HITBOX, so they do not move with distance.\nStartup and active share the tick the box appears: 4 + 3 + 7 - 1 = 13 Total.\nTotal includes gaps between hits, minus the attacker's hitfreeze; * = not frozen.\nACTION TIMELINE (third row, green): one action on a clock, each entry stamped\nwith its Tick. LP..HK and Action Steps names. 1t PreJump > 4t Air > 10t MP."),
         child_of("mo_enable_frame_data", list_menu_item("Tick Data Side", training_settings, "mo_frame_data_side", { "P1", "P2" }, 1, "WHICH PLAYER the rows above measure. P1 is you.\nP2 measures the DUMMY: its move gets Startup / Active / Recovery, the Action\nTimeline follows what the DUMMY did, and YOUR side supplies the hit or guard\nit ran into. This is how to see what a recorded Action Steps pattern really\ncame out as.\nOne side at a time. Both readouts say P2 while it is on.")),
+        -- TIMELINE CUT (user, 2026-10-04). How long the Action Timeline waits
+        -- through a pause before it ends the row - actionRoute's gap, which
+        -- was a fixed 10. 60 is the ceiling the other Tick rows on the menu use.
+        child_of("mo_enable_frame_data", integer_menu_item("Timeline Cut (Free Ticks)", training_settings, "mo_route_gap", 0, 60, false, 10, nil, "How many Ticks the character stands free, doing nothing, before the Action\nTimeline (green row) is cut. A shorter pause joins what comes next onto the\nsame row; at this length the next action starts a new row. 10 by default.\n0 cuts it on the first free Tick. Walking does not count as standing.\nThe Free entry is the first free Tick either way.")),
         checkbox_menu_item("Show Step Wait Ticks", training_settings, "display_step_wait_ticks", false,"Shows what each Action Step actually waited, in game Ticks.\nThe Wait row names a mode - Auto (After), Auto (Chain) - without saying how\nlong it came to. This measures it: Step.2 Wait:13 is step two connecting 13 Ticks\nafter step one. Act is the Ticks that step spends entering its own inputs.\nLoop Wait is the gap a loop restart waited, which is not step one own wait.\nMeasured only - what the row is set to is on the row."),
         checkbox_menu_item("Show PB Counter", training_settings, "display_pb_counter",1, "Push block presses the game counted ($170), plus any after it grants - a lucky\nthree would read three however hard you mash. Green once granted; the count\ncarries a blocked string. Right: the TICK timeline of the last window (Guard\nopens it, | closes it, digit = buttons that tick; 2+ red is simultaneous).\nMultiPush counts those. LateMash: buttons pressed AFTER the 14 ticks - they\nLEAK A NORMAL when guard stun ends. Cap 14t. The dummy shows as P2."),
         checkbox_menu_item("Show PB Stats", training_settings, "display_pb_stats", false,"Push block, over every touch on the ground you pressed a button in: Total.\nPass: it pushed. Fail: it did not, or you were hit. Unpressed touches: ignored.\nAvg: the PB Count line's own values, over the touches you pressed in and guarded.\nMulti / Late: its MultiPush and LateMash. A blocked string is one touch.\nA guard cancel that came out is left out. Counts stop at 99999.\nOff and on starts at 0."),
@@ -2214,10 +2245,11 @@ menuModule = {
             if menu[main_menu_selected_index].entries[i].is_disabled == nil or not menu[main_menu_selected_index].entries[i].is_disabled() then
               if _draw_index > 10 then _menu_x_interval = 150 else _menu_x_interval = 0 end
               if _draw_index > 10 then _menu_y_second_column = true else _menu_y_second_column = false end
+              local _row_x = menu_row_x(menu[main_menu_selected_index].entries[i], _menu_x + _menu_x_interval)
               if not _menu_y_second_column then 
-                menu[main_menu_selected_index].entries[i]:draw(_menu_x + _menu_x_interval, _menu_y + _menu_y_interval * _draw_index, not is_main_menu_selected and not current_popup and sub_menu_selected_index == i)
+                menu[main_menu_selected_index].entries[i]:draw(_row_x, _menu_y + _menu_y_interval * _draw_index, not is_main_menu_selected and not current_popup and sub_menu_selected_index == i)
               else 
-                menu[main_menu_selected_index].entries[i]:draw(_menu_x + _menu_x_interval, (_menu_y - 110) + _menu_y_interval * _draw_index, not is_main_menu_selected and not current_popup and sub_menu_selected_index == i)
+                menu[main_menu_selected_index].entries[i]:draw(_row_x, (_menu_y - 110) + _menu_y_interval * _draw_index, not is_main_menu_selected and not current_popup and sub_menu_selected_index == i)
               end 
               _draw_index = _draw_index + 1
             end

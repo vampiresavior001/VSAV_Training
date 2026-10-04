@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.22 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.22.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [Start with installation](#02-install) · [Already set up? Try the PB / GC drill](#sasquatch-pb-tutorial) · [Scope and verification](#verification-scope)
 
@@ -206,6 +206,8 @@ Start the copied training installation. Before proceeding, confirm that `Disable
 LP/MP/HP mean light/medium/heavy punch; LK/MK/HK mean light/medium/heavy kick.
 
 Moving beyond either end of a list returns to the tab selection. MP has different meanings in different screens: it toggles a pattern's selection in Action Patterns and records another take at the recording confirmation screen. Follow the on-screen control guide.
+
+An indented row is a setting of the nearest less-indented row above it, its parent. Most such rows appear or disappear with the parent's value (for example, `Frame Meter = yes` opens four indented rows under it).
 
 `Reset This Tab` on `Display`, `Trainer` and `Analysis` resets all settings on that tab. A confirmation dialog opens with `Cancel` selected. This also resets any child settings hidden because their parent setting is OFF.
 
@@ -521,9 +523,9 @@ The row is hidden for `None`, `Guard Cancel` and `Push Block`. It shares its set
 1. Set `Guard = All Guard` and `Random Guard % = 100%`.
 2. Set `Guard Action Type = Reversal - Specified`.
 3. Set `Random Guard Action % = 100%` and `Random Start Wait = 0`.
-4. Set `Reversal/Counter Input Motion = None`.
-5. Set `Reversal/Counter Button = LP`.
-6. Set `Reversal/Counter Button Lever = Neutral`, `Button Wait = 0` and `Random Delay = 0`.
+4. Set `Input Motion = None`.
+5. Set `Button = LP`.
+6. Set `Button Lever = Neutral`, `Button Wait = 0` and `Random Delay = 0`.
 7. Have the dummy block an attack, then test whether your pressure beats its LP after blockstun.
 
 For a crouching normal, select the appropriate downward direction. For a special, match `Input Motion` and the button to the move. To press the button later, or at a different point each time, see [4.4](#dummy-button-timing).
@@ -535,7 +537,7 @@ With `Reversal - Specified` and `Counter Attack - Specified`, three rows decide 
 
 | Option | What it does |
 |---|---|
-| `Reversal/Counter Button Lever` | The lever at the moment of the press. `As Is` keeps the motion's final direction (on a dash, the dash attack); `Neutral` releases it |
+| `Button Lever` | The lever at the moment of the press. `As Is` keeps the motion's final direction (on a dash, the dash attack); `Neutral` releases it |
 | `Button Wait` | The wait between the motion and the button press, in Ticks, up to 60. `Auto` is offered only for a dash and uses character-specific attack timing |
 | `Random Delay` | The indented row under `Button Wait`. Every reversal or counter draws a fresh number from 0 up to the setting and adds it to `Button Wait` (0–60; 0 is off) |
 
@@ -1086,7 +1088,7 @@ For example, you can test **how many Ticks to spend setting up an attack timed t
 
 Enable `Trainer > Tick Data` to show the green history below the move data. Timestamps start at 1t; subtract them to find the interval between events. In the screenshot, `20t Demon Cradle` to `23t Guard` is a three-Tick interval, or the fourth Tick when counting the move’s starting Tick. `Total 45t` measures the move, while `65t Free` marks when you could act again on the history’s clock; they cover different spans.
 
-The history is finalized when you remain actionable and neutral for ten Ticks after entering that state. Its ending `Free` timestamp marks the first actionable Tick, not the end of that wait. A long neutral pause can split a setup into separate histories, so check whether the whole setup remains in one history. Continuing to walk does not meet this ending condition.
+The history is finalized when you remain actionable and neutral for ten Ticks after entering that state. `Timeline Cut (Free Ticks)`, indented under `Tick Data`, changes that length from 0 to 60 Ticks (0 finalizes it on the first actionable Tick). Its ending `Free` timestamp marks the first actionable Tick, not the end of that wait. A long neutral pause splits a setup into separate histories; to keep it in one, set `Timeline Cut (Free Ticks)` longer than the pause. Continuing to walk does not meet this ending condition.
 
 The green `ACTION TIMELINE` in Tick Data shows the stages of an action on a shared clock. For example, `1t PreJump > 4t Air > 10t MP` identifies the Ticks when prejump, airborne state and MP occurred. Do not add these timestamps together.
 
@@ -1147,7 +1149,7 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 <a id="frame-meter"></a>
 ### 11.6 Frame Meter
 
-With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the four rows in the table below under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
+With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the four rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
 
 | Tile colour | State |
 |---|---|
@@ -1160,6 +1162,8 @@ With `Frame Meter = yes`, the last row on the `Display` tab, both players' state
 | Red-purple | Throw invulnerable (with `Show Throw Invulnerability` ON) |
 | Light blue | Jump or dash (with `Show Movement Data` ON) |
 | Dark grey | Doing nothing |
+
+**Two tiles with a black dot either side of the border between them are 120Hz Ticks.** At turbo, four Ticks pass in three displayed frames, so one frame in three carries two Ticks. Each of those two is on screen for only half a frame, so each of their tiles gets one black dot about halfway up, next to the border they share. Idle tiles get no dot. At normal speed (`Game Speed = 0`) there are none.
 
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
@@ -1295,7 +1299,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated and checked for consistency: 2026-10-03. This does not include testing the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.22; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.22.1; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

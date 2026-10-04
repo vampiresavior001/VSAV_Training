@@ -143,4 +143,21 @@ fd.registerAfter()
 want("空の行には印も足さない", shown_data, "")
 want("道筋の行も空のまま", shown_route, "")
 
+-- 道筋を切る長さは、メニューの Timeline Cut (Free Ticks) を毎ティック渡す
+-- (2026-10-04)。本物の actionRoute の set_gap を横取りして、渡った値を見る。
+do
+	local ar = require "./scripts/actionRoute"
+	local real_set_gap, got = ar.set_gap, "none"
+	ar.set_gap = function(n) got = n; real_set_gap(n) end
+	globals.options.mo_frame_data_side = 1
+	globals.options.mo_route_gap = 25
+	tick(21)
+	want("Timeline Cut の値が道筋に渡る", got, 25)
+	globals.options.mo_route_gap = nil
+	got = "none"
+	tick(22)
+	want("値が無ければ nil を渡す (道筋が既定の 10 に戻す)", got, nil)
+	ar.set_gap = real_set_gap
+end
+
 if fails == 0 then print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

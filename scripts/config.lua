@@ -32,6 +32,9 @@ local default_training_settings = {
   -- 1 = P1, 2 = P2. A 1-based index into the list on the menu row, and P1 is
   -- how the readout has always behaved.
   mo_frame_data_side = 1,
+  -- Free Ticks that end an Action Timeline row. actionRoute's GAP_TICKS, which
+  -- is what the row read before it could be set (user, 2026-10-04).
+  mo_route_gap = 10,
   display_recording_gui= false,
   display_hitbox_default = true,
   display_hud=true,

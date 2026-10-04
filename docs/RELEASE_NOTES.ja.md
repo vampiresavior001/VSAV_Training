@@ -6,6 +6,34 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.22.1
+
+### 新機能：Frame Meter の120Hz Tick
+
+- ターボでは表示3フレームに1回、1フレームで2 Tick進みます。その2マスの境目の左右に黒い点を
+  1つずつ付け、小さな「+」でつないだように見せます。何もしていないマスには付かず、ノーマルでは
+  出ません。マニュアルの[11.6 Frame Meter](PLAYER_MANUAL.ja.md#frame-meter)を見てください
+
+### 新機能：Timeline Cut (Free Ticks)
+
+- Trainerタブの `Tick Data` の下（Tick DataがONのとき）に足しました。立ったまま何もしない時間が
+  何TickでAction Timelineの行を切るかを決めます。0〜60、初期値は今までの固定値と同じ10です。
+  待ちを挟む連係を1行で見たいときは、待ちより長くします。マニュアルの
+  [11.3 Action Timeline](PLAYER_MANUAL.ja.md#action-timeline)を見てください
+
+### 変更：親の行に属する行を字下げ
+
+- すべてのタブで、すぐ上の行に属する行を字下げしました。Frame Meterの4行、Scrolling Inputの行、
+  DummyタブでGuard Action Typeが開く行、`Use Random Recording Slot` の下のスロットなどです。
+  `Random Delay` と `Loop Wait` はもう1段深くなります
+- `Show Character Specific` をHUDの行の下（`Show Tech Hit Mash` の隣）へ移しました
+- Dummyタブの `Reversal/Counter Input Motion`・`Reversal/Counter Button`・
+  `Reversal/Counter Button Lever` を `Input Motion`・`Button`・`Button Lever` に改名しました。
+  Guard Action Typeの下に字下げされたので頭の語は重複になり、Leverの行はメニューの右端から
+  はみ出していたためです。保存した設定はそのまま使えます
+
+---
+
 ## v11.7.22
 
 ### 新機能：Frame Meter

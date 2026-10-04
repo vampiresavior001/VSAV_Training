@@ -6,6 +6,36 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.22.1
+
+### New: 120Hz Ticks on the Frame Meter
+
+- At turbo, one displayed frame in three runs two Ticks. Those two tiles now get
+  a black dot each side of the border between them, so the pair reads as joined
+  by a small "+". Idle tiles get no dot, and at normal speed there are none. See
+  [11.6 Frame Meter](PLAYER_MANUAL.en.md#frame-meter)
+
+### New: Timeline Cut (Free Ticks)
+
+- A row under `Tick Data` on the Trainer tab, shown while Tick Data is on: how
+  many Ticks of standing free end an Action Timeline row. 0-60, default 10 -
+  the fixed value it used until now. Set it longer than a pause to keep a setup
+  in one row. See [11.3 Action Timeline](PLAYER_MANUAL.en.md#action-timeline)
+
+### Changed: rows that belong to another row are indented
+
+- On every tab, a row that belongs to the row above it is indented under it:
+  the Frame Meter's four rows, the Scrolling Input rows, everything Guard Action
+  Type opens on the Dummy tab, the slots under `Use Random Recording Slot`, and
+  so on. `Random Delay` and `Loop Wait` sit one level deeper
+- `Show Character Specific` moved up under the HUD row, next to `Show Tech Hit Mash`
+- On the Dummy tab, `Reversal/Counter Input Motion`, `Reversal/Counter Button`
+  and `Reversal/Counter Button Lever` are now `Input Motion`, `Button` and
+  `Button Lever`. Indented under Guard Action Type, the prefix only repeated it,
+  and the Lever row ran past the menu's right edge. Saved settings carry over
+
+---
+
 ## v11.7.22
 
 ### New: Frame Meter

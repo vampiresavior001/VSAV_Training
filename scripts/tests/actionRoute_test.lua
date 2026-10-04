@@ -483,6 +483,69 @@ test("10 ティック空いたら終わる", function()
   eq(ar.formatResult(), "1t Dash >  11t Free", "ダッシュだけで終わる")
 end)
 
+-- 何ティックで切るかはメニューで変えられる (Timeline Cut, 2026-10-04)。
+-- ザベルの 6 ティックの中立は、5 で切れば 2 本に分かれる。
+test("切る長さを 5 にすると 6 ティックの中立で分かれる", function()
+  ar.set_gap(5)
+  feed({
+    { 0,  { free = true, cel = 0x1000 } },
+    { 10, { free = false, dash = true, atk = 1, cel = 0x1000 } },
+    { 20, { free = true, dash = false, atk = 0 } },
+    { 26, { free = false, special = true, key = 0x20E0E, name = "Death Voltage" } },
+    { 32, { p2 = 6 } },
+    { 60, { free = true, special = false, key = 0 } },
+  }, 80)
+  ar.set_gap(nil)
+  -- 前の行は 25 ティック目に 1t Dash >  11t Free で閉じている。
+  eq(ar.formatResult(), "1t Death Voltage >  7t Throw >  35t Free", "後の行は投げから")
+end)
+
+-- 長くすれば 20 ティックの中立でもつながる。時刻は最初の行動から数えたまま。
+test("切る長さを 30 にすると 20 ティックの中立でもつながる", function()
+  ar.set_gap(30)
+  feed({
+    { 0,  { free = true, cel = 0x1000 } },
+    { 10, { free = false, dash = true, atk = 1, cel = 0x1000 } },
+    { 20, { free = true, dash = false, atk = 0 } },
+    { 40, { free = false, special = true, key = 0x20E0E, name = "Death Voltage" } },
+    { 70, { free = true, special = false, key = 0 } },
+  }, 110)
+  ar.set_gap(nil)
+  eq(ar.formatResult(), "1t Dash >  31t Death Voltage >  61t Free", "1 行")
+end)
+
+-- 0 は最初の中立のティックで切る。1 ティックの中立でも分かれる。
+test("切る長さ 0 は最初の中立で切る", function()
+  ar.set_gap(0)
+  feed({
+    { 0,  { free = true, cel = 0x1000 } },
+    { 10, { free = false, dash = true, atk = 1, cel = 0x1000 } },
+    { 20, { free = true, dash = false, atk = 0 } },
+    { 21, { free = false, special = true, key = 0x20E0E, name = "Death Voltage" } },
+    { 50, { free = true, special = false, key = 0 } },
+  }, 60)
+  ar.set_gap(nil)
+  eq(ar.formatResult(), "1t Death Voltage >  30t Free", "後の行だけ残る")
+end)
+
+-- 読めない値は既定の 10 に戻る。負の数、小数、文字、nil。
+test("読めない切る長さは 10 に戻る", function()
+  for _, bad in ipairs({ -1, 1.5, "x", false }) do
+    ar.set_gap(bad)
+    feed({
+      { 0,  { free = true, cel = 0x1000 } },
+      { 10, { free = false, dash = true, atk = 1, cel = 0x1000 } },
+      { 20, { free = true, dash = false, atk = 0 } },
+      { 26, { free = false, key = 0x20E0E, name = "Death Voltage" } },
+      { 32, { p2 = 6 } },
+      { 60, { free = true, key = 0 } },
+    }, 80)
+    eq(ar.formatResult(),
+      "1t Dash >  17t Death Voltage >  23t Throw >  51t Free", "10 のまま (" .. tostring(bad) .. ")")
+  end
+  ar.set_gap(nil)
+end)
+
 -- 必殺技は単体でも道筋を持つ。ジャンプやダッシュを経由しなくてよい。
 test("必殺技だけでも道筋になる", function()
   local r = feed({

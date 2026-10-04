@@ -77,7 +77,11 @@ local CEL_SIZE = 0x18
 -- A NUMBER OF TICKS, which this project otherwise refuses to put in code. It is
 -- here because it was asked for by that name, and because there is nothing in
 -- RAM that says "this pause belongs to what came before" - the state is simply
--- neutral either way. If it needs changing it is this one line.
+-- neutral either way.
+--
+-- THE PLAYER SETS IT NOW (user, 2026-10-04): Trainer > Tick Data > Timeline
+-- Cut (Free Ticks), handed in through set_gap every tick. This is the default
+-- that row ships with and what anything it cannot read falls back to.
 --
 -- The end is still stamped at the FIRST free tick, so waiting costs the
 -- reading nothing.
@@ -86,6 +90,17 @@ local CEL_SIZE = 0x18
 -- case it was picked for still fits - Zabel's dash command throw passes through
 -- neutral for 6 ticks on its way out of the dash.
 local GAP_TICKS = 10
+local gap_ticks = GAP_TICKS
+
+-- A whole number of Ticks, 0 or more. 0 ends the route on its first free tick,
+-- the behaviour the gap was added to stop - allowed, because it is a choice
+-- now and not a default. Anything else is the default, so a settings file with
+-- a stray value cannot leave the row unable to end.
+function M.set_gap(n)
+  n = tonumber(n)
+  if n == nil or n < 0 or n ~= math.floor(n) then n = GAP_TICKS end
+  gap_ticks = n
+end
 
 local function abort(reason)
   route = nil
@@ -526,13 +541,13 @@ function M.update(s)
       r.air_seen = false
     end
 
-    -- A pause, not necessarily the end. Held open for GAP_TICKS in case the
+    -- A pause, not necessarily the end. Held open for gap_ticks in case the
     -- action continues out of it; cleared the moment it does.
     -- Standing still, not merely able to act: a walk is free by $05 and $06 and
     -- would otherwise end its own route fifteen ticks into itself.
     if s.p1.free and s.p1.stance == nil then
       if r.free_at == nil then r.free_at = s.tick end
-      if s.tick - r.free_at >= GAP_TICKS then complete(r.free_at) end
+      if s.tick - r.free_at >= gap_ticks then complete(r.free_at) end
     else
       r.free_at = nil
     end
