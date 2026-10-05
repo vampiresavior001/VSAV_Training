@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.22.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.22.2 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [Start with installation](#02-install) · [Already set up? Try the PB / GC drill](#sasquatch-pb-tutorial) · [Scope and verification](#verification-scope)
 
@@ -421,7 +421,7 @@ Save the base sequence you built manually as `Short LP`. If you are using the in
 
 This is a copy: editing the pattern later does not change the original Action Steps. Check Loop settings separately from these two steps.
 
-**With random waits set to 0 and only `Short LP` selected, you can practice against fixed timing.** Save other offensive sequences and mark several `[x]` to select one at random for each time the dummy has an opportunity to respond. This takes the drill from PB and GC against a known action to reacting to different attack sequences.
+**With random waits set to 0 and only `Short LP` selected, you can practice against fixed timing.** Save other offensive sequences and mark several `[x]` to select one at random for each time the dummy has an opportunity to respond ([optional drill](#tutorial-mixed-patterns)). This takes the drill from PB and GC against a known action to reacting to different attack sequences.
 
 <details>
 <summary>Show import screens and help with the name window</summary>
@@ -455,6 +455,26 @@ Once consistent against fixed timing, change one of the following at a time.
 When using the copy, mark only that pattern `[x]` and uncheck the original `Short LP`. Confirm that the intended short-dash LP still comes out before practicing PB or GC. See [Section 4.4](#dummy-button-timing) for the settings.
 
 To return to fixed timing, set `Random Start Wait = 0` and select only the original `Short LP`.
+
+<a id="tutorial-mixed-patterns"></a>
+### Optional: Have the dummy choose between two attacks
+
+`Long LP > MP`, the partner to `Short LP`, is also included. It is a full forward dash (no cancel) into LP, then MP after a gap. The gap is set to make jumping out difficult.
+
+1. Open `Reversal Action Patterns` and use `Import from a File` to import `scripts/patterns/Sasquatch_Long_LP_MP.json` from the release. It appears under `Short LP` in the list.
+2. Mark only `Long LP > MP` as `[x]` and check that `Random Start Wait = 0`. Make the dummy block your attack and check that it dashes in with LP into MP.
+
+![Action Steps for Long LP > MP: Dash : Forward, Auto (0) Attack : LP, +26t Attack : MP](images/tut_sasquatch_long_lp_mp_steps.png)
+
+The third step's `+26t` inputs MP 26 Ticks after LP. It is a fixed gap, not `Auto (Chain)`.
+
+3. Mark both `Short LP` and `Long LP > MP` as `[x]`. On each counter opportunity, one of the two is chosen at random. The same one can come up several times in a row.
+
+![The pattern list with only Short LP and Long LP > MP marked [x]](images/tut_sasquatch_patterns_mixed.png)
+
+**This moves you from practicing against one fixed sequence to reading which attack is coming and responding to it.**
+
+To return to `Short LP` alone, uncheck `Long LP > MP` and leave only `Short LP` marked `[x]`.
 
 ### What to try next
 
@@ -1313,7 +1333,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated and checked for consistency: 2026-10-05. This does not include testing the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.22.1; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.22.2; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

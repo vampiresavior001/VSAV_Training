@@ -6,6 +6,25 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.22.2
+
+### 新機能：サスカッチのチュートリアル用に Long LP > MP
+
+- `scripts/patterns/Sasquatch_Long_LP_MP.json` を同梱しました。キャンセルしない前ダッシュから
+  小P、その26 Tick後に中Pを出す連係で、ジャンプで逃げにくい間隔にしてあります。`Short LP` と
+  並べて取り込み、両方を `[x]` にすると、ダミーがどちらかをランダムに出します。マニュアルの
+  [2種類の攻めをランダムに出させる](PLAYER_MANUAL.ja.md#tutorial-mixed-patterns)を見てください
+
+### マニュアル
+
+- Frame Meter で何が見えるかの説明を足しました。設定によって記録が変わることも書きました。
+  `Show Throw Invulnerability` をONにすると、そのTickは攻撃判定ではなく投げ無敵として数えます
+- Action Steps（一連の動きを作る）と Action Patterns（複数を保存してランダムに実行する）の
+  役割と、チュートリアルの後に試すことを整理しました
+- 1ステップ目の数値Waitの上限は30です。例を30に直しました
+
+---
+
 ## v11.7.22.1
 
 ### 新機能：同じ表示フレーム内のTickをFrame Meterに表示

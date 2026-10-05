@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.22.1／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.22.2／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [設定済みならAG・GCの実践へ](#sasquatch-ag-tutorial) · [対象環境・確認範囲](#verification-scope)
 
@@ -19,7 +19,7 @@
 
 この制御を生かすAction Stepsでは、動作を内部フレーム単位で組み立てられます。単発の反撃だけでなく、連係や複雑なコンボも定義でき、バレッタやビシャモンの永久コンボを完遂するような定義も可能です。用意した動きを繰り返し再現させ、自分の対処を検証する、より高度なトレーニングに使えます。
 
-記録・再生は表示フレーム単位であり、Tick単位の入力タイミングを正確に再現するものではありません。特にターボ時の細かなタイミングを指定する練習には、Action Stepsを使ってください。 本フォークで追加したRecording Wizardは、操作開始から操作終了までを簡単に記録するための機能です。
+記録・再生は表示フレーム単位であり、Tick単位の入力タイミングを正確に再現するものではありません。特にターボ時の細かなタイミングを指定する練習には、Action Stepsを使ってください。本フォークで追加したRecording Wizardは、操作開始から操作終了までを簡単に記録するための機能です。
 
 さらに、AGでは「なるべく遅らせて受付内に6回入力できたか」、GCでは「どの入力が受け付けられ、どこで遅れたか」、空中ガードでは「割り込める隙間があるか・押したタイミングはよかったか・着地後にどちらが有利か」を確認できます。正確な相手の動きと、詳しい振り返りの両方を揃えることが本フォークの狙いです。
 
@@ -419,7 +419,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 
 コピーなので、後からパターンを編集しても元のAction Stepsは変わりません。Loopの設定はこの2ステップとは別に確認してください。
 
-**追加のランダム待ちを0にし、`Short LP`一つだけを選択すれば、固定のタイミングで練習できます。** 別の攻めもパターンとして登録して複数を`[x]`にすると、反撃の機会ごとに候補から一つをランダムに実行できます。固定の動きへのAG・GC練習から、異なる攻めを見て対応する練習へ発展させられます。
+**追加のランダム待ちを0にし、`Short LP`一つだけを選択すれば、固定のタイミングで練習できます。** 別の攻めもパターンとして登録して複数を`[x]`にすると、反撃の機会ごとに候補から一つをランダムに実行できます（[応用](#tutorial-mixed-patterns)）。固定の動きへのAG・GC練習から、異なる攻めを見て対応する練習へ発展させられます。
 
 <details>
 <summary>取り込み画面・名前入力で困ったとき</summary>
@@ -453,6 +453,26 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 コピーを使うときは、それだけを`[x]`にして元の`Short LP`は外します。狙ったショートダッシュ小Pが出ることを確認してから、AG・GCを練習します。詳しい設定の使い分けは[4.4](#dummy-button-timing)へ。
 
 固定の練習に戻すときは、`Random Start Wait = 0`にし、元の`Short LP`だけを`[x]`にします。
+
+<a id="tutorial-mixed-patterns"></a>
+### 応用：2種類の攻めをランダムに出させる
+
+`Short LP`と対になる`Long LP > MP`も同梱しています。キャンセルしない前ダッシュから小Pを出し、間を空けて中Pを出す連係です。ジャンプで逃げにくい間隔にしてあります。
+
+1. `Reversal Action Patterns`を開き、`Import from a File`で配布物の`scripts/patterns/Sasquatch_Long_LP_MP.json`を取り込みます。一覧の`Short LP`の下に入ります。
+2. `Long LP > MP`だけを`[x]`にし、`Random Start Wait = 0`を確認します。こちらの技をガードさせ、ダッシュからの小P→中Pが出ることを確認します。
+
+![Long LP > MPのAction Steps。Dash : Forward、Auto (0) Attack : LP、+26t Attack : MP](images/tut_sasquatch_long_lp_mp_steps.png)
+
+3ステップ目の`+26t`は、小Pから26ティック後に中Pを入力する指定です。`Auto (Chain)`ではなく、間隔を固定しています。
+
+3. `Short LP`と`Long LP > MP`の両方を`[x]`にします。反撃の機会ごとに、どちらか一方がランダムに選ばれます。同じほうが続くこともあります。
+
+![Short LPとLong LP > MPの2つだけが[x]のパターン一覧](images/tut_sasquatch_patterns_mixed.png)
+
+**同じ動きを固定で練習する段階から、どちらの攻めが来るかを見て対応する練習へ進めます。**
+
+`Short LP`だけの練習に戻すときは、`Long LP > MP`の`[x]`を外し、`Short LP`だけを`[x]`にします。
 
 ### 次に試すこと
 
@@ -706,7 +726,7 @@ Waitの選択画面では `After / Landing / Rapid / Chain / Cancel / Late Cance
 
 一覧では1ステップ目が `Crouch : Neutral (Hold 60t)`、2ステップ目が `+60t` と表示されます。
 
-**1ステップ目のWaitを30にすると「30ティック待ってからしゃがむ」という指定になります。** 1ステップ目の数値Waitの上限は30です。 保持時間は、基本的に次のステップのWaitで決まります。
+**1ステップ目のWaitを30にすると「30ティック待ってからしゃがむ」という指定になります。** 1ステップ目の数値Waitの上限は30です。保持時間は、基本的に次のステップのWaitで決まります。
 
 タメ技は、前のステップで必要な方向と時間を確保します。必殺技名を選ぶだけでタメ時間が自動的に足されるわけではありません。複数ステップにまたがってタメを維持する場合は、途中のHoldも確認してください。
 
@@ -1311,7 +1331,7 @@ Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_Fr
 - 文書更新・整合性確認日：2026-10-05（エミュレーター上の操作確認は含みません）。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.22.1（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.22.2（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

@@ -6,6 +6,27 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.22.2
+
+### New: Long LP > MP for the Sasquatch tutorial
+
+- `scripts/patterns/Sasquatch_Long_LP_MP.json` is now included: a full forward
+  dash (no cancel) into LP, then MP 26 Ticks later - a gap set to make jumping
+  out difficult. Import it next to `Short LP` and mark both `[x]` to have the
+  dummy pick one at random. See
+  [Have the dummy choose between two attacks](PLAYER_MANUAL.en.md#tutorial-mixed-patterns)
+
+### Manual
+
+- An overview of what the Frame Meter shows, and that its settings change what
+  it records: with `Show Throw Invulnerability` on, those Ticks count as throw
+  invulnerability rather than active frames
+- Clearer roles for Action Steps (build one sequence) and Action Patterns
+  (save several and run them at random), and what to try after the tutorial
+- The first step's numeric Wait goes up to 30; the example now uses 30
+
+---
+
 ## v11.7.22.1
 
 ### New: Frame Meter marks Ticks within the same displayed frame

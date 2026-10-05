@@ -1,5 +1,5 @@
 -- 配布物に入れるパターンファイル (scripts/patterns/*.json) が、本物の Import で
--- そのまま取り込めること。
+-- そのまま取り込めること。Short LP と、その対の Long LP > MP ([5])。
 --
 -- チュートリアルの近道として Short LP (サスカッチのショートダッシュ小P) を
 -- 同梱する (本人、2026-10-02)。手で書いたファイルなので、書き間違えると
@@ -121,6 +121,42 @@ local mk = io.open("../analysis/make_release_zip.py"):read("*a")
 eq("scripts を丸ごと歩いている", mk:find('walk("scripts", names)', 1, true) ~= nil, true)
 eq("json は除外の対象でない (除外は名前で決まる)",
 	mk:find('"Sasquatch_Short_LP.json"', 1, true), nil)
+eq("ロング版も除外されない", mk:find('"Sasquatch_Long_LP_MP.json"', 1, true), nil)
+
+-- THE LONG VERSION (user, 2026-10-05). Short LP's partner for the tutorial:
+-- a full forward dash, LP, then MP 26 Ticks after the LP - a gap the user
+-- built so that jumping out of it is hard. Not Chain: the gap is the point.
+-- Imported on top of Short LP, as the tutorial does, so it lands second.
+print("")
+print("[5] ロング版 (Long LP > MP) も本物の Import で入る")
+local lf = io.open("patterns/Sasquatch_Long_LP_MP.json", "rb")
+eq("scripts/patterns にある", lf ~= nil, true)
+local ltext = lf and lf:read("*a") or ""
+if lf then lf:close() end
+eq("改行は LF だけ", ltext:find(string.char(13), 1, true), nil)
+local lgot = json.decode(ltext) or {}
+eq("版", lgot.version, 1)
+eq("反撃のパターン", lgot.trigger, "reversal")
+eq("サスカッチ (0x0A) のもの", lgot.character, 0x0A)
+eq("1 本だけ", lgot.items and #lgot.items, 1)
+function read_object_from_json_file() return lgot end
+E.open_patterns("reversal")
+eq("Import の行がある", goto_row("Import from a File"), true)
+tap("LP") draw() E.registerBefore()
+local _, lrows = draw()
+eq("1 本入ったと出る", table.concat(lrows, " "):find("OK  1 added", 1, true) ~= nil, true)
+local litems = lib and lib["10"] and lib["10"].items or {}
+eq("Short LP の次に入る", #litems, 2)
+local lit = litems[2] or {}
+eq("名前", lit.name, "Long LP > MP")
+eq("印は付かない", lit.use, false)
+eq("3 ステップ", lit.steps and #lit.steps, 3)
+training_settings.action_sequences.reversal = { ["10"] = { version = 1, steps = lit.steps } }
+E.open("reversal")
+local _, lsrows = draw()
+eq("1 行目", squeeze(lsrows[1] or ""), "1 Auto (Fastest) Dash : Forward")
+eq("2 行目", squeeze(lsrows[2] or ""), "2 Auto (0) Attack : LP")
+eq("3 行目 (Chain ではなく 26 Tick)", squeeze(lsrows[3] or ""), "3 +26t Attack : MP")
 
 print("")
 if fails == 0 then

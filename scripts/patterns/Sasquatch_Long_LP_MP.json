@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "trigger": "reversal",
+  "character": 10,
+  "items": [
+    {
+      "name": "Long LP > MP",
+      "use": false,
+      "steps": [
+        { "action": "dash.f", "wait": -1 },
+        { "action": "atk", "lever": "none", "button": "LP", "wait": -1 },
+        { "action": "atk", "lever": "none", "button": "MP", "wait": 26 }
+      ]
+    }
+  ]
+}
