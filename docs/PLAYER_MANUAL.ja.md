@@ -443,6 +443,8 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 <a id="tutorial-varied-timing"></a>
 ### 応用：タイミングを変えた攻めに対応する
 
+停止していた場合は、`Guard Action Type = Reversal - Action Patterns`に戻し、`Short LP`だけを`[x]`にしてください。こちらの技をガードさせ、反撃が出ることを確認します。
+
 固定のタイミングで安定したら、一方だけを変えて試します。
 
 - **始動をばらつかせる：** `Short LP`を使い、`Random Start Wait`を少しずつ増やします。パターン自体の編集は不要です。
@@ -694,7 +696,7 @@ Waitの選択画面では `After / Landing / Rapid / Chain / Cancel / Late Cance
 
 一覧では1ステップ目が `Crouch : Neutral (Hold 60t)`、2ステップ目が `+60t` と表示されます。
 
-**1ステップ目のWaitを60にすると「60ティック待ってからしゃがむ」という指定になります。** 保持時間は、基本的に次のステップのWaitで決まります。
+**1ステップ目のWaitを30にすると「30ティック待ってからしゃがむ」という指定になります。** 1ステップ目の数値Waitの上限は30です。 保持時間は、基本的に次のステップのWaitで決まります。
 
 タメ技は、前のステップで必要な方向と時間を確保します。必殺技名を選ぶだけでタメ時間が自動的に足されるわけではありません。複数ステップにまたがってタメを維持する場合は、途中のHoldも確認してください。
 
@@ -1296,7 +1298,7 @@ Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_Fr
 
 > 本書は対象版のソースコードとリリースノートを照合して作成しています。本書作成時のエミュレーター上での操作確認は未実施です。特定キャラクター・組み合わせでの成功を保証する練習レシピではありません。
 
-- 文書更新・整合性確認日：2026-10-03（エミュレーター上の操作確認は含みません）。
+- 文書更新・整合性確認日：2026-10-05（エミュレーター上の操作確認は含みません）。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
 - 対象：v11.7.22.1（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。

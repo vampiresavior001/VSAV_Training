@@ -445,6 +445,8 @@ If the emulator covers the name window, it comes back in front automatically; cl
 <a id="tutorial-varied-timing"></a>
 ### Optional: Practice against varied timing
 
+If you disabled counter actions, restore `Guard Action Type = Reversal - Action Patterns` and mark only `Short LP` as `[x]`. Make the dummy block your attack and check that it responds.
+
 Once consistent against fixed timing, change one of the following at a time.
 
 - **Vary the start:** Use `Short LP` and gradually increase `Random Start Wait`. You do not need to edit the pattern.
@@ -696,7 +698,7 @@ To crouch as soon as possible, then stand 60 Ticks later, use:
 
 The list shows `Crouch : Neutral (Hold 60t)` for step one and `+60t` for step two.
 
-**Setting step one's Wait to 60 instead means waiting 60 Ticks before crouching.** Hold duration is generally determined by the next step's Wait.
+**Setting step one's Wait to 30 instead means waiting 30 Ticks before crouching.** The first step's numeric Wait is capped at 30. Hold duration is generally determined by the next step's Wait.
 
 For charge moves, establish the required direction and duration in earlier steps. Selecting a special move by name does not automatically add the required charge time. Check Hold on intervening steps if the charge must be maintained across them.
 
@@ -1298,7 +1300,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 
 > This manual was checked against the target version's source code and release notes. The procedures were not tested in an emulator during preparation of this document. Example drills do not guarantee success with every character or setup.
 
-- Documentation updated and checked for consistency: 2026-10-03. This does not include testing the procedures in an emulator.
+- Documentation updated and checked for consistency: 2026-10-05. This does not include testing the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
 - Fork version: v11.7.22.1; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
