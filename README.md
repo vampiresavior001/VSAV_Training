@@ -46,6 +46,8 @@ See [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) for the conditions require
 
 Here, six presses on Ticks 5–13 of the window activated PB. **Once you can fit six presses consistently, start a little later and see whether you can still fit all six.** If you fall short, check for simultaneous presses or inputs after the window closes. See [PB practice](docs/PLAYER_MANUAL.en.md#08-pb) for the full readout guide.
 
+**See move properties visually:** [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) displays startup, active frames, recovery, invulnerability and other states for normals and special moves as colored bars. If colors and lengths are easier for you to follow, use it alongside the numerical readouts to see how a move unfolds.
+
 ### Choose easy recording or precise action control
 
 For actions you can perform yourself, **[Recording Wizard](docs/PLAYER_MANUAL.en.md#05-recording)** offers a quick way to record them. It automatically captures your inputs from start to finish, then lets you review and save the recording.

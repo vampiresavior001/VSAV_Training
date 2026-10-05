@@ -1149,9 +1149,11 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 <a id="frame-meter"></a>
 ### 11.6 Frame Meter
 
+**Frame Meter gives you a visual view of normal and special moves.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
+
 With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the four rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
 
-| Tile colour | State |
+| Tile color | State |
 |---|---|
 | Green | Startup |
 | Red | Attack box out |
@@ -1161,9 +1163,9 @@ With `Frame Meter = yes`, the last row on the `Display` tab, both players' state
 | White | Invulnerable |
 | Red-purple | Throw invulnerable (with `Show Throw Invulnerability` ON) |
 | Light blue | Jump or dash (with `Show Movement Data` ON) |
-| Dark grey | Doing nothing |
+| Dark gray | Doing nothing |
 
-**Two tiles with a black dot either side of the border between them are 120Hz Ticks.** At turbo, four Ticks pass in three displayed frames, so one frame in three carries two Ticks. Each of those two is on screen for only half a frame, so each of their tiles gets one black dot about halfway up, next to the border they share. Idle tiles get no dot. At normal speed (`Game Speed = 0`) there are none.
+**Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
 
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
@@ -1174,7 +1176,7 @@ When neither player has done anything for five Ticks, the meter stops. While it 
 | `Show P1 Inputs` | Draws P1's (your) inputs above the meter on each Tick they change |
 | `Log Hitstop Frames` | Keeps logging through hitstop (impact freeze). Off: those Ticks are skipped |
 
-It counts differently from [Tick Data](#tick-data). Check how each counts before comparing numbers. The Frame Meter's numbers were not checked against the game for this manual.
+Frame Meter counts differently from [Tick Data](#tick-data). **Display settings can affect both the states recorded and the measured values.** For example, enabling `Show Throw Invulnerability` records affected Ticks as throw invulnerability in preference to active attack frames, which also affects the numerical calculations. Keep throw-invulnerability, movement and hitstop settings the same when comparing results. The Frame Meter's numbers were not checked against the game for this manual.
 
 The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
 

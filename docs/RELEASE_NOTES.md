@@ -8,9 +8,10 @@ Newest first. Older releases are kept below.
 
 ## v11.7.22.1
 
-### New: 120Hz Ticks on the Frame Meter
+### New: Frame Meter marks Ticks within the same displayed frame
 
-- At turbo, one displayed frame in three runs two Ticks. Those two tiles now get
+- Black dots mark a pair of Ticks processed within the same displayed frame.
+  At Turbo 3, four Ticks pass in three displayed frames. Those two tiles get
   a black dot each side of the border between them, so the pair reads as joined
   by a small "+". Idle tiles get no dot, and at normal speed there are none. See
   [11.6 Frame Meter](PLAYER_MANUAL.en.md#frame-meter)
@@ -47,8 +48,9 @@ Newest first. Older releases are kept below.
 - Turning it on opens four rows right under it: `Show Throw Invulnerability`,
   `Show Movement Data`, `Show P1 Inputs` and `Log Hitstop Frames`. All start off
 - It comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
-  It counts differently from Tick Data, and its numbers have not been checked
-  against the game
+  It counts differently from Tick Data. Display settings can also affect the
+  measured values, so keep settings the same when comparing results. Its numbers
+  have not been checked against the game
 
 ### Changed
 

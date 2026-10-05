@@ -8,9 +8,9 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ## v11.7.22.1
 
-### 新機能：Frame Meter の120Hz Tick
+### 新機能：同じ表示フレーム内のTickをFrame Meterに表示
 
-- ターボでは表示3フレームに1回、1フレームで2 Tick進みます。その2マスの境目の左右に黒い点を
+- 同じ表示フレーム内で処理された2 Tickの組を示します。ターボ3では表示3フレームの間に4 Tick進みます。その2マスの境目の左右に黒い点を
   1つずつ付け、小さな「+」でつないだように見せます。何もしていないマスには付かず、ノーマルでは
   出ません。マニュアルの[11.6 Frame Meter](PLAYER_MANUAL.ja.md#frame-meter)を見てください
 
@@ -44,7 +44,8 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 - ONにすると、そのすぐ下に `Show Throw Invulnerability`・`Show Movement Data`・`Show P1 Inputs`・
   `Log Hitstop Frames` の4行が開きます。どれも初期値はOFFです
 - tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter)から取り込みました。
-  Tick Dataとは数え方が違います。数値は実機で照合していません
+  Tick Dataとは数え方が違い、表示設定によって測定値も変わる場合があります。比較時は設定をそろえてください。
+  数値は実機で照合していません
 
 ### 変更
 
