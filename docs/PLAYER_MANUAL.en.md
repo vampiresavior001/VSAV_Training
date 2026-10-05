@@ -1183,7 +1183,15 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 
 **Frame Meter gives you a visual view of normal and special moves.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
 
+![Frame Meter: the upper row is P1 (Lilith) with 7 green, 1 red and 18 blue tiles; the lower row is P2 (Sasquatch) with 22 yellow tiles](images/frame_meter.png)
+
+In this example, P2 (Sasquatch) turns yellow (hit or block stun) from P1's (Lilith's) attack. P1's row runs green (startup), red (active), then blue (recovery). The black dots between tiles mark pairs of Ticks that fell in the same displayed frame at turbo.
+
+**The number on a run of tiles is how many tiles of that color are in a row (shown for runs of 6 or more).** The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (7 green tiles read `Startup 8`). `Recovery` is also one more than the blue tiles (18 blue tiles read `Recovery 19`).
+
 With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the four rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
+
+![On the Display tab, Frame Meter : yes opens four indented rows under it](images/frame_meter_menu.png)
 
 | Tile color | State |
 |---|---|
