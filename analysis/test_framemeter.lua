@@ -63,10 +63,12 @@ memory = {
 -- border a pair shares is at x = 8 + 4k and its dots at 8 + 4k - 1 (the left
 -- tile's last fill column) and 8 + 4k + 1 (the right tile's first).
 local BLACK = "#000000FF"
-local startup_tiles, tiles, boxes = 0, {}, {}
+local startup_tiles, active_tiles, recovery_tiles, tiles, boxes = 0, 0, 0, {}, {}
 gui = {
 	image = function(x, y, img)
 		if img == "images/framemeter/FM_startup.png" then startup_tiles = startup_tiles + 1 end
+		if img == "images/framemeter/FM_active.png" then active_tiles = active_tiles + 1 end
+		if img == "images/framemeter/FM_recovery.png" then recovery_tiles = recovery_tiles + 1 end
 		tiles[x .. "," .. y] = img
 	end,
 	text = function() end,
@@ -105,7 +107,7 @@ end
 -- The meter grows in over ~96 draws; look only once it is fully out.
 local function draw_once(fm)
 	for _ = 1, 120 do fm.guiRegister() end
-	startup_tiles, tiles, boxes = 0, {}, {}
+	startup_tiles, active_tiles, recovery_tiles, tiles, boxes = 0, 0, 0, {}, {}
 	fm.guiRegister()
 end
 local function startup_drawn(fm)
@@ -200,6 +202,95 @@ print("[4] ノーマル: 1 フレーム 1 Tick なら付けない")
 fm = fresh(true)
 feed({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 })
 eq("ドットの数", (dotted(fm)), 0)
+
+-- ---------------------------------------------------------------------------
+print("[4b] ヒットストップは「動かなかった Tick」だけ飛ばす (Log Hitstop Frames = no)")
+-- Demitri, measured on the real thing (2026-10-05): the close LP stands still
+-- through hitstop, the crouching HK keeps animating through it. Whiff and
+-- block have to read the same, as Tick Data does:
+--   close LP   startup 3 tiles, 3 red, 6 blue    (Startup 4 / Active 3 / Recovery 7)
+--   crouch HK  startup 9 tiles, 4 red, 24 blue   (Startup 10 / Active 4 / Recovery 25)
+-- The HK's box ticks and its first recovery tick all play while $5C is set:
+-- the contact tick, then 3 box ticks and 1 recovery tick inside the freeze.
+-- A tick where the animation advanced changes $20 (the cel's remaining
+-- ticks); here $20 simply counts down while the move plays.
+local CEL = 0x500000
+local A1, A2 = 0xFF8400, 0xFF8800
+local function box(on) ram[A1 + 0x1C] = on and CEL or CEL + 0x100 ; ram[CEL + 0x0A] = on and 1 or 0 end
+local function stop(n) ram[A1 + 0x5C] = n ; ram[A2 + 0x5C] = n end
+-- One move. `plays` says which of the frozen ticks still animate.
+--   su / act / rec  startup, box and recovery ticks the move plays
+--   freeze          ticks of hitstop after contact (0 = whiff)
+--   anime           how many ticks the move keeps playing inside the freeze
+local function move(su, act, rec, freeze, anime)
+	local script = {}                 -- one entry per tick: kind, plays
+	for _ = 1, su do script[#script + 1] = { "su", true } end
+	local played_in_freeze = 0
+	for k = 1, act do
+		script[#script + 1] = { "act", true }
+		if k == 1 and freeze > 0 then
+			-- contact: freeze ticks follow, the first `anime` of them playing on
+			for f = 1, freeze do
+				if played_in_freeze < anime then
+					played_in_freeze = played_in_freeze + 1
+					script[#script + 1] = { "frz_play", true }
+				else
+					script[#script + 1] = { "frz_still", false }
+				end
+			end
+		end
+	end
+	for _ = 1, rec do script[#script + 1] = { "rec", true } end
+	-- the ticks played inside the freeze came off what follows it
+	local trimmed, drop = {}, played_in_freeze
+	for i, e in ipairs(script) do
+		if drop > 0 and i > su + 1 + freeze and (e[1] == "act" or e[1] == "rec") then
+			drop = drop - 1
+		else
+			trimmed[#trimmed + 1] = e
+		end
+	end
+	-- what each tick shows: box out for the act ticks and for the first act-1
+	-- of the ticks played in the freeze; recovery for the rest
+	local frames, n = {}, #trimmed + 12
+	for i = 1, n do frames[i] = i end
+	local anim, box_left, frz = 200, act, 0
+	feed(frames, function(i)
+		local e = trimmed[i]
+		ram[A1 + 0x105] = e and 1 or 0
+		ram[A2 + 0x05] = 0
+		if e == nil then box(false) ; stop(0) ; return end
+		if e[2] then anim = anim - 1 end
+		ram[A1 + 0x20] = anim
+		if e[1] == "su" then box(false) ; stop(0)
+		elseif e[1] == "act" then
+			box(true) ; box_left = box_left - 1
+			if box_left == act - 1 and freeze > 0 then frz = freeze ; stop(frz) else stop(0) end
+		elseif e[1] == "frz_play" or e[1] == "frz_still" then
+			-- $5C stays set on every frozen tick and reads 0 on the first one
+			-- that moves again (measured: the v1 trial read the LP right).
+			stop(frz) ; frz = frz - 1
+			if e[1] == "frz_play" then
+				box(box_left > 0) ; if box_left > 0 then box_left = box_left - 1 end
+			end
+			-- the defender enters guard on the first frozen tick: a new cel,
+			-- nothing played. Must not make a tile of its own.
+			if frz == freeze - 1 then ram[A2 + 0x1C] = 0x600000 ; ram[A2 + 0x20] = 9 end -- first frozen tick
+		else box(false) ; stop(0) end
+	end)
+end
+local function read(su, act, rec, freeze, anime)
+	fm = fresh(true)
+	globals.options.fm_hitstop = false
+	move(su, act, rec, freeze, anime)
+	draw_once(fm)
+	return startup_tiles .. "/" .. active_tiles .. "/" .. recovery_tiles
+end
+eq("近距離 LP 空振り: 緑 3 / 赤 3 / 青 6", read(3, 3, 6, 0, 0), "3/3/6")
+eq("近距離 LP ガード (11 Tick 止まる): 同じ", read(3, 3, 6, 11, 0), "3/3/6")
+eq("しゃがみ大 K 空振り: 緑 9 / 赤 4 / 青 24", read(9, 4, 24, 0, 0), "9/4/24")
+eq("しゃがみ大 K ガード (止まる間に 4 Tick 動く): 同じ", read(9, 4, 24, 11, 4), "9/4/24")
+box(false) ; stop(0) ; ram[A1 + 0x105] = 1 ; ram[A1 + 0x20] = 0 ; ram[A2 + 0x1C] = 0 ; ram[A2 + 0x20] = 0
 
 -- ---------------------------------------------------------------------------
 print("[5] 試合中かどうかは match_running で見る")

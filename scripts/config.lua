@@ -35,6 +35,9 @@ local default_training_settings = {
   -- Free Ticks that end an Action Timeline row. actionRoute's GAP_TICKS, which
   -- is what the row read before it could be set (user, 2026-10-04).
   mo_route_gap = 10,
+  -- The Action Timeline row under Tick Data. Shown, as it always was
+  -- (user, 2026-10-05). Same key as tirsod's fork.
+  display_action_timeline = true,
   display_recording_gui= false,
   display_hitbox_default = true,
   display_hud=true,

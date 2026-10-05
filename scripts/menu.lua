@@ -1552,6 +1552,19 @@ local function indent(_level, _item)
   return _item
 end
 
+-- A child of a child: offered only while every row above it in the chain is
+-- on, and indented one level per row. Same ~= true test as child_of.
+local function grandchild_of(_parents, _item)
+  _item.is_disabled = function()
+    for _, _p in ipairs(_parents) do
+      if training_settings[_p] ~= true then return true end
+    end
+    return false
+  end
+  _item.indent = #_parents
+  return _item
+end
+
 
 -- RESET A WHOLE TAB, AND IT FINDS OUT WHICH TAB IT IS ON BY ITSELF.
 --
@@ -1908,10 +1921,15 @@ return {
       entries = {
         checkbox_menu_item("Tick Data", training_settings, "mo_enable_frame_data", false, "Startup, active, recovery, advantage, total, hitstun, hitfreeze - in Ticks.\nThe first three come from the ATTACK HITBOX, so they do not move with distance.\nStartup and active share the tick the box appears: 4 + 3 + 7 - 1 = 13 Total.\nTotal includes gaps between hits, minus the attacker's hitfreeze; * = not frozen.\nACTION TIMELINE (third row, green): one action on a clock, each entry stamped\nwith its Tick. LP..HK and Action Steps names. 1t PreJump > 4t Air > 10t MP."),
         child_of("mo_enable_frame_data", list_menu_item("Tick Data Side", training_settings, "mo_frame_data_side", { "P1", "P2" }, 1, "WHICH PLAYER the rows above measure. P1 is you.\nP2 measures the DUMMY: its move gets Startup / Active / Recovery, the Action\nTimeline follows what the DUMMY did, and YOUR side supplies the hit or guard\nit ran into. This is how to see what a recorded Action Steps pattern really\ncame out as.\nOne side at a time. Both readouts say P2 while it is on.")),
+        -- SHOW ACTION TIMELINE (user, 2026-10-05). Off hides the green row
+        -- only; framedata.lua stops handing it to the HUD. Same key as
+        -- tirsod's fork, which has this switch too, so a setting carries
+        -- between the two. On by default: the row has always been shown.
+        child_of("mo_enable_frame_data", checkbox_menu_item("Show Action Timeline", training_settings, "display_action_timeline", true, "The green row under Tick Data: one action on a clock, each entry stamped with\nits Tick, as in 1t PreJump > 4t Air > 10t MP. Off hides that row only - the\nTick Data rows above stay, and Timeline Cut below is hidden with it.")),
         -- TIMELINE CUT (user, 2026-10-04). How long the Action Timeline waits
         -- through a pause before it ends the row - actionRoute's gap, which
         -- was a fixed 10. 60 is the ceiling the other Tick rows on the menu use.
-        child_of("mo_enable_frame_data", integer_menu_item("Timeline Cut (Free Ticks)", training_settings, "mo_route_gap", 0, 60, false, 10, nil, "How many Ticks the character stands free, doing nothing, before the Action\nTimeline (green row) is cut. A shorter pause joins what comes next onto the\nsame row; at this length the next action starts a new row. 10 by default.\n0 cuts it on the first free Tick. Walking does not count as standing.\nThe Free entry is the first free Tick either way.")),
+        grandchild_of({ "mo_enable_frame_data", "display_action_timeline" }, integer_menu_item("Timeline Cut (Free Ticks)", training_settings, "mo_route_gap", 0, 60, false, 10, nil, "How many Ticks the character stands free, doing nothing, before the Action\nTimeline (green row) is cut. A shorter pause joins what comes next onto the\nsame row; at this length the next action starts a new row. 10 by default.\n0 cuts it on the first free Tick. Walking does not count as standing.\nThe Free entry is the first free Tick either way.")),
         checkbox_menu_item("Show Step Wait Ticks", training_settings, "display_step_wait_ticks", false,"Shows what each Action Step actually waited, in game Ticks.\nThe Wait row names a mode - Auto (After), Auto (Chain) - without saying how\nlong it came to. This measures it: Step.2 Wait:13 is step two connecting 13 Ticks\nafter step one. Act is the Ticks that step spends entering its own inputs.\nLoop Wait is the gap a loop restart waited, which is not step one own wait.\nMeasured only - what the row is set to is on the row."),
         checkbox_menu_item("Show PB Counter", training_settings, "display_pb_counter",1, "Push block presses the game counted ($170), plus any after it grants - a lucky\nthree would read three however hard you mash. Green once granted; the count\ncarries a blocked string. Right: the TICK timeline of the last window (Guard\nopens it, | closes it, digit = buttons that tick; 2+ red is simultaneous).\nMultiPush counts those. LateMash: buttons pressed AFTER the 14 ticks - they\nLEAK A NORMAL when guard stun ends. Cap 14t. The dummy shows as P2."),
         checkbox_menu_item("Show PB Stats", training_settings, "display_pb_stats", false,"Push block, over every touch on the ground you pressed a button in: Total.\nPass: it pushed. Fail: it did not, or you were hit. Unpressed touches: ignored.\nAvg: the PB Count line's own values, over the touches you pressed in and guarded.\nMulti / Late: its MultiPush and LateMash. A blocked string is one touch.\nA guard cancel that came out is left out. Counts stop at 99999.\nOff and on starts at 0."),

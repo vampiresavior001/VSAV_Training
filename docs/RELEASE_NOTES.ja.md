@@ -6,6 +6,33 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.22.3
+
+### 修正：ヒットストップ中の Frame Meter
+
+- `Log Hitstop Frames` がOFFのとき、当たった技は空振りより短く表示されていました。
+  ヒットストップ明けの最初のTickが抜け（デミトリ近距離LPのガードで赤2マス。空振りは3マス）、
+  ヒットストップ中も動く技は、その間に動いたTickも抜けていました（しゃがみ大Kのガードで赤1マス。
+  空振りは4マス）。攻撃中のキャラが1人も動かなかったTickだけを飛ばすように直しました。
+  デミトリの立ち・しゃがみ通常技11種で、Startup / Total / Recovery / Advantage が空振りと
+  Tick Dataに一致することを確かめました
+- 防御側の黄は、Tick DataのHitstunより数マス長く出ることがあります。当たったTickと、攻撃側だけが
+  動いたTickも1列ずつ使うためです
+
+### 新機能：Show Action Timeline
+
+- Trainerタブの `Tick Data` の下に `Show Action Timeline`（初期値はON）を足しました。OFFにすると
+  緑のAction Timelineの行だけが消え、Tick Dataの数値は残ります。`Timeline Cut (Free Ticks)` は
+  この行の下に移りました。マニュアルの[11.3 Action Timeline](PLAYER_MANUAL.ja.md#action-timeline)を
+  見てください
+
+### マニュアル
+
+- [11.6](PLAYER_MANUAL.ja.md#frame-meter)にFrame Meterの画像と、マスの数字とStartup・Recoveryの
+  関係を足しました
+
+---
+
 ## v11.7.22.2
 
 ### 新機能：サスカッチのチュートリアル用に Long LP > MP

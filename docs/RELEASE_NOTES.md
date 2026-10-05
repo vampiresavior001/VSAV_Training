@@ -6,6 +6,34 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.22.3
+
+### Fix: Frame Meter during hitstop
+
+- With `Log Hitstop Frames` off, a move that connected showed fewer tiles than
+  the same move whiffed. The first Tick after hitstop was dropped (Demitri's
+  close LP, blocked: 2 red tiles instead of 3), and a move that keeps animating
+  through hitstop lost those Ticks too (crouching HK, blocked: 1 red instead
+  of 4). A Tick is now skipped only when no attacking character moved. Checked
+  on Demitri's 11 standing and crouching normals: Startup / Total / Recovery /
+  Advantage match the whiff and Tick Data
+- The defender's yellow run can be a few tiles longer than Tick Data's Hitstun:
+  the contact Tick, and Ticks where only the attacker moved, take a column too
+
+### New: Show Action Timeline
+
+- `Show Action Timeline` under `Tick Data` on the Trainer tab (on by default).
+  Off hides the green Action Timeline row and keeps the Tick Data rows.
+  `Timeline Cut (Free Ticks)` now sits under it. See
+  [11.3 Action Timeline](PLAYER_MANUAL.en.md#action-timeline)
+
+### Manual
+
+- Frame Meter screenshots in [11.6](PLAYER_MANUAL.en.md#frame-meter), with how
+  the numbers on the tiles relate to Startup and Recovery
+
+---
+
 ## v11.7.22.2
 
 ### New: Long LP > MP for the Sasquatch tutorial

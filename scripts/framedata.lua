@@ -152,6 +152,9 @@ function M.registerAfter()
   -- wraps it like any other.
   local data = tickData.formatResult()
   local route = actionRoute.formatResult()
+  -- Show Action Timeline (Trainer). Off: the HUD gets no route and draws the
+  -- Tick Data rows alone, its box shrinking with them.
+  if globals.options.display_action_timeline ~= true then route = "" end
   if vsav.side() == "P2" then
     if data ~= "" then data = "P2  " .. data end
     if route ~= "" then route = "P2  " .. route end

@@ -190,7 +190,8 @@ local TREE = {
 			"Show P1 Inputs", "Log Hitstop Frames" } },
 	},
 	Trainer = {
-		{ "Tick Data", { "Tick Data Side", "Timeline Cut (Free Ticks)" } },
+		{ "Tick Data", { "Tick Data Side", "Show Action Timeline" } },
+		{ "Show Action Timeline", { "Timeline Cut (Free Ticks)" } },
 	},
 }
 -- name -> parent, per tab; a parent's level decides its children's.
@@ -245,6 +246,29 @@ do
 	-- Random Delay used to shift itself 8px. With the loop adding its level
 	-- too it would sit 8px deeper than the indent says.
 	want("自分で字下げする行が無い", src:find("gui.text(_x + 8,", 1, true), nil)
+end
+
+-- TIMELINE CUT GOES WITH THE ACTION TIMELINE (2026-10-05). It cuts the green
+-- row, so with the row hidden it has nothing to do - and with Tick Data off
+-- neither of them does.
+do
+	local row = find_row("Timeline Cut (Free Ticks)")
+	want("Timeline Cut の行がある", row ~= nil, true)
+	if row ~= nil then
+		training_settings.mo_enable_frame_data = true
+		training_settings.display_action_timeline = true
+		want("Timeline Cut: 両方 ON なら出る", row.is_disabled(), false)
+		training_settings.display_action_timeline = false
+		want("Timeline Cut: Action Timeline が OFF なら消える", row.is_disabled(), true)
+		training_settings.display_action_timeline = true
+		training_settings.mo_enable_frame_data = false
+		want("Timeline Cut: Tick Data が OFF なら消える", row.is_disabled(), true)
+		training_settings.mo_enable_frame_data = nil
+		training_settings.display_action_timeline = nil
+	end
+	local sw = find_row("Show Action Timeline")
+	want("Show Action Timeline の既定は ON", sw ~= nil and sw.default_value, true)
+	want("Show Action Timeline が書く先", sw ~= nil and sw.property_name, "display_action_timeline")
 end
 
 if fails == 0 then

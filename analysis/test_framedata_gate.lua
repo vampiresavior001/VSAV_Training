@@ -143,6 +143,30 @@ fd.registerAfter()
 want("空の行には印も足さない", shown_data, "")
 want("道筋の行も空のまま", shown_route, "")
 
+-- SHOW ACTION TIMELINE (2026-10-05): off hands the HUD no route at all, and
+-- leaves the Tick Data rows alone. The route itself is the real actionRoute's,
+-- stubbed here to a fixed line so only the switch is being asked about.
+do
+	local ar = require "./scripts/actionRoute"
+	local real_fmt = ar.formatResult
+	ar.formatResult = function() return "1t LP >  13t Free" end
+	fd_result = "Startup 4t"
+	globals.options.mo_frame_data_side = 1
+	tick(23)                          -- back to P1, so nothing is prefixed
+	globals.options.display_action_timeline = true
+	fd.registerAfter()
+	want("ON: 道筋を渡す", shown_route, "1t LP >  13t Free")
+	globals.options.display_action_timeline = false
+	fd.registerAfter()
+	want("OFF: 道筋は空", shown_route, "")
+	want("OFF でも Tick Data の行は出る", shown_data, "Startup 4t")
+	globals.options.display_action_timeline = nil
+	fd.registerAfter()
+	want("設定が無ければ出さない (== true の扱い。既定値は config で true)", shown_route, "")
+	ar.formatResult = real_fmt
+	fd_result = ""
+end
+
 -- 道筋を切る長さは、メニューの Timeline Cut (Free Ticks) を毎ティック渡す
 -- (2026-10-04)。本物の actionRoute の set_gap を横取りして、渡った値を見る。
 do

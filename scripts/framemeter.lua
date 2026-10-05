@@ -844,7 +844,39 @@ local function handle_scrolling()
 end
 
 -- Update function called by the subscription made when the module first registers. Calls every method above this to produce the meter. 
+-- VSAV_Training: HITSTOP IS SKIPPED BY WHAT STOOD STILL, NOT BY $5C (trial,
+-- 2026-10-05). $5C only says a player is in hitstop. Demitri's crouching HK
+-- keeps animating through it - its 4 active ticks all run while $5C is set -
+-- and an ordinary move stands still (the close LP's box is out 14 ticks, 11 of
+-- them frozen). Skipping on $5C read the blocked HK as 1 red tile against 4 on
+-- a whiff, and the old one-tick-late flag also dropped the first tick after
+-- every hitstop (blocked LP: 2 red against 3). Tick Data counts the same
+-- moves right because it asks whether the animation advanced: $20 (the cel's
+-- remaining ticks) and $1C (the cel) change on exactly those ticks.
+-- A tick is skipped now only while someone is in hitstop AND no attacking
+-- player's animation advanced. The defender is left out: entering guard
+-- swaps its cel without anything having played.
+local last_anim = { nil, nil }
+local function anim_advanced()
+	local moved = false
+	for p = 1, 2 do
+		local addr = game.address[p]
+		local a = memory.readbyte(addr + 0x20) * 0x10000 + ((memory.readdword(addr + 0x1C) or 0) % 0x10000)
+		if last_anim[p] ~= nil and a ~= last_anim[p] and get_attack_state[super_mode](addr) then
+			moved = true
+		end
+		last_anim[p] = a
+	end
+	return moved
+end
+
 local function update(tick)
+	-- VSAV_Training: see anim_advanced above.
+	local moved = anim_advanced()
+	local frozen = (game.hitfreeze(game.address[1]) or game.hitfreeze(game.address[2]))
+	               and not globals.options.fm_hitstop
+	-- Don't draw any new frames to the meter if the game is frozen for dramatic effect.
+	freezeNextFrame = frozen and not moved -- VSAV_Training: now "skip this tick"
 	if not freezeNextFrame then
 		refresh_meter()
 		-- VSAV_Training: match_running, not match_begun - the latter drops to
@@ -857,12 +889,6 @@ local function update(tick)
 				handle_scrolling()
 			end
 		end
-	end
-
-	-- Don't draw any new frames to the meter if the game is frozen for dramatic effect.
-	freezeNextFrame = false
-	if (game.hitfreeze(game.address[1]) or game.hitfreeze(game.address[2])) and not globals.options.fm_hitstop then
-		freezeNextFrame = true
 	end
 
 	if prevHitStop ~= globals.options.fm_hitstop then

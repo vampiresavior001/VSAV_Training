@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.22.2 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.22.3 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [Start with installation](#02-install) · [Already set up? Try the PB / GC drill](#sasquatch-pb-tutorial) · [Scope and verification](#verification-scope)
 
@@ -1120,7 +1120,9 @@ For example, you can test **how many Ticks to spend setting up an attack timed t
 
 Enable `Trainer > Tick Data` to show the green history below the move data. Timestamps start at 1t; subtract them to find the interval between events. In the screenshot, `20t Demon Cradle` to `23t Guard` is a three-Tick interval, or the fourth Tick when counting the move’s starting Tick. `Total 45t` measures the move, while `65t Free` marks when you could act again on the history’s clock; they cover different spans.
 
-The history is finalized when you remain actionable and neutral for ten Ticks after entering that state. `Timeline Cut (Free Ticks)`, indented under `Tick Data`, changes that length from 0 to 60 Ticks (0 finalizes it on the first actionable Tick). Its ending `Free` timestamp marks the first actionable Tick, not the end of that wait. A long neutral pause splits a setup into separate histories; to keep it in one, set `Timeline Cut (Free Ticks)` longer than the pause. Continuing to walk does not meet this ending condition.
+To hide only the green history, set `Show Action Timeline = no` under `Tick Data`. The Tick Data rows stay.
+
+The history is finalized when you remain actionable and neutral for ten Ticks after entering that state. `Timeline Cut (Free Ticks)`, indented under `Show Action Timeline`, changes that length from 0 to 60 Ticks (0 finalizes it on the first actionable Tick). Its ending `Free` timestamp marks the first actionable Tick, not the end of that wait. A long neutral pause splits a setup into separate histories; to keep it in one, set `Timeline Cut (Free Ticks)` longer than the pause. Continuing to walk does not meet this ending condition.
 
 The green `ACTION TIMELINE` in Tick Data shows the stages of an action on a shared clock. For example, `1t PreJump > 4t Air > 10t MP` identifies the Ticks when prejump, airborne state and MP occurred. Do not add these timestamps together.
 
@@ -1341,7 +1343,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated and checked for consistency: 2026-10-05. This does not include testing the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.22.2; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.22.3; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).
