@@ -459,6 +459,8 @@ To return to fixed timing, set `Random Start Wait = 0` and select only the origi
 <a id="tutorial-mixed-patterns"></a>
 ### Optional: Have the dummy choose between two attacks
 
+Set `Dummy > Guard Action Type = Reversal - Action Patterns` and `Loop Steps = no` to check one response at a time.
+
 `Long LP > MP`, the partner to `Short LP`, is also included. It is a full forward dash (no cancel) into LP, then MP after a gap. The gap is set to make jumping out difficult.
 
 1. Open `Reversal Action Patterns` and use `Import from a File` to import `scripts/patterns/Sasquatch_Long_LP_MP.json` from the release. It appears under `Short LP` in the list.
@@ -1189,6 +1191,8 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 
 In this example, P2 (Sasquatch) turns yellow (hit or block stun) from P1's (Lilith's) attack. P1's row runs green (startup), red (active), then blue (recovery). The black dots between tiles mark pairs of Ticks that fell in the same displayed frame at turbo.
 
+The defender's yellow run includes the contact Tick and Ticks when only the attacker moved, so it can be longer than Tick Data's `Hitstun`.
+
 **The number on a run of tiles is how many tiles of that color are in a row (shown for runs of 6 or more).** The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (7 green tiles read `Startup 8`). `Recovery` is also one more than the blue tiles (18 blue tiles read `Recovery 19`).
 
 With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the four rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
@@ -1216,9 +1220,9 @@ When neither player has done anything for five Ticks, the meter stops. While it 
 | `Show Throw Invulnerability` | Marks throw-invulnerable Ticks |
 | `Show Movement Data` | Shows jumps and dashes. Off: attacks and hit or block stun only |
 | `Show P1 Inputs` | Draws P1's (your) inputs above the meter on each Tick they change |
-| `Log Hitstop Frames` | Keeps logging through hitstop (impact freeze). Off: those Ticks are skipped |
+| `Log Hitstop Frames` | On: records all Ticks during hitstop. Off: skips only hitstop Ticks when no attacking character's animation advanced |
 
-Frame Meter counts differently from [Tick Data](#tick-data). **Display settings can affect both the states recorded and the measured values.** For example, enabling `Show Throw Invulnerability` records affected Ticks as throw invulnerability in preference to active attack frames, which also affects the numerical calculations. Keep throw-invulnerability, movement and hitstop settings the same when comparing results. The Frame Meter's numbers were not checked against the game for this manual.
+Frame Meter counts differently from [Tick Data](#tick-data). **Display settings can affect both the states recorded and the measured values.** For example, enabling `Show Throw Invulnerability` records affected Ticks as throw invulnerability in preference to active attack frames, which also affects the numerical calculations. Keep throw-invulnerability, movement and hitstop settings the same when comparing results. The [v11.7.22.3 release notes](RELEASE_NOTES.md#v117223) report that the developer checked the values using Demitri's 11 standing and crouching normals. This does not cover every character or move.
 
 The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
 
@@ -1340,7 +1344,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 
 > This manual was checked against the target version's source code and release notes. The procedures were not tested in an emulator during preparation of this document. Example drills do not guarantee success with every character or setup.
 
-- Documentation updated and checked for consistency: 2026-10-05. This does not include testing the procedures in an emulator.
+- Documentation updated and checked for consistency: 2026-10-06. This does not include testing the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
 - Fork version: v11.7.22.3; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).

@@ -457,6 +457,8 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 <a id="tutorial-mixed-patterns"></a>
 ### 応用：2種類の攻めをランダムに出させる
 
+`Dummy > Guard Action Type = Reversal - Action Patterns`、`Loop Steps = no`にして、一回ずつ動作を確認します。
+
 `Short LP`と対になる`Long LP > MP`も同梱しています。キャンセルしない前ダッシュから小Pを出し、間を空けて中Pを出す連係です。ジャンプで逃げにくい間隔にしてあります。
 
 1. `Reversal Action Patterns`を開き、`Import from a File`で配布物の`scripts/patterns/Sasquatch_Long_LP_MP.json`を取り込みます。一覧の`Short LP`の下に入ります。
@@ -1187,6 +1189,8 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 
 この例では、P1（リリス）の技を受けたP2（サスカッチ）が黄（やられ・ガード硬直）になっています。上の段は緑（発生まで）、赤（攻撃判定）、青（戻り）の順です。マスの間の黒い点は、ターボで同じ表示フレームに入った2 Tickの組です。
 
+防御側の黄色い帯には、接触したTickや攻撃側だけが動いたTickも含まれるため、Tick Dataの`Hitstun`より長くなる場合があります。
+
 **マスに付く数字は、同じ色が続いたマスの数です（6マス以上のときだけ表示）。** 行の数値とは数え方が違います。`Startup` は最初の攻撃判定のTickまで含めるので、緑の数より1多くなります（緑7マスで `Startup 8`）。`Recovery` も青の数より1多く表示されます（青18マスで `Recovery 19`）。
 
 `Display` タブの末尾にある `Frame Meter = yes` にすると、画面の下に両プレイヤーの状態が1 Tickごとに1マスずつ並びます。ONにすると、その下に次の表の4行が字下げして開きます。上の段がP1、下の段がP2です。メーターの上にP1、下にP2の `Startup / Total / Recovery / Advantage` を表示します。
@@ -1214,9 +1218,9 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | `Show Throw Invulnerability` | 投げ無敵のTickを表示する |
 | `Show Movement Data` | ジャンプ・ダッシュを表示する。OFFでは攻撃とやられ・ガードだけ |
 | `Show P1 Inputs` | P1（自分）の入力を、変わったTickごとにメーターの上へ表示する |
-| `Log Hitstop Frames` | ヒットストップ（着弾フリーズ）の間も記録する。OFFではその間を飛ばす |
+| `Log Hitstop Frames` | ONではヒットストップ中もすべて記録する。OFFでは、その間に攻撃中のどのキャラクターもアニメーションが進まなかったTickだけを省略する |
 
-数え方は[Tick Data](#tick-data)とは別です。**表示設定によって、記録される状態と測定値が変わる場合があります。** たとえば`Show Throw Invulnerability`をONにすると、該当するTickは攻撃判定より優先して投げ無敵として記録され、数値の集計にも影響します。比較するときは、投げ無敵・移動・ヒットストップの設定をそろえてください。本書では、Frame Meterの数値を実機で照合していません。
+数え方は[Tick Data](#tick-data)とは別です。**表示設定によって、記録される状態と測定値が変わる場合があります。** たとえば`Show Throw Invulnerability`をONにすると、該当するTickは攻撃判定より優先して投げ無敵として記録され、数値の集計にも影響します。比較するときは、投げ無敵・移動・ヒットストップの設定をそろえてください。[v11.7.22.3のリリースノート](RELEASE_NOTES.ja.md#v117223)では、開発側がデミトリの立ち・しゃがみ通常技11種で数値を確認したと報告しています。全キャラクター・全技の確認ではありません。
 
 Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter)から取り込みました。
 
@@ -1338,7 +1342,7 @@ Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_Fr
 
 > 本書は対象版のソースコードとリリースノートを照合して作成しています。本書作成時のエミュレーター上での操作確認は未実施です。特定キャラクター・組み合わせでの成功を保証する練習レシピではありません。
 
-- 文書更新・整合性確認日：2026-10-05（エミュレーター上の操作確認は含みません）。
+- 文書更新・整合性確認日：2026-10-06（エミュレーター上の操作確認は含みません）。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
 - 対象：v11.7.22.3（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
