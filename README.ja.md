@@ -54,6 +54,8 @@ Tickはゲームの内部フレームです。本フォークは、この内部�
 
 **記録・再生は表示フレーム単位です。** 自分では難しい操作や、Tick単位の正確なタイミングはAction Stepsで定義してください。
 
+**Action Stepsで一連の動きを定義し、Action Patternsで複数を保存・管理してランダムに実行できます。**
+
 ## Windowsでの導入
 
 対象ゲームは **Vampire Savior - the lord of vampire（970519 Japan／`vsavj`）** です。

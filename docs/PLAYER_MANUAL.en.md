@@ -456,6 +456,12 @@ When using the copy, mark only that pattern `[x]` and uncheck the original `Shor
 
 To return to fixed timing, set `Random Start Wait = 0` and select only the original `Short LP`.
 
+### What to try next
+
+- **Find why PB or GC failed:** [Read PB results and improve your inputs](#08-pb) / [Read GC results and improve your inputs](#09-gc).
+- **Practice against another character or offensive sequence:** [Record actions](#05-recording) / [Build a sequence in Steps](#06-steps) / [Manage multiple patterns and run them at random](#07-patterns).
+- **Test your own pressure and wake-up setups:** [Practice recipes](#11-drills) / [Read move data and gaps](#10-data).
+
 # Part 2: Build the opponent
 
 Set up what the dummy does. Practice starts with building the opponent.
@@ -567,12 +573,16 @@ Change one setting at a time at first, and check that the intended attack still 
 <a id="05-recording"></a>
 ## 5. Record opponent actions
 
-Recording and Action Steps offer two ways to prepare the opponent's behavior.
+Choose how to prepare and manage the dummy's actions based on your goal.
 
-| Method | How you prepare the sequence | Best suited to |
-|---|---|---|
-| Recording | Play the opponent's character and record the inputs yourself | Quickly reproducing offense you can perform by hand |
-| Action Steps | Specify the actions and their timing | Reproducing difficult execution or earliest possible actions |
+| Goal | What to use |
+|---|---|
+| Start practicing with a ready-made sequence | [Import an included Action Pattern](#sasquatch-pb-tutorial) |
+| Reproduce actions you can perform yourself | Record your inputs with Recording Wizard |
+| Build a sequence by specifying actions and timing | [Action Steps](#06-steps) |
+| Save and manage multiple sequences, then run them at random | [Action Patterns](#07-patterns) |
+
+**Build a sequence in Steps, then save it with a name in Patterns. Select several patterns to have the dummy choose between different offensive sequences at random.**
 
 A recording stores gameplay inputs for replay, not video.
 
@@ -729,7 +739,7 @@ If a dash stops coming out from the second pass onward, check whether the preced
 <a id="07-patterns"></a>
 ## 7. Save, randomize and share Action Patterns
 
-Action Steps holds one action list; Action Patterns holds multiple named lists. Patterns are stored separately from the five recording slots.
+**Action Steps defines a sequence of actions. Action Patterns saves and manages multiple named sequences and lets you run them at random.** Save your Steps as a pattern so you can select that sequence again after building another one. With several patterns selected, the tool randomly chooses a whole sequence to run. Patterns are stored separately from the five recording slots.
 
 ### 7.1 Create and use a pattern
 

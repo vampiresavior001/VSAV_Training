@@ -54,6 +54,8 @@ For actions you can perform yourself, **[Recording Wizard](docs/PLAYER_MANUAL.en
 
 **Recording and playback operate in displayed frames.** Use Action Steps for difficult execution or precise Tick-level timing.
 
+**Define a sequence in Action Steps, then use Action Patterns to save and manage multiple sequences and run them at random.**
+
 ## Windows installation
 
 The target game is **Vampire Savior - the lord of vampire (970519 Japan / `vsavj`)**.
