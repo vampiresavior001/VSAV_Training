@@ -1222,7 +1222,7 @@ When neither player has done anything for five Ticks, the meter stops. While it 
 | `Show P1 Inputs` | Draws P1's (your) inputs above the meter on each Tick they change |
 | `Log Hitstop Frames` | On: records all Ticks during hitstop. Off: skips only hitstop Ticks when no attacking character's animation advanced |
 
-Frame Meter counts differently from [Tick Data](#tick-data). **Display settings can affect both the states recorded and the measured values.** For example, enabling `Show Throw Invulnerability` records affected Ticks as throw invulnerability in preference to active attack frames, which also affects the numerical calculations. Keep throw-invulnerability, movement and hitstop settings the same when comparing results. The [v11.7.22.3 release notes](RELEASE_NOTES.md#v117223) report that the developer checked the values using Demitri's 11 standing and crouching normals. This does not cover every character or move.
+Frame Meter counts differently from [Tick Data](#tick-data). **Display settings can affect both the states recorded and the measured values.** For example, enabling `Show Throw Invulnerability` records affected Ticks as throw invulnerability in preference to active attack frames, which also affects the numerical calculations. Keep throw-invulnerability, movement and hitstop settings the same when comparing results. The [v11.7.22.3 release notes](RELEASE_NOTES.md#v117223) report that the developer checked the values using Demitri's 12 standing and crouching normals. This does not cover every character or move.
 
 The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
 

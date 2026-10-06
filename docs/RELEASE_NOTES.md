@@ -15,7 +15,7 @@ Newest first. Older releases are kept below.
   close LP, blocked: 2 red tiles instead of 3), and a move that keeps animating
   through hitstop lost those Ticks too (crouching HK, blocked: 1 red instead
   of 4). A Tick is now skipped only when no attacking character moved. Checked
-  on Demitri's 11 standing and crouching normals: Startup / Total / Recovery /
+  on Demitri's 12 standing and crouching normals: Startup / Total / Recovery /
   Advantage match the whiff and Tick Data
 - The defender's yellow run can be a few tiles longer than Tick Data's Hitstun:
   the contact Tick, and Ticks where only the attacker moved, take a column too

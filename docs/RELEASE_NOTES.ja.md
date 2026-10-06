@@ -14,7 +14,7 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
   ヒットストップ明けの最初のTickが抜け（デミトリ近距離LPのガードで赤2マス。空振りは3マス）、
   ヒットストップ中も動く技は、その間に動いたTickも抜けていました（しゃがみ大Kのガードで赤1マス。
   空振りは4マス）。攻撃中のキャラが1人も動かなかったTickだけを飛ばすように直しました。
-  デミトリの立ち・しゃがみ通常技11種で、Startup / Total / Recovery / Advantage が空振りと
+  デミトリの立ち・しゃがみ通常技12種で、Startup / Total / Recovery / Advantage が空振りと
   Tick Dataに一致することを確かめました
 - 防御側の黄は、Tick DataのHitstunより数マス長く出ることがあります。当たったTickと、攻撃側だけが
   動いたTickも1列ずつ使うためです
