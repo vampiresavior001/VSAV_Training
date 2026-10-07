@@ -16,6 +16,6 @@ rem What to look for:
 rem   "err" on screen is predicted minus actual, across every prediction made
 rem   during every descent. "+0" only means the prediction is exact.
 rem Everything also lands in analysis\landing_predict_probe.log.
-cd /d "%~dp0.."
-start fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs %cd%\analysis\landingPredictProbe.lua
-exit
+cd /d "%~dp0.." || exit /b 1
+start "" "%cd%\fcadefbneo.exe" vsavj savestates\vsavj_fbneo.fs analysis\landingPredictProbe.lua
+exit /b

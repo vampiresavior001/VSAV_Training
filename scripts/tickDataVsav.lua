@@ -54,27 +54,58 @@ end
 --   030AEE  moveq  #$39, D0           throw box id
 --   030AF0  jsr    $2947e.l           attempt it, EVERY TICK
 --
--- 30 against the table's 持続 29. So the check IS the window, and hooking it is
--- the way to measure it.
+-- 30 against the table's 持続 29. So the attempt IS the window, and hooking it
+-- is the way to measure it.
 --
--- LATCHED, NOT TIME-STAMPED. The first attempt compared the tick counter the
--- hook saw against the one capture saw, which reads as order-independent and is
--- not: the hook runs inside the state dispatch and capture runs from the ticker
--- subscription, so capture usually sampled the tick before. That is why Midnight
--- Bliss reported one active tick instead of twenty-nine (user, 2026-09-07).
+-- THE ATTEMPTS, NOT THE RANGE CHECK (2026-10-08). This used to hook 0x029406,
+-- the range test every throw path goes through. But 29 calls in the character
+-- code make that test on its own, to decide whether a move may start at all -
+-- "is the opponent close enough for this command throw" - and never grab. A
+-- dash into Negative Stolen showed it: one active tick on the move's first
+-- tick, where the command was recognised, and the real attempt five ticks
+-- later (user's screenshot; the table says 発生 6, 持続 1). The family of
+-- routines that TRY a grab are the ones below: each tests the opponent's state
+-- its own way (standing, airborne, in hit stun ...), and every one goes on to
+-- the same grab at 0x029482 when it connects, or to 0x02947A when it does not.
+-- So their entries are the attempts, whiffs included:
 --
--- SAFE TO HOOK. cps2-hitboxes.lua lists 0x029450 among its breakpoints but its
--- registerexec call is commented out, so nothing is registered on this routine.
--- The tool's own hooks are 0x02211A and 0x0221CC.
+--   02947E  standing ($4 = 0200 / 0204), via the range test   49 callers
+--   0294D8  airborne                                           14
+--   02950A  airborne, no height test                            1
+--   029510  in hit stun ($4 = 0202)                             2
+--   029540  in hit stun, grounded                               1
+--   02957C                                                      6
+--   0295BE  in hit stun, $54 not FF                             2
+--   0295F8  standing, own range                                 6
+--   029664  standing, joins 0295F8                              3
+--
+-- (0x02968C, called 68 times, is the throw's hit and release, not an attempt.)
+-- A grab made some other way still shows: the tick the opponent's $05 turns to
+-- 0x06, thrown, counts too (capture, and Frame Meter's read_throw_checks).
 local throw_seen = false
-if memory ~= nil and memory.registerexec ~= nil then
-  memory.registerexec(0x029406, function()
-    -- The measured side only. A6 is the object attempting the throw.
-    local _a6 = memory.getregister and memory.getregister("m68000.a6")
-    if _a6 ~= ATK then return end
-    throw_seen = true
-  end)
+local def_was_thrown = false
+-- EVERY ATTEMPT, BOTH PLAYERS, COUNTED. Frame Meter draws the throw window from
+-- this too: a second registerexec on one of these addresses would replace this
+-- one, so it reads the counts instead. A count, not a flag, so each reader can
+-- ask "any since I last looked" without taking the answer from the other.
+local throw_checks = { [P1] = 0, [P2] = 0 }
+local GRAB_ATTEMPTS = { 0x02947E, 0x0294D8, 0x02950A, 0x029510, 0x029540,
+                        0x02957C, 0x0295BE, 0x0295F8, 0x029664 }
+local function on_grab_attempt()
+  -- A6 is the object attempting the throw.
+  local _a6 = memory.getregister and memory.getregister("m68000.a6")
+  if throw_checks[_a6] ~= nil then throw_checks[_a6] = throw_checks[_a6] + 1 end
+  -- Tick Data: the measured side only.
+  if _a6 ~= ATK then return end
+  throw_seen = true
 end
+if memory ~= nil and memory.registerexec ~= nil then
+  for _, _pc in ipairs(GRAB_ATTEMPTS) do memory.registerexec(_pc, on_grab_attempt) end
+end
+-- How many throw attempts the player at this base has made so far.
+function M.throw_checks(base) return throw_checks[base] end
+-- The addresses hooked, for the offline test.
+M.GRAB_ATTEMPTS = GRAB_ATTEMPTS
 
 -- THE DAMAGE IS NOT ALWAYS ON THE ATTACKER.
 --
@@ -200,10 +231,18 @@ function M.capture(tick)
   -- what says which move is playing.
   local _cel = memory.readdword(ATK + 0x1C) or 0
   local _box = attack_box(ATK)
+  -- The attacker's OWN box, before a projectile or a throw stands in for it
+  -- below: Meaty Timing counts an active tick only for this one.
+  snapshot.p1.body_box = _box ~= 0
   -- The attacker's own box first, then the throw it is offering, then whatever
   -- it has put on the screen. A move is one of the three.
   if _box == 0 then _box = projectile_box() end
-  if _box == 0 and throw_seen then
+  -- The tick the opponent became thrown is a throw's active tick whichever
+  -- way the grab was made (see GRAB_ATTEMPTS).
+  local _thrown = memory.readbyte(DEF + 0x005) == 0x06
+  local _thrown_now = _thrown and not def_was_thrown
+  def_was_thrown = _thrown
+  if _box == 0 and (throw_seen or _thrown_now) then
     -- A throw has no attack box, so it borrows an id of its own. Runs, startup
     -- and active then work unchanged.
     _box = 0x100
@@ -431,6 +470,11 @@ function M.capture(tick)
   snapshot.p2.hitfreeze = snapshot.p2.hitstop ~= 0
   -- $1A7 is the reliable wake-up tally used by the existing GC trainer.
   snapshot.p2.knockdown = memory.readbyte(DEF + 0x1A7) ~= 0
+  -- For Meaty Timing. The last tick of a recovery: 0x024F0A writes $04..$07 =
+  -- 02 02 04 00, and the next tick is the reversal tick (the read Frame Meter
+  -- makes for its yellow mark). And whether that tick is in the air.
+  snapshot.p2.marker = memory.readdword(DEF + 0x004) == 0x02020400
+  snapshot.p2.airborne = memory.readbyte(DEF + 0x038) ~= 0
   return snapshot
 end
 

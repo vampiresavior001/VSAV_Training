@@ -16,6 +16,6 @@ rem Keep playing for a few seconds after each one: whether the emulator comes
 rem back matters as much as whether the dialog worked.
 rem Everything also lands in analysis\dialog_probe.log (FBNeo resolves relative
 rem io.open against the Lua script's own folder, not this bat's cd target).
-cd /d "%~dp0.."
-start fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs %cd%\analysis\dialogProbe.lua
-exit
+cd /d "%~dp0.." || exit /b 1
+start "" "%cd%\fcadefbneo.exe" vsavj savestates\vsavj_fbneo.fs analysis\dialogProbe.lua
+exit /b

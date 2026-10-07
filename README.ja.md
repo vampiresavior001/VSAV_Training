@@ -73,7 +73,7 @@ Tickはゲームの内部フレームです。本フォークは、この内部�
 
 全画面で遊ぶときは、先に`Video > Blitter options > Windowed Fullscreen`にチェックを入れてください。古い形式の全画面では、パターンの名前入力やExport・Importのウィンドウを表示できません。
 
-配置先は、空白や日本語を含まない短いパスを使用してください。既存環境を更新する場合は、先に[バックアップ](#更新とバックアップ)を行います。
+配置先は、日本語を含まない短いパスを使用してください（空白は含んでも構いません）。既存環境を更新する場合は、先に[バックアップ](#更新とバックアップ)を行います。
 
 ### 基本操作
 
@@ -136,8 +136,10 @@ FBNeoを終了する前に編集内容を保存し、次のファイルをバッ
 
 | 内容 | 保存先 |
 |---|---|
-| 設定・Action Steps・Action Patterns | `scripts/training_settings.json` |
+| 設定・Action Steps・Action Patterns | `training_data/training_settings.json` |
 | 記録 | `scripts/macro`フォルダー全体 |
+
+設定ファイルは、`scripts`の外にある`training_data`フォルダーに置かれます。`training_data`を使う版を最初に起動すると、既存の`scripts/training_settings.json`が自動でそこへコピーされます。元のファイルは控えとしてその場に残りますが、以後は更新されません。記録は引き続き`scripts/macro`にあるため、両方をバックアップしてください。
 
 更新はトレーニング専用の複製先へ行います。配布物に記録ファイルが含まれる場合があるため、自分の記録を不用意に上書きしないでください。更新後はFBNeoを完全に再起動し、`Video > Runahead`で`Disabled`が選ばれていることを確認します。
 

@@ -2,8 +2,11 @@
 --
 -- The attack box is animation data and can be read (cel + 0x0A, 0 = none).
 -- The throw box cannot: its id is a literal in the character's own script, so
--- the only thing that knows is the check at 0x029406 - which the ROM shows runs
--- every tick the throw is out (see the note in tickDataVsav.lua).
+-- the only thing that knows is the grab attempt - the family of routines from
+-- 0x02947E that try a grab and go on to 0x029482 when it connects. Not the
+-- range test 0x029406 they share: command code calls that on its own to decide
+-- whether a move may start, and a dash into Negative Stolen read Startup 1
+-- instead of 6 from it (2026-10-08; see the note in tickDataVsav.lua).
 --
 -- What this pins is the hook, the P1 filter, and that the flag is LATCHED
 -- rather than time-stamped. The first attempt compared tick counters and the
@@ -38,7 +41,13 @@ memory = {
 local P1, P2 = 0xFF8400, 0xFF8800
 local vsav = dofile("scripts/tickDataVsav.lua")
 
-want("投げ判定にフックした", type(hooks[0x029406]), "function")
+local hooked = 0
+for _, pc in ipairs(vsav.GRAB_ATTEMPTS) do
+	if type(hooks[pc]) == "function" then hooked = hooked + 1 end
+end
+want("掴みの入口 9 つすべてにフック", hooked, 9)
+want("間合いの確認 (0x029406) にはフックしない", hooks[0x029406], nil)
+local function attempt() hooks[0x02947E]() end
 
 ram[P1 + 0x1C] = 0x900000
 ram[0x900000 + 0x0A] = 0
@@ -48,10 +57,10 @@ local s = vsav.capture(2)
 want("攻撃判定は出る", s.p1.attack_box, true)
 want("その id", s.p1.attack_box_id, 7)
 
--- 投げ。攻撃判定は無いが、検査が走っていれば出ている扱い。
+-- 投げ。攻撃判定は無いが、掴みを試していれば出ている扱い。
 ram[0x900000 + 0x0A] = 0
 regs["m68000.a6"] = P1
-hooks[0x029406]()
+attempt()
 s = vsav.capture(3)
 want("投げ判定も箱として出る", s.p1.attack_box, true)
 want("投げ専用の id", s.p1.attack_box_id, 0x100)
@@ -62,21 +71,51 @@ want("検査が無いティックでは消える", vsav.capture(4).p1.attack_box
 -- 持続のあいだ毎ティック検査が走る = 毎ティック出ている。
 local out = 0
 for _ = 1, 29 do
-	hooks[0x029406]()
+	attempt()
 	if vsav.capture(0).p1.attack_box then out = out + 1 end
 end
 want("毎ティック検査があれば毎ティック出る", out, 29)
 
 -- 相手 (P2) の投げは拾わない。
 regs["m68000.a6"] = P2
-hooks[0x029406]()
+attempt()
 want("P2 の投げは拾わない", vsav.capture(5).p1.attack_box, false)
 
 -- 攻撃判定があるときは、そちらの id が優先される。
 ram[0x900000 + 0x0A] = 3
 regs["m68000.a6"] = P1
-hooks[0x029406]()
+attempt()
 want("攻撃判定が優先", vsav.capture(6).p1.attack_box_id, 3)
+
+-- 入口を通らない掴みでも、相手が投げられ状態 ($05 = 0x06) に入った Tick は持続。
+do
+	ram[0x900000 + 0x0A] = 0
+	vsav.capture(9)
+	ram[P2 + 0x005] = 0x06
+	local t = vsav.capture(10)
+	want("投げられた Tick は投げの箱", t.p1.attack_box_id, 0x100)
+	want("投げられたままの次の Tick は出ない", vsav.capture(11).p1.attack_box, false)
+	ram[P2 + 0x005] = 0
+	vsav.capture(12)
+end
+
+-- 回数は両プレイヤー分 (Frame Meter が読む、2026-10-08)。同じアドレスに 2 つ目の
+-- registerexec は置けないので、Frame Meter はこの回数を見る。Tick Data の拾い方
+-- (測る側だけ、読んだら消える) は上のとおり変わらない。
+do
+	ram[0x900000 + 0x0A] = 0
+	local c1, c2 = vsav.throw_checks(P1), vsav.throw_checks(P2)
+	regs["m68000.a6"] = P2 ; attempt()
+	want("P2 の検査も数える", vsav.throw_checks(P2), c2 + 1)
+	want("P1 の回数は変わらない", vsav.throw_checks(P1), c1)
+	want("P2 の検査は Tick Data には出ない", vsav.capture(7).p1.attack_box, false)
+	regs["m68000.a6"] = P1 ; attempt()
+	want("P1 の検査を数える", vsav.throw_checks(P1), c1 + 1)
+	regs["m68000.a6"] = 0xFF9400 ; attempt()
+	want("プレイヤー以外は数えない",
+		vsav.throw_checks(P1) == c1 + 1 and vsav.throw_checks(P2) == c2 + 1, true)
+	vsav.capture(8)   -- P1's latch, taken so it does not reach the cases below
+end
 
 
 -- 飛び道具は別オブジェクト。本体のセルには判定が無いので、そちらを見ないと
@@ -377,10 +416,10 @@ ram[P1 + 0x05C] = 0
 ram[P2 + 0x01C] = 0x920000
 ram[0x920000 + 0x0A] = 0
 regs["m68000.a6"] = P1
-hooks[0x029406]()
+attempt()
 want("測っていない側の投げは拾わない", vsav.capture(202).p1.attack_box, false)
 regs["m68000.a6"] = P2
-hooks[0x029406]()
+attempt()
 want("P2 の投げを拾う", vsav.capture(203).p1.attack_box_id, 0x100)
 
 -- 飛び道具の持ち主も倒れる。$30 が測る側なら自分の技。

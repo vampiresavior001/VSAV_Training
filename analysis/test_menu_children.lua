@@ -190,7 +190,7 @@ local TREE = {
 			"Show P1 Inputs" } },
 	},
 	Trainer = {
-		{ "Tick Data", { "Tick Data Side", "Show Action Timeline" } },
+		{ "Tick Data", { "Tick Data Side", "Show Meaty Timing", "Show Action Timeline" } },
 		{ "Show Action Timeline", { "Timeline Cut (Free Ticks)" } },
 	},
 }
@@ -269,6 +269,11 @@ do
 	local sw = find_row("Show Action Timeline")
 	want("Show Action Timeline の既定は ON", sw ~= nil and sw.default_value, true)
 	want("Show Action Timeline が書く先", sw ~= nil and sw.property_name, "display_action_timeline")
+	-- MEATY TIMING (2026-10-07): on by default, between the Tick Data rows and
+	-- the Action Timeline - the order the rows have on screen.
+	local mt = find_row("Show Meaty Timing")
+	want("Show Meaty Timing の既定は ON", mt ~= nil and mt.default_value, true)
+	want("Show Meaty Timing が書く先", mt ~= nil and mt.property_name, "display_meaty_timing")
 end
 
 if fails == 0 then

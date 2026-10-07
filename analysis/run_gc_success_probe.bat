@@ -8,6 +8,6 @@ rem   3. do it eight or ten times, including attempts that were too late
 rem   4. complete one or two by RELEASING the button instead of pressing it
 rem The screen shows the gap in ticks between the last button edge and the
 rem cancel. All zeros means the input bar is only losing it to sampling rate.
-cd /d "%~dp0.."
-start fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs %cd%\analysis\gcSuccessProbe.lua
-exit
+cd /d "%~dp0.." || exit /b 1
+start "" "%cd%\fcadefbneo.exe" vsavj savestates\vsavj_fbneo.fs analysis\gcSuccessProbe.lua
+exit /b

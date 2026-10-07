@@ -154,7 +154,7 @@ If Runahead is still enabled, this red warning flashes at the top of the screen 
 
 Launch matches through your usual Fightcade installation and training through the copied batch file. A shortcut named “VSAV Training” helps distinguish the two.
 
-For a fresh installation, use a short path without spaces or Japanese characters to avoid problems with the existing launcher and Lua file access. Before updating, follow the [backup instructions](#13-save).
+For a fresh installation, use a short path without Japanese characters to avoid problems with Lua file access. Spaces in the path are fine. Before updating, follow the [backup instructions](#13-save).
 
 **Always assign `Lua Hotkey 1` and `P1 Coin`: neither has a menu equivalent.** The other shortcuts can be replaced by the menu operations below.
 
@@ -1092,7 +1092,7 @@ Here, `Total 45t` is 4 + 3 + 20 + 19 − 1. Startup and active time both include
 
 </details>
 
-The green history below is [Action Timeline](#action-timeline). The next section explains how to read it separately from the move data.
+Below the move data come [Meaty Timing](#meaty-timing), when it has a result, and the green history, [Action Timeline](#action-timeline). The next section explains how to read the history separately from the move data.
 
 | Field | Meaning |
 |---|---|
@@ -1112,6 +1112,26 @@ Keep these limits in mind:
 - Moves with a super flash may produce large Total or Recovery values.
 - Projectile active time does not represent all the time the projectile continues flying after the character's measurement ends.
 - Startup and active share the first hitbox Tick. For a basic single move, read `Total = Startup + Active + Recovery − 1`: startup 4, active 3 and recovery 7 give Total 13.
+
+<a id="meaty-timing"></a>
+**Meaty Timing** (`Show Meaty Timing` under `Tick Data`, on by default) shows on one row, between the Tick Data rows and the green history, when your attack met the opponent as they recovered:
+
+`Wake-up  Reversal +0t  Active 3t`
+
+- The first word is the situation: `Wake-up` (after a knockdown), `After Guard` (block stun), `After Hit` (hit stun) or `Air Recovery` (recovering in the air from a hit).
+- `Reversal +0t` is the contact Tick minus the opponent's reversal Tick. The reversal Tick is the first Tick the opponent can act again, when only blocking and special moves are available: the Tick Frame Meter marks with a magenta bar ([11.6](#frame-meter)). It is not the Tick an input was sent, nor the first Tick a normal can come out. Contact on that same Tick is `+0t`.
+- `Active 3t` is which Tick of your attack's active period made contact, counted from 1 the way Tick Data counts `Active`: Ticks frozen in hitstop are not counted, and moves that keep animating through hitstop are. For a move with several active periods, `Active 2:3t` is the third Tick of the second one. `Active -` means a projectile or a throw made contact; which Tick of the move that was cannot be told.
+- For each recovery, the first hit or block from `+0t` to `+30t` is recorded. Later hits of the same string, whiffs and contacts outside that range leave the row as it is; it stays until the next result. A contact before the reversal Tick, while the opponent is still in stun, is not recorded.
+- The opponent is the side opposite `Tick Data Side`. Q-Bee's wake-up has no such reversal Tick, so it is not measured. Changing characters, the end of a round, loading a state, changing `Tick Data Side` or turning it off clears the row, and a recovery already under way when measuring starts is not measured.
+- It does not judge whether a setup worked or a jump was stopped.
+
+![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 4t. On the Frame Meter below, P2's magenta bar sits under the fourth of P1's five red tiles](images/meaty_timing.png)
+
+In this example, P1's attack was timed to P2's wake-up. It made contact on P2's reversal Tick (`+0t`), on the 4th of its 5 active Ticks (`Active 5t` in the row above). On Frame Meter the same contact shows as P2's magenta bar under P1's 4th red tile. The tiles before it with white lower halves are Ticks in which P2 was invulnerable while getting up.
+
+`Show Meaty Timing` opens indented under `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
+
+![On the Trainer tab, Show Meaty Timing is indented under Tick Data, with its help text at the bottom](images/meaty_timing_menu.png)
 
 <a id="action-timeline"></a>
 ### 11.3 Action Timeline and Step Wait Ticks
@@ -1187,9 +1207,9 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 
 **Frame Meter gives you a visual view of normal and special moves.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
 
-![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 6 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a yellow top](images/frame_meter.png)
+![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 6 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
 
-In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. P1's row runs green (startup), red (active), then blue (recovery). P2's row is yellow (block stun). The gray top on its first tile marks a Tick spent frozen in hitstop; it is not counted, so the 14 yellow tiles are numbered 13. The yellow bar on the tile after the yellow run is the reversal-only tick, and the red and white stripes on the lower half of the five tiles from there are throw invulnerability. The black dots between tiles mark pairs of Ticks that fell in the same displayed frame at turbo.
+In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. P1's row runs green (startup), red (active), then blue (recovery). P2's row is yellow (block stun). The gray top on its first tile marks a Tick spent frozen in hitstop; it is not counted, so the 14 yellow tiles are numbered 13. The magenta bar along the top of the tile after the yellow run is the reversal-only tick, and the red and white stripes on the lower half of the five tiles from there are throw invulnerability. The black dots between tiles mark pairs of Ticks that fell in the same displayed frame at turbo.
 
 **The number on a run of tiles is how many tiles of that color are in a row (shown for runs of 5 or more; up to four can be told at a glance).** The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
 
@@ -1199,23 +1219,25 @@ With `Frame Meter = yes`, the last row on the `Display` tab, both players' state
 
 | Tile color | State |
 |---|---|
-| Green | Startup |
-| Red | Attack box out |
+| Green | Startup; also Dark Force activation |
+| Red | Attack box out, or a throw: a throw has no attack box, so the Ticks the game tries the grab (whiffs included) and the Tick the opponent is grabbed are shown |
 | Blue | Recovery |
-| Yellow | Hit or block stun |
+| Yellow | Hit or block stun, or being thrown |
 | Orange | Projectile out |
-| White | Invulnerable |
+| Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup |
 | Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change |
 | Light blue | Jump or dash (with `Include Jumps / Dashes` ON) |
 | Dark gray | Doing nothing |
-| Yellow bar along the top | Reversal-only tick: only blocking and special moves are available (see below) |
+| Magenta bar along the top | Reversal-only tick: only blocking and special moves are available (see below) |
 | Gray bar along the top | A Tick the character spent frozen in hitstop; left out of the numbers and run counts (see below) |
 | Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
 | Tile borders in yellow-green | PB succeeded |
 
 **Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
 
-**A yellow bar along the top of a tile marks a reversal-only tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
+**A magenta bar along the top of a tile marks a reversal-only tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
+
+**Invulnerability is shown the way the hitbox display shows it:** the character has no hurtbox, or the game has flagged it untouchable (the values `$147`, `$11E`, `$134` or `$145`). Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab shows only `$147`. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF the hitstop Ticks are not drawn, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
 
 **A gray bar along the top marks a Tick the character spent frozen in hitstop.** It is left out of that character's numbers and run counts. With `Show P1 Inputs` ON, every hitstop Tick is shown; with it OFF, only the Ticks in which an attacking character moved are kept (some moves keep animating through hitstop). The numbers are the same either way.
 
@@ -1282,7 +1304,7 @@ With Anakaris as the dummy, `Pit of Blame` offers `None / Normal / ES / Random`.
 
 | Content to preserve | Location or method |
 |---|---|
-| Settings, Action Steps and Action Patterns | `scripts/training_settings.json` |
+| Settings, Action Steps and Action Patterns | `training_data/training_settings.json` |
 | Character-specific recordings | `scripts/macro/<character name>/slot_1.mis` through `slot_5.mis` |
 | Shared recordings | `scripts/macro/slot_1.mis` through `slot_5.mis` |
 | Last recording and other recording data | Under `scripts/macro`; back up the entire folder |
@@ -1290,11 +1312,15 @@ With Anakaris as the dummy, `Pit of Blame` offers `None / Normal / ES / Random`.
 
 General settings are saved when you close the menu. Action Steps edits are separate: **you must select Save for them to be included**.
 
+**The settings file is in `training_data`, outside `scripts`.** When you first start a version that uses `training_data`, an existing `scripts/training_settings.json` is copied there automatically. If both exist, the one in `training_data` is used. The old file stays where it was as a copy and is no longer updated. Recordings are still in `scripts/macro`; `training_data` alone is not a full backup.
+
+If a settings file cannot be read, a red message at the top of the screen shows its path. Nothing is saved until FBNeo is restarted, and the file is not overwritten. Fix or move that file, then restart.
+
 To update:
 
 1. Save any Action Steps edits, then close the training menu.
 2. Close FBNeo.
-3. Copy `scripts/training_settings.json` and the entire `scripts/macro` folder elsewhere.
+3. Copy the `training_data` folder and the entire `scripts/macro` folder elsewhere. When updating from a version that kept the settings in `scripts/training_settings.json`, copy that file too.
 4. Install the update in the separate training copy. The downloaded files may include recordings, so take care not to overwrite your own `.mis` files.
 5. Restart from the copied batch file and confirm that `Disabled` is selected under `Video > Runahead` and that your settings and recordings remain.
 
@@ -1305,7 +1331,7 @@ When resetting settings for diagnosis, move the JSON aside instead of deleting i
 
 | Symptom | Check first |
 |---|---|
-| Does not start | Whether FBNeo alone runs `vsavj`; batch/EXE placement; complete `scripts` folder; spaces or Japanese characters in the path; whether antivirus software is blocking `fcadefbneo.exe` |
+| Does not start | Whether FBNeo alone runs `vsavj`; batch/EXE placement; complete `scripts` folder; Japanese characters in the path; whether antivirus software is blocking `fcadefbneo.exe` |
 | `gd.dll` error | Check that the entire FBNeo folder was copied. If the error persists, report the full message and the action that triggered it, such as launching the game or loading the script |
 | Dummy actions or readouts behave incorrectly | Whether you launched the separate training copy and selected `Video > Runahead > Disabled`. The absence of a warning does not confirm that Runahead is disabled. If a red warning appears, recheck the setting and installation, then restart |
 | Menu will not open | Whether the match has started and `Lua Hotkey 1` is assigned; do not rely on Start to open the menu |

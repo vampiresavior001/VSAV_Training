@@ -17,6 +17,8 @@ Usage (from the fbneo repo root):
 
 Exclusions (the same list every handoff section 7 has carried):
     training_settings.json        the user's live settings, logger state and all
+                                  (scripts/ until v11.7.23; training_data/ since,
+                                  which is not walked at all)
     training_settings_pre_action_patterns.json
     *.log, action_patterns_transfer.json
     scripts/reversal_logs/  scripts/reversal_logs_archive/  scripts/savestate/
@@ -114,7 +116,8 @@ def main():
         print("contains %s:" % must, must in names)
     # docs/development is for developers and lives on GitHub only; the zip is
     # for players (user, 2026-09-30). Nothing walks it, and this says so.
-    for must_not in ("scripts/training_settings.json", "scripts/reversal_logs",
+    for must_not in ("scripts/training_settings.json", "training_data",
+                     "scripts/reversal_logs",
                      "scripts/action_pattern_trace.log", "docs/development"):
         hit = [n for n in names if n.startswith(must_not)]
         print("excluded %s:" % must_not, not hit)

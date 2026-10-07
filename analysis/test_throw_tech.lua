@@ -154,10 +154,9 @@ local saved = {}
 -- は解決できない。JSON は使わない - ファイルの中身は下で直接渡す。
 package.preload["./scripts/dkjson"] = function() return {} end
 dofile("utilities.lua")
--- 差し替えは dofile の後。read_object_from_json_file は utilities.lua が
--- 定義するグローバルなので、先に置くと上書きされる。
-read_object_from_json_file = function() return saved end
-write_object_to_json_file = function() return true end
+-- 設定ファイルの読み書きは settingsFile.lua (training_settings_store) が持つ。
+-- ここではその load を差し替えて、ファイルの中身を直接渡す。
+training_settings_store = { load = function() return saved end, save = function() return true end }
 
 local function migrated(file_table)
 	saved = file_table

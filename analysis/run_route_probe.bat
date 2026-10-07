@@ -12,6 +12,6 @@ rem   8. hit a CPU opponent and let it recover on its own, several times
 rem   9. rapid-fire LP BY HAND, twice and three times. No menu here, so
 rem      Auto is checked in the training script instead.
 rem Then close the emulator. The log lands next to fcadefbneo.exe.
-cd /d "%~dp0.."
-start fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs %cd%\analysis\routeProbe.lua
-exit
+cd /d "%~dp0.." || exit /b 1
+start "" "%cd%\fcadefbneo.exe" vsavj savestates\vsavj_fbneo.fs analysis\routeProbe.lua
+exit /b

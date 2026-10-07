@@ -101,6 +101,10 @@ local function fresh(match_begun)
 end
 -- P1 attacking, not walking: the meter logs every Tick.
 ram[0xFF8400 + 0x105] = 1
+-- Both have a hurtbox, as a character normally does: with $94-$96 all 0 the
+-- meter takes them for invulnerable (see [4j]).
+ram[0xFF8400 + 0x94] = 1
+ram[0xFF8800 + 0x94] = 1
 
 -- One call per Tick, with the displayed frame the Tick ran in. `before`, if
 -- given, runs ahead of each Tick (to change a state mid-run).
@@ -133,6 +137,11 @@ local function dotted(fm)
 	local top
 	for _, d in ipairs(boxes) do if top == nil or d.y < top then top = d.y end end
 	local good, left, right, p1 = 0, 0, 0, 0
+	local dots = {}
+	for _, d in ipairs(boxes) do
+		if d.w == 1 and d.h == 1 then dots[#dots + 1] = d end
+	end
+	boxes = dots
 	for _, d in ipairs(boxes) do
 		local side = (d.x - 8) % 4
 		local host = nil
@@ -197,12 +206,13 @@ n, good, left, right, p1 = dotted(fm)
 eq("何もしない → やられ: P2 は右 (やられのマス) だけ", (n - p1) .. ":" .. left .. "+" .. right, "1:1+2")  -- P1: 1 + 1
 eq("どれも動いているマスの上", good, n)
 ram[0xFF8800 + 0x05] = 0
--- Striped and light tiles get the same black dots: invulnerable white.
+-- Invulnerability is drawn on the lower half now (see [4j]), so an idle P2
+-- that is invulnerable is still an idle tile: no dots on its row.
 ram[0xFF8800 + 0x147] = 1
 fm = fresh(true)
 feed(TURBO)
 n, good = dotted(fm)
-eq("無敵の白のマスにも黒 (P1 6 + P2 6)", good .. "/" .. n, "12/12")
+eq("何もしていない無敵の P2 には点を打たない (P1 の 6 つ)", good .. "/" .. n, "6/6")
 ram[0xFF8800 + 0x147] = 0
 
 -- ---------------------------------------------------------------------------
@@ -371,11 +381,14 @@ for i = 1, 200 do
 end
 eq("200 回切り替えてもメニューは開いたまま", globals.show_menu, true)
 eq("操作も渡さない", handed_back, 0)
-eq("謝辞の文は残す", fsrc:find("VSAV_FrameMeter by @tirsod.com", 1, true) ~= nil, true)
+-- The off-screen credits text went too (user, 2026-10-08): scrolling the meter
+-- brought it onto the screen. The origin stays credited in the README.
+eq("画面外の謝辞の文は無い", fsrc:find("VSAV_FrameMeter by @tirsod.com", 1, true), nil)
+eq("README には出典が残る", slurp("../README.md"):find("tirsod/VSAV_FrameMeter", 1, true) ~= nil, true)
 globals.options.fm_input_p1 = false
 
 -- ---------------------------------------------------------------------------
-print("[4e] リバーサルフレーム: シグネチャの次の Tick の上 2 行を黄色に")
+print("[4e] リバーサルフレーム: シグネチャの次の Tick の上 2 行をマゼンタに")
 -- The game writes $04..$07 = 02 02 04 00 on the last recovery tick (free-1);
 -- the tick after it is the one where only a special (or guard) can start.
 -- Here: stun on ticks 1..10, the signature on the last one or two of them,
@@ -394,7 +407,7 @@ end
 local function marks()
 	local out = {}
 	for _, b in ipairs(boxes) do
-		if b.w == 3 and b.h == 2 and b.fill == "#FFF730FF" then
+		if b.w == 3 and b.h == 2 and b.fill == "#FF40FFFF" then
 			out[#out + 1] = { here = tiles[(b.x - 1) .. "," .. (b.y - 1)],
 			                  before = tiles[(b.x - 5) .. "," .. (b.y - 1)] }
 		end
@@ -490,6 +503,155 @@ eq("成立は入力 ON でも描く", s_on, 1)
 local _, s_skip = guard_with_pb(false, 8)
 eq("飛ばしたヒットストップの中の成立も、次のマスに描く", s_skip, 1)
 globals.options.fm_input_p1 = false
+ram[A1 + 0x105] = 1
+
+-- ---------------------------------------------------------------------------
+print("[4i] 投げ: 判定の出た Tick を攻撃判定に、投げられている間をやられに (2026-10-08)")
+-- A throw has no attack box. The game checks it on every tick its window is
+-- out (0x029406, the hook Tick Data already has); tickDataVsav counts those
+-- per player and the meter reads the count. The count is driven here.
+local throw_count = { [A1] = 0, [A2] = 0 }
+package.loaded["./scripts/tickDataVsav"] = { throw_checks = function(base) return throw_count[base] end }
+local function throw_case(window, thrown_from)
+	fm = fresh(true)
+	local frames = {}
+	for i = 1, 40 do frames[i] = 5000 + i end
+	local in_window = {}
+	for _, t in ipairs(window) do in_window[t] = true end
+	feed(frames, function(i)
+		ram[A1 + 0x105] = (i <= 24) and 1 or 0     -- the throw, start to end
+		ram[A1 + 0x20] = 300 - i                    -- it plays every tick
+		box(false) ; stop(0)
+		if in_window[i] then throw_count[A1] = throw_count[A1] + 1 end
+		ram[A2 + 0x05] = (thrown_from ~= nil and i >= thrown_from and i <= 22) and 6 or 0
+	end)
+	ram[A1 + 0x105] = 0 ; ram[A2 + 0x05] = 0 ; ram[A1 + 0x20] = 0
+	draw_once(fm)
+	local hurt = 0
+	for _, img in pairs(tiles) do
+		if img == "images/framemeter/FM_hurt.png" then hurt = hurt + 1 end
+	end
+	return startup_tiles, active_tiles, hurt, p1_numbers()
+end
+-- A grab that connects writes the opponent's thrown state on the tick it is
+-- tried (0x029482), so the attempt and the thrown edge are the same tick.
+local su, act, hurt, nums = throw_case({ 5 }, 5)
+eq("掴んだ投げ: 試した 1 Tick が攻撃判定", act, 1)
+eq("その前は発生", su, 4)
+eq("発生は判定の Tick まで (4 + 1)", nums:match("^Startup (%d+)"), "5")
+eq("投げられている 18 Tick はやられ", hurt, 18)
+-- A grab made by a path that is not hooked: the thrown edge alone.
+su, act = throw_case({}, 7)
+eq("入口を通らない掴みも、投げられた Tick が攻撃判定", act, 1)
+eq("その前は発生", su, 6)
+su, act, hurt = throw_case({ 5, 6, 7, 8 }, nil)
+eq("判定が 4 Tick 出る投げ (空振り): 4 マス", act, 4)
+eq("投げられていなければやられは無い", hurt, 0)
+su, act = throw_case({}, nil)
+eq("判定が出なければ攻撃判定は無い (全部発生)", act, 0)
+package.loaded["./scripts/tickDataVsav"] = nil
+ram[A1 + 0x105] = 1
+
+-- ---------------------------------------------------------------------------
+print("[4j] 無敵は下半分の白。マスの色と数値はそのまま (2026-10-08)")
+-- Invulnerability used to be a white tile of its own, which hid the startup,
+-- active or recovery under it and restarted the Startup count where it ended.
+-- Now it is the solid white lower half, for any of the hitbox display's
+-- tests: $134, $147, $11E, $145 with $1A4 = 0, or no hurtbox ($94-$96 all 0).
+local WHITE = "#F2F2F2FF"
+local function invul_case(set, clear, shown)
+	fm = fresh(true)
+	globals.options.fm_no_throw = shown == true
+	local frames = {}
+	for i = 1, 30 do frames[i] = 6000 + i end
+	feed(frames, function(i)
+		ram[A1 + 0x105] = (i <= 12) and 1 or 0
+		box(i >= 4 and i <= 6)
+		ram[A1 + 0x20] = 100 - i
+		if i <= 2 then set() else clear() end
+		ram[A1 + 0x143] = (shown and i <= 2) and 1 or 0
+	end)
+	clear() ; box(false) ; ram[A1 + 0x20] = 0 ; ram[A1 + 0x143] = 0
+	draw_once(fm)
+	local white, stripes = 0, 0
+	for _, b in ipairs(boxes) do
+		if b.w == 3 and b.h == 3 and b.fill == WHITE then white = white + 1 end
+		if b.w == 3 and b.h == 1 and b.fill == "#CA275FFF" then stripes = stripes + 1 end
+	end
+	globals.options.fm_no_throw = false
+	return p1_numbers(), startup_tiles, white, stripes
+end
+local function byte(off, v) return function() ram[A1 + off] = v end end
+local plain = invul_case(function() end, function() end)
+eq("無敵なし", plain, "Startup 4 / Total 13 / Recovery 7")
+local cases = {
+	{ "やられ判定なし ($94-$96 = 0)", byte(0x94, 0), byte(0x94, 1) },
+	{ "$147", byte(0x147, 9), byte(0x147, 0) },
+	{ "$11E", byte(0x11E, 1), byte(0x11E, 0) },
+	{ "$134", byte(0x134, 1), byte(0x134, 0) },
+	{ "$145 ($1A4 = 0)", byte(0x145, 1), byte(0x145, 0) },
+}
+for _, c in ipairs(cases) do
+	local nums, su, white = invul_case(c[2], c[3])
+	eq(c[1] .. ": 数値は無敵なしと同じ", nums, plain)
+	eq(c[1] .. ": 発生の緑は 3 マスのまま", su, 3)
+	eq(c[1] .. ": 下半分の白は 2 マス", white, 2)
+end
+do
+	local _, _, white = invul_case(function() ram[A1 + 0x145] = 1 ; ram[A1 + 0x1A4] = 20 end,
+		function() ram[A1 + 0x145] = 0 ; ram[A1 + 0x1A4] = 0 end)
+	eq("$145 でも $1A4 が残っていれば無敵ではない", white, 0)
+end
+do
+	local _, _, white, stripes = invul_case(byte(0x147, 9), byte(0x147, 0), true)
+	eq("無敵と投げ無敵が重なれば白 (縞は描かない)", white .. "/" .. stripes, "2/0")
+end
+-- Dark Force activation ($06 = 0x16) is an animation with no attack flag. With
+-- the white tile gone it read as doing nothing; it is startup (2026-10-08).
+do
+	fm = fresh(true)
+	local frames = {}
+	for i = 1, 60 do frames[i] = 7000 + i end
+	feed(frames, function(i)
+		ram[A1 + 0x105] = 0
+		ram[A1 + 0x006] = (i <= 43) and 0x16 or 0
+		ram[A1 + 0x147] = (i <= 43) and (44 - i) or 0
+		ram[A1 + 0x20] = 300 - i
+	end)
+	ram[A1 + 0x006] = 0 ; ram[A1 + 0x147] = 0 ; ram[A1 + 0x20] = 0
+	draw_once(fm)
+	local white = 0
+	for _, b in ipairs(boxes) do
+		if b.w == 3 and b.h == 3 and b.fill == WHITE then white = white + 1 end
+	end
+	eq("DF 発動は発生 (緑 43 マス)", startup_tiles, 43)
+	eq("下半分の白も 43 マス", white, 43)
+	eq("数値は前の白いマスのときと同じ", p1_numbers(), "Startup 43 / Total 43 / Recovery 0")
+end
+ram[A1 + 0x105] = 1
+
+-- ---------------------------------------------------------------------------
+print("[4k] 持続からすぐ動ける技も、動ける Tick を硬直に数える (2026-10-08)")
+-- Midnight Pleasure whiffed: startup, 29 active ticks, then free on the next
+-- tick with no recovery tile. The tables and Tick Data read 2 / 29 / 1, total
+-- 31; the meter read Recovery 0 / Total 30.
+local function no_recovery_tiles(running)
+	fm = fresh(true)
+	local frames = {}
+	local last = running and 25 or 40
+	for i = 1, last do frames[i] = 8000 + i end
+	feed(frames, function(i)
+		ram[A1 + 0x105] = (i <= 30) and 1 or 0
+		box(i >= 2 and i <= 30)
+		ram[A1 + 0x20] = 300 - i
+	end)
+	box(false) ; ram[A1 + 0x20] = 0
+	draw_once(fm)
+	return p1_numbers()
+end
+eq("持続 29 のあとすぐ動ける: Recovery 1 / Total 31", no_recovery_tiles(false),
+	"Startup 2 / Total 31 / Recovery 1")
+eq("技の途中では足さない", no_recovery_tiles(true):match("Recovery (%d+)"), "0")
 ram[A1 + 0x105] = 1
 
 -- ---------------------------------------------------------------------------

@@ -37,9 +37,11 @@ def main():
     # ag_prox.json is All Guard's own log. It is rewritten whole rather than
     # rotated, so it has to be moved out with the batch or the next session
     # silently overwrites it. idle_sound.json (Mute Idle Sounds, written while
-    # Knockdown Logger is on) is the same kind of file.
+    # Knockdown Logger is on) is the same kind of file, and so is
+    # invuln_log.json (invulnLog.lua, the invulnerability bytes per tick).
     extra = [p for p in (os.path.join(log_dir, "ag_prox.json"),
-                         os.path.join(log_dir, "idle_sound.json"))
+                         os.path.join(log_dir, "idle_sound.json"),
+                         os.path.join(log_dir, "invuln_log.json"))
              if os.path.exists(p)]
     if not paths and not extra:
         print("nothing to archive in", log_dir)

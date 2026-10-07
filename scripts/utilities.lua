@@ -214,11 +214,16 @@ function mark_training_settings_dirty()
 	training_settings_dirty = true
 end
 
+-- THE ONE PLACE THE SETTINGS FILE IS READ AND WRITTEN: settingsFile.lua
+-- (training_settings_store, required by the master script at startup). It
+-- decides where the file is, copies it over from scripts\ once, and writes
+-- through a checked temporary file. Without it nothing is read or written -
+-- there is no fallback to scripts\, which would bring the old place back.
 function save_training_data()
 	-- backup_recordings()
-	if not write_object_to_json_file(training_settings, training_settings_file) then
-		print(string.format("Error: Failed to save training settings to \"%s\"", training_settings_file))
-	else
+	if training_settings_store == nil then
+		print("Error: the settings store is not loaded; the settings were not saved")
+	elseif training_settings_store.save(training_settings) then
 		training_settings_dirty = false
 	end
 
@@ -233,7 +238,12 @@ function save_training_data_if_dirty()
 	end
 end
 function load_training_data()
-	local _training_settings = read_object_from_json_file(training_settings_file)
+	local _training_settings = nil
+	if training_settings_store == nil then
+		print("Error: the settings store is not loaded; the settings were not read")
+	else
+		_training_settings = training_settings_store.load()
+	end
 	if _training_settings == nil then
 		_training_settings = {}
 	end

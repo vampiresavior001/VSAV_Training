@@ -30,7 +30,14 @@ dofile("macro-modules.lua", "r")
 
 serialize                = require './scripts/ser'
 local configModule       = require './scripts/config'
-training_settings_file   = "training_settings.json"
+-- The settings file lives in training_data\ beside scripts\, found from this
+-- script's own path (settingsFile.lua says how). Required here, at startup,
+-- like every other module.
+training_settings_store  = require './scripts/settingsFile'
+training_settings_store.set_master_source((function()
+	local ok, info = pcall(function() return debug.getinfo(1, "S") end)
+	return ok and info and info.source or nil
+end)())
 training_settings        = configModule.default_training_settings
 Rx                       = require "./scripts/rx-lua/rx"
 local inpHistoryModule   = require"./scripts/inputHistory"
@@ -83,6 +90,8 @@ local soundModule        = require "./scripts/sound"
 local frameMeterModule   = require "./scripts/framemeter"
 -- Mute Idle Sounds (Game tab). Its exec hook is registered at start-up.
 local idleSoundModule    = require "./scripts/idleSound"
+-- Diagnostic: the invulnerability bytes per tick, while Knockdown Logger is on.
+local invulnLogModule    = require "./scripts/invulnLog"
 
 -- this module provides clocks and game data from memory
 -- data and clock signals are provided every tick
@@ -199,6 +208,8 @@ globals = {
 	-- The Action Route row, kept apart from last_fd so the HUD can draw it in
 	-- its own colour: the two readouts do not mean the same thing.
 	last_route = "",
+	-- Meaty Timing's row, drawn between the two.
+	last_meaty = "",
 	airdash_heights = {},
 	time_between_dashes = {},
 	dash_length_frames = {},
@@ -222,6 +233,9 @@ globals = {
 	end,
 	set_last_route = function (route)
 		globals.last_route = route
+	end,
+	set_last_meaty = function (meaty)
+		globals.last_meaty = meaty
 	end,
 	pushboxes = {},
 	gc_event = "p1_gc_none",
@@ -313,6 +327,7 @@ local function return_to_character_select()
 	globals.successful_pb_counter = {}
 	globals.last_fd = ""
 	globals.last_route = ""
+	globals.last_meaty = ""
 	-- Nothing else drops a playback on the way out, so it stayed "playing"
 	-- across the return and into the next match - the Play Recording row kept
 	-- reading (playing) and the loop kept trying to restart. The wizard has to
@@ -424,6 +439,7 @@ emu.registerstart(function()
 	debugKnockdownModule.registerStart()
 	frameMeterModule.registerStart()
 	idleSoundModule.registerStart()
+	invulnLogModule.registerStart()
 
 end)
 
@@ -804,6 +820,7 @@ end)
 emu.registerafter(function() --recording is done after the frame, not before, to catch input from playing macros
 	-- Mute Idle Sounds' log: gathered in its exec hook, written here.
 	idleSoundModule.registerAfter()
+	invulnLogModule.registerAfter()
 	if globals.game_state.match_begun == false then
 		if globals == nil or globals.options == nil then
 			return
@@ -947,6 +964,7 @@ while true do
 			and not match_actually_running() then
 			gui.clearuncommitted()
 			draw_runahead_warning()
+			training_settings_store.draw()
 			-- Only show the help text on the select screen itself.
 			if memory.readbyte(0xFF8009) == 2 then
 				if globals.desired_stage ~= nil then
@@ -1057,6 +1075,7 @@ while true do
 		-- Last, so it paints over the hud and the hitbox overlay rather than
 		-- under them.
 		draw_runahead_warning()
+		training_settings_store.draw()
 	end)
 
 	macroLuaModule.gameLoop()

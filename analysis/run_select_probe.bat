@@ -6,6 +6,6 @@ rem   2. choose BULLETA on P1 and lock in, wait a second
 rem   3. choose anyone on P2 and lock in, wait a second
 rem   4. do it again with DEMITRI on P1, as a working case to compare
 rem Then close the emulator. The log lands next to fcadefbneo.exe.
-cd /d "%~dp0.."
-start fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs %cd%\analysis\selectProbe.lua
-exit
+cd /d "%~dp0.." || exit /b 1
+start "" "%cd%\fcadefbneo.exe" vsavj savestates\vsavj_fbneo.fs analysis\selectProbe.lua
+exit /b

@@ -90,6 +90,8 @@ local input_images = {
 -- [11] = Still in hitstop, player 2
 -- [12] = Throw invulnerable ($143), player 1 (VSAV_Training, display only)
 -- [13] = Throw invulnerable ($143), player 2
+-- [14] = Invulnerable, player 1 (VSAV_Training, display only - see mark_lower)
+-- [15] = Invulnerable, player 2
 -- breakdown_log[] shows number of grouped frames counted @ specific positions 
 -- [1] = Player 1
 -- [2] = Player 2
@@ -99,7 +101,7 @@ local state_log = {}
 local breakdown_log = {{},{},true}
 
 local function reset_state_log()
-	state_log = {{},{},{},{},{},{},{},{},{},{},{},{},{}} -- VSAV_Training: [7]..[13]
+	state_log = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}} -- VSAV_Training: [7]..[15]
 	breakdown_log = {{},{},true}
 end
 reset_state_log()
@@ -140,8 +142,8 @@ local test_state = "actionable"
 
 -- VSAV_Training: the easter egg (a shake on toggling Include Hitstop, then the
 -- meter blowing apart with scrolling rainbow text, closing the menu and
--- handing both players back) was removed (user, 2026-10-06). The credits
--- text in draw_meter stays.
+-- handing both players back) was removed (user, 2026-10-06), and the credits
+-- text draw_meter kept off screen with it (2026-10-08).
 
 -- Borrowed from other files.
 local super_mode = false
@@ -166,10 +168,27 @@ local profile = {
 		walking = function(addr) return memory.readbyte(addr + 0x06) == 0x04 end,
 		supering  = function(addr) return memory.readbyte(addr + 0x06) == 0x12 end,
 		dfreturn  = function(addr) return memory.readbyte(addr + 0x06) == 0x1A end,
+		-- VSAV_Training: the Dark Force activation itself (invuln_log.json:
+		-- $06 = 0x16 while $147 counts down from 43, Bishamon).
+		dfstart   = function(addr) return memory.readbyte(addr + 0x06) == 0x16 end,
 
 		hitfreeze = function(addr) return memory.readbyte(addr + 0x05C) ~= 0x00 end,
 		knockdown = function(addr) return memory.readbyte(addr + 0x1A7) ~= 0 end,
-		invulnerable = function(addr) return memory.readbyte(addr + 0x147) ~= 0 end,
+		-- VSAV_Training: INVULNERABLE AS THE HITBOX DISPLAY HAS IT (user,
+		-- 2026-10-08). This read $147 only, so Bishamon's Kirisute Gomen - fully
+		-- invulnerable on its frames 1-13 by the tables - showed nothing: it has
+		-- no hurtbox ($94-$96 all 0) and every flag clear (invuln_log.json from
+		-- the game). cps2-hitboxes.lua hides a hurtbox for $134, $147, $11E, or
+		-- $145 with $1A4 = 0, and a box id of 0 draws nothing; the game's own
+		-- throw check (0x029406) refuses an opponent whose $94-$96 are all 0.
+		invulnerable = function(addr)
+			return memory.readbyte(addr + 0x134) > 0
+				or memory.readbyte(addr + 0x147) > 0
+				or memory.readbyte(addr + 0x11E) > 0
+				or (memory.readbyte(addr + 0x145) > 0 and memory.readbyte(addr + 0x1A4) == 0)
+				or (memory.readbyte(addr + 0x94) == 0 and memory.readbyte(addr + 0x95) == 0
+					and memory.readbyte(addr + 0x96) == 0)
+		end,
 		nothrow = function(addr) return memory.readbyte(addr + 0x143) ~= 0 end,
 		
 		jump = function(addr) 	 return memory.readbyte(addr + 0x006) == 0x06 end,
@@ -258,6 +277,7 @@ local function get_player_objects()
 		player[p].status_2	  = game.status_2(addr)
 		player[p].walking 	  = game.walking(addr)
 		player[p].dfreturn 	  = game.dfreturn(addr)
+		player[p].dfstart 	  = game.dfstart(addr) -- VSAV_Training
 
 		player[p].pbtimer	  = game.pushblock(addr)
 		player[p].pbsuccess   = game.pbsuccess(addr)
@@ -331,8 +351,11 @@ end
 -- ($174) right after - which is why only a special can make the next tick.
 -- The signature held on every transition of two batches (68 and 112) across
 -- wake-up, air recovery and ground hit / block, and on 249 of 250 wake-ups.
--- It sometimes lasts two ticks (15 of 103); free-1 is the LAST of them, so
--- the mark goes on the first tick that no longer carries it.
+-- The mark goes on the first tick that no longer carries it. In the archived
+-- per-tick logs it lasted exactly one tick on all 4358 recoveries (2026-10-07,
+-- knockdown 554, guard 195, hit the rest); an earlier note that it sometimes
+-- lasts two (15 of 103) could not be traced to its data. Read this way, a
+-- longer one would still be marked on its end.
 --
 -- Q-Bee's wake-up does not write it (0 of 21) and opens her window one tick
 -- late, so her specials come out on free+1 like everything else: no mark.
@@ -394,6 +417,38 @@ local function read_pb_success()
 	end
 end
 
+-- VSAV_Training: THROWS (user, 2026-10-08). A throw has no attack box, so the
+-- meter drew a whole throw as startup and nothing red, and the one thrown as
+-- doing nothing. The throw is checked by the game's own routine on every tick
+-- its window is out - the grab attempts Tick Data hooks (tickDataVsav.lua
+-- "THE ATTEMPTS, NOT THE RANGE CHECK") - and on the tick the opponent turns
+-- thrown; those ticks are drawn as active here. The hooks are Tick Data's:
+-- registering a second one would replace it, so its per-player count is read
+-- instead. Being thrown ($05 = 0x06, the test refresh_meter and Tick Data
+-- already use) is drawn as hurt.
+-- tickDataVsav is already loaded by framedata.lua before this file is, so the
+-- require is answered from the cache; offline tests preload a stand-in.
+local tdv_ok, tickDataVsav = pcall(require, "./scripts/tickDataVsav")
+if not tdv_ok then tickDataVsav = nil end
+local last_throw_checks = { nil, nil }
+local was_thrown = { false, false }
+local throw_now = { false, false }
+local function read_throw_checks()
+	local thrown_now = { false, false }
+	for p = 1, 2 do
+		local t = game.thrown(game.address[p])
+		thrown_now[p] = t and not was_thrown[p]
+		was_thrown[p] = t
+	end
+	for p = 1, 2 do
+		local n = tickDataVsav and tickDataVsav.throw_checks
+			and tickDataVsav.throw_checks(game.address[p]) or nil
+		throw_now[p] = (n ~= nil and last_throw_checks[p] ~= nil and n ~= last_throw_checks[p])
+			or thrown_now[(p == 1) and 2 or 1]
+		last_throw_checks[p] = n
+	end
+end
+
 local REVERSAL_SIGNATURE = 0x02020400
 local signature_seen = { false, false }
 local reversal_now = { false, false }
@@ -412,14 +467,27 @@ local function log_player_state(tick)
 		local previousState = state_log[p][log_position-1%log_length]
 
 		local priolist = {
-			{player[p].invulnerable, 8},
+			-- VSAV_Training: invulnerability is not a state any more (user,
+			-- 2026-10-08). It replaced whatever the tick was, so a move whose
+			-- invulnerability ends during startup showed white then green, and
+			-- Startup was counted from the change. It is kept in [14] / [15] and
+			-- drawn on the lower half of the tile (mark_lower), like throw
+			-- invulnerability before it.
 			-- VSAV_Training: throw invulnerability is not a state any more. It
 			-- replaced startup / active / recovery under it, so switching its
 			-- display changed the numbers. It is kept in [12] / [13] and drawn
-			-- on the lower half of the tile (mark_nothrow).
-			{player[p].attack_box, 3},
-			{player[p].hurt or player[p].knockbox, 5},
+			-- on the lower half of the tile (mark_lower).
+			-- VSAV_Training: a throw's window is active too (read_throw_checks).
+			{player[p].attack_box or throw_now[p], 3},
+			-- VSAV_Training: and being thrown is being hurt.
+			{player[p].hurt or player[p].knockbox or player[p].thrown, 5},
 			{player[p].dfreturn, 4},
+			-- VSAV_Training: Dark Force activation is an animation, drawn as
+			-- startup (user, 2026-10-08). It used to show as the white tile;
+			-- once invulnerability moved to the lower half it read as doing
+			-- nothing. As startup it also keeps the numbers that tile gave
+			-- (Startup 43 / Total 43 for Bishamon's).
+			{player[p].dfstart, 2},
 			{player[p].projectile, 6},
 			{player[p].attacking and (previousState == 3 or previousState == 4 or previousState == 6) and (not player[p].walking), 4},
 			{player[p].attacking and (not player[p].walking or player[p].throwing), 2},
@@ -448,6 +516,7 @@ local function log_player_state(tick)
 		-- VSAV_Training: still in hitstop (not counted) and throw invulnerable.
 		state_log[9+p][log_position] = still_now[p] or nil
 		state_log[11+p][log_position] = player[p].nothrow or nil
+		state_log[13+p][log_position] = player[p].invulnerable or nil
 	end
 	-- VSAV_Training: the displayed frame this tick ran in (see second_of_pair).
 	state_log[7][log_position] = emu.framecount()
@@ -555,7 +624,14 @@ local function measure_player(player)
 	end
 
 	-- Inclusive frame counting
-	if recovery > 0 then recovery = recovery + 1 end
+	-- VSAV_Training: the tick the character can act again belongs to recovery
+	-- even when no recovery tile came before it (2026-10-08). Midnight Pleasure
+	-- whiffed goes straight from its 29 active ticks to free, and the tables
+	-- and Tick Data read recovery 1 there; this read 0. So the tick is added
+	-- once the move has ended - the last tick logged is idle - not only after
+	-- a blue tile. While the move is still running nothing is added.
+	local ended = is_idle_state(state(log_position - 1))
+	if recovery > 0 or (active > 0 and ended) then recovery = recovery + 1 end
 	local total = (startup + active + recovery)
 	if active > 0 then startup = startup + 1 end
 	total = total
@@ -583,6 +659,7 @@ local function refresh_meter()
 			or game.nothrow(addr)
 			or globals.options.fm_movement_data and (game.dash(addr) or game.jump(addr))
 			or game.dfreturn(addr)
+			or game.dfstart(addr) -- VSAV_Training
 			or player_owns_projectile(addr)
 	end
 
@@ -606,12 +683,15 @@ local function refresh_meter()
 end
 
 -- VSAV_Training: the reversal-only mark - a bar over the top two rows of the
--- tile's fill, in the hurt tiles' yellow: the character is still partly held,
--- only a special or a guard can start. Light gray on one row was tried first
--- and did not stand out (user, 2026-10-07). The tile keeps its own colour on
--- the four rows below - a special that starts on this tick is green there -
--- and the 120Hz dots sit on the third row, so neither covers the other.
-local FM_REVERSAL = { "#FFF730FF", "#7F7B18FF" } -- current block, previous block
+-- tile's fill, in MAGENTA, which no tile and no other mark uses. Light gray on
+-- one row was tried first and did not stand out; then the hurt tiles' yellow
+-- (#FFF730), which is the hurt tile's own colour - so a meaty that lands ON the
+-- reversal tick, the case the mark matters most for, turns that tile yellow and
+-- the mark vanished into it (user, 2026-10-07 / 08, Meaty Timing +0t). The tile
+-- keeps its own colour on the four rows below - a special that starts on this
+-- tick is green there - and the 120Hz dots sit on the third row, so neither
+-- covers the other.
+local FM_REVERSAL = { "#FF40FFFF", "#7F207FFF" } -- current block, previous block
 -- VSAV_Training: the same two rows say "still in hitstop, not counted" in gray.
 -- The two never fall on one tick; if they did, the reversal is drawn last.
 local FM_STILL = { "#B0B0B0FF", "#585858FF" }
@@ -624,12 +704,20 @@ local function mark_top(player, i, x, y, block)
 	end
 end
 
--- VSAV_Training: throw invulnerability on the lower half of the fill (rows 4-6)
--- in the old throw-invulnerable tile's stripes, over whatever the tile is.
--- Display only: the tile's own state, and the numbers, are unaffected.
+-- VSAV_Training: THE LOWER HALF OF THE FILL (rows 4-6) says what cannot touch
+-- the character, over whatever the tile is. Display only: the tile's own state,
+-- and the numbers, are unaffected.
+--   solid white   invulnerable ([14] / [15]) - strikes and throws alike, as the
+--                 game's throw check refuses an invulnerable opponent too.
+--                 Always shown, as the white tile it replaces was.
+--   stripes       throw invulnerable only ($143), the old throw-invulnerable
+--                 tile's colours; with Show Throw Invulnerability.
+local FM_INVUL = { "#F2F2F2FF", "#3C3C3CFF" } -- the invulnerable tiles' colours
 local FM_NOTHROW = { { "#EFF5F1FF", "#CA275FFF" }, { "#3C3D3CFF", "#320A18FF" } } -- even, odd row
-local function mark_nothrow(player, i, x, y, block)
-	if globals.options.fm_no_throw and state_log[11 + player][i] then
+local function mark_lower(player, i, x, y, block)
+	if state_log[13 + player][i] then
+		gui.box(x + 1, y + 4, x + 3, y + 6, FM_INVUL[block], FM_INVUL[block])
+	elseif globals.options.fm_no_throw and state_log[11 + player][i] then
 		local even, odd = FM_NOTHROW[block][1], FM_NOTHROW[block][2]
 		gui.box(x + 1, y + 4, x + 3, y + 4, even, even)
 		gui.box(x + 1, y + 5, x + 3, y + 5, odd, odd)
@@ -691,7 +779,9 @@ local function draw_meter()
 	measure_anchor.y = measure_anchor.y - lerp
 	if (math.abs(lerp) < .1) then measure_anchor.y = measure1_target end
 
-	gui.text(-512-meter_anchor.scroll, 48, "VSAV_FrameMeter by @tirsod.com\nSpecial thanks to Nbee, MBD, KyleW, vampiresavior001\nrar, hagure, zako, dom & enker\nfor all the hard work that made this\nlittle fun project possible!\n\nGo lab those purrsuits! :3 -6410\n(I really had to learn Lua for this, huh?)\nShoutouts to the vsav discord!")
+	-- VSAV_Training: the credits text that sat here, off screen to the left,
+	-- was removed (user, 2026-10-08): scrolling the meter brought it onto the
+	-- screen. The Frame Meter's origin is credited in the README and manual.
 
 	-- -- The frame meter draws 90 frames to screen (log_drawn), but the log itself is 270 frames long (log_length = log_drawn * 3)
 	-- -- The drawing is then divided into 3 blocks of 90 frames. The current block is drawn first, fully colored,
@@ -750,7 +840,7 @@ local function draw_meter()
 			-- Draws the frame's rectangle
 			gui.image(drawX + xx, drawY + (10*player) + relY, image)
 			-- VSAV_Training: lower half, top two rows, then the 120Hz dots on row 3.
-			mark_nothrow(player, log_ind, drawX + xx, drawY + (10*player) + relY, 1)
+			mark_lower(player, log_ind, drawX + xx, drawY + (10*player) + relY, 1)
 			mark_top(player, log_ind, drawX + xx, drawY + (10*player) + relY, 1)
 			mark_120hz(player, log_ind, drawX + xx, drawY + (10*player) + relY, offset == 0)
 
@@ -816,7 +906,7 @@ local function draw_meter()
 				if state_entry and state_entry[2] ~= nil then
 					image = state_entry[2]
 					gui.image(drawX + xx, drawY + (10*player), image)
-					mark_nothrow(player, log_ind, drawX + xx, drawY + (10*player), 2) -- VSAV_Training
+					mark_lower(player, log_ind, drawX + xx, drawY + (10*player), 2) -- VSAV_Training
 					mark_top(player, log_ind, drawX + xx, drawY + (10*player), 2) -- VSAV_Training
 					mark_120hz(player, log_ind, drawX + xx, drawY + (10*player), offset == run_start) -- VSAV_Training
 				end
@@ -898,6 +988,7 @@ local function update(tick)
 	local moved = read_motion()
 	read_reversal_ticks()
 	read_pb_success()
+	read_throw_checks()
 	local frozen = (game.hitfreeze(game.address[1]) or game.hitfreeze(game.address[2]))
 	               and not globals.options.fm_input_p1
 	-- Don't draw any new frames to the meter if the game is frozen for dramatic effect.

@@ -12,12 +12,6 @@ See macro-readme.html for help and instructions.
 --[[ Prepare the script for the current emulator and the game. ]]--
 
 macrolua = "1.13, 2/18/2011"
-local f = io.popen("dir \"C:\\users\\\"")
--- if f then
-    -- print(f:read("*a"))
--- else
---     print("failed to read")
--- end
 local inp_display_script = "./scripts/input-display.lua"
 -- print("MacroLua v" .. macrolua)
 if fba and not emu.registerstart then

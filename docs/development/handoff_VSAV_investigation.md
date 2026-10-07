@@ -218,9 +218,9 @@ memory.writebyte(0xFF8947, 0x01)
 アナカリスの技テーブルに「Pit of Blame」が**2つ**登録されており、片方が誤って `0x1C` になっていた。
 
 - `0x16` = Pit of Blame（正）
-- `0x1C` = P. Salvation（別の技）
+- `0x1C` = Pharaoh Decoration（別の技。当時の一覧と本書は P. Salvation と書いていたが、2026-10-07 に 0x14 = Salvation、0x1C = Decoration と直した。`charMoves.lua` の get_moves_Anakaris の注記）
 
-名前で技を引く仕組み（`dummyState.lua` の `get_p2_char_specific_reversal`）は**最後に一致したものを採用**するため、「Pit of Blame」を選ぶと実際には `0x1C`（P. Salvation）が叩かれていた。誤った重複エントリを削除。
+名前で技を引く仕組み（`dummyState.lua` の `get_p2_char_specific_reversal`）は**最後に一致したものを採用**するため、「Pit of Blame」を選ぶと実際には `0x1C`（Pharaoh Decoration）が叩かれていた。誤った重複エントリを削除。
 
 ### 修正2：発動方式 — メモリpokeから実コマンド入力へ
 

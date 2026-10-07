@@ -73,7 +73,7 @@ The target game is **Vampire Savior - the lord of vampire (970519 Japan / `vsavj
 
 To play in full screen, check `Video > Blitter options > Windowed Fullscreen` first. The older full-screen mode cannot show the windows used to name, export and import patterns.
 
-Use a short path without spaces or Japanese characters. Before updating an existing installation, make a [backup](#updates-and-backups).
+Use a short path without Japanese characters; spaces are fine. Before updating an existing installation, make a [backup](#updates-and-backups).
 
 ### Basic controls
 
@@ -137,8 +137,10 @@ Save your edits before closing FBNeo, then back up:
 
 | Content | Location |
 |---|---|
-| Settings, Action Steps and Action Patterns | `scripts/training_settings.json` |
+| Settings, Action Steps and Action Patterns | `training_data/training_settings.json` |
 | Recordings | Entire `scripts/macro` folder |
+
+The settings file is in the `training_data` folder, outside `scripts`. When you first start a version that uses `training_data`, an existing `scripts/training_settings.json` is copied there automatically. The old file stays where it was as a copy and is no longer updated. Recordings are still in `scripts/macro`, so back up both.
 
 Update the separate training installation. The downloaded files may include recordings, so take care not to overwrite your own. Fully restart FBNeo afterward and confirm that `Disabled` is selected under `Video > Runahead`.
 

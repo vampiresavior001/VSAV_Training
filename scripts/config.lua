@@ -38,6 +38,9 @@ local default_training_settings = {
   -- The Action Timeline row under Tick Data. Shown, as it always was
   -- (user, 2026-10-05). Same key as tirsod's fork.
   display_action_timeline = true,
+  -- Show Meaty Timing (user, 2026-10-07): on, for a new install and for a
+  -- settings file written before it existed. A saved off stays off.
+  display_meaty_timing = true,
   display_recording_gui= false,
   display_hitbox_default = true,
   display_hud=true,

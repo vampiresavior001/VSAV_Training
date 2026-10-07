@@ -7,6 +7,6 @@ rem   2. hold DOWN+LEFT, then RIGHT, then DOWN+RIGHT
 rem   3. press whatever key you use for the position shortcut. The probe
 rem      registers ALL eight Lua hotkeys and shows which index arrived,
 rem      so a key mapped to a different index shows up as that number.
-cd /d "%~dp0.."
-start fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs %cd%\analysis\leverProbe.lua
-exit
+cd /d "%~dp0.." || exit /b 1
+start "" "%cd%\fcadefbneo.exe" vsavj savestates\vsavj_fbneo.fs analysis\leverProbe.lua
+exit /b

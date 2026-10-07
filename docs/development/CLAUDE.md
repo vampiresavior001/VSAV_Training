@@ -31,7 +31,7 @@ PB 採点の再設計 (保留) は `docs/development/design_pb_score.md`。
 版を渡すたびに git tag を打つ
 GitHub へ出すときは commit-tree に -p fc2-v11 を付ける (「GitHub への公開手順」)
 再テストを頼む前に reversal_logs を archive する (消さない)
-training_settings.json は絶対に配布物へ入れない
+training_settings.json と training_data/ (利用者の設定。2026-10-07 から scripts/ の外) は絶対に配布物へ入れない
 docs/development/ (開発資料) は配布 zip に入れない。zip は配布用、開発資料は GitHub 上だけ
 リリース時は Analysis タブのトグルを全部 OFF にする (analysis/test_release_defaults.lua)
 ビルドした zip はリポジトリに置かない (../../dist)

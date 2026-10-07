@@ -16,6 +16,20 @@ Newest first. Older releases are kept below.
   sounds and BGM stay. Both P1 and P2. See
   [12. Display and game settings](PLAYER_MANUAL.en.md#12-options)
 
+### New: Meaty Timing
+
+- `Show Meaty Timing` under `Trainer > Tick Data` (on by default; a saved off
+  stays off). After a wake-up, block stun, hit stun or air recovery, one row
+  between the Tick Data rows and the Action Timeline shows when your attack
+  touched the opponent, counted from their reversal Tick, and on which active
+  Tick: `Wake-up  Reversal +0t  Active 3t`
+- The reversal Tick is the first Tick the opponent can act again, when only
+  blocking and specials are available (Frame Meter's magenta bar). The first hit
+  or block from +0 to +30 Ticks is recorded. `Active 2:3t` is the third Tick of
+  the second active period; `Active -` is a projectile or a throw
+- It does not judge whether a setup worked. See
+  [11.2 Tick Data](PLAYER_MANUAL.en.md#meaty-timing)
+
 ### Frame Meter: the numbers no longer change with the display settings
 
 - **Gray bar along the top: frozen in hitstop.** A Tick a character spent frozen
@@ -23,7 +37,7 @@ Newest first. Older releases are kept below.
   Startup 4 / Total 13 / Recovery 7 with `Show P1 Inputs` on or off, and the
   defender's yellow run now matches Tick Data's Hitstun (13 for that LP, 14 for
   a LK that hits). Checked in the game
-- **Yellow bar along the top: reversal-only tick.** The first Tick a character can
+- **Magenta bar along the top: reversal-only tick.** The first Tick a character can
   act after a wake-up, block stun, hit stun or an air recovery, when only blocking
   and special moves are available. Both P1 and P2. Checked in the game: a special
   comes out from the marked Tick, a dash from the next. Q-Bee's wake-up has none
@@ -37,7 +51,44 @@ Newest first. Older releases are kept below.
 - `Show Movement Data` is now `Include Jumps / Dashes`, on by default (a saved
   setting keeps its value)
 - The count on a run of tiles is shown from 5 tiles (was 6)
+- A move that can act again right after its active period read Recovery 0;
+  the Tick it becomes free counts, as in the tables and Tick Data (Demitri's
+  Midnight Pleasure whiffed: 2 / 29 / 1, Total 31)
+- Invulnerability is drawn as solid white on the lower half of the tile, over
+  its own color, instead of a white tile, so a move whose invulnerability ends
+  during startup shows where it ends, and Startup is no longer counted from
+  there. It follows the hitbox display: moves invulnerable because their
+  hurtboxes disappear, such as Bishamon's Kirisute Gomen, are shown too.
+  Dark Force activation, which the white tile used to cover, is green
+- Throws are shown. A throw has no attack box, so a whole throw used to be
+  drawn as startup and the one thrown as doing nothing. The Ticks the game
+  tries the grab (whiffs included) and the Tick the opponent is grabbed are now
+  red, so a throw's Startup ends there; being thrown is yellow
 - See [11.6 Frame Meter](PLAYER_MANUAL.en.md#frame-meter), with new screenshots
+
+### Settings moved out of `scripts`
+
+- The settings file (settings, Action Steps and Action Patterns) is now
+  `training_data/training_settings.json` in the FBNeo folder, outside `scripts`,
+  which an update replaces. Its format and contents are unchanged
+- On the first start, an existing `scripts/training_settings.json` is copied
+  there automatically. If both exist, the one in `training_data` is used. The
+  old file stays where it was as a copy and is no longer updated
+- Recordings stay in `scripts/macro`: back up both `training_data` and
+  `scripts/macro`
+- A save is written to a temporary file and checked before it replaces the
+  file, so a failed save no longer leaves an empty file
+- If a settings file cannot be read, a red message at the top of the screen
+  shows its path. Nothing is saved until FBNeo is restarted, and the file is not
+  overwritten. See [13. Saving, backups and updates](PLAYER_MANUAL.en.md#13-save)
+
+### Launcher: the training folder's path may contain spaces
+
+- `run_vsav_training.bat` now hands the savestate and the script to FBNeo
+  relative to its own folder, so a path with spaces in it (such as
+  `C:\Fight cade\...`) works. Japanese characters in the path may still cause
+  problems
+- Run from a console, it no longer closes that console
 
 ### Fix: negative count in the scrolling input bar
 
@@ -45,6 +96,22 @@ Newest first. Older releases are kept below.
   could show a large negative count (such as -25593). A column recorded before
   the first game Tick was counted against a different clock. Such columns are now
   dropped, and a count is never drawn negative
+
+### Fix: Tick Data's throws
+
+- A command throw's Startup ended on the range check the game makes when the
+  command is entered, not on the grab. A dash into Demitri's Negative Stolen
+  read Startup 1 and two active periods; it is the grab, five Ticks later, as
+  in the frame data tables (発生 6, 持続 1)
+- Tick Data now counts the Ticks the game tries a grab, in every way it can:
+  standing, airborne and in hit stun. Air throws were not measured before
+
+### Fix: Pharaoh Salvation and Pharaoh Decoration
+
+- Anakaris's two supers had each other's move ID. Choosing `P. Salvation` as a
+  Character Specific Reversal wrote Pharaoh Decoration's ID, and Tick Data
+  named each one as the other. The Action Steps commands were already right
+  and are unchanged
 
 ---
 

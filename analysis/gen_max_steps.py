@@ -23,7 +23,9 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-SETTINGS = os.path.join(ROOT, "scripts", "training_settings.json")
+# training_data/ since the settings moved out of scripts/ (2026-10-07). The old
+# scripts/ copy is a backup the tool no longer reads or writes.
+SETTINGS = os.path.join(ROOT, "training_data", "training_settings.json")
 BACKUP = os.path.join(HERE, "training_settings.backup.json")
 
 # actionSequenceEditor.lua: local MAX_STEPS = 4096

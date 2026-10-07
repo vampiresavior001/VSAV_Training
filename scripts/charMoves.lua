@@ -223,11 +223,24 @@ function get_moves_Anakaris()
     -- 10 = P.Magic
     -- 1E = P.Magic
     -- 12 = Pursuit
-    -- 14 = P.Decoration
+    -- 14 = P.Salvation
     -- 16 = Pit of Blame
     -- 18 = Guard Cancel
     -- 1A = Taunt
-    -- 1C = P.Salvation
+    -- 1C = P.Decoration
+    --
+    -- 14 AND 1C WERE THE WRONG WAY ROUND until 2026-10-07. 0x14 is Pharaoh
+    -- Salvation (HK MP 2 MK HP, 2 levels) and 0x1C Pharaoh Decoration (HK MP LK
+    -- 2 LP MK HP, 3 levels): darkstalkers.web.fc2.com's Anakaris EX move page,
+    -- checked against the ROM (user). vsavscriptv2.lua's Salvation readout keys
+    -- on the same 0x14 ($105-$106 = 0x0114). With them swapped, picking
+    -- "P. Salvation" as a Character Specific Reversal poked Decoration, and
+    -- Tick Data named each one as the other.
+    --
+    -- Only the values moved. The names stay as they were - Action Steps save
+    -- the name and find the command by it (character_command_registry below,
+    -- whose commands were right all along) - and so does the order, because
+    -- p2_reversal_list saves a position in this list.
     return {
         {value = 0x00, name = "Coffin",             conditions = {}, isReversalMove = true },
         {value = 0x02, name = "Spell of Turn - IN", conditions = {}, isReversalMove = true },
@@ -239,17 +252,17 @@ function get_moves_Anakaris()
         {value = 0x0E, name = "Pit to Underworld",  conditions = {}, isReversalMove = true  , isEX = true },
         {value = 0x10, name = "Pharoah Magic",      conditions = {}, isReversalMove = true  , isEX = true },
         {value = 0x1E, name = "Pharoah Magic",      conditions = {}, isReversalMove = true  , isEX = true },
-        {value = 0x1C, name = "P. Salvation",       conditions = {}, isReversalMove = true  , isEX = true },
-        {value = 0x14, name = "Pharoah Decoration", conditions = {}, isReversalMove = true  , isEX = true },
+        {value = 0x14, name = "P. Salvation",       conditions = {}, isReversalMove = true  , isEX = true },
+        {value = 0x1C, name = "Pharoah Decoration", conditions = {}, isReversalMove = true  , isEX = true },
         {value = 0x12, name = "Pursuit",            conditions = {}, isReversalMove = false , isPursuit = true },
         {value = 0x16, name = "Pit of Blame",       conditions = {}, isReversalMove = true  },
         {value = 0x18, name = "Guard Cancel",       conditions = {}, isReversalMove = false },
-        -- FIX: a second "Pit of Blame" entry sat here with value 0x1C. The
-        -- comment block above, and the P. Salvation entry two lines down,
-        -- both give 0x1C as P. Salvation. Name lookups
+        -- FIX: a second "Pit of Blame" entry sat here with value 0x1C, which
+        -- is a super (Pharaoh Decoration - see the note above the list; when
+        -- this was removed the list still had it as P. Salvation). Name lookups
         -- (dummyState.lua get_p2_char_specific_reversal) keep the LAST match,
-        -- so picking "Pit of Blame" in the menu silently poked 0x1C
-        -- (P. Salvation) instead of the correct 0x16 below. Duplicate removed.
+        -- so picking "Pit of Blame" in the menu silently poked 0x1C instead of
+        -- the correct 0x16 above. Duplicate removed.
         {value = 0x1A, name = "Taunt",              conditions = {}, isReversalMove = true  },
     }
 end
@@ -899,7 +912,7 @@ function seq_special_list(cid)
 				-- One row per NAME, because Anakaris has two moves called
 				-- "Pharoah Magic" (0x10 and 0x1E) and the registry keys on the
 				-- name. Duplicate names have caused a lookup bug in this file
-				-- before - see the note above the P. Salvation entry.
+				-- before - see the "Pit of Blame" note in get_moves_Anakaris.
 				--
 				-- And one row per COMMAND, which is what collapses the air and
 				-- ground forms of one move into the single choice they are.

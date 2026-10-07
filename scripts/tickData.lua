@@ -480,6 +480,16 @@ function M.update(s)
 end
 
 function M.getResult() return result end
+-- THE ACTIVE RUN THE BOX IS IN ON THE TICK JUST UPDATED, for Meaty Timing:
+-- which run of this measurement (1-based) and how many advancing ticks of it
+-- so far, the contact tick included when it advanced. Still ticks - hitstop the
+-- move did not play through - are not in adv, the same count Active uses.
+-- nil when nothing is being measured or no box is out this tick.
+function M.currentRun()
+  local m = measurement
+  if m == nil or m.run == nil then return nil end
+  return { index = #m.runs, adv = m.run.adv }
+end
 function M.getAbortReason() return last_abort end
 function M.isMeasuring() return measurement ~= nil end
 

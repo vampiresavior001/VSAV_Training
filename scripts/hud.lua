@@ -87,6 +87,15 @@ local function draw_fd()
 			_row = _row + 1
 		end
 	end
+	-- MEATY TIMING, BETWEEN THE TWO (user, 2026-10-07): Tick Data, then this,
+	-- then the Action Timeline. Rows only where there is text, so with it off
+	-- or empty the timeline moves up into its place.
+	if globals.last_meaty ~= nil and globals.last_meaty ~= "" then
+		for _, _line in ipairs(fd_lines(globals.last_meaty)) do
+			gui.text(mid_width, mid_height + _row * 9, _line)
+			_row = _row + 1
+		end
+	end
 	-- Under the frame data, and drawn even when there is none: the route can
 	-- have something to say before a move has been measured.
 	if globals.last_route ~= nil and globals.last_route ~= "" then

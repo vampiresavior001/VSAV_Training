@@ -18,6 +18,6 @@ rem After each one the result is drawn back through gui.text, the same path a
 rem real pattern name would take. Say what you SEE there, not only what you
 rem typed - the two disagreeing is the finding.
 rem Everything also lands in analysis\naming_probe.log.
-cd /d "%~dp0.."
-start fcadefbneo.exe vsavj savestates\vsavj_fbneo.fs %cd%\analysis\namingProbe.lua
-exit
+cd /d "%~dp0.." || exit /b 1
+start "" "%cd%\fcadefbneo.exe" vsavj savestates\vsavj_fbneo.fs analysis\namingProbe.lua
+exit /b

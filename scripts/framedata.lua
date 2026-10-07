@@ -6,6 +6,9 @@ local tickData = require "./scripts/tickData"
 -- The route the move was reached by - a second window over the same ticks.
 -- Fed the same snapshot so the two rows can never disagree about one.
 local actionRoute = require "./scripts/actionRoute"
+-- Meaty Timing (user, 2026-10-07): the same snapshot again, after Tick Data,
+-- whose active run it reads on the contact tick.
+local meatyTiming = require "./scripts/meatyTiming"
 local vsav = require "./scripts/tickDataVsav"
 
 local M = {}
@@ -13,10 +16,16 @@ local subscription_generation = 0
 local last_enabled = false
 local last_menu = false
 local last_match = false
+local last_meaty = false
 
 local function option_enabled()
   return globals ~= nil and globals.options ~= nil
     and globals.options.mo_enable_frame_data == true
+end
+
+-- Show Meaty Timing, under Tick Data (on by default).
+local function meaty_enabled()
+  return globals.options.display_meaty_timing == true
 end
 
 local function on_tick(tick)
@@ -25,6 +34,7 @@ local function on_tick(tick)
     if last_enabled then
       tickData.reset("disabled", true)
       actionRoute.reset("disabled", true)
+      meatyTiming.reset("disabled", true)
     end
     last_enabled = false
     last_menu = false
@@ -55,6 +65,7 @@ local function on_tick(tick)
     if not last_menu then
       tickData.reset("menu_open", false)
       actionRoute.reset("menu_open", false)
+      meatyTiming.reset("menu_open", false)
     end
     last_menu = true
     last_match = match
@@ -79,6 +90,7 @@ local function on_tick(tick)
       local why = match and "round_not_ready" or "match_not_running"
       tickData.reset(why, true)
       actionRoute.reset(why, true)
+      meatyTiming.reset(why, true)
     end
     last_match = false
     return
@@ -104,6 +116,7 @@ local function on_tick(tick)
   if vsav.set_side(side) then
     tickData.reset("side_changed", true)
     actionRoute.reset("side_changed", true)
+    meatyTiming.reset("side_changed", true)
   end
 
   -- ONE CAPTURE, TWO READERS. vsav.capture hands back the same table every
@@ -111,6 +124,15 @@ local function on_tick(tick)
   -- same one twice, and cost a second pass over the RAM for nothing.
   local snapshot = vsav.capture(tick)
   tickData.update(snapshot)
+  -- Off clears what it had: switched back on, it starts from the next
+  -- recovery it sees whole.
+  if meaty_enabled() then
+    meatyTiming.update(snapshot, tickData.currentRun and tickData.currentRun() or nil)
+    last_meaty = true
+  elseif last_meaty then
+    meatyTiming.reset("meaty_off", true)
+    last_meaty = false
+  end
   -- Timeline Cut (Free Ticks), read every tick like the side above.
   actionRoute.set_gap(globals.options ~= nil and globals.options.mo_route_gap or nil)
   actionRoute.update(snapshot)
@@ -119,6 +141,7 @@ end
 function M.registerStart()
   tickData.reset("emulator_start", true)
   actionRoute.reset("emulator_start", true)
+  meatyTiming.reset("emulator_start", true)
   subscription_generation = subscription_generation + 1
   local mine = subscription_generation
   globals.truth.ticker:subscribe(function(tick)
@@ -129,12 +152,14 @@ end
 function M.registerLoad()
   tickData.reset("savestate_load", true)
   actionRoute.reset("savestate_load", true)
+  meatyTiming.reset("savestate_load", true)
 end
 
 function M.registerAfter()
   if not option_enabled() then
     globals.set_last_data("")
     globals.set_last_route("")
+    if globals.set_last_meaty then globals.set_last_meaty("") end
     return
   end
   -- TWO READOUTS, KEPT APART.
@@ -155,11 +180,17 @@ function M.registerAfter()
   -- Show Action Timeline (Trainer). Off: the HUD gets no route and draws the
   -- Tick Data rows alone, its box shrinking with them.
   if globals.options.display_action_timeline ~= true then route = "" end
+  -- Meaty Timing, between the two. Empty when off or when there is no result
+  -- yet, and the HUD closes the gap.
+  local meaty = ""
+  if meaty_enabled() then meaty = meatyTiming.formatResult() end
   if vsav.side() == "P2" then
     if data ~= "" then data = "P2  " .. data end
+    if meaty ~= "" then meaty = "P2  " .. meaty end
     if route ~= "" then route = "P2  " .. route end
   end
   globals.set_last_data(data)
+  if globals.set_last_meaty then globals.set_last_meaty(meaty) end
   globals.set_last_route(route)
 end
 
