@@ -1011,7 +1011,8 @@ The two rows under the table average each step of the command over `Pass` attemp
 2. Configure the desired normal or special. Set `Button Wait = 0` and the `Random Delay` directly below it to `0`. See [4.3](#dummy-normal-response) for a normal example.
 3. Start with `Wakeup = None` to keep conditions fixed.
 4. Knock the dummy down and test your setup.
-5. Once consistent, vary wake-up movement and response probability. Spreading the response with `Random Start Wait` or `Random Delay` checks that the setup does not rely on one fixed timing.
+5. Enable `Trainer > Tick Data` and `Show Meaty Timing`. Use [Meaty Timing](#meaty-timing) to check how many Ticks after the reversal Tick your attack connected and which active Tick made contact. Test whether the setup works against the dummy’s response, then use the readout to review the timing.
+6. Once consistent, vary wake-up movement and response probability. Spreading the response with `Random Start Wait` or `Random Delay` checks that the setup does not rely on one fixed timing.
 
 Do not judge whether a normal came out as early as possible solely by whether the game displays REVERSAL.
 
@@ -1114,24 +1115,39 @@ Keep these limits in mind:
 - Startup and active share the first hitbox Tick. For a basic single move, read `Total = Startup + Active + Recovery − 1`: startup 4, active 3 and recovery 7 give Total 13.
 
 <a id="meaty-timing"></a>
-**Meaty Timing** (`Show Meaty Timing` under `Tick Data`, on by default) shows on one row, between the Tick Data rows and the green history, when your attack met the opponent as they recovered:
+#### Meaty Timing: check when your attack connects
 
-`Wake-up  Reversal +0t  Active 3t`
-
-- The first word is the situation: `Wake-up` (after a knockdown), `After Guard` (block stun), `After Hit` (hit stun) or `Air Recovery` (recovering in the air from a hit).
-- `Reversal +0t` is the contact Tick minus the opponent's reversal Tick. The reversal Tick is the first Tick the opponent can act again, when only blocking and special moves are available: the Tick Frame Meter marks with a magenta bar ([11.6](#frame-meter)). It is not the Tick an input was sent, nor the first Tick a normal can come out. Contact on that same Tick is `+0t`.
-- `Active 3t` is which Tick of your attack's active period made contact, counted from 1 the way Tick Data counts `Active`: Ticks frozen in hitstop are not counted, and moves that keep animating through hitstop are. For a move with several active periods, `Active 2:3t` is the third Tick of the second one. `Active -` means a projectile or a throw made contact; which Tick of the move that was cannot be told.
-- For each recovery, the first hit or block from `+0t` to `+30t` is recorded. Later hits of the same string, whiffs and contacts outside that range leave the row as it is; it stays until the next result. A contact before the reversal Tick, while the opponent is still in stun, is not recorded.
-- The opponent is the side opposite `Tick Data Side`. Q-Bee's wake-up has no such reversal Tick, so it is not measured. Changing characters, the end of a round, loading a state, changing `Tick Data Side` or turning it off clears the row, and a recovery already under way when measuring starts is not measured.
-- It does not judge whether a setup worked or a jump was stopped.
+**See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from block stun or hit stun, and air recovery. Test your setup against the dummy’s response, then use this readout to review its timing. It does not automatically judge whether a setup worked or a jump was stopped.
 
 ![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 4t. On the Frame Meter below, P2's magenta bar sits under the fourth of P1's five red tiles](images/meaty_timing.png)
 
-In this example, P1's attack was timed to P2's wake-up. It made contact on P2's reversal Tick (`+0t`), on the 4th of its 5 active Ticks (`Active 5t` in the row above). On Frame Meter the same contact shows as P2's magenta bar under P1's 4th red tile. The tiles before it with white lower halves are Ticks in which P2 was invulnerable while getting up.
+In this example, P1’s attack connects on P2’s wake-up, on the fourth of its five active Ticks.
+
+| Readout and field | What it means in this example |
+|---|---|
+| Tick Data: `Active 5t` | The attack has five active Ticks in total |
+| Meaty Timing: `Wake-up` | The attack connects on wake-up |
+| Meaty Timing: `Reversal +0t` | Contact occurs on the opponent’s reversal Tick |
+| Meaty Timing: `Active 4t` | Contact occurs on the fourth active Tick |
+
+Frame Meter shows the same timing: P2’s magenta bar sits directly below P1’s fourth red tile. The preceding tiles with white lower halves show P2’s invulnerability while getting up.
+
+The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` is on by default.
 
 `Show Meaty Timing` opens indented under `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
 
 ![On the Trainer tab, Show Meaty Timing is indented under Tick Data, with its help text at the bottom](images/meaty_timing_menu.png)
+
+<details>
+<summary>Measurement conditions and special readouts</summary>
+
+- The first word is the situation: `Wake-up` (after a knockdown), `After Guard` (block stun), `After Hit` (hit stun) or `Air Recovery` (recovering in the air from a hit).
+- `Reversal +0t` is the contact Tick minus the opponent's reversal Tick. The reversal Tick is the first Tick the opponent can act again, when only blocking and special moves are available: the Tick Frame Meter marks with a magenta bar ([11.6](#frame-meter)). It is not the Tick an input was sent, nor the first Tick a normal can come out. Contact on that same Tick is `+0t`.
+- `Active 4t` means contact on the fourth active Tick, counted from 1 the way Tick Data counts `Active`: Ticks frozen in hitstop are not counted, and moves that keep animating through hitstop are. For a move with several active periods, `Active 2:3t` is the third Tick of the second one. `Active -` means a projectile or a throw made contact; which Tick of the move that was cannot be told.
+- For each recovery, the first hit or block from `+0t` to `+30t` is recorded. Later hits of the same string, whiffs and contacts outside that range leave the row as it is; it stays until the next result. A contact before the reversal Tick, while the opponent is still in stun, is not recorded.
+- The opponent is the side opposite `Tick Data Side`. Q-Bee's wake-up has no such reversal Tick, so it is not measured. Changing characters, the end of a round, loading a state, changing `Tick Data Side` or turning it off clears the row, and a recovery already under way when measuring starts is not measured.
+
+</details>
 
 <a id="action-timeline"></a>
 ### 11.3 Action Timeline and Step Wait Ticks
@@ -1211,7 +1227,7 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 
 In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. P1's row runs green (startup), red (active), then blue (recovery). P2's row is yellow (block stun). The gray top on its first tile marks a Tick spent frozen in hitstop; it is not counted, so the 14 yellow tiles are numbered 13. The magenta bar along the top of the tile after the yellow run is the reversal-only tick, and the red and white stripes on the lower half of the five tiles from there are throw invulnerability. The black dots between tiles mark pairs of Ticks that fell in the same displayed frame at turbo.
 
-**The number on a run of tiles is how many tiles of that color are in a row (shown for runs of 5 or more; up to four can be told at a glance).** The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
+**The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks. The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
 
 With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the three rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
 
@@ -1233,25 +1249,36 @@ With `Frame Meter = yes`, the last row on the `Display` tab, both players' state
 | Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
 | Tile borders in yellow-green | PB succeeded |
 
-**Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
-
-**A magenta bar along the top of a tile marks a reversal-only tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
-
-**Invulnerability is shown the way the hitbox display shows it:** the character has no hurtbox, or the game has flagged it untouchable (the values `$147`, `$11E`, `$134` or `$145`). Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab shows only `$147`. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF the hitstop Ticks are not drawn, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
-
-**A gray bar along the top marks a Tick the character spent frozen in hitstop.** It is left out of that character's numbers and run counts. With `Show P1 Inputs` ON, every hitstop Tick is shown; with it OFF, only the Ticks in which an attacking character moved are kept (some moves keep animating through hitstop). The numbers are the same either way.
-
-**PB (Push Block):** on the defender's row, the tile borders join in yellow while the PB window is open. Most of the window falls in hitstop, so it is shown only with `Show P1 Inputs` ON. When a PB succeeds, the borders on the pushing side's row turn yellow-green; that is always shown.
-
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
 | Child row | What it does |
 |---|---|
 | `Show Throw Invulnerability` | Marks throw-invulnerable Ticks with stripes on the lower half of the tile (on by default). Display only; the numbers do not change |
 | `Include Jumps / Dashes` | Shows jumps and dashes too (on by default). Off: attacks and hit or block stun only. Walking is not shown either way |
-| `Show P1 Inputs` | Draws P1's (your) inputs above the meter on each Tick they change. While on, hitstop Ticks and the PB window are shown too: inputs are accepted during hitstop, and this is for seeing when yours went in |
+| `Show P1 Inputs` | Draws P1's inputs above the meter on each Tick they change. While on, hitstop Ticks and the PB window are shown too: inputs are accepted during hitstop, and this is for seeing when yours went in |
 
 Frame Meter counts differently from [Tick Data](#tick-data). Switching the throw-invulnerability or P1-input display does not change the numbers. The [v11.7.22.3 release notes](RELEASE_NOTES.md#v117223) report that the developer checked the values using Demitri's 12 standing and crouching normals. This does not cover every character or move.
+
+<details>
+<summary>Details of the marks and measurement rules</summary>
+
+**Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
+
+**A magenta bar along the top of a tile marks a reversal-only tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
+
+**Invulnerability is shown the way the hitbox display shows it:** the character has no hurtbox, or the game has flagged it untouchable. Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab covers only some forms of invulnerability, so its coverage differs. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF, hitstop Ticks in which neither attacking character advanced are omitted, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
+
+**Being in hitstop does not always mean an attack has stopped advancing.** Some moves keep animating through hitstop; excluding those Ticks would make their measured active duration too short.
+
+- `Show P1 Inputs` ON: every hitstop Tick is displayed.
+- OFF: a hitstop Tick is kept if either attacking character advanced. It is omitted if neither did.
+- **Among the displayed tiles, a gray top means that character was frozen, so the Tick is excluded from its numbers.** Ticks in which the attack advanced are counted. A column can be kept because the opponent’s attack advanced while your character’s tile has a gray top.
+
+Switching the input display can therefore change the number of visible tiles, but not the measured values.
+
+**PB (Push Block):** on the defender's row, the tile borders join in yellow while the PB window is open. Most of the window falls in hitstop, so it is shown only with `Show P1 Inputs` ON. When a PB succeeds, the borders on the pushing side's row turn yellow-green; that is always shown.
+
+</details>
 
 The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
 

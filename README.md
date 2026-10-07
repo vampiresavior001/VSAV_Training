@@ -35,6 +35,7 @@ See [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) for the conditions require
 |---|---|
 | **Test when your offense works** | Make the dummy respond with a light normal, throw, jump or dash, then test whether your pressure or wake-up setup beats it |
 | **Practice against varied timing** | Vary when the same offense starts or when an attack within it comes out. Practice PB and GC without relying on a fixed rhythm. See [which setting to use](docs/PLAYER_MANUAL.en.md#dummy-button-timing) |
+| **Check attack timing on recovery** | Use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to see how many Ticks after the opponent’s reversal Tick your attack connected, and which active Tick made contact |
 | **Measure setup timing** | Use Action Timeline in Tick Data to measure the time spent setting up wake-up pressure, or how far away you can start a walk-up throw and still perform it within 15 displayed frames (20 Ticks at Turbo 3) |
 | **Examine situations after air guarding** | Find interruptible gaps in air chains, evaluate actual interrupt timing, see when you air-blocked and check landing advantage |
 
