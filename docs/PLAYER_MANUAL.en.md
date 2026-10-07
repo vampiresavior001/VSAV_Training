@@ -8,7 +8,7 @@ This guide uses **PB (Push Block)**, matching the English UI. Menu options are s
 
 For **v11.7.23 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
-[Start with installation](#02-install) · [Already set up? Try the PB / GC drill](#sasquatch-pb-tutorial) · [Scope and verification](#verification-scope)
+[New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
 See the [README](../README.md) for a feature overview. This manual explains how to set up drills and interpret the results.
 
@@ -103,6 +103,7 @@ Show only the displays for the drill you are practicing; they are easier to read
 | Goal | Feature | Where to start |
 |---|---|---|
 | Test combos and pressure strings | Dummy stance, blocking and health recovery | `Dummy`, `Gauge` |
+| Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
 | Make the dummy challenge on wake-up or after blocking | Individual counter actions, Action Steps | `Dummy > Guard Action Type` |
 | Repeat offense seen in matches | Recording and looping | `Recording > Recording Wizard` |
 | Specify a dash into an attack precisely | Action Steps | [Section 6](#06-steps) |
@@ -379,8 +380,12 @@ The trace shows → 7t, ↓ 4t, ↘ 4t and the buttons 0t (on the same Tick as �
 
 **Check: `Success` / `SUCCESS` means the GC activated.**
 
+### When ready: repeat, save and vary the offense
+
+**The first drill is complete.** Once you have tried either PB or GC, you can keep practicing under the same conditions. Continue below when you want to expand the drill.
+
 <a id="tutorial-loop"></a>
-### Step 5: Repeat short-dash LP and practice PB or GC
+#### Step 5: Repeat short-dash LP and practice PB or GC
 
 After practicing one response at a time, change these `Dummy` settings:
 
@@ -404,7 +409,7 @@ You can practice GC against the same repeated offense. Choose PB or GC for each 
 To stop looping, open the menu and set `Loop Steps = no`. To disable counter actions too, set `Guard Action Type = None`.
 
 <a id="tutorial-save"></a>
-### Step 6: Save it as `Short LP`
+#### Step 6: Save it as `Short LP`
 
 Save the base sequence you built manually as `Short LP`. If you are using the included pattern as-is, skip this procedure and go to [the optional timing drill](#tutorial-varied-timing).
 
@@ -443,7 +448,7 @@ If the emulator covers the name window, it comes back in front automatically; cl
 </details>
 
 <a id="tutorial-varied-timing"></a>
-### Optional: Practice against varied timing
+#### Optional: Practice against varied timing
 
 If you disabled counter actions, restore `Guard Action Type = Reversal - Action Patterns` and mark only `Short LP` as `[x]`. Make the dummy block your attack and check that it responds.
 
@@ -457,7 +462,7 @@ When using the copy, mark only that pattern `[x]` and uncheck the original `Shor
 To return to fixed timing, set `Random Start Wait = 0` and select only the original `Short LP`.
 
 <a id="tutorial-mixed-patterns"></a>
-### Optional: Have the dummy choose between two attacks
+#### Optional: Have the dummy choose between two attacks
 
 Set `Dummy > Guard Action Type = Reversal - Action Patterns` and `Loop Steps = no` to check one response at a time.
 
@@ -896,6 +901,10 @@ First make GC consistent against the same single attack. Then practice on both s
 1. **Start the dragon-punch motion as soon as you block.** The earlier you start, the better. After you release back to neutral, the guard pose holds for a short time (guard persistence, shown as `G-Persist n` in the trace and `GP n` on the input bar). Once you have confirmed that you can block in neutral, return to neutral early and start the motion from there. Holding forward (→) during persistence makes you walk and drops your guard, so enter → after contact.
 2. **Press the button together with the last down-forward.** Press it at the same time as down-forward and release it right away. Even if the button lands first, aim to complete the command on the release; this makes the fastest timing easier to hit.
 
+**If your 1P-side inputs are slow on an arcade stick, try adjusting its position**
+
+On the 1P side (left side of the screen, facing right), if the transition from → to ↓ is especially slow, try repositioning the arcade stick so the lever sits slightly farther to the right relative to your body. In the author’s experience, this often makes the downward movement easier and improves input speed. The effect depends on your grip and posture; compare the per-direction averages and success rate before and after the adjustment, using the same attack for practice.
+
 ### 9.2 Input history versus command trace
 
 - **Input history** shows your inputs over time. Newer inputs appear on the right of the bottom bar.
@@ -1005,6 +1014,7 @@ The two rows under the table average each step of the command over `Pass` attemp
 3. Repeat the same starter, continue the combo on hit and stop on block.
 4. Then set a light normal under `Reversal - Specified` to check the gaps you leave after being blocked.
 
+<a id="wakeup-pressure-drill"></a>
 ### B. Can your wake-up pressure beat the opponent’s fastest response?
 
 1. Select `Guard Action Type = Reversal - Specified`, with `Random Guard Action % = 100%` and `Random Start Wait = 0`.
@@ -1138,6 +1148,8 @@ The readout appears between the basic Tick Data and Action Timeline. `Show Meaty
 
 ![On the Trainer tab, Show Meaty Timing is indented under Tick Data, with its help text at the bottom](images/meaty_timing_menu.png)
 
+**Try next:** Repeat the same wake-up setup, changing only when you start the attack, and compare `Reversal` and `Active`. Also check whether the opponent’s response comes out; the readout alone does not determine whether the setup works.
+
 <details>
 <summary>Measurement conditions and special readouts</summary>
 
@@ -1225,7 +1237,7 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 
 ![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 6 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
 
-In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. P1's row runs green (startup), red (active), then blue (recovery). P2's row is yellow (block stun). The gray top on its first tile marks a Tick spent frozen in hitstop; it is not counted, so the 14 yellow tiles are numbered 13. The magenta bar along the top of the tile after the yellow run is the reversal-only tick, and the red and white stripes on the lower half of the five tiles from there are throw invulnerability. The black dots between tiles mark pairs of Ticks that fell in the same displayed frame at turbo.
+In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players’ states on the same Tick.
 
 **The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks. The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
 

@@ -8,7 +8,7 @@ English | [日本語](README.ja.md)
 
 This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.23**.
 
-**[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [First PB / GC drill](#first-pb-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
+**[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [Practice defense](#first-pb-drill) · [Test wake-up pressure](docs/PLAYER_MANUAL.en.md#wakeup-pressure-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 
 ![Practicing PB (left) and GC (right), with each display numbered](docs/images/screen_map.png)
 
