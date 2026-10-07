@@ -36,8 +36,10 @@ def main():
     paths += sorted(glob.glob(os.path.join(log_dir, "airg_*.json")))
     # ag_prox.json is All Guard's own log. It is rewritten whole rather than
     # rotated, so it has to be moved out with the batch or the next session
-    # silently overwrites it.
-    extra = [p for p in (os.path.join(log_dir, "ag_prox.json"),)
+    # silently overwrites it. idle_sound.json (Mute Idle Sounds, written while
+    # Knockdown Logger is on) is the same kind of file.
+    extra = [p for p in (os.path.join(log_dir, "ag_prox.json"),
+                         os.path.join(log_dir, "idle_sound.json"))
              if os.path.exists(p)]
     if not paths and not extra:
         print("nothing to archive in", log_dir)
@@ -64,7 +66,7 @@ def main():
     for p in paths + extra:
         shutil.move(p, os.path.join(dest, os.path.basename(p)))
     print("archived %d recordings%s -> %s"
-          % (len(paths), " + ag_prox.json" if extra else "", dest))
+          % (len(paths), "".join(" + " + os.path.basename(p) for p in extra), dest))
     if len(versions) > 1:
         print("  (mixed versions in one batch: %s)" % sorted(str(v) for v in versions))
 

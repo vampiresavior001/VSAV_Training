@@ -976,14 +976,16 @@ function draw_input_history(_history, _x, _y, _is_left)
     end
     local _frame_diff = _next_frame - _entry.frame
     local _text = "-"
-    if (_frame_diff < 999) then
+    -- Never a negative count: two stamps that are out of order (see
+    -- history_clock) say nothing about how long the input was held.
+    if (_frame_diff >= 0 and _frame_diff < 999) then
       _text = string.format("%d", _frame_diff)
     end
 
     local _offset = 0
     if _is_left then
       _offset = 8
-      if (_frame_diff < 999) then
+      if (_frame_diff >= 0 and _frame_diff < 999) then
         if (_frame_diff >= 100) then _offset = 0
         elseif (_frame_diff >= 10) then _offset = 4 end
       end
@@ -1155,16 +1157,27 @@ function handle_idle_event( was_gc_event, was_pb_event,_was_hit_spark_event)
     -- end
 
 end
+-- A CHARACTER SELECT CLEARS THE HISTORY, as a restart would (user,
+-- 2026-09-27). Emptied in place: other code holds these two tables.
+local function clear_history()
+    for _i = 1, 2 do
+        local _t = input_history[_i]
+        for _k in pairs(_t) do _t[_k] = nil end
+    end
+    if globals ~= nil then globals.p1_tick_inputs = {} end
+end
+
+-- THE CLOCK THE HISTORY WAS STAMPED ON. Until guardCancel.lua's tick hook has
+-- run once, p1_tick_seq is nil and columns are stamped with emu.framecount() -
+-- a large number once a savestate is loaded. The tick clock then starts from 1,
+-- and the count under the last column stamped the old way came out as the new
+-- stamp minus the old one: -25593 in the bar (user's screenshots, 2026-10-07).
+-- The two clocks cannot be compared, so the history starts over when the clock
+-- changes - in practice it drops what was pressed before the match's first tick.
+local history_clock = nil
+
 local inpHistoryModule = {
-    -- A CHARACTER SELECT CLEARS THE HISTORY, as a restart would (user,
-    -- 2026-09-27). Emptied in place: other code holds these two tables.
-    ["clear"] = function()
-        for _i = 1, 2 do
-            local _t = input_history[_i]
-            for _k in pairs(_t) do _t[_k] = nil end
-        end
-        if globals ~= nil then globals.p1_tick_inputs = {} end
-    end,
+    ["clear"] = clear_history,
     ["registerStart"] = function()
         return {
             reset_inp_history_scroll = reset_inp_history_scroll,
@@ -1189,6 +1202,9 @@ local inpHistoryModule = {
         -- tests and any load order without that hook working on the old clock.
         local _seq = globals and globals.p1_tick_seq
         frame_number = _seq or emu.framecount()
+        local _clock = (_seq ~= nil) and "tick" or "frame"
+        if history_clock ~= nil and history_clock ~= _clock then clear_history() end
+        history_clock = _clock
         -- local _input = joypad.get()
         -- THE GUARD CANCEL STATE COMES FROM THE TICK HOOK WHEN THERE IS ONE.
         --

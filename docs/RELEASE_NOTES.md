@@ -6,6 +6,48 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.23
+
+### New: Mute Idle Sounds
+
+- `Game > Mute Idle Sounds` (off by default) stops the voice and sound effects a
+  character repeats while idle: Gallon, Dark Gallon, Jedah, Victor and B.B. Hood
+  (crouching idle). The idle animation still plays, and attack, guard and hit
+  sounds and BGM stay. Both P1 and P2. See
+  [12. Display and game settings](PLAYER_MANUAL.en.md#12-options)
+
+### Frame Meter: the numbers no longer change with the display settings
+
+- **Gray bar along the top: frozen in hitstop.** A Tick a character spent frozen
+  is left out of its numbers and run counts. Demitri's close LP, blocked, reads
+  Startup 4 / Total 13 / Recovery 7 with `Show P1 Inputs` on or off, and the
+  defender's yellow run now matches Tick Data's Hitstun (13 for that LP, 14 for
+  a LK that hits). Checked in the game
+- **Yellow bar along the top: reversal-only tick.** The first Tick a character can
+  act after a wake-up, block stun, hit stun or an air recovery, when only blocking
+  and special moves are available. Both P1 and P2. Checked in the game: a special
+  comes out from the marked Tick, a dash from the next. Q-Bee's wake-up has none
+- `Log Hitstop Frames` is gone. Hitstop Ticks and the PB window are shown while
+  `Show P1 Inputs` is on: inputs are accepted during hitstop, and this is for
+  seeing when yours went in. A PB success is always shown
+- Throw invulnerability is drawn as red and white stripes on the lower half of
+  the tile, over its own color, instead of replacing startup, active and
+  recovery. `Show Throw Invulnerability` no longer changes the numbers, and is
+  on by default (a saved setting keeps its value)
+- `Show Movement Data` is now `Include Jumps / Dashes`, on by default (a saved
+  setting keeps its value)
+- The count on a run of tiles is shown from 5 tiles (was 6)
+- See [11.6 Frame Meter](PLAYER_MANUAL.en.md#frame-meter), with new screenshots
+
+### Fix: negative count in the scrolling input bar
+
+- Right after starting the script, the oldest column of `Show Scrolling Input`
+  could show a large negative count (such as -25593). A column recorded before
+  the first game Tick was counted against a different clock. Such columns are now
+  dropped, and a count is never drawn negative
+
+---
+
 ## v11.7.22.3
 
 ### Fix: Frame Meter during hitstop

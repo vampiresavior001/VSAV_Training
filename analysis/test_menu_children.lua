@@ -186,8 +186,8 @@ local TREE = {
 		{ "Display Hitboxes", { "Display Pushbox X Center" } },
 		{ "Show Scrolling Input", { "Scrolling Input History", "Show Button Releases",
 			"Hide Negative Edge Inputs", "Show GC Trainer" } },
-		{ "Frame Meter", { "Show Throw Invulnerability", "Show Movement Data",
-			"Show P1 Inputs", "Log Hitstop Frames" } },
+		{ "Frame Meter", { "Show Throw Invulnerability", "Include Jumps / Dashes",
+			"Show P1 Inputs" } },
 	},
 	Trainer = {
 		{ "Tick Data", { "Tick Data Side", "Show Action Timeline" } },

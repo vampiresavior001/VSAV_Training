@@ -81,6 +81,8 @@ local soundModule        = require "./scripts/sound"
 -- Frame Meter (end of the Display tab), from tirsod/VSAV_FrameMeter. Required at
 -- start-up like the rest: a first require in mid-run fails in FBNeo.
 local frameMeterModule   = require "./scripts/framemeter"
+-- Mute Idle Sounds (Game tab). Its exec hook is registered at start-up.
+local idleSoundModule    = require "./scripts/idleSound"
 
 -- this module provides clocks and game data from memory
 -- data and clock signals are provided every tick
@@ -421,6 +423,7 @@ emu.registerstart(function()
 	macroLuaModule.registerStart()
 	debugKnockdownModule.registerStart()
 	frameMeterModule.registerStart()
+	idleSoundModule.registerStart()
 
 end)
 
@@ -799,6 +802,8 @@ end)
 
 
 emu.registerafter(function() --recording is done after the frame, not before, to catch input from playing macros
+	-- Mute Idle Sounds' log: gathered in its exec hook, written here.
+	idleSoundModule.registerAfter()
 	if globals.game_state.match_begun == false then
 		if globals == nil or globals.options == nil then
 			return

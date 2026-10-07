@@ -84,6 +84,12 @@ local input_images = {
 -- [5] = Inputs, player 1 only
 -- [6] = Inputs, player 2 (Not implemented)
 -- [7] = Displayed frame each tick was logged in (VSAV_Training: 120Hz ticks)
+-- [8] = Reversal-only tick, player 1 (VSAV_Training, see REVERSAL-ONLY TICK)
+-- [9] = Reversal-only tick, player 2
+-- [10] = Still in hitstop, player 1 (VSAV_Training, see read_motion)
+-- [11] = Still in hitstop, player 2
+-- [12] = Throw invulnerable ($143), player 1 (VSAV_Training, display only)
+-- [13] = Throw invulnerable ($143), player 2
 -- breakdown_log[] shows number of grouped frames counted @ specific positions 
 -- [1] = Player 1
 -- [2] = Player 2
@@ -93,7 +99,7 @@ local state_log = {}
 local breakdown_log = {{},{},true}
 
 local function reset_state_log()
-	state_log = {{},{},{},{},{},{},{}} -- VSAV_Training: [7]
+	state_log = {{},{},{},{},{},{},{},{},{},{},{},{},{}} -- VSAV_Training: [7]..[13]
 	breakdown_log = {{},{},true}
 end
 reset_state_log()
@@ -104,10 +110,6 @@ local meter_anchor = {
 	scroll_hold = 0,
 	bound = -90,
 	widget_x_offset = 0,
-	shake = 0,
-	bomb = 0,
-	exploded = false,
-	extra_wide_txt = 0
 }
 
 -- Stores display and positioning data for the text above meter 
@@ -136,17 +138,10 @@ local freezeNextFrame = false
 -- Debugging variable
 local test_state = "actionable"
 
--- -- Funny
-local xsin = 0
-local colours = {
-	"#003FFF", "#1F4FFF", "#3A2CFF", "#5900FF", "#7300FF", "#A100FF",
-	"#C700FF", "#FF00C8", "#FF007F", "#FF004D", "#FF0000", "#FF4D00",
-	"#FF8A00", "#FFBB00", "#FFD000", "#D9FF00", "#9DFF00", "#5DFF00",
-	"#00FF6A", "#00FF9A", "#00FFAA", "#00D9FF", "#00A9FF", "#006EFF"
-}
-local particles = {}
-local particle_count = 0
-local prevHitStop = false
+-- VSAV_Training: the easter egg (a shake on toggling Include Hitstop, then the
+-- meter blowing apart with scrolling rainbow text, closing the menu and
+-- handing both players back) was removed (user, 2026-10-06). The credits
+-- text in draw_meter stays.
 
 -- Borrowed from other files.
 local super_mode = false
@@ -231,94 +226,6 @@ local function player_owns_projectile(player_address)
 	return false
 end
 
--- --	Don't worry about it, just keep scrolling.
-local function make_particle(x, y, img)
-	local new_particle = {
-		posX = x,
-		posY = y,
-		speedY = math.random(-10, -5),
-		speedX = math.random(-2, 2),
-		image = img
-	}
-	particle_count = particle_count + 1
-	particles[particle_count] = new_particle
-	return new_particle
-end
-
-local function run_particles()
-	for _, part in ipairs(particles) do
-		gui.image(part.posX, part.posY, part.image)
-		part.posX = part.posX + part.speedX
-		part.posY = part.posY + part.speedY
-
-		part.speedY = part.speedY + 0.08
-		part.speedX = part.speedX * 0.995
-		if (part.posY > 224 and part.speedY > 0) then
-			part.posY = 224
-			part.speedY = part.speedY * -.8
-		end
-		if (part.posX < 0 or part.posX > emu.screenwidth()-4) then
-			part.posX = clamp(part.posX, 0, emu.screenwidth()-4)
-			part.speedX = part.speedX * -.9
-		end
-	end
-end
-
-local function clear_particles()
-	particles = {}
-	particle_count = 0
-end
-
-local function explode_meter()
-	globals.show_menu = false
-	globals.controllerModule.enable_both_players()
-	meter_anchor.exploded = true
-	meter_anchor.extra_wide_txt = 20
-	xsin = 0
-	local block_start = math.floor(log_position / log_drawn) * log_drawn
-	for player = 1, 2 do 
-		local xx = drawX
-		local max_squares = log_drawn - 1 -- boundary will start at 90-1
-		for offset = 0, max_squares do
-			local i = (block_start + offset) % log_length
-			xx = offset%log_drawn * 4
-			local log_ind = i+meter_anchor.scroll
-			local relY = 0
-			relY = (-6) + clamp((meter_anchor.bound) - (offset), 0, 6)
-			if player == 2 then relY = relY * -1 end
-			local image = states[1][1]
-			local st = state_log[player][log_ind]
-			local state_entry = states[st]
-			if state_entry and state_entry[1] ~= nil then
-				image = state_entry[1]
-			end
-			-- Draws the frame's rectangle
-			make_particle(drawX + xx, drawY + (10*player) + relY, image)
-        end
-    end
-end
-
-local function fightcade_txt()
-	local ttt = "ur entire identity is built upon a character from a 1995 game"
-	meter_anchor.extra_wide_txt = meter_anchor.extra_wide_txt * .9
-	for i = 1, #ttt do
-		local c = ttt:sub(i,i)
-
-		cc = clamp(math.floor(i+(xsin/4))%#colours, 1, #colours-1)
-
-		local letterx = 64+(4*i)
-		local right = ((4*#ttt))
-		local left = 64
-		local center = ((right/2)+left)
-		
-		local widen = (letterx - center) * (math.sin(xsin*.02)+.5) * (.3 + meter_anchor.extra_wide_txt)
-
-		gui.text(letterx+widen, 170 + math.sin((xsin*.07)+i) * 2, c, colours[cc])
-		-- do something with c
-	end
-	local sine_period = (math.pi * 2) / 0.02
-	xsin = (xsin + 1) % sine_period
-end
 
 --	--	--	--	--	--	--	--	--
 --	--	Frame meter begins	--	--
@@ -412,6 +319,92 @@ local function get_player_inputs()
 end
 
 -- Logs each player's statuses to state_log[1/2][log_position]
+-- VSAV_Training: REVERSAL-ONLY TICK (user, 2026-10-06/07). The tick on which
+-- a character coming out of hit stun, block stun, a knockdown or an air
+-- recovery can start a SPECIAL (or guard) but not yet a normal, dash, jump or
+-- Dark Force. Measured and recorded in guardCancel.lua ("WHAT IS ALLOWED ON
+-- THE FREE TICK"): a special pressed on free-1 starts on free+0 (336 spans),
+-- everything else pressed on free+0 starts on free+1 - so free+0 is the tick.
+--
+-- free-1 is marked by the game itself: 0x024F0A writes $04..$07 = 02 02 04 00
+-- on the last recovery tick, and 0x024F12 opens the special input window
+-- ($174) right after - which is why only a special can make the next tick.
+-- The signature held on every transition of two batches (68 and 112) across
+-- wake-up, air recovery and ground hit / block, and on 249 of 250 wake-ups.
+-- It sometimes lasts two ticks (15 of 103); free-1 is the LAST of them, so
+-- the mark goes on the first tick that no longer carries it.
+--
+-- Q-Bee's wake-up does not write it (0 of 21) and opens her window one tick
+-- late, so her specials come out on free+1 like everything else: no mark.
+--
+-- Read every tick from the state itself - not from the dummy's input
+-- preparation, not from any reversal setting - so it shows for P1 and P2,
+-- with or without a guard action, whether a move comes out or not.
+-- VSAV_Training: HITSTOP. A character is STILL on a tick when it is in
+-- hitstop ($5C) and did not move. "Move" is the animation advancing - $20
+-- (the cel's remaining ticks) or $1C (the cel) changing, the test Tick Data
+-- uses - and only counts for a character that is attacking: Demitri's
+-- crouching HK keeps animating through its own hitstop, while a defender's
+-- cel is swapped as it enters guard without anything playing.
+--
+-- A still tick is drawn with a gray top and left out of that character's
+-- numbers and run counts, so the numbers do not depend on which hitstop ticks
+-- are on screen. Which ones are: all of them while Show P1 Inputs is on -
+-- inputs are taken during hitstop, and seeing when they went in is what the
+-- inputs are shown for (user, 2026-10-07; this replaced Include Hitstop) -
+-- and otherwise only the ticks in which an attacking character moved.
+--
+-- AN ATTACKER IS STILL WHILE ANYONE IS IN HITSTOP, not only while its own $5C
+-- is set. The attacker's $5C reaches 0 a tick before the defender's, and on
+-- that tick it has not moved yet. Asking only its own $5C counted that tick
+-- as active with Show P1 Inputs on, while with it off the tick was skipped -
+-- close LP blocked read Total 14 against 13 (user's screenshots, 2026-10-07).
+-- This is the same test the skip uses, so the two cannot drift apart.
+-- The defender keeps its own $5C: its yellow then matches Tick Data's Hitstun.
+local last_anim = { nil, nil }
+local still_now = { false, false }
+local function read_motion()
+	local moved = false
+	local frozen_any = game.hitfreeze(game.address[1]) or game.hitfreeze(game.address[2])
+	for p = 1, 2 do
+		local addr = game.address[p]
+		local a = memory.readbyte(addr + 0x20) * 0x10000 + ((memory.readdword(addr + 0x1C) or 0) % 0x10000)
+		local advanced = last_anim[p] ~= nil and a ~= last_anim[p]
+		local attacking = get_attack_state[super_mode](addr)
+		if advanced and attacking then moved = true end
+		if attacking then
+			still_now[p] = frozen_any and not advanced
+		else
+			still_now[p] = game.hitfreeze(addr)
+		end
+		last_anim[p] = a
+	end
+	return moved
+end
+
+-- VSAV_Training: AG success, read every tick. The opponent's push block
+-- pushback timer ($1B0) at 1..3 is what the original read, on the tile it
+-- logged; held here until a tile is logged, and dropped if none is.
+local pb_success_pending = { false, false }
+local function read_pb_success()
+	for p = 1, 2 do
+		local op = (p == 1) and 2 or 1
+		local v = game.pbsuccess(game.address[op])
+		if v > 0 and v <= 3 then pb_success_pending[p] = true end
+	end
+end
+
+local REVERSAL_SIGNATURE = 0x02020400
+local signature_seen = { false, false }
+local reversal_now = { false, false }
+local function read_reversal_ticks()
+	for p = 1, 2 do
+		local sig = memory.readdword(game.address[p] + 0x04) == REVERSAL_SIGNATURE
+		reversal_now[p] = signature_seen[p] and not sig
+		signature_seen[p] = sig
+	end
+end
+
 local function log_player_state(tick)
     local player = get_player_objects()
 	for p = 1, 2 do
@@ -420,7 +413,10 @@ local function log_player_state(tick)
 
 		local priolist = {
 			{player[p].invulnerable, 8},
-			{player[p].nothrow and globals.options.fm_no_throw, 7},
+			-- VSAV_Training: throw invulnerability is not a state any more. It
+			-- replaced startup / active / recovery under it, so switching its
+			-- display changed the numbers. It is kept in [12] / [13] and drawn
+			-- on the lower half of the tile (mark_nothrow).
 			{player[p].attack_box, 3},
 			{player[p].hurt or player[p].knockbox, 5},
 			{player[p].dfreturn, 4},
@@ -443,12 +439,21 @@ local function log_player_state(tick)
 			state_log[p+2][log_position] = 1
 		end
 
-		local op = 2
-		if p == 2 then op = 1 end
-		if player[op].pbsuccess > 0 and player[op].pbsuccess <= 3 then state_log[p+2][log_position] = 2 end
+		-- VSAV_Training: the success is noted every tick (read_pb_success),
+		-- so one that falls inside skipped hitstop still lands on a tile.
+		if pb_success_pending[p] then
+			state_log[p+2][log_position] = 2
+			pb_success_pending[p] = false
+		end
+		-- VSAV_Training: still in hitstop (not counted) and throw invulnerable.
+		state_log[9+p][log_position] = still_now[p] or nil
+		state_log[11+p][log_position] = player[p].nothrow or nil
 	end
 	-- VSAV_Training: the displayed frame this tick ran in (see second_of_pair).
 	state_log[7][log_position] = emu.framecount()
+	-- VSAV_Training: this tick's own reversal-only flag (see REVERSAL-ONLY TICK).
+	state_log[8][log_position] = reversal_now[1] or nil
+	state_log[9][log_position] = reversal_now[2] or nil
 	log_position = (log_position + 1) % log_length
 end
 
@@ -476,6 +481,11 @@ local function measure_player(player)
 		local index = at % log_length
 		return state_log[player][index]
 	end
+	-- VSAV_Training: a tick this character spent still in hitstop is not
+	-- counted and does not break a run (see read_motion).
+	local function still(at)
+		return state_log[9 + player][at % log_length]
+	end
 
 	local function is_idle_state(state)
 		return state == nil or state == 0 or state == 1 or state == 7 --or state == 6 -- or state == 9
@@ -499,6 +509,9 @@ local function measure_player(player)
 
 	for i = log_position, 0, -1 do
 		local s = state(i)
+		if still(i) then
+			-- VSAV_Training: not counted
+		else
 		if not is_idle_state(s) and idle_offset == nil then
 			idle_offset = i
 		end
@@ -521,11 +534,12 @@ local function measure_player(player)
 				break
 			end
 		end
+		end
 	end
 
 	for i = log_position, 0, -1 do
 		local s = state(i)
-		if (idle_frames > max_idle_frames and breakdown_is_open()) then
+		if (idle_frames > max_idle_frames and breakdown_is_open()) and not still(i) then
 			if (last_state_seen ~= s) then
 				add_to_breakdown(s, i)
 			elseif (s ~= nil and s > 1) then
@@ -564,6 +578,9 @@ local function refresh_meter()
 			or game.hitfreeze(addr, game.address[(p == 1 and 2) or 1])
 			or (game.superfreeze and game.superfreeze(addr, game.address[(p == 1 and 2) or 1]))
 			or game.invulnerable(addr)
+			-- VSAV_Training: throw invulnerability keeps the meter recording
+			-- whether or not it is shown, so the display cannot cut a run short.
+			or game.nothrow(addr)
 			or globals.options.fm_movement_data and (game.dash(addr) or game.jump(addr))
 			or game.dfreturn(addr)
 			or player_owns_projectile(addr)
@@ -584,9 +601,39 @@ local function refresh_meter()
 		last_button_string = ""
 		meter_anchor.scroll = 0
 
-		meter_anchor.exploded = false
-		clear_particles()
 		reset_state_log()
+	end
+end
+
+-- VSAV_Training: the reversal-only mark - a bar over the top two rows of the
+-- tile's fill, in the hurt tiles' yellow: the character is still partly held,
+-- only a special or a guard can start. Light gray on one row was tried first
+-- and did not stand out (user, 2026-10-07). The tile keeps its own colour on
+-- the four rows below - a special that starts on this tick is green there -
+-- and the 120Hz dots sit on the third row, so neither covers the other.
+local FM_REVERSAL = { "#FFF730FF", "#7F7B18FF" } -- current block, previous block
+-- VSAV_Training: the same two rows say "still in hitstop, not counted" in gray.
+-- The two never fall on one tick; if they did, the reversal is drawn last.
+local FM_STILL = { "#B0B0B0FF", "#585858FF" }
+local function mark_top(player, i, x, y, block)
+	if state_log[9 + player][i] then
+		gui.box(x + 1, y + 1, x + 3, y + 2, FM_STILL[block], FM_STILL[block])
+	end
+	if state_log[7 + player][i] then
+		gui.box(x + 1, y + 1, x + 3, y + 2, FM_REVERSAL[block], FM_REVERSAL[block])
+	end
+end
+
+-- VSAV_Training: throw invulnerability on the lower half of the fill (rows 4-6)
+-- in the old throw-invulnerable tile's stripes, over whatever the tile is.
+-- Display only: the tile's own state, and the numbers, are unaffected.
+local FM_NOTHROW = { { "#EFF5F1FF", "#CA275FFF" }, { "#3C3D3CFF", "#320A18FF" } } -- even, odd row
+local function mark_nothrow(player, i, x, y, block)
+	if globals.options.fm_no_throw and state_log[11 + player][i] then
+		local even, odd = FM_NOTHROW[block][1], FM_NOTHROW[block][2]
+		gui.box(x + 1, y + 4, x + 3, y + 4, even, even)
+		gui.box(x + 1, y + 5, x + 3, y + 5, odd, odd)
+		gui.box(x + 1, y + 6, x + 3, y + 6, even, even)
 	end
 end
 
@@ -634,7 +681,7 @@ end
 
 -- Draws the meter to the screen, using the data from the logged states and inputs.
 local function draw_meter()
-    drawX = 8 + meter_anchor.widget_x_offset + meter_anchor.shake
+    drawX = 8 + meter_anchor.widget_x_offset
     drawY = _height - 64
 
 	local measure1_target = measure_anchor.normal
@@ -643,15 +690,6 @@ local function draw_meter()
 	local lerp = (measure_anchor.y - measure1_target) * .3
 	measure_anchor.y = measure_anchor.y - lerp
 	if (math.abs(lerp) < .1) then measure_anchor.y = measure1_target end
-
-	if math.abs(meter_anchor.shake) > .2 then
-		meter_anchor.shake = meter_anchor.shake * -.5
-		meter_anchor.bomb = meter_anchor.bomb + 1
-		if (meter_anchor.bomb == 60) then explode_meter() end
-	else
-		meter_anchor.shake = 0
-		meter_anchor.bomb = 0
-	end
 
 	gui.text(-512-meter_anchor.scroll, 48, "VSAV_FrameMeter by @tirsod.com\nSpecial thanks to Nbee, MBD, KyleW, vampiresavior001\nrar, hagure, zako, dom & enker\nfor all the hard work that made this\nlittle fun project possible!\n\nGo lab those purrsuits! :3 -6410\n(I really had to learn Lua for this, huh?)\nShoutouts to the vsav discord!")
 
@@ -711,12 +749,18 @@ local function draw_meter()
 
 			-- Draws the frame's rectangle
 			gui.image(drawX + xx, drawY + (10*player) + relY, image)
-			mark_120hz(player, log_ind, drawX + xx, drawY + (10*player) + relY, offset == 0) -- VSAV_Training
+			-- VSAV_Training: lower half, top two rows, then the 120Hz dots on row 3.
+			mark_nothrow(player, log_ind, drawX + xx, drawY + (10*player) + relY, 1)
+			mark_top(player, log_ind, drawX + xx, drawY + (10*player) + relY, 1)
+			mark_120hz(player, log_ind, drawX + xx, drawY + (10*player) + relY, offset == 0)
 
 			-- Draws the frame's overlay
+			-- VSAV_Training: the AG window (1) only with Show P1 Inputs, as the
+			-- hitstop it mostly falls in is shown only then; the success (2) always.
 			local overlay = nil
 			local timer_entry = state_log[player+2][log_ind]
-			if (timer_entry ~= nil and timer_entry > 0) then
+			if (timer_entry ~= nil and timer_entry > 0)
+			   and (timer_entry == 2 or globals.options.fm_input_p1) then
 				if timers[timer_entry] ~= nil then
 					overlay = timers[timer_entry]
 					gui.image(drawX + xx, drawY + (10*player) + relY, overlay)
@@ -740,7 +784,7 @@ local function draw_meter()
 				--print("p2")
 			end
 
-			if (breakdown ~= nil and breakdown > 5) then
+			if (breakdown ~= nil and breakdown >= 5) then -- VSAV_Training: 5, was 6
 				local bdXoffset = -1
 				if breakdown > 9 then bdXoffset = -5 end
 				if breakdown > 99 then bdXoffset = -9 end
@@ -772,6 +816,8 @@ local function draw_meter()
 				if state_entry and state_entry[2] ~= nil then
 					image = state_entry[2]
 					gui.image(drawX + xx, drawY + (10*player), image)
+					mark_nothrow(player, log_ind, drawX + xx, drawY + (10*player), 2) -- VSAV_Training
+					mark_top(player, log_ind, drawX + xx, drawY + (10*player), 2) -- VSAV_Training
 					mark_120hz(player, log_ind, drawX + xx, drawY + (10*player), offset == run_start) -- VSAV_Training
 				end
 			end
@@ -844,61 +890,36 @@ local function handle_scrolling()
 end
 
 -- Update function called by the subscription made when the module first registers. Calls every method above this to produce the meter. 
--- VSAV_Training: HITSTOP IS SKIPPED BY WHAT STOOD STILL, NOT BY $5C (trial,
--- 2026-10-05). $5C only says a player is in hitstop. Demitri's crouching HK
--- keeps animating through it - its 4 active ticks all run while $5C is set -
--- and an ordinary move stands still (the close LP's box is out 14 ticks, 11 of
--- them frozen). Skipping on $5C read the blocked HK as 1 red tile against 4 on
--- a whiff, and the old one-tick-late flag also dropped the first tick after
--- every hitstop (blocked LP: 2 red against 3). Tick Data counts the same
--- moves right because it asks whether the animation advanced: $20 (the cel's
--- remaining ticks) and $1C (the cel) change on exactly those ticks.
--- A tick is skipped now only while someone is in hitstop AND no attacking
--- player's animation advanced. The defender is left out: entering guard
--- swaps its cel without anything having played.
-local last_anim = { nil, nil }
-local function anim_advanced()
-	local moved = false
-	for p = 1, 2 do
-		local addr = game.address[p]
-		local a = memory.readbyte(addr + 0x20) * 0x10000 + ((memory.readdword(addr + 0x1C) or 0) % 0x10000)
-		if last_anim[p] ~= nil and a ~= last_anim[p] and get_attack_state[super_mode](addr) then
-			moved = true
-		end
-		last_anim[p] = a
-	end
-	return moved
-end
-
+-- VSAV_Training: hitstop ticks are skipped by what stood still, not by $5C
+-- alone (2026-10-05): a tick is skipped only while someone is in hitstop AND
+-- no attacking character moved. See read_motion for what "moved" is.
 local function update(tick)
-	-- VSAV_Training: see anim_advanced above.
-	local moved = anim_advanced()
+	-- VSAV_Training: every tick, logged or not (see read_motion).
+	local moved = read_motion()
+	read_reversal_ticks()
+	read_pb_success()
 	local frozen = (game.hitfreeze(game.address[1]) or game.hitfreeze(game.address[2]))
-	               and not globals.options.fm_hitstop
+	               and not globals.options.fm_input_p1
 	-- Don't draw any new frames to the meter if the game is frozen for dramatic effect.
 	freezeNextFrame = frozen and not moved -- VSAV_Training: now "skip this tick"
 	if not freezeNextFrame then
 		refresh_meter()
 		-- VSAV_Training: match_running, not match_begun - the latter drops to
 		-- false during a transformation (Demitri's bat spin and the like).
+		local logged = false
 		if globals.match_running == nil or globals.match_running() then
 			if (idle_frames < max_idle_frames) then
 				log_player_inputs()
 				log_player_state(tick)
+				logged = true
 			else
 				handle_scrolling()
 			end
 		end
+		-- VSAV_Training: a success is carried over skipped hitstop only.
+		if not logged then pb_success_pending = { false, false } end
 	end
 
-	if prevHitStop ~= globals.options.fm_hitstop then
-		local shkvalue = 5 + meter_anchor.bomb
-		if not prevHitStop then shkvalue = -5 end
-
-		meter_anchor.shake = shkvalue
-		prevHitStop = globals.options.fm_hitstop
-	end
-	run_particles()
 end
 
 local frameMeterModule = {
@@ -939,12 +960,7 @@ local frameMeterModule = {
     ["second_of_pair"] = second_of_pair,
     ["guiRegister"] = function()
 		if (globals.options.display_frame_meter) then
-			if (not meter_anchor.exploded) then
-        		draw_meter()
-			else
-				run_particles()
-				fightcade_txt()
-			end
+			draw_meter()
 		end
     end
 }

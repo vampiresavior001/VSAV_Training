@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.22.3 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.23 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [Start with installation](#02-install) · [Already set up? Try the PB / GC drill](#sasquatch-pb-tutorial) · [Scope and verification](#verification-scope)
 
@@ -207,7 +207,7 @@ LP/MP/HP mean light/medium/heavy punch; LK/MK/HK mean light/medium/heavy kick.
 
 Moving beyond either end of a list returns to the tab selection. MP has different meanings in different screens: it toggles a pattern's selection in Action Patterns and records another take at the recording confirmation screen. Follow the on-screen control guide.
 
-An indented row is a setting of the nearest less-indented row above it, its parent. Most such rows appear or disappear with the parent's value (for example, `Frame Meter = yes` opens four indented rows under it).
+An indented row is a setting of the nearest less-indented row above it, its parent. Most such rows appear or disappear with the parent's value (for example, `Frame Meter = yes` opens three indented rows under it).
 
 `Reset This Tab` on `Display`, `Trainer` and `Analysis` resets all settings on that tab. A confirmation dialog opens with `Cancel` selected. This also resets any child settings hidden because their parent setting is OFF.
 
@@ -1187,17 +1187,15 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 
 **Frame Meter gives you a visual view of normal and special moves.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
 
-![Frame Meter: the upper row is P1 (Lilith) with 7 green, 1 red and 18 blue tiles; the lower row is P2 (Sasquatch) with 22 yellow tiles](images/frame_meter.png)
+![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 6 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a yellow top](images/frame_meter.png)
 
-In this example, P2 (Sasquatch) turns yellow (hit or block stun) from P1's (Lilith's) attack. P1's row runs green (startup), red (active), then blue (recovery). The black dots between tiles mark pairs of Ticks that fell in the same displayed frame at turbo.
+In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. P1's row runs green (startup), red (active), then blue (recovery). P2's row is yellow (block stun). The gray top on its first tile marks a Tick spent frozen in hitstop; it is not counted, so the 14 yellow tiles are numbered 13. The yellow bar on the tile after the yellow run is the reversal-only tick, and the red and white stripes on the lower half of the five tiles from there are throw invulnerability. The black dots between tiles mark pairs of Ticks that fell in the same displayed frame at turbo.
 
-The defender's yellow run includes the contact Tick and Ticks when only the attacker moved, so it can be longer than Tick Data's `Hitstun`.
+**The number on a run of tiles is how many tiles of that color are in a row (shown for runs of 5 or more; up to four can be told at a glance).** The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
 
-**The number on a run of tiles is how many tiles of that color are in a row (shown for runs of 6 or more).** The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (7 green tiles read `Startup 8`). `Recovery` is also one more than the blue tiles (18 blue tiles read `Recovery 19`).
+With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the three rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
 
-With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the four rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
-
-![On the Display tab, Frame Meter : yes opens four indented rows under it](images/frame_meter_menu.png)
+![On the Display tab, Frame Meter : yes opens three indented rows under it](images/frame_meter_menu.png)
 
 | Tile color | State |
 |---|---|
@@ -1207,22 +1205,31 @@ With `Frame Meter = yes`, the last row on the `Display` tab, both players' state
 | Yellow | Hit or block stun |
 | Orange | Projectile out |
 | White | Invulnerable |
-| Red-purple | Throw invulnerable (with `Show Throw Invulnerability` ON) |
-| Light blue | Jump or dash (with `Show Movement Data` ON) |
+| Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change |
+| Light blue | Jump or dash (with `Include Jumps / Dashes` ON) |
 | Dark gray | Doing nothing |
+| Yellow bar along the top | Reversal-only tick: only blocking and special moves are available (see below) |
+| Gray bar along the top | A Tick the character spent frozen in hitstop; left out of the numbers and run counts (see below) |
+| Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
+| Tile borders in yellow-green | PB succeeded |
 
 **Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
+
+**A yellow bar along the top of a tile marks a reversal-only tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
+
+**A gray bar along the top marks a Tick the character spent frozen in hitstop.** It is left out of that character's numbers and run counts. With `Show P1 Inputs` ON, every hitstop Tick is shown; with it OFF, only the Ticks in which an attacking character moved are kept (some moves keep animating through hitstop). The numbers are the same either way.
+
+**PB (Push Block):** on the defender's row, the tile borders join in yellow while the PB window is open. Most of the window falls in hitstop, so it is shown only with `Show P1 Inputs` ON. When a PB succeeds, the borders on the pushing side's row turn yellow-green; that is always shown.
 
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
 | Child row | What it does |
 |---|---|
-| `Show Throw Invulnerability` | Marks throw-invulnerable Ticks |
-| `Show Movement Data` | Shows jumps and dashes. Off: attacks and hit or block stun only |
-| `Show P1 Inputs` | Draws P1's (your) inputs above the meter on each Tick they change |
-| `Log Hitstop Frames` | On: records all Ticks during hitstop. Off: skips only hitstop Ticks when no attacking character's animation advanced |
+| `Show Throw Invulnerability` | Marks throw-invulnerable Ticks with stripes on the lower half of the tile (on by default). Display only; the numbers do not change |
+| `Include Jumps / Dashes` | Shows jumps and dashes too (on by default). Off: attacks and hit or block stun only. Walking is not shown either way |
+| `Show P1 Inputs` | Draws P1's (your) inputs above the meter on each Tick they change. While on, hitstop Ticks and the PB window are shown too: inputs are accepted during hitstop, and this is for seeing when yours went in |
 
-Frame Meter counts differently from [Tick Data](#tick-data). **Display settings can affect both the states recorded and the measured values.** For example, enabling `Show Throw Invulnerability` records affected Ticks as throw invulnerability in preference to active attack frames, which also affects the numerical calculations. Keep throw-invulnerability, movement and hitstop settings the same when comparing results. The [v11.7.22.3 release notes](RELEASE_NOTES.md#v117223) report that the developer checked the values using Demitri's 12 standing and crouching normals. This does not cover every character or move.
+Frame Meter counts differently from [Tick Data](#tick-data). Switching the throw-invulnerability or P1-input display does not change the numbers. The [v11.7.22.3 release notes](RELEASE_NOTES.md#v117223) report that the developer checked the values using Demitri's 12 standing and crouching normals. This does not cover every character or move.
 
 The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
 
@@ -1247,7 +1254,7 @@ Enable only the readouts you need under `Display`.
 | `Show Button Releases` | Marks button releases |
 | `Hide Negative Edge Inputs` | Omits columns with no new input; does not remove dedicated release markers |
 | `Show P2 Inputs` | Dummy inputs on the right |
-| `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Turning it on opens four more rows under it ([11.6](#frame-meter)) |
+| `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Turning it on opens three more rows under it ([11.6](#frame-meter)) |
 
 Child options are hidden when their parent is OFF. The GC input bar requires `Show Scrolling Input`; some other readouts require `HUD (Life / Meter)`.
 
@@ -1256,6 +1263,7 @@ Child options are hidden when their parent is OFF. The GC input bar requires `Sh
 - `Gauge`: separate P1/P2 `Max Life`, `Refill Timer (seconds)` and `Infinite Dark Force`. Turn infinite DF OFF to let it end.
 - `Game > Game Speed`: 0 is Normal; 1–3 are Turbo. Default is 3.
 - `Game > BGM On`: after changing it, return through character select for it to take effect.
+- `Game > Mute Idle Sounds`: stops the voice and sound effects a character repeats while idle, such as Gallon's growl and Jedah's dripping. The idle animation still plays, and attack, guard and hit sounds and BGM stay. Applies to both P1 and P2; off by default. It covers the idle sounds of Gallon, Dark Gallon, Jedah, Victor and B.B. Hood (crouching idle).
 
 Character-specific options include `Anak Projectile`, `Gloomy Puppet Show` and `Lei-Lei Always Stun Item`. Some depend on the P1 character; settings under Dummy are not limited to P2.
 
@@ -1347,7 +1355,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated and checked for consistency: 2026-10-06. This does not include testing the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.22.3; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.23; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

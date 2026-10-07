@@ -1851,6 +1851,9 @@ return {
       entries = {
         integer_menu_item("Game Speed", training_settings, "game_speed", 0, 3, false, 3, 0, "Change the game speed\n0 = normal, 1-3 = turbo 1-3"),
         checkbox_menu_item("BGM On", training_settings, "bgm_on", false, "Background music on or off.\nIt only takes proper effect after a trip through character select - switch it\nhere and the music comes back quiet. Return to Character Select below does\nthat, and so does Lua Hotkey 4."),
+        -- MUTE IDLE SOUNDS (idleSound.lua, user 2026-10-06). Next to BGM On:
+        -- both are about what you hear, and neither changes the game.
+        checkbox_menu_item("Mute Idle Sounds", training_settings, "mute_idle_sounds", false, "Stops the sounds a character makes over and over while standing idle - Gallon's\ngrowl, Jedah's dripping. Attacks, guards, hits and BGM are left alone, and the\nidle animation still plays. Both players. A sound already playing finishes.\nOnly the idle sounds found so far are covered - see the manual."),
         list_menu_item("P1 Min PB Presses", training_settings, "min_pb_inputs", { "Normal", "4", "5", "6" }, 1, "How many presses YOU must make before a push block is allowed. P1 only - it\ndoes not make the dummy work harder.\nNormal leaves the game alone: it counts presses in a 14 Tick window and rolls\nper press - never on 1-2, then 25/50/75%, and the 6th always pushes.\n4/5/6 rewrite the count the game reads to zero whenever you pressed fewer than\nthat (ROM 0x02760E), so it rolls as if you had not pressed at all."),
         { name = "Return to Character Select",
           draw = function(_self, _x, _y, _selected)
@@ -1908,11 +1911,10 @@ return {
         -- is his file with the local changes marked; these rows are the hook.
         -- Last on the tab (before Reset Tab), so its four rows open right under
         -- it and push nothing else around (user, 2026-10-04).
-        checkbox_menu_item("Frame Meter", training_settings, "display_frame_meter", false, "Both players, one tile per game Tick, along the bottom: green startup, red\nactive, blue recovery, yellow hurt, orange projectile, white invulnerable.\nStartup / Total / Recovery / Advantage of the last action: P1 above, P2 below.\nA black dot each side of a border: those two Ticks shared one frame (turbo).\nOnce it stops, hold down-back or down-forward to scroll it."),
-        child_of("display_frame_meter", checkbox_menu_item("Show Throw Invulnerability", training_settings, "fm_no_throw", false, "Marks the Ticks a character cannot be thrown ($143) on the Frame Meter.")),
-        child_of("display_frame_meter", checkbox_menu_item("Show Movement Data", training_settings, "fm_movement_data", false, "Puts jumps and dashes on the Frame Meter. Off: attacks and reactions only.")),
-        child_of("display_frame_meter", checkbox_menu_item("Show P1 Inputs", training_settings, "fm_input_p1", false, "Draws YOUR inputs over the P1 row of the Frame Meter, one icon per change.")),
-        child_of("display_frame_meter", checkbox_menu_item("Log Hitstop Frames", training_settings, "fm_hitstop", false, "Keeps the Frame Meter running through hitstop (impact freeze). Off: those\nTicks are left out, so the meter shows only Ticks where something moves.")),
+        checkbox_menu_item("Frame Meter", training_settings, "display_frame_meter", false, "Both players, one tile per game Tick, along the bottom: green startup, red\nactive, blue recovery, yellow hurt, orange projectile, white invulnerable.\nStartup / Total / Recovery / Advantage of the last action: P1 above, P2 below.\nA black dot each side of a border: those two Ticks shared one frame (turbo).\nYellow top: reversal-only tick. Gray top: frozen in hitstop, not counted.\nOnce it stops, hold down-back or down-forward to scroll it."),
+        child_of("display_frame_meter", checkbox_menu_item("Show Throw Invulnerability", training_settings, "fm_no_throw", true, "Marks the Ticks a character cannot be thrown ($143): red and white stripes on\nthe lower half of the tile, over its own colour. Display only - the numbers\ndo not change, and the meter keeps recording while it lasts either way.")),
+        child_of("display_frame_meter", checkbox_menu_item("Include Jumps / Dashes", training_settings, "fm_movement_data", true, "Puts jumps and dashes on the Frame Meter, as light blue tiles. Off: attacks and\nreactions only. Walking is not shown either way.")),
+        child_of("display_frame_meter", checkbox_menu_item("Show P1 Inputs", training_settings, "fm_input_p1", false, "Draws YOUR inputs over the P1 row of the Frame Meter, one icon per change.\nHitstop Ticks and the AG window are shown with them: inputs are taken during\nhitstop, and this is for seeing when they went in. A gray top marks a Tick a\ncharacter spent frozen - it is not counted, so the numbers stay the same.")),
         reset_tab_item("Display"),
       }
     },
@@ -1972,7 +1974,7 @@ return {
         -- Frequency Counter" on the Trainer tab; the property keeps its name
         -- so a saved setting still reaches it.
         checkbox_menu_item("Random Guard Action % Check", training_settings, "display_gc_freq_counter", false, "The dummy's Random Guard Action %, counted: does it act as often as set?\nopp = chances the dummy had, roll+ = how many the roll allowed,\narm = guard actions started, seq = later sequence steps sent.\nGreen when roll+/opp matches the setting. seq above opp means\nleftover steps from an earlier chance are still coming out."),
-        checkbox_menu_item("Knockdown Logger", training_settings, "knockdown_logger_enable", false,"Writes a JSON trace of every recovery to scripts/reversal_logs.\nFor investigating timing. Leave it off unless you are measuring something -\nit writes a file per recovery.\nAir guards go to airg_s01..s30.json, one file per air-blocked chain."),
+        checkbox_menu_item("Knockdown Logger", training_settings, "knockdown_logger_enable", false,"Writes a JSON trace of every recovery to scripts/reversal_logs.\nFor investigating timing. Leave it off unless you are measuring something -\nit writes a file per recovery.\nAir guards go to airg_s01..s30.json, one file per air-blocked chain.\nIdle sound requests (Game > Mute Idle Sounds) go to idle_sound.json."),
         reset_tab_item("Analysis"),
       }
     }

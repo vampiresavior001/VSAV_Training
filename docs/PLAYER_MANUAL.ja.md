@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.22.3／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.23／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [設定済みならAG・GCの実践へ](#sasquatch-ag-tutorial) · [対象環境・確認範囲](#verification-scope)
 
@@ -207,7 +207,7 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 
 一覧の端を越えて上下へ移動すると、タブ選択へ戻ります。MPの意味は画面ごとに異なり、Action Patternsでは使用チェックの切り替え、記録確認では記録し直しになります。画面下の操作案内を優先してください。
 
-字下げされた行は、すぐ上の一段浅い行（親）の設定です。多くは親の値によって表示されたり消えたりします（例：`Frame Meter = yes` で、その下に字下げした4行が開く）。
+字下げされた行は、すぐ上の一段浅い行（親）の設定です。多くは親の値によって表示されたり消えたりします（例：`Frame Meter = yes` で、その下に字下げした3行が開く）。
 
 `Display`、`Trainer`、`Analysis` の `Reset This Tab` は、そのタブの設定をまとめて初期化します。確認画面が開き、初期選択は `Cancel` です。親設定がOFFで隠れている子項目も初期化されます。
 
@@ -1185,17 +1185,15 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 
 **通常技や必殺技の性質を、色分けされた帯で直感的に確認できる機能です。** 発生・攻撃判定・戻り・無敵などの流れを、色と長さでつかめます。数値とあわせてグラフィカルな表示で理解したい方に向いています。
 
-![Frame Meter。上の段がP1（リリス）で緑7・赤1・青18マス、下の段がP2（サスカッチ）で黄22マス](images/frame_meter.png)
+![Frame Meter。上の段がP1（デミトリ）で緑3・赤3・青6マス。下の段がP2（モリガン）で、上端が灰色のマスを先頭に黄14マス（数字は13）、続いて上端が黄色のマスから下半分が縞の5マス](images/frame_meter.png)
 
-この例では、P1（リリス）の技を受けたP2（サスカッチ）が黄（やられ・ガード硬直）になっています。上の段は緑（発生まで）、赤（攻撃判定）、青（戻り）の順です。マスの間の黒い点は、ターボで同じ表示フレームに入った2 Tickの組です。
+この例では、P1（デミトリ）の技をP2（モリガン）がガードしています。上の段は緑（発生まで）、赤（攻撃判定）、青（戻り）の順です。下の段は黄（ガード硬直）で、最初のマスの上端の灰色は、ヒットストップで止まっていたTickです。数えないので、黄14マスに付く数字は13です。黄が終わった次のマスの上端の黄色い線はリバーサルフレーム、そこから5マス続く下半分の赤と白の縞は投げ無敵です。マスの間の黒い点は、ターボで同じ表示フレームに入った2 Tickの組です。
 
-防御側の黄色い帯には、接触したTickや攻撃側だけが動いたTickも含まれるため、Tick Dataの`Hitstun`より長くなる場合があります。
+**マスに付く数字は、同じ色が続いたマスの数です（5マス以上のときだけ表示。4マスまでは数えなくても見て分かるため）。** 行の数値とは数え方が違います。`Startup` は最初の攻撃判定のTickまで含めるので、緑の数より1多くなります（緑3マスで `Startup 4`）。`Recovery` も青の数より1多く表示されます（青6マスで `Recovery 7`）。
 
-**マスに付く数字は、同じ色が続いたマスの数です（6マス以上のときだけ表示）。** 行の数値とは数え方が違います。`Startup` は最初の攻撃判定のTickまで含めるので、緑の数より1多くなります（緑7マスで `Startup 8`）。`Recovery` も青の数より1多く表示されます（青18マスで `Recovery 19`）。
+`Display` タブの末尾にある `Frame Meter = yes` にすると、画面の下に両プレイヤーの状態が1 Tickごとに1マスずつ並びます。ONにすると、その下に次の表の3行が字下げして開きます。上の段がP1、下の段がP2です。メーターの上にP1、下にP2の `Startup / Total / Recovery / Advantage` を表示します。
 
-`Display` タブの末尾にある `Frame Meter = yes` にすると、画面の下に両プレイヤーの状態が1 Tickごとに1マスずつ並びます。ONにすると、その下に次の表の4行が字下げして開きます。上の段がP1、下の段がP2です。メーターの上にP1、下にP2の `Startup / Total / Recovery / Advantage` を表示します。
-
-![DisplayタブでFrame Meter : yesにすると、その下に4行が字下げして開く](images/frame_meter_menu.png)
+![DisplayタブでFrame Meter : yesにすると、その下に3行が字下げして開く](images/frame_meter_menu.png)
 
 | マスの色 | 状態 |
 |---|---|
@@ -1205,22 +1203,31 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | 黄 | やられ・ガード硬直 |
 | オレンジ | 飛び道具が出ている |
 | 白 | 無敵 |
-| 赤紫 | 投げ無敵（`Show Throw Invulnerability` がONのとき） |
-| 水色 | ジャンプ・ダッシュ（`Show Movement Data` がONのとき） |
+| 下半分の赤と白の縞 | 投げ無敵（`Show Throw Invulnerability` がONのとき）。表示だけで、数値は変わらない |
+| 水色 | ジャンプ・ダッシュ（`Include Jumps / Dashes` がONのとき） |
 | 暗い灰色 | 何もしていない |
+| 上端の黄色い線 | リバーサルフレーム。ガードと必殺技だけが可能なTick（下の説明） |
+| 上端の灰色の線 | ヒットストップで止まっていたTick。数値とマスの数字に数えない（下の説明） |
+| マスの境目が黄色くつながる | AGの受付中（`Show P1 Inputs` がONのときだけ） |
+| マスの境目が黄緑 | AGが成立した |
 
 **黒い点は、同じ表示フレーム内で処理された2 Tickの組を示します。** ターボ3では、表示3フレームの間に内部処理が4 Tick進みます。同じ表示フレームに属する2マスの境目をはさんで、黒い点を付けます。何もしていないマスには付けません。ノーマル（`Game Speed = 0`）では付きません。
+
+**上端の黄色い線は、リバーサルフレームです。ガードと必殺技だけが可能なTickを示します。** 起き上がり・ガード後・やられ後・空中やられからの復帰で、動けるようになった最初のTickに付きます。このTickに始められるのは必殺技とガードだけで、通常技・ダッシュ・ジャンプは次のTickからです。線の下にはマスの色が残ります（このTickに必殺技を出せば緑）。P1・P2の両方に、反撃の設定や技を出したかどうかに関係なく付きます。キュービーの起き上がりには付きません（必殺技もほかの行動と同じTickからになるため）。
+
+**上端の灰色の線は、ヒットストップで止まっていたTickです。** そのキャラの数値とマスの数字には数えません。`Show P1 Inputs` がONのときはヒットストップ中のTickをすべて並べ、OFFのときは攻撃中のキャラが動いたTickだけを残します（ヒットストップ中も動く技があるため）。どちらでも数値は同じです。
+
+**AGの表示：** 守る側の段で、AGの受付中はマスの境目が黄色でつながります。受付の多くはヒットストップ中なので、`Show P1 Inputs` がONのときだけ表示します。AGが成立すると、成立させた側の段のマスの境目が黄緑になります。こちらは常に表示します。
 
 両プレイヤーが5 Tick続けて何もしていないと、メーターは止まります。止まっている間に下後ろか下前を押し続けると、記録を前後にスクロールできます。次の動きが始まると、新しく記録し直します。
 
 | 子の行 | 内容 |
 |---|---|
-| `Show Throw Invulnerability` | 投げ無敵のTickを表示する |
-| `Show Movement Data` | ジャンプ・ダッシュを表示する。OFFでは攻撃とやられ・ガードだけ |
-| `Show P1 Inputs` | P1（自分）の入力を、変わったTickごとにメーターの上へ表示する |
-| `Log Hitstop Frames` | ONではヒットストップ中もすべて記録する。OFFでは、その間に攻撃中のどのキャラクターもアニメーションが進まなかったTickだけを省略する |
+| `Show Throw Invulnerability` | 投げ無敵のTickを、マスの下半分の縞で表示する（初期値はON）。表示だけで、数値は変わらない |
+| `Include Jumps / Dashes` | ジャンプ・ダッシュも表示する（初期値はON）。OFFでは攻撃とやられ・ガードだけ。歩きはどちらでも表示しない |
+| `Show P1 Inputs` | P1（自分）の入力を、変わったTickごとにメーターの上へ表示する。ONの間はヒットストップ中のTickとAGの受付も並べる（ヒットストップ中の入力も受け付けられるので、いつ入力したかを見るため） |
 
-数え方は[Tick Data](#tick-data)とは別です。**表示設定によって、記録される状態と測定値が変わる場合があります。** たとえば`Show Throw Invulnerability`をONにすると、該当するTickは攻撃判定より優先して投げ無敵として記録され、数値の集計にも影響します。比較するときは、投げ無敵・移動・ヒットストップの設定をそろえてください。[v11.7.22.3のリリースノート](RELEASE_NOTES.ja.md#v117223)では、開発側がデミトリの立ち・しゃがみ通常技12種で数値を確認したと報告しています。全キャラクター・全技の確認ではありません。
+数え方は[Tick Data](#tick-data)とは別です。投げ無敵とP1の入力の表示を切り替えても、数値は変わりません。[v11.7.22.3のリリースノート](RELEASE_NOTES.ja.md#v117223)では、開発側がデミトリの立ち・しゃがみ通常技12種で数値を確認したと報告しています。全キャラクター・全技の確認ではありません。
 
 Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter)から取り込みました。
 
@@ -1245,7 +1252,7 @@ Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_Fr
 | `Show Button Releases` | ボタンを離した印を表示 |
 | `Hide Negative Edge Inputs` | 新しい入力のない列を省略。ボタンを離した専用の印は消さない |
 | `Show P2 Inputs` | 右側のダミー入力表示 |
-| `Frame Meter` | 両プレイヤーの状態を1 Tickごとに並べる帯。ONにすると下に4行が開く（[11.6](#frame-meter)） |
+| `Frame Meter` | 両プレイヤーの状態を1 Tickごとに並べる帯。ONにすると下に3行が開く（[11.6](#frame-meter)） |
 
 親項目がOFFのときは、その子項目が隠れます。GC入力帯は `Show Scrolling Input`、一部の補助表示は `HUD (Life / Meter)` も必要です。
 
@@ -1254,6 +1261,7 @@ Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_Fr
 - `Gauge`：P1／P2別の `Max Life`、`Refill Timer (seconds)`、`Infinite Dark Force`。無限DFを終了するには設定をOFFにします。
 - `Game > Game Speed`：0が通常、1～3がTurbo。初期設定は3です。
 - `Game > BGM On`：切り替え後、キャラクター選択を経由すると反映されます。
+- `Game > Mute Idle Sounds`：待機中のキャラクターが繰り返す声・効果音（ガロンのうなり声、ジェダの水滴音など）を止めます。待機の動きはそのままで、攻撃・ガード・被弾の音とBGMは残ります。P1・P2の両方が対象で、初期値はOFFです。対象はガロン、ダークガロン、ジェダ、ビクトル、バレッタ（しゃがみ待機）の待機音です。
 
 キャラクターによって `Anak Projectile`、`Gloomy Puppet Show`、`Lei-Lei Always Stun Item` などの固有設定が出ます。これらにはP1キャラに応じて表示されるものもあり、Dummyタブの全項目がP2専用というわけではありません。
 
@@ -1345,7 +1353,7 @@ Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_Fr
 - 文書更新・整合性確認日：2026-10-06（エミュレーター上の操作確認は含みません）。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.22.3（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.23（項目名は2026-10-04に確認）。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

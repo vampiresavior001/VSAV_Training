@@ -93,13 +93,17 @@ local default_training_settings = {
   show_mash_timer = false,
   show_pursuit_indicator = false,
   show_invuln_timer = false,
-  -- Frame Meter (end of the Display tab), from tirsod/VSAV_FrameMeter. All OFF,
-  -- Show Movement Data included (user, 2026-10-04).
+  -- Frame Meter (end of the Display tab), from tirsod/VSAV_FrameMeter. Off.
+  -- Of its rows, Include Jumps / Dashes (fm_movement_data, since 2026-10-06) and
+  -- Show Throw Invulnerability (fm_no_throw, since 2026-10-07) are on for a new
+  -- install (user). A saved setting is kept either way.
   display_frame_meter = false,
-  fm_no_throw = false,
-  fm_movement_data = false,
+  fm_no_throw = true,
+  fm_movement_data = true,
+  -- Show P1 Inputs also brings in the hitstop Ticks and the AG window. It
+  -- replaced Include Hitstop (fm_hitstop, 2026-10-07): a saved value of that is
+  -- read by nothing now.
   fm_input_p1 = false,
-  fm_hitstop = false,
   display_airdash_trainer = 0,
   show_x_distance = 1,
   display_dash_interval_trainer = false,
@@ -142,6 +146,8 @@ local default_training_settings = {
   display_jump_in_trainer = false,
   game_speed = 3,
   bgm_on = false,
+  -- Off: the idle sounds play as the game has them (user, 2026-10-06).
+  mute_idle_sounds = false,
   -- Display/Etc defaults set from the maintainer's own working setup, so a
   -- fresh install comes up the way the tool is actually used. These three had
   -- no entry here at all and fell back to nil, which reads as off.

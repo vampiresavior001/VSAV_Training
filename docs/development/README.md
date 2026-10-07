@@ -12,6 +12,7 @@ Design notes, investigation results and handoffs are collected here. File names 
 | [Action Pattern Library](design_action_pattern_library.md) | アクションパターンの設計 |
 | [Landing prediction](design_landing_prediction.md) | 着地予測の調査と設計 |
 | [PB scoring](design_pb_score.md) | AG採点の再設計案（保留） |
+| [Frame Meter](design_frame_meter.md) | Frame Meterの記録と表示の作り、リバーサルフレームの根拠 |
 | [v11.3.2 changes](VSAV_TRAINING_v11.3.2_CHANGES.md) | 旧版の変更記録 |
 | [v11.3.2 wake-up reversal behavior](wakeup_reversal_behavior_v11.3.2.md) | 旧版の起き上がり・リバーサル仕様 |
 
