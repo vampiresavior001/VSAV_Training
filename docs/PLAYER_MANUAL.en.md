@@ -1148,7 +1148,36 @@ The readout appears between the basic Tick Data and Action Timeline. `Show Meaty
 
 ![On the Trainer tab, Show Meaty Timing is indented under Tick Data, with its help text at the bottom](images/meaty_timing_menu.png)
 
-**Try next:** Repeat the same wake-up setup, changing only when you start the attack, and compare `Reversal` and `Active`. Also check whether the opponent’s response comes out; the readout alone does not determine whether the setup works.
+<a id="meaty-timing-strategy"></a>
+##### Choose your attack and timing based on the opponent’s response
+
+**Hitting as early as possible is not always the best choice.** Choose the attack and its timing based on what you expect the opponent to do.
+
+| Expected response | Timing and attack to aim for | Goal |
+|---|---|---|
+| Dark Force activation or jump | **A low at `+0t`** | Hit before the opponent starts the action. Holding up-back will not block a low |
+| Jump or a light normal while holding a guard direction | **A non-low attack around `+2t`** | Catch the transition from guarding to acting. This also helps cover certain actions that avoid lows |
+
+Against a jump, `+0t` targets the opponent **before the jump starts**, while `+2t` targets **the start of the jump**. Results depend on spacing and the attack’s hitbox, so set the dummy to the response you want to test.
+
+<details>
+<summary>Timing reference: +0t through +6t</summary>
+
+`Reversal +0t` means contact on the opponent’s reversal Tick; `+2t` means two Ticks later. The following assumes the opponent acts as early as possible. Move-specific properties, such as invulnerability, still apply.
+
+| Readout | What to expect |
+|---|---|
+| **`+0t`** | Only blocking and reversal specials are available. An opponent pressing a light normal while holding a guard direction blocks because the normal cannot start yet. Against up-back, a low hits; an attack that can be blocked standing is blocked |
+| **`+1t–+3t`** | Can catch a light normal or the start of a jump. However, Zabel’s jump, Sasquatch’s wake-up dash and Anakaris’s float can avoid lows. The opponent can also activate Dark Force |
+| **`+4t`** | Can trade with a normal that starts in four Ticks. Watch especially for B.B. Hood’s and Lilith’s crouching normals. A jump started at the earliest opportunity can avoid lows |
+| **`+5t`** | The boundary where throw invulnerability expires. At the same timing, a throw may succeed or fail depending on character processing order |
+| **`+6t`** | Can target the end of throw invulnerability without depending on processing order. The opponent must still be in throw range and must not be avoiding the throw by jumping or through another form of invulnerability |
+
+</details>
+
+**Start by fixing the opponent’s response.** Vary when the same attack connects, and compare the Meaty Timing readout with the actual outcome. Once you understand the conditions, mix the opponent’s responses to practice making reads.
+
+Meaty Timing reports contact timing. Whiffs and contacts outside its measurement window leave the previous result on screen, so check that the readout updated for the exchange you just tested.
 
 <details>
 <summary>Measurement conditions and special readouts</summary>
