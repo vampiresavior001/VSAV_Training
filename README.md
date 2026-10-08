@@ -42,7 +42,11 @@ See [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) for the conditions require
 
 **Tick Data** avoids the turbo-frame variation of the original display-frame measurements. Its counting conventions for startup, active time, recovery and frame advantage are aligned with those used by strategy sites. See [manual Section 11](docs/PLAYER_MANUAL.en.md#10-data) for measurement conditions and how to read Action Timeline.
 
-### See what happened to your inputs
+### Look beyond success or failure to see your inputs
+
+In Vampire Savior, randomness affects PB activation and the time allowed to complete GC command inputs. Attempts that feel the same can succeed or fail, making it hard to tell what to improve from the outcome alone.
+
+**PB Counter and GC Command Trace help you review what actually happened.** For PB, check when you pressed and how many valid presses registered. For GC, see which directions and button presses the game accepted and where an input window expired. Use that feedback alongside the result to decide what to adjust on your next attempt.
 
 ![PB Counter and PB Stats showing PB input count, timing, simultaneous presses and practice results](docs/images/pb_counter_stats.png)
 

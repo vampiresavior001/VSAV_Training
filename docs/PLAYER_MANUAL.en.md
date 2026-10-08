@@ -814,6 +814,8 @@ Try PB and GC against that opponent, read the results and adjust your input.
 <a id="08-pb"></a>
 ## 8. Practice PB
 
+PB activation involves randomness, so one successful attempt does not tell you whether your inputs are consistent. Use PB Counter to review the number and timing of valid presses alongside the result.
+
 **First fit six valid presses inside the window. Once consistent, delay the start of your inputs.**
 
 ### 8.1 Set up the drill
@@ -883,6 +885,8 @@ The `4 / 5 / 6` choices under `Game > P1 Min PB Presses` **modify game behavior 
 
 <a id="09-gc"></a>
 ## 9. Practice guard cancels
+
+The time allowed to complete GC command inputs involves randomness, so attempts that feel the same can produce different results. GC Command Trace shows the directions and button presses the game accepted, the intervals between them and where a window expired. Use it to identify what to adjust rather than judging by success or failure alone.
 
 **Look for `Success` first. If GC fails, check the accepted directions and finishing button.**
 
