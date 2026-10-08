@@ -40,7 +40,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 
 ## Contents
 
-- [Start here: the screen and what to practice](#01-purpose)
+- [Start here: choose a drill and learn the displays](#01-purpose)
 
 **Part 1: Get started**
 
@@ -70,7 +70,24 @@ The distinction is **the precision of reproduced actions and the detail availabl
 - [15. Glossary and reference version](#15-reference)
 
 <a id="01-purpose"></a>
-## Start here: the screen and what to practice
+## Start here: choose a drill and learn the displays
+
+### Choose what to practice
+
+| Goal | Feature | Where to start |
+|---|---|---|
+| Test combos and pressure strings | Dummy stance, blocking and health recovery | `Dummy`, `Gauge` |
+| Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
+| Make the dummy challenge on wake-up or after blocking | Individual counter actions, Action Steps | `Dummy > Guard Action Type` |
+| Repeat offense seen in matches | Recording and looping | `Recording > Recording Wizard` |
+| Specify a dash into an attack precisely | Action Steps | [Section 6](#06-steps) |
+| Randomize several offensive sequences | Recording slots, Action Patterns | [Section 5](#05-recording), [Section 7](#07-patterns) |
+| Improve PB execution | `Show PB Counter`, `Show PB Stats` | [Section 8](#08-pb) |
+| Find why a GC failed | GC Command Trace, input history | [Section 9](#09-gc) |
+| Track your GC success rate on the 1P and 2P sides | `Show GC Stats` | [Section 9.4](#gc-stats) |
+| Examine advantage, interrupts and landing situations | Tick Data, Air Guard Gaps | [Section 11](#10-data) |
+
+Start with [installation](#02-install) and [basic controls](#03-controls), then [practice PB and GC against Sasquatch](#sasquatch-pb-tutorial).
 
 <a id="screen-map"></a>
 ### The screen
@@ -97,23 +114,6 @@ Show only the displays for the drill you are practicing; they are easier to read
 | 5 | GC Stats | Your GC success rate and input time, split into the 1P and 2P sides. Top left while PB Stats and the other top-left displays are off, bottom right otherwise | [9.4](#gc-stats) |
 | 6 | Input bar | Your inputs, with the guard and GC marks (`G`, `GC`, `SUCCESS`) | [9.3](#gc-timing) |
 | 7 | P2 inputs (`Show P2 Inputs`) | The dummy's inputs | [Section 12](#12-options) |
-
-### Choose what to practice
-
-| Goal | Feature | Where to start |
-|---|---|---|
-| Test combos and pressure strings | Dummy stance, blocking and health recovery | `Dummy`, `Gauge` |
-| Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
-| Make the dummy challenge on wake-up or after blocking | Individual counter actions, Action Steps | `Dummy > Guard Action Type` |
-| Repeat offense seen in matches | Recording and looping | `Recording > Recording Wizard` |
-| Specify a dash into an attack precisely | Action Steps | [Section 6](#06-steps) |
-| Randomize several offensive sequences | Recording slots, Action Patterns | [Section 5](#05-recording), [Section 7](#07-patterns) |
-| Improve PB execution | `Show PB Counter`, `Show PB Stats` | [Section 8](#08-pb) |
-| Find why a GC failed | GC Command Trace, input history | [Section 9](#09-gc) |
-| Track your GC success rate on the 1P and 2P sides | `Show GC Stats` | [Section 9.4](#gc-stats) |
-| Examine advantage, interrupts and landing situations | Tick Data, Air Guard Gaps | [Section 11](#10-data) |
-
-Start with [installation](#02-install) and [basic controls](#03-controls), then [practice PB and GC against Sasquatch](#sasquatch-pb-tutorial).
 
 # Part 1: Get started
 
@@ -247,9 +247,12 @@ You can also use `Dummy > Position`. In its diagram, `1` is you, `2` is the dumm
 
 Make Sasquatch perform short-dash LP, then practice PB (Push Block) and GC (Guard Cancel) against it. Complete [installation and input mapping](#02-install) first.
 
-- **Try it once:** Import the included pattern in steps 1–2, then try [PB (step 3)](#tutorial-pb) or [GC (step 4)](#tutorial-gc). **You can start practicing at this point.**
-- **Repeat when ready:** Enable looping in [step 5](#tutorial-loop).
-- **Save your own sequence:** If you build the action manually, save it as a pattern in [step 6](#tutorial-save). An imported pattern is saved for next time.
+- **Succeed against one fixed attack:** Import the included pattern in steps 1–2, then try [PB (step 3)](#tutorial-pb) or [GC (step 4)](#tutorial-gc). **You can start practicing at this point.**
+- **Make your inputs consistent:** Repeat the same attack. For PB, aim to fit six presses within the window even when starting late; for GC, aim for a consistent success indicator. Enable looping in [step 5](#tutorial-loop).
+- **Practice on both sides:** Keep the setup the same and practice facing each direction. For GC, compare success rates with [GC Stats](#gc-stats).
+- **Mix timing and attacks:** Once consistent, practice with [varied start or attack timing](#tutorial-varied-timing) or [two randomly selected attacks](#tutorial-mixed-patterns).
+
+An imported pattern is saved for next time. If you build your own sequence, save it as a pattern in [step 6](#tutorial-save).
 
 ### Step 1: Prepare the counter action
 

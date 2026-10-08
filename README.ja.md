@@ -10,9 +10,11 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [守りを練習する](#first-ag-drill) · [起き攻めを調べる](docs/PLAYER_MANUAL.ja.md#wakeup-pressure-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
 
+**同梱のサスカッチ用パターンで、動きを自分で作らずにAG・GC練習を始められます。** [画像付きチュートリアル](docs/PLAYER_MANUAL.ja.md#sasquatch-ag-tutorial)に沿って進めてください。
+
 ![左はAG、右はGCを練習中の画面。番号は表示の種類](docs/images/screen_map.png)
 
-左：AGの練習画面。右：GCの練習画面。各表示の読み方は[画面の見方](docs/PLAYER_MANUAL.ja.md#screen-map)へ。
+左：遅らせAGでも6回入力できたかを確認。右：GCの方向入力やボタンが、どこまで受け付けられたかを確認。各表示の読み方は[画面の見方](docs/PLAYER_MANUAL.ja.md#screen-map)へ。
 
 ## Tick単位で、再現・練習・改善する
 

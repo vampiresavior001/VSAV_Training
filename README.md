@@ -10,9 +10,11 @@ This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Tr
 
 **[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [Practice defense](#first-pb-drill) · [Test wake-up pressure](docs/PLAYER_MANUAL.en.md#wakeup-pressure-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 
+**Start practicing PB and GC with the included Sasquatch pattern—no need to build a sequence first.** Follow the [illustrated tutorial](docs/PLAYER_MANUAL.en.md#sasquatch-pb-tutorial).
+
 ![Practicing PB (left) and GC (right), with each display numbered](docs/images/screen_map.png)
 
-Left: practicing PB. Right: practicing GC. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
+Left: check whether you still fit six presses when delaying PB. Right: see which GC directions and button presses the game accepted. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
 
 ## Reproduce, practice and improve in Ticks
 
