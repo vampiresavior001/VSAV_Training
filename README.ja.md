@@ -4,7 +4,7 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 [English](README.md) | 日本語
 
-**内部フレーム（Tick）単位で相手の動きを再現し、攻めの検証と守りの練習に使える、Fightcade 2／FBNeo用トレーニングモードです。** 入力や攻防のタイミングを可視化し、成功・失敗の理由を確認しながら練習できます。
+**内部フレーム（Tick）単位で相手の動きを再現し、攻めの検証と守りの練習に使える、Fightcade 2／FBNeo用トレーニングモードです。** 自分では出せない相手の動きを練習相手にし、入力や当たり方を見ながら、自分の対処を改善できます。
 
 [VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.23.1** です。
 
@@ -33,11 +33,10 @@ Tickはゲームの内部フレームです。本フォークは、この内部�
 
 | 目的 | 使い方 |
 |---|---|
-| **攻めが通る条件を調べる** | ダミーに小技・投げ・ジャンプ・ダッシュで対応させ、連係や起き攻めがそれらに勝つか検証する |
-| **タイミングを変えた攻めに対応する** | 同じ攻めの始動や途中の攻撃をばらつかせ、決まったリズムに頼らずAG・GCする練習へ進む。[設定の使い分け](docs/PLAYER_MANUAL.ja.md#dummy-button-timing) |
-| **攻撃を重ねたタイミングを調べる** | [Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で、相手のリバーサルから何Tick後に、攻撃の持続の何Tick目で当たったか確認する |
-| **セットプレイの時間を調べる** | Tick DataのAction Timelineで、起き攻めのフレーム消費や、15表示フレーム（ターボ3では20 Tick）以内に歩き投げを仕掛けられる開始距離を検証する |
-| **空中ガード後の攻防を調べる** | 空中チェーンの割り込める隙間、実際の割り込みタイミング、空中ガードした時点、着地後の有利不利を確認する |
+| **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
+| **実戦に近い守りを練習する** | 複数の攻めや入力タイミングをランダムにし、固定のリズムに頼らずAG・GCする。[設定の使い分け](docs/PLAYER_MANUAL.ja.md#dummy-button-timing) |
+| **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
+| **空中ガード後の攻防を調べる** | [Air Guard Gaps](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)で、空中チェーンの隙間、割り込みタイミング、着地後の有利不利を確認する |
 
 **Tick Data**は、従来の表示フレーム単位の測定で生じていたターボによる数値の揺れを抑え、発生・持続・戻り・有利不利の数え方・考え方を攻略サイトのフレームデータに合わせています。測定条件とAction Timelineの読み方は[マニュアル11章](docs/PLAYER_MANUAL.ja.md#10-data)で説明しています。
 

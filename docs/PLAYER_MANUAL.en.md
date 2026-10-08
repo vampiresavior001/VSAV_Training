@@ -1022,7 +1022,8 @@ The two rows under the table average each step of the command over `Pass` attemp
 3. Start with `Wakeup = None` to keep conditions fixed.
 4. Knock the dummy down and test your setup.
 5. Enable `Trainer > Tick Data` and `Show Meaty Timing`. Use [Meaty Timing](#meaty-timing) to check how many Ticks after the reversal Tick your attack connected and which active Tick made contact. Test whether the setup works against the dummy’s response, then use the readout to review the timing.
-6. Once consistent, vary wake-up movement and response probability. Spreading the response with `Random Start Wait` or `Random Delay` checks that the setup does not rely on one fixed timing.
+6. Keep the knockdown, spacing, attack and dummy response the same, and change only when you start the attack. Compare Meaty Timing with the outcome—your attack hits, is blocked, or loses to the response—to find the timing that produces the result you want. Whiffs can leave an older result on screen, so check that the readout updated.
+7. Once you understand the conditions, switch the dummy to another response and test the same timing. Then vary wake-up movement and response probability. Spreading the response with `Random Start Wait` or `Random Delay` checks that the setup does not rely on one fixed timing.
 
 Do not judge whether a normal came out as early as possible solely by whether the game displays REVERSAL.
 
@@ -1173,7 +1174,16 @@ Against a jump, `+0t` targets the opponent **before the jump starts**, while `+2
 
 </details>
 
+**Start by fixing the opponent’s response.** Vary when the same attack connects, and compare the Meaty Timing readout with the actual outcome. Once you understand the conditions, mix the opponent’s responses to practice making reads.
+
+Meaty Timing reports contact timing. Whiffs and contacts outside its measurement window leave the previous result on screen, so check that the readout updated for the exchange you just tested.
+
 <a id="meaty-timing-qbee"></a>
+**Q-Bee’s wake-up uses `Actionable`, measured from the first Tick she can start a normal action.** See below for her head-shake invulnerability and timing targets.
+
+<details>
+<summary>Against Q-Bee: Actionable timing and the head shake</summary>
+
 **Q-Bee's wake-up is counted differently.** She has no reversal Tick, and the row reads `Wake-up  Actionable +0t`. `Actionable +0t` is the first Tick she can start anything, specials and normals alike (other characters start specials on the reversal Tick and normals a Tick later).
 
 - If she does nothing, the last part of her wake-up (the head shake) lasts until `+1t` or `+2t`, and ordinary strikes are turned away during it (by the game's strike test in the ROM; the developer's logs from the game had no strike connecting during it either). A strike can reach an idle Q-Bee from `+2t` or `+3t`, depending on the turbo cycle. Frame Meter shows the head shake with a white lower half from `+0t` (the Tick she gets back up shows neither white nor stripes: nothing she does comes out on it yet, so in effect she is still down).
@@ -1181,9 +1191,7 @@ Against a jump, `+0t` targets the opponent **before the jump starts**, while `+2
 - A jump at `+0t` is airborne by `+3t`. To cover both an idle Q-Bee and a jump, a non-low around `+3t` is a reasonable target.
 - Her throw invulnerability lasts until `+3t` (the stripes on Frame Meter).
 
-**Start by fixing the opponent’s response.** Vary when the same attack connects, and compare the Meaty Timing readout with the actual outcome. Once you understand the conditions, mix the opponent’s responses to practice making reads.
-
-Meaty Timing reports contact timing. Whiffs and contacts outside its measurement window leave the previous result on screen, so check that the readout updated for the exchange you just tested.
+</details>
 
 <details>
 <summary>Measurement conditions and special readouts</summary>
@@ -1213,6 +1221,7 @@ The green `ACTION TIMELINE` in Tick Data shows the stages of an action on a shar
 
 `Show Step Wait Ticks` displays the actual wait between Action Steps. `Step.2 Wait:13` is the measured interval from the preceding step. `Act` is the Ticks spent entering that step's own inputs. `Loop Wait` measures the boundary between passes. This lets you distinguish a configured timing from its measured result.
 
+<a id="air-guard-gaps"></a>
 ### 11.4 Air Guard Gaps
 
 **Check `Gap` for time in which you could act. A gap alone does not mean your chosen attack is fast enough.**
@@ -1270,13 +1279,11 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 
 **Frame Meter gives you a visual view of normal and special moves.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
 
+With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the three rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
+
 ![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 6 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
 
 In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players’ states on the same Tick.
-
-**The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks. The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
-
-With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the three rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
 
 ![On the Display tab, Frame Meter : yes opens three indented rows under it](images/frame_meter_menu.png)
 
@@ -1296,6 +1303,8 @@ With `Frame Meter = yes`, the last row on the `Display` tab, both players' state
 | Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
 | Tile borders in yellow-green | PB succeeded |
 
+**The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks.
+
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
 | Child row | What it does |
@@ -1308,6 +1317,8 @@ Frame Meter counts differently from [Tick Data](#tick-data). Switching the throw
 
 <details>
 <summary>Details of the marks and measurement rules</summary>
+
+The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
 
 **Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
 
