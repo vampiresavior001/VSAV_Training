@@ -24,11 +24,11 @@ Newest first. Older releases are kept below.
 
 ### Frame Meter
 
-- Neither the white (invulnerable) nor the throw stripes are drawn any more
-  while a character is hit, blocking, knocked down or getting up, on the
-  ground or in the air: they mark not being hit where you would be hit, and
-  there the protection is a given. The white used to run to the end of every
-  wake-up, up to the reversal Tick
+- The meter now omits white invulnerability marks and throw-invulnerability
+  stripes during hit stun, block stun, knockdown and wake-up, on the ground
+  and in the air. This makes invulnerability during actionable periods easier
+  to see; it does not mean those states are always invulnerable. Previously,
+  white marks continued through the end of wake-up, up to the reversal Tick
 - Q-Bee's head shake at the end of her wake-up is drawn white from the first
   Tick she can act (`Actionable +0t`): ordinary strikes are still turned away
   there for 2 or 3 Ticks
