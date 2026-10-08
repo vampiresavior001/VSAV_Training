@@ -150,6 +150,32 @@ local super_mode = false
 local game
 
 -- Addresses for the game's various flags
+-- VSAV_Training: the current cel's +$0B is negative and not $FF - the strike
+-- test turns ordinary attacks away (0x018040). See invulnerable below.
+-- free_before[addr]: $05 was 0 on the tick before this one (read_free_ticks);
+-- nil when not known (the first tick, a load).
+local free_before = {}
+local function strike_shy_cel(addr)
+	local cel = memory.readdword(addr + 0x1C) or 0
+	if cel == 0 then return false end
+	local f = memory.readbyte(cel + 0x0B)
+	return f >= 0x80 and f ~= 0xFF
+end
+-- VSAV_Training: NO INVULNERABILITY IS DRAWN WHILE DOWN OR IN RECOVERY (user,
+-- 2026-10-08): "invulnerable shows not being hit where you would be hit", and
+-- "throw invulnerability while down is a given - showing it is wrong". While a
+-- character is in recovery ($05 = 2: hit, block, knocked down - on the ground
+-- or in the air) or in a cel whose +$0B is $FE (lying down, getting up), the
+-- game is protecting it anyway, so neither the white nor the throw stripes are
+-- drawn. Q-Bee's head shake is the exception: still $FE, but from the tick
+-- after she is free again ($05 = 0 twice) she can start anything.
+local function marks_off(addr)
+	if strike_shy_cel(addr) then
+		return not (memory.readbyte(addr + 0x05) == 0 and free_before[addr] == true)
+	end
+	return memory.readbyte(addr + 0x05) == 0x02
+end
+
 local profile = {
 	{
 		games = {"vsav","vhunt2","vsav2"},
@@ -181,7 +207,23 @@ local profile = {
 		-- the game). cps2-hitboxes.lua hides a hurtbox for $134, $147, $11E, or
 		-- $145 with $1A4 = 0, and a box id of 0 draws nothing; the game's own
 		-- throw check (0x029406) refuses an opponent whose $94-$96 are all 0.
+		-- VSAV_Training: DOWN IS NOT INVULNERABLE (user, 2026-10-08). See
+		-- marks_off above: nothing while down or in recovery. Lying down and
+		-- getting up are cels with +$0B = $FE, which the strike test turns away
+		-- (0x018040), and usually no hurtbox; not every wake-up ends in $FE
+		-- (Morrigan's last 6 ticks are an ordinary cel with no hurtbox and $145),
+		-- which is why $05 = 2 counts too. The white used to run to the tick
+		-- before the reversal tick on every wake-up.
+		-- Q-BEE'S HEAD SHAKE: her last wake-up cel keeps $FE for 3-4 ticks after
+		-- she is free again ($05 = 0), and from the tick after she becomes free
+		-- she can start anything (Meaty Timing's Actionable +0t) - there it is a
+		-- real invulnerability, and her throw invulnerability ($143) runs with
+		-- it. The tick she becomes free is not: nothing she does comes out on
+		-- it, so in effect she is still down (user, 2026-10-08).
+		-- analysis/QBEE_WAKEUP_HEADSHAKE_SURVEY.ja.md 9.
 		invulnerable = function(addr)
+			if marks_off(addr) then return false end
+			if strike_shy_cel(addr) then return true end
 			return memory.readbyte(addr + 0x134) > 0
 				or memory.readbyte(addr + 0x147) > 0
 				or memory.readbyte(addr + 0x11E) > 0
@@ -267,7 +309,7 @@ local function get_player_objects()
 		player[p].attack_box  = bool(attack_box(addr) ~= 0)
 		player[p].knockdown   = game.knockdown(addr)
 		player[p].invulnerable= game.invulnerable(addr)
-		player[p].nothrow     = game.nothrow(addr)
+		player[p].nothrow     = game.nothrow(addr) and not marks_off(addr) -- VSAV_Training
 		
 		player[p].jump		  = game.jump(addr)
 		player[p].dash	      = game.dash(addr)
@@ -437,7 +479,8 @@ local function read_throw_checks()
 	local thrown_now = { false, false }
 	for p = 1, 2 do
 		local t = game.thrown(game.address[p])
-		thrown_now[p] = t and not was_thrown[p]
+		-- false, not nil: after a load the first read is only a baseline.
+		thrown_now[p] = t and was_thrown[p] == false
 		was_thrown[p] = t
 	end
 	for p = 1, 2 do
@@ -446,6 +489,17 @@ local function read_throw_checks()
 		throw_now[p] = (n ~= nil and last_throw_checks[p] ~= nil and n ~= last_throw_checks[p])
 			or thrown_now[(p == 1) and 2 or 1]
 		last_throw_checks[p] = n
+	end
+end
+
+-- VSAV_Training: whether each player was free ($05 = 0) on the tick before,
+-- for invulnerable (Q-Bee's head shake). Read every tick, logged or not.
+local free_now = {}
+local function read_free_ticks()
+	for p = 1, 2 do
+		local addr = game.address[p]
+		free_before[addr] = free_now[addr]
+		free_now[addr] = memory.readbyte(addr + 0x05) == 0
 	end
 end
 
@@ -979,12 +1033,38 @@ local function handle_scrolling()
 	if meter_anchor.scroll_hold <= -29 then meter_anchor.scroll = meter_anchor.scroll - 1 end
 end
 
+-- VSAV_Training: A LOADED STATE IS NOT THE TICK AFTER THE LAST ONE (2026-10-08).
+-- The meter went on from the ticks before the load and compared the first
+-- tick after it with the last one before: an animation that "advanced", a
+-- reversal marker that "went", a thrown flag that "changed" - none of them in
+-- the game - and a run that joined the two sides of the load. Whatever is
+-- carried from one tick to the next is dropped here, so the first tick after a
+-- load is only read, and the meter counts as stopped: the log on screen stays
+-- to be read and scrolled, and the next action starts a new one, as after five
+-- idle ticks (refresh_meter).
+local function reset_after_load()
+	free_before = {}
+	free_now = {}
+	idle_frames = max_idle_frames
+	test_state = "idle"
+	freezeNextFrame = false
+	last_anim = { nil, nil }
+	still_now = { false, false }
+	pb_success_pending = { false, false }
+	last_throw_checks = { nil, nil }
+	was_thrown = { nil, nil }
+	throw_now = { false, false }
+	signature_seen = { false, false }
+	reversal_now = { false, false }
+end
+
 -- Update function called by the subscription made when the module first registers. Calls every method above this to produce the meter. 
 -- VSAV_Training: hitstop ticks are skipped by what stood still, not by $5C
 -- alone (2026-10-05): a tick is skipped only while someone is in hitstop AND
 -- no attacking character moved. See read_motion for what "moved" is.
 local function update(tick)
 	-- VSAV_Training: every tick, logged or not (see read_motion).
+	read_free_ticks()
 	local moved = read_motion()
 	read_reversal_ticks()
 	read_pb_success()
@@ -1047,6 +1127,8 @@ local frameMeterModule = {
 
 		print("not prepared for " .. emu.romname() .. " frame data")
 	end,
+    -- VSAV_Training: called from the master script's savestate.registerload.
+    ["registerLoad"] = function() reset_after_load() end,
     -- VSAV_Training: for analysis/test_framemeter.lua.
     ["second_of_pair"] = second_of_pair,
     ["guiRegister"] = function()

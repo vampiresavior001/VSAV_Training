@@ -860,6 +860,7 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 		frameDataModule.registerLoad()
 		vsavScriptModule.registerLoad(slot)
 		cps2HitboxModule.registerLoad()
+		frameMeterModule.registerLoad()
 		macroLuaModule.registerLoad(slot)
 		globals.dmg_calc.red_life = 0
 		globals.dmg_calc.white_life = 0

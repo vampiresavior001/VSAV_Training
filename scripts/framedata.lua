@@ -183,7 +183,8 @@ function M.registerAfter()
   -- Meaty Timing, between the two. Empty when off or when there is no result
   -- yet, and the HUD closes the gap.
   local meaty = ""
-  if meaty_enabled() then meaty = meatyTiming.formatResult() end
+  -- The defender is the other side: "P2 Hit First" when P1 is measured.
+  if meaty_enabled() then meaty = meatyTiming.formatResult(vsav.side() == "P2" and "P1" or "P2") end
   if vsav.side() == "P2" then
     if data ~= "" then data = "P2  " .. data end
     if meaty ~= "" then meaty = "P2  " .. meaty end

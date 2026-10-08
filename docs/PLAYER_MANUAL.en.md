@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.23 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.23.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -903,7 +903,7 @@ First make GC consistent against the same single attack. Then practice on both s
 
 **If your 1P-side inputs are slow on an arcade stick, try adjusting its position**
 
-On the 1P side (left side of the screen, facing right), if the transition from → to ↓ is especially slow, try repositioning the arcade stick so the lever sits slightly farther to the right relative to your body. In the author’s experience, this often makes the downward movement easier and improves input speed. The effect depends on your grip and posture; compare the per-direction averages and success rate before and after the adjustment, using the same attack for practice.
+On the 1P side (left side of the screen, facing right), if the transition from → to ↓ is especially slow, try repositioning the arcade stick so the lever sits slightly farther to the right relative to your body. In the author’s experience, this can make the downward movement easier and improve input speed. The effect depends on your grip and posture; compare the per-direction averages and success rate before and after the adjustment, using the same attack for practice.
 
 ### 9.2 Input history versus command trace
 
@@ -1129,22 +1129,20 @@ Keep these limits in mind:
 
 **See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from block stun or hit stun, and air recovery. Test your setup against the dummy’s response, then use this readout to review its timing. It does not automatically judge whether a setup worked or a jump was stopped.
 
-![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 4t. On the Frame Meter below, P2's magenta bar sits under the fourth of P1's five red tiles](images/meaty_timing.png)
+![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 3t. On the Frame Meter below, P2's magenta bar sits under the third of P1's four red tiles](images/meaty_timing.png)
 
-In this example, P1’s attack connects on P2’s wake-up, on the fourth of its five active Ticks.
+In this example, P1’s attack connects on P2’s wake-up, on the third of its four active Ticks.
 
 | Readout and field | What it means in this example |
 |---|---|
-| Tick Data: `Active 5t` | The attack has five active Ticks in total |
+| Tick Data: `Active 4t` | The attack has four active Ticks in total |
 | Meaty Timing: `Wake-up` | The attack connects on wake-up |
 | Meaty Timing: `Reversal +0t` | Contact occurs on the opponent’s reversal Tick |
-| Meaty Timing: `Active 4t` | Contact occurs on the fourth active Tick |
+| Meaty Timing: `Active 3t` | Contact occurs on the third active Tick |
 
-Frame Meter shows the same timing: P2’s magenta bar sits directly below P1’s fourth red tile. The preceding tiles with white lower halves show P2’s invulnerability while getting up.
+Frame Meter shows the same timing: P2’s magenta bar sits directly below P1’s third red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hit stun from the meaty; it is one color, so the number on the run (113) counts both.
 
-The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` is on by default.
-
-`Show Meaty Timing` opens indented under `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
+The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` (on by default) opens indented under `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
 
 ![On the Trainer tab, Show Meaty Timing is indented under Tick Data, with its help text at the bottom](images/meaty_timing_menu.png)
 
@@ -1175,6 +1173,14 @@ Against a jump, `+0t` targets the opponent **before the jump starts**, while `+2
 
 </details>
 
+<a id="meaty-timing-qbee"></a>
+**Q-Bee's wake-up is counted differently.** She has no reversal Tick, and the row reads `Wake-up  Actionable +0t`. `Actionable +0t` is the first Tick she can start anything, specials and normals alike (other characters start specials on the reversal Tick and normals a Tick later).
+
+- If she does nothing, the last part of her wake-up (the head shake) lasts until `+1t` or `+2t`, and ordinary strikes are turned away during it (by the game's strike test in the ROM; the developer's logs from the game had no strike connecting during it either). A strike can reach an idle Q-Bee from `+2t` or `+3t`, depending on the turbo cycle. Frame Meter shows the head shake with a white lower half from `+0t` (the Tick she gets back up shows neither white nor stripes: nothing she does comes out on it yet, so in effect she is still down).
+- An action at `+0t` ends the head shake there. Dark Force carries straight on with its own invulnerability.
+- A jump at `+0t` is airborne by `+3t`. To cover both an idle Q-Bee and a jump, a non-low around `+3t` is a reasonable target.
+- Her throw invulnerability lasts until `+3t` (the stripes on Frame Meter).
+
 **Start by fixing the opponent’s response.** Vary when the same attack connects, and compare the Meaty Timing readout with the actual outcome. Once you understand the conditions, mix the opponent’s responses to practice making reads.
 
 Meaty Timing reports contact timing. Whiffs and contacts outside its measurement window leave the previous result on screen, so check that the readout updated for the exchange you just tested.
@@ -1184,9 +1190,9 @@ Meaty Timing reports contact timing. Whiffs and contacts outside its measurement
 
 - The first word is the situation: `Wake-up` (after a knockdown), `After Guard` (block stun), `After Hit` (hit stun) or `Air Recovery` (recovering in the air from a hit).
 - `Reversal +0t` is the contact Tick minus the opponent's reversal Tick. The reversal Tick is the first Tick the opponent can act again, when only blocking and special moves are available: the Tick Frame Meter marks with a magenta bar ([11.6](#frame-meter)). It is not the Tick an input was sent, nor the first Tick a normal can come out. Contact on that same Tick is `+0t`.
-- `Active 4t` means contact on the fourth active Tick, counted from 1 the way Tick Data counts `Active`: Ticks frozen in hitstop are not counted, and moves that keep animating through hitstop are. For a move with several active periods, `Active 2:3t` is the third Tick of the second one. `Active -` means a projectile or a throw made contact; which Tick of the move that was cannot be told.
-- For each recovery, the first hit or block from `+0t` to `+30t` is recorded. Later hits of the same string, whiffs and contacts outside that range leave the row as it is; it stays until the next result. A contact before the reversal Tick, while the opponent is still in stun, is not recorded.
-- The opponent is the side opposite `Tick Data Side`. Q-Bee's wake-up has no such reversal Tick, so it is not measured. Changing characters, the end of a round, loading a state, changing `Tick Data Side` or turning it off clears the row, and a recovery already under way when measuring starts is not measured.
+- `Active 4t` means contact on the fourth active Tick, counted from 1 the way Tick Data counts `Active`: Ticks frozen in hitstop are not counted, and moves that keep animating through hitstop are. For a move with several active periods, `Active 2:3t` is the third Tick of the second one. `Active -` means a projectile or a throw made contact; which Tick of the move that was cannot be told. A projectile's contact reads `-` even while your own attack box is out.
+- For each recovery, the first hit or block from `+0t` to `+30t` is recorded; later hits of the same string do not change it. A contact before the reversal Tick, while the opponent is still in stun, is not recorded. If the opponent's attack struck you first (an invulnerable reversal, for example), the row ends with their side and `Hit First`, such as `P2 Hit First`, instead of `Active`.
+- The opponent is the side opposite `Tick Data Side`. Q-Bee's wake-up is counted as `Actionable` ([above](#meaty-timing-qbee)). Changing characters, the end of a round, loading a state, changing `Tick Data Side` or turning it off clears the row, and a recovery already under way when measuring starts is not measured.
 
 </details>
 
@@ -1281,8 +1287,8 @@ With `Frame Meter = yes`, the last row on the `Display` tab, both players' state
 | Blue | Recovery |
 | Yellow | Hit or block stun, or being thrown |
 | Orange | Projectile out |
-| Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup |
-| Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change |
+| Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup. Not shown while hit, knocked down or getting up |
+| Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change. Not shown while hit, knocked down or getting up |
 | Light blue | Jump or dash (with `Include Jumps / Dashes` ON) |
 | Dark gray | Doing nothing |
 | Magenta bar along the top | Reversal-only tick: only blocking and special moves are available (see below) |
@@ -1308,6 +1314,8 @@ Frame Meter counts differently from [Tick Data](#tick-data). Switching the throw
 **A magenta bar along the top of a tile marks a reversal-only tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
 
 **Invulnerability is shown the way the hitbox display shows it:** the character has no hurtbox, or the game has flagged it untouchable. Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab covers only some forms of invulnerability, so its coverage differs. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF, hitstop Ticks in which neither attacking character advanced are omitted, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
+
+**Neither the white nor the throw stripes are drawn while a character is hit, knocked down or getting up.** They mark not being hit where you would be hit. While in hit or block recovery (in the air too, juggles and air recoveries included), lying down or getting up, the protection is a given. The white used to run to the end of every wake-up, up to the reversal Tick. Q-Bee's head shake at the end of her wake-up is shown white from `+0t`, the first Tick she can act: the hitbox display draws her hurtbox, but ordinary strikes are turned away and she is throw invulnerable.
 
 **Being in hitstop does not always mean an attack has stopped advancing.** Some moves keep animating through hitstop; excluding those Ticks would make their measured active duration too short.
 
@@ -1449,7 +1457,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated and checked for consistency: 2026-10-06. This does not include testing the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.23; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.23.1; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

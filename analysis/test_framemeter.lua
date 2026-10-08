@@ -606,6 +606,75 @@ do
 	local _, _, white, stripes = invul_case(byte(0x147, 9), byte(0x147, 0), true)
 	eq("無敵と投げ無敵が重なれば白 (縞は描かない)", white .. "/" .. stripes, "2/0")
 end
+-- Down is not invulnerable (user, 2026-10-08): "invulnerable shows not being
+-- hit where you would be hit". A knockdown or wake-up cel has +$0B = $FE, and
+-- while it does the white is left off, even with no hurtbox. Except Q-Bee's
+-- head shake: still $FE once she is free ($05 = 0), and from the tick after she
+-- becomes free (Actionable +0t) she can act - white from there.
+do
+	local function cel_flag(v) ram[CEL + 0x0B] = v ; ram[CEL + 0x100 + 0x0B] = v end
+	-- ticks 1-6 down ($05 = 2), no hurtbox, $FE; 7 free (T); 8-9 still $FE
+	-- (the head shake, +0t and +1t); 10- an ordinary cel. shake = false: the
+	-- cel changes on T, as every other character's does on its reversal tick.
+	-- $143 is set on T (7) and counts down to 0 on 12, as Q-Bee's does.
+	local function wakeup(shake)
+		fm = fresh(true)
+		globals.options.fm_no_throw = true
+		local frames = {}
+		for i = 1, 20 do frames[i] = 6500 + i end
+		feed(frames, function(i)
+			ram[A1 + 0x105] = 0
+			ram[A1 + 0x05] = (i <= 6) and 2 or 0
+			ram[A1 + 0x94] = (i <= 6) and 0 or 1
+			cel_flag(((i <= 6) or (shake and i <= 9)) and 0xFE or 0)
+			ram[A1 + 0x143] = (i >= 7 and i <= 11) and (12 - i) or 0
+			ram[A1 + 0x20] = 100 - i
+		end)
+		cel_flag(0) ; ram[A1 + 0x05] = 0 ; ram[A1 + 0x94] = 1 ; ram[A1 + 0x20] = 0 ; ram[A1 + 0x143] = 0
+		draw_once(fm)
+		local white, stripes = 0, 0
+		for _, b in ipairs(boxes) do
+			if b.w == 3 and b.h == 3 and b.fill == WHITE then white = white + 1 end
+			if b.w == 3 and b.h == 1 and b.fill == "#CA275FFF" then stripes = stripes + 1 end
+		end
+		globals.options.fm_no_throw = false
+		return white, stripes
+	end
+	local w, st = wakeup(false)
+	eq("起き上がり ($FE、やられ判定なし) は白にしない", w, 0)
+	eq("ほかのキャラの形 (T でセルが替わる): 投げ無敵は T から縞 5 マス", st, 5)
+	w, st = wakeup(true)
+	eq("Q-Bee の首振り: 動ける状態になった次の Tick (+0t) から白、2 マス", w, 2)
+	eq("Q-Bee: T は縞も出さない (結果的にダウンと同じ)。白の後の残り 2 マスだけ縞", st, 2)
+	local _, _, white = invul_case(function() cel_flag(0xFF) end, function() cel_flag(0) end)
+	eq("+$0B = $FF は無敵ではない", white, 0)
+	_, _, white = invul_case(function() cel_flag(0xFE) ; ram[A1 + 0x05] = 2 ; ram[A1 + 0x147] = 9 end,
+		function() cel_flag(0) ; ram[A1 + 0x05] = 0 ; ram[A1 + 0x147] = 0 end)
+	eq("ダウン中 ($05 = 2、$FE) は $147 があっても白にしない", white, 0)
+	-- Morrigan's last wake-up ticks: an ordinary cel, no hurtbox, $145 with
+	-- $1A4 = 0, on the ground (user's screenshot, 2026-10-08).
+	local function morrigan(air)
+		return function()
+			ram[A1 + 0x05] = 2 ; ram[A1 + 0x94] = 0 ; ram[A1 + 0x145] = 1 ; ram[A1 + 0x1A4] = 0
+			ram[A1 + 0x38] = air and 0xFF or 0
+		end
+	end
+	local function back()
+		ram[A1 + 0x05] = 0 ; ram[A1 + 0x94] = 1 ; ram[A1 + 0x145] = 0 ; ram[A1 + 0x38] = 0
+	end
+	_, _, white = invul_case(morrigan(false), back)
+	eq("地上のやられ中 ($05 = 2): $FE でなくても、$145・やられ判定なしでも白にしない", white, 0)
+	-- (user, 2026-10-08) In the air too: being knocked down or juggled is
+	-- recovery, and the protection is a given.
+	_, _, white = invul_case(morrigan(true), back)
+	eq("空中のやられ中 (浮かされ・受け身) も白にしない", white, 0)
+	local _, _, _, stripes = invul_case(function() ram[A1 + 0x05] = 2 end, function() ram[A1 + 0x05] = 0 end, true)
+	eq("やられ中 ($05 = 2) の投げ無敵は縞にしない", stripes, 0)
+	_, _, _, stripes = invul_case(function() end, function() end, true)
+	eq("(対照) 動ける状態の投げ無敵は縞 2 マス", stripes, 2)
+	ram[A1 + 0x105] = 1
+end
+-- Juggle invulnerability in the air is not $FE: still white ($145 above).
 -- Dark Force activation ($06 = 0x16) is an animation with no attack flag. With
 -- the white tile gone it read as doing nothing; it is startup (2026-10-08).
 do
@@ -655,6 +724,45 @@ eq("技の途中では足さない", no_recovery_tiles(true):match("Recovery (%d
 ram[A1 + 0x105] = 1
 
 -- ---------------------------------------------------------------------------
+print("[4l] ステートを読み込んだら、前の Tick と比べない。記録もつなげない (2026-10-08)")
+-- Ten ticks, a load (fm.registerLoad, as the master script calls it), ten more.
+-- `before` sets the RAM for each tick; `after` is the same for the ticks after
+-- the load.
+local function across_load(before, after)
+	fm = fresh(true)
+	local frames = {}
+	for i = 1, 10 do frames[i] = 9000 + i end
+	feed(frames, before)
+	fm.registerLoad()
+	for i = 1, 10 do frames[i] = 9100 + i end
+	feed(frames, after)
+	draw_once(fm)
+end
+ram[A1 + 0x105] = 1
+across_load(nil, nil)
+eq("動き続けていても、ロードの後から記録し直す (発生 10 マス、20 ではない)", startup_tiles, 10)
+across_load(nil, function() ram[A1 + 0x105] = 0 end)
+eq("ロードの後に誰も動かなければ、前の記録は残る (発生 10 マス)", startup_tiles, 10)
+ram[A1 + 0x105] = 1
+-- The reversal marker on the last tick before the load, gone after it: not a
+-- reversal tick - the two ticks are not one after the other in the game.
+across_load(function(i)
+	ram[A2 + 0x05] = 2
+	ram[A2 + 0x04] = (i == 10) and SIG or 0x02000000
+end, function() ram[A2 + 0x05] = 0 ; ram[A2 + 0x04] = 0 end)
+eq("ロード前のシグネチャで、ロード後に印を付けない", #marks(), 0)
+ram[A2 + 0x05] = 0 ; ram[A2 + 0x04] = 0
+-- Not thrown before the load, thrown in the loaded state: not a grab.
+across_load(function() ram[A2 + 0x05] = 0 end, function() ram[A2 + 0x05] = 6 end)
+eq("ロードをまたいで投げられた状態になっても、掴みのマスにしない", active_tiles, 0)
+ram[A2 + 0x05] = 0
+-- Control: without a load the same marker does mark the next tick.
+fm = fresh(true)
+recovery(A2, 1)
+draw_once(fm)
+eq("(対照) ロードが無ければ印は付く", #marks(), 1)
+
+-- ---------------------------------------------------------------------------
 print("[5] 試合中かどうかは match_running で見る")
 running = true
 fm = fresh(false)                 -- match_begun false, as during a transformation
@@ -700,6 +808,11 @@ local master = slurp("vsav_training_master_script.lua")
 eq("起動時に require", master:find('= require "./scripts/framemeter"', 1, true) ~= nil, true)
 eq("registerStart を呼ぶ", master:find("frameMeterModule.registerStart()", 1, true) ~= nil, true)
 eq("guiRegister を呼ぶ", master:find("frameMeterModule.guiRegister()", 1, true) ~= nil, true)
+local load_hook = master:find("savestate.registerload(function(slot)", 1, true)
+local load_end = load_hook and master:find("\n\tend)", load_hook, true)
+local fm_load = master:find("frameMeterModule.registerLoad()", 1, true)
+eq("ステートの読み込みで registerLoad を呼ぶ", load_hook ~= nil and fm_load ~= nil
+	and fm_load > load_hook and load_end ~= nil and fm_load < load_end, true)
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))
 os.exit(fails == 0 and 0 or 1)

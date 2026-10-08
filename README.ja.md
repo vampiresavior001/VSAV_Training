@@ -6,7 +6,7 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 **内部フレーム（Tick）単位で相手の動きを再現し、攻めの検証と守りの練習に使える、Fightcade 2／FBNeo用トレーニングモードです。** 入力や攻防のタイミングを可視化し、成功・失敗の理由を確認しながら練習できます。
 
-[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.23** です。
+[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.23.1** です。
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [守りを練習する](#first-ag-drill) · [起き攻めを調べる](docs/PLAYER_MANUAL.ja.md#wakeup-pressure-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
 

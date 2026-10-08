@@ -38,6 +38,12 @@ local FREEZE = 8
 -- o.anime     the move plays through hitstop
 -- o.first, o.last  ticks fed (o.first > 1: measuring switched on late)
 -- o.skip      a tick that is not fed (ticks missed)
+-- o.known     the game's strike confirmations are there (tickDataVsav hook)
+-- o.strikes   { [tick] = { body = true / proj = true / back = true } }: on that
+--             tick your body / your projectile struck them, or they struck you
+-- o.qbee      Q-Bee's wake-up: no marker; free from R in a cel whose +$0B is
+--             $FE (the head shake) until R+2, as on the knockdown before it
+-- o.fe        a knockdown's +$0B = $FE up to the marker tick (others' wake-up)
 local function model(o)
 	local mlen = o.marker or 1
 	local snaps = {}
@@ -45,7 +51,10 @@ local function model(o)
 		local d = { status = 0, state = 0, block_clock = 0, hitstop = 0, knockdown = false,
 			marker = false, airborne = false }
 		if t >= o.E and t < o.R then d.status = 2 end
-		if t >= o.R - mlen and t < o.R then d.marker = true end
+		if t >= o.R - mlen and t < o.R and not o.qbee then d.marker = true end
+		d.cel_flag = 0
+		if o.qbee and t > o.E and t <= o.R + 2 then d.cel_flag = 0xFE end
+		if o.fe and t > o.E and t < o.R then d.cel_flag = 0xFE end
 		if o.kind == "down" and t > o.E and t < o.R - mlen then d.knockdown = true end
 		if o.kind == "air" and t >= o.E and t <= o.R then d.airborne = true end
 		local function rise(at, peak, field)
@@ -58,6 +67,8 @@ local function model(o)
 			local at, kind = c[1], c[2]
 			rise(at, 10, "hitstop")
 			if kind == "block" then rise(at, 15, "block_clock") end
+			-- "theirs": their attack struck you; their hitstop rises, they are
+			-- not hurt.
 			if t >= at and kind == "hit" then d.status = 2 end
 			if t >= at and kind == "throw" then d.status = 6 end
 			if t >= at and t <= at + FREEZE then p1_hf = true end
@@ -85,6 +96,13 @@ local function model(o)
 				p2 = s.d,
 			}
 			out[#out].p2.hitfreeze = s.d.hitstop ~= 0
+			if o.known then
+				local k = (o.strikes or {})[s.t] or {}
+				out[#out].strikes_known = true
+				out[#out].p1.struck_body = k.body == true
+				out[#out].p1.struck_proj = k.proj == true
+				out[#out].p1.was_struck = k.back == true
+			end
 		end
 	end
 	return out
@@ -198,6 +216,73 @@ want("投げ: Active -", run({ kind = "hit", E = 5, R = 30, attack = { 30, 50 },
 	runs = {}, contacts = { { 31, "throw" } } }), "After Hit  Reversal +1t  Active -")
 want("箱が無い接触は採らない", run({ kind = "guard", E = 5, R = 30, attack = { 28, 40 },
 	runs = { { 31, 32 } }, contacts = { { 35, "block" } } }), "")
+
+print("-- だれの接触か: ゲームの打撃の確認 (0x018230、2026-10-08)")
+-- Their invulnerable reversal strikes you on +2 while your box is out (58-66).
+-- Their hitstop rises; without the confirmations that read as your meaty.
+local function reversal_beats_you(known, later)
+	return run({ kind = "down", E = 5, R = 60, attack = { 54, 80 }, runs = { { 58, 66 } },
+		contacts = { { 62, "theirs" }, later and { 70, "hit" } or nil }, known = known,
+		strikes = { [62] = { back = true }, [70] = { body = true } } })
+end
+want("(対照) 確認が無ければ、相手の技が当たった Tick を自分の重ねと数えていた",
+	reversal_beats_you(false), "Wake-up  Reversal +2t  Active 5t")
+-- (user, 2026-10-08) The row says so: the last meaty stayed and read as this
+-- exchange's.
+want("相手の攻撃だけが当たった: P2 Hit First", reversal_beats_you(true), "Wake-up  Reversal +2t  P2 Hit First")
+want("その復帰はそこで終わり、後の自分のヒットも採らない", reversal_beats_you(true, true),
+	"Wake-up  Reversal +2t  P2 Hit First")
+want("P2 を測っているときは P1 Hit First", mt.formatResult("P1"), "Wake-up  Reversal +2t  P1 Hit First")
+want("自分の本体が当てた: 持続の何 Tick 目かを出す",
+	run({ kind = "down", E = 5, R = 60, attack = { 54, 80 }, runs = { { 58, 62 } },
+		contacts = { { 60, "hit" } }, known = true, strikes = { [60] = { body = true } } }),
+	"Wake-up  Reversal +0t  Active 3t")
+want("相打ち (双方が当てた): 自分の重ねとして出す",
+	run({ kind = "down", E = 5, R = 60, attack = { 54, 80 }, runs = { { 58, 62 } },
+		contacts = { { 60, "hit" } }, known = true, strikes = { [60] = { body = true, back = true } } }),
+	"Wake-up  Reversal +0t  Active 3t")
+want("本体の判定が出ていても、当てたのが飛び道具なら Active -",
+	run({ kind = "guard", E = 5, R = 30, attack = { 20, 45 }, runs = { { 28, 40 } },
+		contacts = { { 33, "hit" } }, known = true, strikes = { [33] = { proj = true } } }),
+	"After Guard  Reversal +3t  Active -")
+want("確認の出ない接触 (フックの外の経路) は従来どおり",
+	run({ kind = "down", E = 5, R = 60, attack = { 54, 80 }, runs = { { 58, 62 } },
+		contacts = { { 60, "hit" } }, known = true, strikes = {} }),
+	"Wake-up  Reversal +0t  Active 3t")
+want("ガードは確認が無くても採る",
+	run({ kind = "guard", E = 5, R = 30, attack = { 28, 50 }, runs = { { 33, 36 } },
+		contacts = { { 34, "block" } }, known = true, strikes = {} }),
+	"After Guard  Reversal +4t  Active 2t")
+
+print("-- キュービーの起き上がり: 目印が無い。動ける最初の Tick から Actionable (2026-10-08)")
+-- Free from R (= T, the head shake starts) in a $FE cel; every action starts
+-- on R + 1, which is the base.
+want("首振りの後の重ね: Actionable、基準は動ける状態になった次の Tick",
+	run({ kind = "down", qbee = true, E = 5, R = 60, attack = { 54, 80 }, runs = { { 60, 66 } },
+		contacts = { { 64, "hit" } }, known = true, strikes = { [64] = { body = true } } }),
+	"Wake-up  Actionable +3t  Active 5t")
+want("基準の Tick に当たれば +0t",
+	run({ kind = "down", qbee = true, E = 5, R = 60, attack = { 54, 80 }, runs = { { 61, 66 } },
+		contacts = { { 61, "hit" } }, known = true, strikes = { [61] = { body = true } } }),
+	"Wake-up  Actionable +0t  Active 1t")
+want("動ける状態になった Tick (基準の 1 つ前) の接触は採らない",
+	run({ kind = "down", qbee = true, E = 5, R = 60, attack = { 54, 80 }, runs = { { 58, 66 } },
+		contacts = { { 60, "hit" } }, known = true, strikes = { [60] = { body = true } } }),
+	"")
+want("相手が先に当てた: Actionable のまま P2 Hit First",
+	run({ kind = "down", qbee = true, E = 5, R = 60, attack = { 54, 80 }, runs = { { 58, 66 } },
+		contacts = { { 63, "theirs" } }, known = true, strikes = { [63] = { back = true } } }),
+	"Wake-up  Actionable +2t  P2 Hit First")
+want("ダウンを見ていなければ測らない",
+	run({ kind = "down", qbee = true, E = 5, R = 60, first = 40, attack = { 54, 80 }, runs = { { 60, 66 } },
+		contacts = { { 64, "hit" } } }), "")
+want("ガード後の復帰 (目印あり) は今までどおり Reversal",
+	run({ kind = "guard", E = 5, R = 30, attack = { 28, 50 }, runs = { { 33, 36 } }, contacts = { { 34, "block" } } }),
+	"After Guard  Reversal +4t  Active 2t")
+want("ほかのキャラの起き上がり ($FE は目印の Tick まで): Reversal のまま、二重に測らない",
+	run({ kind = "down", fe = true, E = 5, R = 60, attack = { 54, 80 }, runs = { { 58, 62 } },
+		contacts = { { 60, "hit" } } }),
+	"Wake-up  Reversal +0t  Active 3t")
 
 print("-- 新しい復帰で測り直す")
 run({ kind = "guard", E = 5, R = 30, attack = { 28, 40 }, runs = { { 31, 33 } }, contacts = { { 32, "block" } } })

@@ -151,6 +151,14 @@ S = start()
 want("新を読む", S.load().p2_throw_tech, 2)
 want("旧は作らない", present(OLD), false)
 
+print("-- 新だけ、末尾が空白と改行 (正常なファイル)")
+fresh_tree()
+mkdir(NEW_DIR)
+put(NEW, '{"p2_throw_tech": 2}\r\n  \n\t')
+S = start()
+want("新を読む", S.load().p2_throw_tech, 2)
+want("保存できる", (S.save({ p2_throw_tech = 3 })), true)
+
 -- ---------------------------------------------------------------------------
 print("-- 両方: 新を使い、旧は混ぜない")
 fresh_tree()
@@ -165,7 +173,12 @@ want("新ファイルはそのまま", get(NEW), '{"p2_throw_tech": 2}')
 want("旧ファイルはそのまま", get(OLD), OLD_TEXT)
 
 -- ---------------------------------------------------------------------------
-for _, broken in ipairs({ { "壊れた", '{"p2_throw_tech": ' }, { "空の", "" } }) do
+-- dkjson stops after the first value: trailing text and a list at the root
+-- used to load as settings and be saved over (2026-10-08).
+for _, broken in ipairs({ { "壊れた", '{"p2_throw_tech": ' }, { "空の", "" },
+                           { "末尾に文字がある", '{"p2_throw_tech": 2} garbage' },
+                           { "閉じ括弧が余る", '{"p2_throw_tech": 2}}' },
+                           { "ルートが配列の", '[1, 2]' }, { "ルートが空の配列の", '[]' } }) do
 	print("-- " .. broken[1] .. "新ファイル: エラーを出し、何も上書きしない")
 	fresh_tree()
 	mkdir(NEW_DIR)

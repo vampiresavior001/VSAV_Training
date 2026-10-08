@@ -107,6 +107,52 @@ function M.throw_checks(base) return throw_checks[base] end
 -- The addresses hooked, for the offline test.
 M.GRAB_ATTEMPTS = GRAB_ATTEMPTS
 
+-- STRIKES THE GAME CONFIRMED (2026-10-08, for Meaty Timing).
+--
+-- The defender's hitstop ($5C) rises when it is hit AND when its own attack
+-- hits, so an invulnerable reversal that struck you while your box was out read
+-- as your meaty, with your active tick. 0x018230 is where the game has found a
+-- strike box over a hurtbox and passed every test before it: 0x018000 for one
+-- player against another (the loop at 0x017F22), 0x0193B8 -> 0x018054 for a
+-- projectile. A6 is the striking object and A1 the one struck; guard or hit is
+-- decided after this point. Counted by the striking side - a projectile by its
+-- owner, $30, as projectile_box below reads it - from the start and never
+-- reset: each reader takes the difference since it last looked, so one reader
+-- cannot clear what another has not seen (invulnLog.lua logs these too).
+local STRIKE_PC = 0x018230
+local strike_totals = {
+  [P1] = { body = 0, proj = 0 },  -- P1 (or its projectile) striking P2
+  [P2] = { body = 0, proj = 0 },  -- P2 (or its projectile) striking P1
+}
+local strike_hooked = false
+local function on_strike()
+  local _a6 = (memory.getregister("m68000.a6") or 0) % 0x1000000
+  local _a1 = (memory.getregister("m68000.a1") or 0) % 0x1000000
+  local _by = (_a1 == P2 and P1) or (_a1 == P1 and P2) or nil
+  if _by == nil then return end
+  local _t = strike_totals[_by]
+  if _a6 == _by then
+    _t.body = _t.body + 1
+  elseif _a6 ~= _a1 and memory.readword(_a6 + 0x30) == _by % 0x10000 then
+    _t.proj = _t.proj + 1
+  end
+end
+if memory ~= nil and memory.registerexec ~= nil and memory.getregister ~= nil then
+  memory.registerexec(STRIKE_PC, on_strike)
+  strike_hooked = true
+end
+-- The running totals, keyed by the striking side's base. For invulnLog.lua and
+-- the offline tests.
+function M.strike_totals() return strike_totals end
+M.STRIKE_PC = STRIKE_PC
+-- What capture last saw, relative to the measured side. nil: take the totals
+-- as they are on the next capture and report nothing for it.
+local strike_seen = nil
+local function strike_baseline()
+  local _m, _t = strike_totals[ATK], strike_totals[DEF]
+  strike_seen = { mb = _m.body, mp = _m.proj, tb = _t.body, tp = _t.proj }
+end
+
 -- THE DAMAGE IS NOT ALWAYS ON THE ATTACKER.
 --
 -- A projectile is its own object with its own animation, so the player's cel
@@ -219,6 +265,7 @@ function M.set_side(side)
   ATK_KEY = _p2 and "P2" or "P1"
   -- A throw latched by the side being left is not this side's move.
   throw_seen = false
+  strike_seen = nil
   return true
 end
 
@@ -226,6 +273,16 @@ function M.side() return ATK_KEY end
 
 function M.capture(tick)
   snapshot.tick = tick
+  -- Who struck whom since the last capture (STRIKES THE GAME CONFIRMED).
+  -- strikes_known is false where the hook could not be set (offline), and the
+  -- readers then go on as they did without it.
+  if strike_seen == nil then strike_baseline() end
+  local _mine, _theirs = strike_totals[ATK], strike_totals[DEF]
+  snapshot.strikes_known = strike_hooked
+  snapshot.p1.struck_body = _mine.body ~= strike_seen.mb
+  snapshot.p1.struck_proj = _mine.proj ~= strike_seen.mp
+  snapshot.p1.was_struck = _theirs.body ~= strike_seen.tb or _theirs.proj ~= strike_seen.tp
+  strike_baseline()
   snapshot.p1.attack = memory.readbyte(ATK + 0x105)
   -- The cel pointer itself, not just the box id inside it: where it points is
   -- what says which move is playing.
@@ -475,6 +532,12 @@ function M.capture(tick)
   -- makes for its yellow mark). And whether that tick is in the air.
   snapshot.p2.marker = memory.readdword(DEF + 0x004) == 0x02020400
   snapshot.p2.airborne = memory.readbyte(DEF + 0x038) ~= 0
+  -- And the defender's cel's +$0B: negative and not $FF, the strike test turns
+  -- ordinary attacks away (0x018040). Every knockdown cel has it, and Q-Bee's
+  -- wake-up, which has no marker, ends in one she can already act from
+  -- (analysis/QBEE_WAKEUP_HEADSHAKE_SURVEY.ja.md 9).
+  local _dcel = memory.readdword(DEF + 0x01C) or 0
+  snapshot.p2.cel_flag = (_dcel ~= 0) and memory.readbyte(_dcel + 0x0B) or 0
   return snapshot
 end
 

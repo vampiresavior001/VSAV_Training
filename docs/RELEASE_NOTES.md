@@ -6,6 +6,55 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.23.1
+
+### Meaty Timing: the opponent's answer, and Q-Bee's wake-up
+
+- When the opponent's attack struck you first (an invulnerable reversal, for
+  example), the row now reads `Wake-up  Reversal +4t  P2 Hit First`, with their
+  side. Their attack used to count as your meaty, with your active Tick,
+  whenever your own attack box was out. Which side struck is now taken from the
+  game's own strike check; in the developer's logs it told Morrigan's Shadow
+  Blade reversal apart both times
+- A projectile's contact reads `Active -` even while your own attack box is out
+- Q-Bee's wake-up, which has no reversal Tick, is now measured:
+  `Wake-up  Actionable +Nt`, counted from the first Tick she can start
+  anything, specials and normals alike. See
+  [Q-Bee's wake-up](PLAYER_MANUAL.en.md#meaty-timing-qbee)
+
+### Frame Meter
+
+- Neither the white (invulnerable) nor the throw stripes are drawn any more
+  while a character is hit, blocking, knocked down or getting up, on the
+  ground or in the air: they mark not being hit where you would be hit, and
+  there the protection is a given. The white used to run to the end of every
+  wake-up, up to the reversal Tick
+- Q-Bee's head shake at the end of her wake-up is drawn white from the first
+  Tick she can act (`Actionable +0t`): ordinary strikes are still turned away
+  there for 2 or 3 Ticks
+- Loading a state no longer joins the log from before it to the one after it,
+  and no longer draws a reversal mark or a throw from comparing the two sides
+  of the load. The log on screen stays to be read; the next action starts a new
+  one
+
+### Settings file
+
+- A settings file with text after its closing brace, or a list instead of
+  settings, is now treated as unreadable: its path is shown and nothing is
+  saved until FBNeo is restarted. Such a file used to load in part and be saved
+  over
+
+### Manual
+
+- How to choose the timing for the response you expect, with a `+0t` to `+6t`
+  reference ([11.2](PLAYER_MANUAL.en.md#meaty-timing-strategy)), and Meaty
+  Timing in the wake-up pressure recipe
+  ([10.B](PLAYER_MANUAL.en.md#wakeup-pressure-drill))
+- GC tips: the arcade stick's position for slow 1P-side inputs
+- Frame Meter: the number on a run leaves out the gray-topped Ticks
+
+---
+
 ## v11.7.23
 
 ### New: Mute Idle Sounds

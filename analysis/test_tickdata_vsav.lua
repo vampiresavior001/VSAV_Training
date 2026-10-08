@@ -455,4 +455,54 @@ want("戻したら P1 の登録簿", vsav.capture(207).p1.move_name, "Chaos Flar
 seq_special_list = nil
 globals.char_moves = nil
 
+-- ゲームが確かめた打撃 (0x018230、2026-10-08)。A6 = 当てた物、A1 = 当てられた側。
+-- 本体か、$30 が持ち主の飛び道具か。相手からの打撃も分けて数える (Meaty Timing が
+-- 相手のリバーサルが当たった Tick を自分の重ねと数えないため)。
+do
+	want("打撃の確認にフック", type(hooks[vsav.STRIKE_PC]), "function")
+	want("その番地", vsav.STRIKE_PC, 0x018230)
+	local function strike(a6, a1)
+		regs["m68000.a6"] = a6 ; regs["m68000.a1"] = a1
+		hooks[vsav.STRIKE_PC]()
+	end
+	vsav.capture(300)   -- what is left from above
+	local c = vsav.capture(301)
+	want("確認が使える", c.strikes_known, true)
+	want("何も無ければ本体 false", c.p1.struck_body, false)
+	want("何も無ければ相手から false", c.p1.was_struck, false)
+	strike(P1, P2)
+	c = vsav.capture(302)
+	want("P1 の本体が P2 に", c.p1.struck_body, true)
+	want("飛び道具ではない", c.p1.struck_proj, false)
+	want("読んだら次は false", vsav.capture(303).p1.struck_body, false)
+	local b = spawn(4, P1, 6)
+	strike(b, P2)
+	c = vsav.capture(304)
+	want("P1 の飛び道具が P2 に", c.p1.struck_proj, true)
+	want("本体ではない", c.p1.struck_body, false)
+	strike(P2, P1)
+	c = vsav.capture(305)
+	want("P2 が P1 に: 相手から", c.p1.was_struck, true)
+	want("自分の打撃ではない", c.p1.struck_body or c.p1.struck_proj, false)
+	local b2 = spawn(5, P2, 6)
+	strike(b2, P1)
+	want("P2 の飛び道具が P1 に: 相手から", vsav.capture(306).p1.was_struck, true)
+	strike(P1, 0xFF9400)
+	c = vsav.capture(307)
+	want("プレイヤー以外に当てたものは数えない", c.p1.struck_body or c.p1.was_struck, false)
+	-- 回数は累計で、読む側が差を取る (invulnLog も同じ表を読む)。
+	local t = vsav.strike_totals()
+	want("累計: P1 本体", t[P1].body >= 1, true)
+	-- 測る側を P2 にすると、向きも入れ替わる。
+	vsav.set_side("P2")
+	vsav.capture(308)
+	strike(P2, P1)
+	c = vsav.capture(309)
+	want("P2 を測る: P2 の本体が P1 に = 自分の打撃", c.p1.struck_body, true)
+	strike(P1, P2)
+	want("P2 を測る: P1 から = 相手から", vsav.capture(310).p1.was_struck, true)
+	vsav.set_side("P1")
+	despawn(4) ; despawn(5)
+end
+
 if fails == 0 then print("全て通った") else print(fails .. " 件 NG") os.exit(1) end

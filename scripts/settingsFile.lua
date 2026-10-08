@@ -86,11 +86,25 @@ local function exists(path)
 end
 
 -- A JSON object, or nil and the reason.
+--
+-- THE WHOLE FILE, AND AN OBJECT. dkjson stops at the end of the first value
+-- and says where; "{...} garbage" or "{...}}" decoded as the object before it,
+-- and "[...]" as a table, so a damaged file was laid over the defaults and the
+-- next save wrote over it. Anything but whitespace after the value, or a list
+-- at the root, is now the same error as any other unreadable file: shown, and
+-- nothing is saved (see the rules at the top).
 local function decode(text)
-	local ok, obj, _, err = pcall(json.decode, text)
+	local ok, obj, pos, err = pcall(json.decode, text)
 	if not ok then return nil, tostring(obj) end
 	if type(obj) ~= "table" then
 		return nil, tostring(err or "not a JSON object")
+	end
+	if type(pos) == "number" and string.find(text, "[^ \t\r\n]", pos) ~= nil then
+		return nil, "unexpected text after the settings, at character " .. pos
+	end
+	local mt = getmetatable(obj)
+	if (mt ~= nil and mt.__jsontype == "array") or obj[1] ~= nil then
+		return nil, "not a JSON object (the file holds a list)"
 	end
 	return obj
 end
