@@ -59,6 +59,10 @@ local function start_measurement(tick, in_dash)
     active_start = nil,
     active_end = nil,
     attack_end = nil,
+    -- Latched when the first box comes out: whether it came out as an airborne
+    -- normal. Such a move ends on touchdown (see A JUMP NORMAL ENDS ON
+    -- TOUCHDOWN in M.update).
+    air_normal_box = false,
     -- Ticks the animation did NOT advance, inside the box span and after it.
     -- Hitstop is only one reason it can stand still, and an アニメ move does
     -- not stand still during hitstop at all - so this counts the standing
@@ -289,6 +293,23 @@ function M.update(s)
   local p1_landed = p.p1.airborne and not s.p1.airborne
   local block_contact = s.p2.block_clock > p.p2.block_clock
   local entered_stun = p.p2.status ~= 0x02 and s.p2.status == 0x02
+  -- A HIT ON THE REVERSAL TICK ITSELF (user, 2026-10-10).
+  --
+  -- A meaty that lands on the defender's reversal tick (Meaty Timing's +0t)
+  -- finds $05 still at 2 from the wake-up, and it stays 2 into the hit stun:
+  -- 10 of 10 such jump-ins in the logs went 0x02020400 -> 0x02020000 with no
+  -- $05 = 0 between, while all 3 at +1t passed through it. The edge above never
+  -- fired, the move was closed as a whiff, and Advantage and Hitstun read "--".
+  -- The game's own strike confirmation (0x018230, the one Meaty Timing reads)
+  -- did fire on every one of them. So a strike by the attacker on a defender in
+  -- stun is a hit too - only while this measurement has no contact yet, so a
+  -- multi-hit move still measures from its first hit as before, and only when it
+  -- was not blocked.
+  if not entered_stun and measurement ~= nil and measurement.first_contact == nil
+     and s.p2.status == 0x02 and not block_contact
+     and (s.p1.struck_body == true or s.p1.struck_proj == true) then
+    entered_stun = true
+  end
   local throw_contact = p.p2.status ~= 0x06 and s.p2.status == 0x06
   local p2_became_free = p.p2.status == 0x02 and s.p2.status == 0x00
   local throw_ended = p.p2.status == 0x06 and s.p2.status == 0x00
@@ -365,7 +386,10 @@ function M.update(s)
     local _still = (s.p1.anim ~= nil and p.p1.anim ~= nil and s.p1.anim == p.p1.anim)
     if _still then m.still_total = m.still_total + 1 end
     if s.p1.attack_box then
-      if m.active_start == nil then m.active_start = s.tick end
+      if m.active_start == nil then
+        m.active_start = s.tick
+        m.air_normal_box = bool(s.p1.air_normal)
+      end
       m.active_end = s.tick
       -- A DIFFERENT BOX IS A DIFFERENT HIT.
       --
@@ -428,7 +452,14 @@ function M.update(s)
     end
 
     if m then
-      if s.p2.knockdown then m.knockdown = true end
+      -- A KNOCKDOWN BY THIS MOVE, NOT THE ONE THE DEFENDER IS GETTING UP FROM
+      -- (user, 2026-10-10). $1A7 counts up while the defender is down and
+      -- getting up (20..27 in the log) and is 0 from the hit on: a jumping LP on
+      -- a waking Morrigan read Wakeup 14t because the flag was seen before the
+      -- contact. Only from the contact tick on does it say this move knocked
+      -- down. Her hit stun ended with $05 and $06 both 0 on the same tick, so
+      -- the value is the same and the label is now Hitstun.
+      if s.p2.knockdown and m.first_contact ~= nil then m.knockdown = true end
       if m.attacker_was_stunned then
         if p1_became_free and not m.attacker_free then m.attacker_free = s.tick end
       elseif m.air_normal_contact then
@@ -449,6 +480,20 @@ function M.update(s)
         end
       elseif attack_ended and not m.attacker_free then
         m.attacker_free = s.tick
+      end
+      -- A JUMP NORMAL ENDS ON TOUCHDOWN (user, 2026-10-10).
+      --
+      -- The rule above made Advantage end there; Recovery and Total still ran
+      -- to $105 dropping, through the landing motion - four ticks of $105 = 1
+      -- on the ground in the logs (cel 0x12C972), the very part that can be
+      -- cancelled into a grounded normal. The cancellable part is not counted
+      -- anywhere now: the touchdown tick is the move's last tick, counted the
+      -- way the actionable tick always is. Frame Meter ends the move there too.
+      -- Only a move whose box came out as an airborne normal, and only if it is
+      -- still running at touchdown: one that ended in the air ends where it
+      -- ended, and air specials keep their landing recovery, which is real.
+      if m.air_normal_box and p1_landed and m.attack_end == nil then
+        m.attack_end = s.tick
       end
       if attack_ended and m.attack_end == nil then m.attack_end = s.tick end
 

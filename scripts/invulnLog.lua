@@ -28,6 +28,19 @@
 -- counter alone makes a row only for Q-Bee (0x0C); for the others it counts
 -- down every tick and would bury the rest.
 --
+-- TICK DATA AGAINST FRAME METER (2026-10-09, version 3). A jumping LP that hit
+-- on its first active tick read Recovery 8 / Total 14 in Tick Data and 6 / 12
+-- on the meter; one that hit on its second read the same in both. Both take
+-- the box from the cel's +$0A and the move from $105, so each row now carries
+-- that box id, and while a move runs ($105 not 0) the counter makes a row on
+-- its own too: every tick of an attack is in the file, with what both
+-- measures read.
+--
+-- THE KNOCKDOWN FLAG (version 4). Tick Data labels a defender's recovery
+-- Wakeup whenever $1A7 was set during the measurement; a jump-in on a waking
+-- opponent read Wakeup 14t though the jumping LP does not knock down. $1A7 is
+-- logged so when it is set, and for how long, can be read off.
+--
 -- reversal_logs/invuln_log.jsonl: one JSON object per line, the first one the
 -- header. New rows are appended at most once a second from the frame callback;
 -- a start of FBNeo begins a new file. analysis/archive_logs.py archives it.
@@ -93,6 +106,8 @@ local function read(base, rev)
 		f23 = memory.readbyte(base + 0x23),
 		c08 = (cel ~= 0) and memory.readword(cel + 0x08) or 0,
 		c0b = (cel ~= 0) and memory.readbyte(cel + 0x0B) or 0,
+		box = (cel ~= 0) and memory.readbyte(cel + 0x0A) or 0,
+		kd = memory.readbyte(base + 0x1A7),
 		hs = memory.readbyte(base + 0x5C),
 		blk = memory.readbyte(base + 0x158),
 		air = memory.readbyte(base + 0x38),
@@ -106,14 +121,14 @@ local function read(base, rev)
 end
 
 local FIELDS = { "char", "state", "atk", "move", "hurt", "f11e", "f134", "f145", "f1a4", "f147", "f143",
-	"cel", "f23", "c08", "c0b", "hs", "blk", "air", "f3b4", "btn", "dir", "sb", "sp", "mt_rev" }
+	"cel", "f23", "c08", "c0b", "box", "kd", "hs", "blk", "air", "f3b4", "btn", "dir", "sb", "sp", "mt_rev" }
 
 local function same(a, b)
 	if a == nil or b == nil then return false end
 	for _, k in ipairs(FIELDS) do
 		if a[k] ~= b[k] then return false end
 	end
-	if a.char == QBEE and a.cnt ~= b.cnt then return false end
+	if (a.char == QBEE or a.atk ~= 0 or b.atk ~= 0) and a.cnt ~= b.cnt then return false end
 	return true
 end
 
@@ -143,11 +158,13 @@ end
 
 local function hex(n, w) return string.format("0x%0" .. w .. "X", n) end
 
-local HEADER = '{"log": "invuln_log", "version": 2, '
+local HEADER = '{"log": "invuln_log", "version": 4, '
 	.. '"read_at": "tick clock (rawStateService ticker): once per game tick, mid-tick at the frameskip read, '
 	.. 'before framedata (Tick Data, Meaty Timing) handles the same tick", '
 	.. '"tick": "the ticker count; mt_rev is in the same ticks but as of the previous tick", '
-	.. '"rows": "one player on one tick where a listed value changed; cnt ($20) alone makes a row only for Q-Bee (char 0x0C)", '
+	.. '"rows": "one player on one tick where a listed value changed; cnt ($20) alone makes a row for Q-Bee (char 0x0C) and while $105 is not 0", '
+	.. '"box": "the attack box id at the cel\'s +$0A, as Tick Data and Frame Meter read it; 0 is no box", '
+	.. '"kd": "$1A7, the knockdown flag Tick Data reads for Wakeup", '
 	.. '"sb_sp": "running totals of strikes the game confirmed at 0x018230 by this player\'s body / projectiles on the other player", '
 	.. '"mt_rev": "the reversal tick Meaty Timing is waiting on (the opponent of Tick Data Side), -1 if none"}\n'
 
@@ -155,11 +172,11 @@ local function row_text(r)
 	return string.format(
 		'{"seq": %d, "tick": %d, "p": %d, "char": "%s", "state": "%s", "atk": %d, "move": "%s", '
 		.. '"hurt": "%s", "f11e": %d, "f134": %d, "f145": %d, "f1a4": %d, "f147": %d, "f143": %d, '
-		.. '"cel": "%s", "cnt": %d, "f23": "%s", "c08": %d, "c0b": "%s", "hs": %d, "blk": %d, '
+		.. '"cel": "%s", "cnt": %d, "f23": "%s", "c08": %d, "c0b": "%s", "box": %d, "kd": %d, "hs": %d, "blk": %d, '
 		.. '"air": %d, "f3b4": %d, "btn": "%s", "dir": "%s", "sb": %d, "sp": %d, "mt_rev": %d}\n',
 		r.seq, r.tick, r.p, hex(r.char, 2), hex(r.state, 8), r.atk, hex(r.move, 2),
 		hex(r.hurt, 6), r.f11e, r.f134, r.f145, r.f1a4, r.f147, r.f143,
-		hex(r.cel, 6), r.cnt, hex(r.f23, 2), r.c08, hex(r.c0b, 2), r.hs, r.blk,
+		hex(r.cel, 6), r.cnt, hex(r.f23, 2), r.c08, hex(r.c0b, 2), r.box, r.kd, r.hs, r.blk,
 		r.air, r.f3b4, hex(r.btn, 2), hex(r.dir, 2), r.sb, r.sp, r.mt_rev)
 end
 

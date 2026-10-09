@@ -6,6 +6,50 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.24.1
+
+A jump normal's recovery and total now end when it lands, and Tick Data
+reports advantage for a meaty that lands right on the reversal Tick.
+
+### Change: a jump normal ends on landing
+
+- Its landing motion can be cancelled into a grounded normal, so it is no
+  longer counted in Tick Data's Recovery and Total or in Frame Meter's
+  Recovery, Total and Advantage. The Tick it lands is counted as the Tick it
+  can act. Until now only advantage was measured to the landing, and Recovery
+  and Total ran through the landing motion
+- Frame Meter draws the landing motion as doing nothing (dark gray)
+- A move that ends in the air ends there. An air special's landing recovery is
+  counted as before. A landing motion cancelled into a grounded normal is
+  counted as a new move
+- On the developer's machine, Demitri's jumping LP on Morrigan's wake-up read
+  the same in Tick Data and Frame Meter (Recovery 1, Total 6 and 8)
+
+### Fix: no advantage for a hit right on the reversal Tick
+
+- With Meaty Timing at `Reversal +0t`, Tick Data showed `--` for Advantage and
+  Hitstun. A waking opponent goes into hit stun without passing through a free
+  state, so the hit was missed. The game's own strike confirmation now counts
+  as a hit too. On the developer's machine a meaty at `Reversal +0t` now reads
+  Advantage +13t, the same as Frame Meter's 13
+- A meaty on a waking opponent read `Wakeup` instead of `Hitstun` for the
+  opponent's recovery: the knockdown flag from before the hit was picked up.
+  Only the flag from the hit on counts now. The value is unchanged (in the
+  developer's logs the flag was set only before the hit, and the recovery
+  ended on the same Tick either way)
+
+### Manual
+
+- The description of turning Auto-Flip off is corrected: it does not hold one
+  direction, it runs the whole input from the orientation at its first input
+  (the menu help too)
+- The safe-jump example in recipe 10.B now has steps to check both the meaty
+  timing and the landing block, and a screenshot of the reversal Shadow Blade
+  blocked on landing
+- The Tick Data and Frame Meter sections say that a jump normal ends on landing
+
+---
+
 ## v11.7.24
 
 You can now see, on the dummy, what the same input turns into after a
@@ -15,9 +59,10 @@ after is easier to find.
 ### New: study option selects on a side switch
 
 - Set `Auto-Flip Inputs on Side Switch = no` on the Dummy or Recording tab, and
-  the dummy keeps holding the left and right it started the input with, like a
-  player who keeps the lever the same way while getting crossed up. The default
-  stays `yes`, the behavior so far
+  the dummy uses the orientation at the first input for the entire sequence,
+  without automatically swapping left and right after a side switch. Direction
+  changes within the recording or Steps still occur as defined. The default
+  remains `yes`, preserving the existing behavior
 - Applies to recording playback, Action Steps, Action Patterns and the
   Specified reversal and counter. See
   [10.F](PLAYER_MANUAL.en.md#side-switch-os) for how to use it and the details

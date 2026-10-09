@@ -763,6 +763,43 @@ draw_once(fm)
 eq("(対照) ロードが無ければ印は付く", #marks(), 1)
 
 -- ---------------------------------------------------------------------------
+print("[4m] ジャンプ通常技は着地で終わる。着地モーションは何もしていないマス (2026-10-10)")
+-- A jump normal: 3 startup ticks in the air, 2 box ticks, 3 recovery ticks in
+-- the air, then touchdown with $105 still 1 for 4 ticks (the landing motion,
+-- cancellable into a grounded normal), then $105 = 0. Tick Data reads this as
+-- Startup 4 / Active 2 / Recovery 4 / Total 9: the touchdown tick is the last.
+-- `state` is $06 in the air (0x06 jump, 0x0E a special); `cancel_at` starts a
+-- new attack ($1B8 + 1) on that tick of the landing motion.
+local function jump_attack(state, cancel_at, movement)
+	fm = fresh(true)
+	globals.options.fm_movement_data = movement or false
+	local frames = {}
+	for i = 1, 30 do frames[i] = 9500 + i end
+	feed(frames, function(i)
+		local air = i <= 8
+		ram[A1 + 0x38] = air and 0xFF or 0
+		ram[A1 + 0x06] = (i <= 12) and (air and state or 0x06) or 0
+		ram[A1 + 0x105] = (i <= 12) and 1 or 0
+		ram[A1 + 0x1B8] = (cancel_at and i >= cancel_at) and 1 or 0
+		box(i >= 4 and i <= 5)
+		ram[A1 + 0x20] = 300 - i
+	end)
+	box(false) ; ram[A1 + 0x20] = 0 ; ram[A1 + 0x38] = 0 ; ram[A1 + 0x06] = 0 ; ram[A1 + 0x1B8] = 0
+	draw_once(fm)
+	return p1_numbers()
+end
+eq("着地のティックまで: Tick Data と同じ", jump_attack(0x06), "Startup 4 / Total 9 / Recovery 4")
+eq("着地モーションは青にしない", recovery_tiles, 3)
+eq("空中の $06 が 0x0A でも同じ", jump_attack(0x0A), "Startup 4 / Total 9 / Recovery 4")
+eq("Include Jumps / Dashes が ON でも同じ", jump_attack(0x06, nil, true), "Startup 4 / Total 9 / Recovery 4")
+eq("空中必殺技の着地硬直は硬直のまま", jump_attack(0x0E), "Startup 4 / Total 13 / Recovery 8")
+-- Cancelled into a grounded normal on the third landing tick: that is a new
+-- move, so it starts over with green tiles and is measured as itself.
+jump_attack(0x06, 11)
+eq("地上の通常技でキャンセルしたら、そこから新しい技 (発生のマス)", startup_tiles, 3 + 2)
+ram[A1 + 0x105] = 1
+
+-- ---------------------------------------------------------------------------
 print("[5] 試合中かどうかは match_running で見る")
 running = true
 fm = fresh(false)                 -- match_begun false, as during a transformation

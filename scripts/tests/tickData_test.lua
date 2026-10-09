@@ -588,4 +588,119 @@ test("空中必殺技は着地基準にしない", function()
  eq(r.advantage,2,"従来どおり技の終わりで測る")
 end)
 
+-- ジャンプ通常技は、硬直と全体も着地で終わる (ユーザ 2026-10-10)。
+--
+-- 有利だけ着地で測り、硬直と全体は $105 が 0 になるまで (着地モーション込み)
+-- 数えていた。キャンセルできる着地モーションは、どの数値にも入れない。
+-- 着地のティックは、動けるティックとして硬直に含める。
+test("空中通常技の硬直と全体は着地で終わる", function()
+ local r=feed({
+  snap(0),
+  snap(1,1,0,0,0,false,false,false,nil,nil,nil,true,true),   -- 空中で技が始まる
+  snap(2,1,0,0,0,false,false,false,true,nil,nil,true,true),  -- 判定
+  snap(3,1,0,0,0,false,false,false,true,nil,nil,true,true),
+  snap(4,1,0,0,0,false,false,false,nil,nil,nil,true,true),   -- 空中の硬直
+  snap(5,1,0,0,0,false,false,false,nil,nil,nil,true,true),
+  snap(6,1,0,0,0,false,false,false,nil,nil,nil,false,false), -- 着地 (着地モーション)
+  snap(7,1),snap(8,1),
+  snap(9,0),snap(10)})
+ eq(r.startup,2,"startup"); eq(r.active,2,"active")
+ eq(r.recovery,3,"recovery は着地のティックまで")   -- 着地モーション込みなら 6
+ eq(r.total,6,"total も着地まで")                   -- 着地モーション込みなら 9
+end)
+
+test("空中で技が終わったジャンプ通常技は、そこで終わる", function()
+ local r=feed({
+  snap(0),
+  snap(1,1,0,0,0,false,false,false,nil,nil,nil,true,true),
+  snap(2,1,0,0,0,false,false,false,true,nil,nil,true,true),
+  snap(3,1,0,0,0,false,false,false,nil,nil,nil,true,true),
+  snap(4,0,0,0,0,false,false,false,nil,nil,nil,true,true),   -- 空中で $105 が 0
+  snap(5,0,0,0,0,false,false,false,nil,nil,nil,false,false), -- 着地
+  snap(6)})
+ eq(r.recovery,2,"recovery"); eq(r.total,4,"total")
+end)
+
+test("空中必殺技の硬直と全体は着地硬直込みのまま", function()
+ local r=feed({
+  snap(0),
+  snap(1,1,0,0,0,false,false,false,nil,nil,nil,true,false),
+  snap(2,1,0,0,0,false,false,false,true,nil,nil,true,false),
+  snap(3,1,0,0,0,false,false,false,nil,nil,nil,true,false),
+  snap(4,1,0,0,0,false,false,false,nil,nil,nil,false,false), -- 着地 (着地硬直)
+  snap(5,1),
+  snap(6,0),snap(7)})
+ eq(r.recovery,4,"recovery"); eq(r.total,6,"total")
+end)
+
+test("地上で判定が出た技は、そのあと空中から降りても着地で終わらない", function()
+ local r=feed({
+  snap(0),
+  snap(1,1,0,0,0,false,false,false,nil,nil,nil,false,false),
+  snap(2,1,0,0,0,false,false,false,true,nil,nil,false,false), -- 地上で判定
+  snap(3,1,0,0,0,false,false,false,nil,nil,nil,true,true),
+  snap(4,1,0,0,0,false,false,false,nil,nil,nil,false,false), -- 着地
+  snap(5,1),
+  snap(6,0),snap(7)})
+ eq(r.recovery,4,"recovery"); eq(r.total,6,"total")
+end)
+
+-- リバーサルTickちょうど (+0t) の当たり (ユーザ 2026-10-10)。
+--
+-- 起き上がり中の相手は $05 = 2 のまま、0 を挟まずにやられの 2 へ入る。$05 の
+-- 変化だけ見ていると接触を見落とし、空振り扱いで有利不利が "--" になっていた。
+-- ゲームの打撃確定 (0x018230、struck_body) で拾う。
+local function struck(s) s.p1.struck_body = true ; return s end
+test("リバーサルTickちょうどの当たりも接触にする", function()
+ local r=feed({
+  snap(0,0,0,2),                                   -- 相手は起き上がり中
+  snap(1,1,0,2),snap(2,1,0,2),
+  struck(snap(3,1,0,2,0,false,false,false,true)),  -- $05 は 2 のまま当たる
+  snap(4,1,0,2),snap(5,0,0,2),snap(6,0,0,0),snap(7)})
+ eq(r.contact_kind,"hit","kind"); eq(r.advantage,1,"advantage")
+end)
+
+test("打撃確定でも、ガードされたらガードのまま", function()
+ local r=feed({
+  snap(0,0,0,2),
+  snap(1,1,0,2),snap(2,1,0,2),
+  struck(snap(3,1,0,2,1,false,false,false,true)),  -- ガードの時計が進む
+  snap(4,1,0,2,1),snap(5,0,0,2,1),snap(6,0,0,0,1),snap(7,0,0,0,1)})
+ eq(r.contact_kind,"block","kind")
+end)
+
+-- 起き上がり中の相手のダウンの印 ($1A7) は、この技のダウンではない
+-- (ユーザ 2026-10-10)。起き上がりに重ねたジャンプ小P が Wakeup 14t と出ていた。
+test("当たる前のダウンの印では Wakeup にしない", function()
+ local r=feed({
+  snap(0,0,0,2,0,false,false,true),                -- 起き上がり中 (印あり)
+  snap(1,1,0,2,0,false,false,true),
+  snap(2,1,0,2,0,false,false,true),
+  struck(snap(3,1,0,2,0,false,false,false,true)),  -- 当たる (印は 0)
+  snap(4,1,0,2),snap(5,0,0,2),snap(6,0,0,0),snap(7)})
+ eq(r.wakeup,nil,"Wakeup ではない"); eq(r.hitstun,3,"hitstun"); eq(r.advantage,1,"advantage")
+end)
+
+test("当たった後のダウンの印は Wakeup のまま", function()
+ local r=feed({
+  snap(0),
+  snap(1,1),
+  snap(2,1,0,2,0,false,false,false,true),
+  snap(3,1,0,2,0,false,false,true),                -- この技でダウン
+  snap(4,0,0,2,0,false,false,true),
+  snap(5,0,0,0,0,false,false,false,nil,nil,0),snap(6)})
+ eq(r.wakeup,true,"Wakeup")
+end)
+
+test("多段技の 2 発目の打撃確定では、接触をやり直さない", function()
+ local r=feed({
+  snap(0),
+  snap(1,1),
+  snap(2,1,0,2,0,false,false,false,true),          -- 1 発目 ($05 の変化で拾う)
+  snap(3,1,0,2),
+  struck(snap(4,1,0,2,0,false,false,false,true)),  -- 2 発目
+  snap(5,0,0,2),snap(6,0,0,0),snap(7)})
+ eq(r.contact_count,1,"接触は 1 回")
+end)
+
 print("PASS "..passed)

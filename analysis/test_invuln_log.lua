@@ -6,7 +6,9 @@
 -- shake needs: the cel, its counter and +$0B, the inputs, the confirmed strikes
 -- and the reversal tick Meaty Timing waits on. Pinned here: it records only
 -- with Knockdown Logger on and in a match, only the ticks something changed
--- (the cel counter alone only for Q-Bee), appends JSON lines after a header,
+-- (the cel counter alone only for Q-Bee, or while a move runs - version 3, for
+-- Tick Data against Frame Meter, with the attack box id), appends JSON lines
+-- after a header,
 -- and writes from the frame callback (never from an exec hook, which cannot
 -- open files). io.open is swallowed: this test must not write the real log.
 --
@@ -65,7 +67,7 @@ local function flush() fc = fc + 100 ; M.registerAfter() end
 -- Three ticks with nothing changing: one row per player for the first.
 step(3) ; flush()
 want("最初の書き込みは新しいファイル (w)", opens[1] and opens[1].mode, "w")
-want("1 行目は見出し (読む位相の説明つき)", all_text():match('^{"log": "invuln_log", "version": 2, "read_at": "tick clock') ~= nil, true)
+want("1 行目は見出し (読む位相の説明つき)", all_text():match('^{"log": "invuln_log", "version": 4, "read_at": "tick clock') ~= nil, true)
 want("最初の Tick だけ記録 (両プレイヤー)", rows_in(all_text()), 2)
 want("1 行 1 オブジェクト", select(2, all_text():gsub("\n", "")), 3)
 want("Tick の番号も", all_text():find('"seq": 1, "tick": 1, "p": 1', 1, true) ~= nil, true)
@@ -97,9 +99,27 @@ local n = rows_in(all_text())
 ram[P2 + 0x20] = 2
 step() ; flush()
 want("Q-Bee はカウンターだけでも 1 行", rows_in(all_text()), n + 1)
+-- Another character's counter: a row only while a move runs ($105 not 0).
+-- P1's move from above is still running.
 ram[P1 + 0x20] = 7
 step() ; flush()
-want("ほかのキャラはカウンターだけでは行にしない", rows_in(all_text()), n + 1)
+want("ほかのキャラも技の最中はカウンターだけで 1 行", rows_in(all_text()), n + 2)
+ram[P1 + 0x105] = 0
+step() ; flush()
+local m = rows_in(all_text())
+ram[P1 + 0x20] = 6
+step() ; flush()
+want("技の外ではカウンターだけでは行にしない", rows_in(all_text()), m)
+-- The attack box id at the cel's +$0A, as Tick Data and Frame Meter read it.
+local P1CEL = 0x12E06A
+ram[P1 + 0x1C] = P1CEL ; ram[P1CEL + 0x0A] = 5
+step() ; flush()
+want("攻撃判定の id", all_text():find('"p": 1, .-"box": 5,') ~= nil, true)
+-- The knockdown flag Tick Data reads for Wakeup (version 4).
+ram[P2 + 0x1A7] = 1
+step() ; flush()
+want("ダウンの印 $1A7", all_text():find('"p": 2, .-"kd": 1,') ~= nil, true)
+ram[P2 + 0x1A7] = 0
 
 -- Inputs, confirmed strikes, the Meaty Timing base.
 ram[P2 + 0x122] = 0x01 ; ram[P2 + 0x125] = 0x08

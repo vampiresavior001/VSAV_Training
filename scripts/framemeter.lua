@@ -514,6 +514,42 @@ local function read_reversal_ticks()
 	end
 end
 
+-- VSAV_Training: A JUMP NORMAL ENDS ON TOUCHDOWN (user, 2026-10-10). A jump
+-- attack's landing motion keeps $105 at 1 on the ground for a few ticks (four
+-- in the logs, cel 0x12C972), and it can be cancelled into a grounded normal,
+-- so it is not recovery: Tick Data ends the move on the touchdown tick, and
+-- the meter draws the landing motion as doing nothing. That makes the touchdown
+-- tick the first idle tile, which is what Recovery's last tick and Advantage
+-- are measured from. An airborne normal is $06 = 0x06 (jump) or 0x0A (normal)
+-- with $105 = 1 in the air, the test Tick Data's adapter makes; air specials
+-- keep their landing recovery, which is real. The landing motion lasts while
+-- $105 stays 1 and no new attack is started ($1B8, the game's count of attack
+-- starts): a cancel into a grounded normal is a new move and draws as one.
+local air_normal_before = { false, false }
+local landing_motion = { false, false }
+local landing_seq = { nil, nil }
+local function read_landing()
+	for p = 1, 2 do
+		local addr = game.address[p]
+		local airborne = memory.readbyte(addr + 0x38) ~= 0
+		local attacking = game.attacking(addr)
+		local seq = memory.readword(addr + 0x1B8)
+		if airborne then
+			local st = memory.readbyte(addr + 0x06)
+			air_normal_before[p] = attacking and (st == 0x06 or st == 0x0A)
+			landing_motion[p] = false
+		else
+			if air_normal_before[p] and attacking then
+				landing_motion[p] = true
+				landing_seq[p] = seq
+			elseif landing_motion[p] and (not attacking or seq ~= landing_seq[p]) then
+				landing_motion[p] = false
+			end
+			air_normal_before[p] = false
+		end
+	end
+end
+
 local function log_player_state(tick)
     local player = get_player_objects()
 	for p = 1, 2 do
@@ -543,6 +579,8 @@ local function log_player_state(tick)
 			-- (Startup 43 / Total 43 for Bishamon's).
 			{player[p].dfstart, 2},
 			{player[p].projectile, 6},
+			-- VSAV_Training: a jump normal's landing motion (read_landing).
+			{landing_motion[p], 0},
 			{player[p].attacking and (previousState == 3 or previousState == 4 or previousState == 6) and (not player[p].walking), 4},
 			{player[p].attacking and (not player[p].walking or player[p].throwing), 2},
 			{player[p].movement and globals.options.fm_movement_data, 9},
@@ -1056,6 +1094,9 @@ local function reset_after_load()
 	throw_now = { false, false }
 	signature_seen = { false, false }
 	reversal_now = { false, false }
+	air_normal_before = { false, false }
+	landing_motion = { false, false }
+	landing_seq = { nil, nil }
 end
 
 -- Update function called by the subscription made when the module first registers. Calls every method above this to produce the meter. 
@@ -1067,6 +1108,7 @@ local function update(tick)
 	read_free_ticks()
 	local moved = read_motion()
 	read_reversal_ticks()
+	read_landing()
 	read_pb_success()
 	read_throw_checks()
 	local frozen = (game.hitfreeze(game.address[1]) or game.hitfreeze(game.address[2]))

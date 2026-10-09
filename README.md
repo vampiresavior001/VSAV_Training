@@ -4,9 +4,9 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 English | [日本語](README.ja.md)
 
-**A training mode for Fightcade 2 / FBNeo that has the dummy reproduce execution you cannot perform yourself, specified in the game's internal frames, so you can practice your defense and test your offense.** See where your inputs were accepted and when your attacks connected, then adjust your response.
+**A training mode for Fightcade 2 / FBNeo. Reproduce demanding sequences with precise internal-frame timing, practice your defense, and test your offense.** See where your inputs were accepted and when your attacks connected, then adjust your response.
 
-This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.24**.
+This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.24.1**.
 
 **[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [Practice defense](#first-pb-drill) · [Test wake-up pressure](docs/PLAYER_MANUAL.en.md#wakeup-pressure-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 
@@ -18,9 +18,11 @@ Left: check whether you still fit six presses when delaying PB. Right: see which
 
 ## Reproduce, practice and adjust
 
-1. **Reproduce the opponent.** Define actions and timing in Action Steps, and the dummy reproduces execution beyond your own, such as crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, it can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
+1. **Reproduce the opponent.** Define actions and timing in Action Steps, and the dummy performs even sequences you find difficult, such as crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, it can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
 2. **Practice and test.** Have the dummy repeat the same offense to practice PB, GC or interrupts after air guarding, or test your own wake-up pressure and strings against a fixed response.
 3. **Read the result and adjust.** See where your inputs landed in the window and on which Tick your attack connected, then adjust your next attempt. PB Stats and GC Stats track your success rate and input time.
+
+Randomness affects PB activation and GC input windows. These displays help you identify what to improve from the inputs the game accepted, rather than success or failure alone.
 
 ## What you can test and practice
 
@@ -43,7 +45,7 @@ Left: check whether you still fit six presses when delaying PB. Right: see which
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up at `Reversal +0t`, right on her reversal Tick. It lands almost at once, so even a reversal Shadow Blade can be blocked on the ground: a safe jump. See the [wake-up pressure drill](docs/PLAYER_MANUAL.en.md#safe-jump-example) for the steps.
+After Demitri's heavy Demon Cradle, a forward-jump LP connects at `Reversal +0t`, right on Morrigan's reversal Tick. It lands almost at once, so even a reversal Shadow Blade can be blocked on the ground: a safe jump. The screenshot shows the moment of contact; see the [wake-up pressure drill](docs/PLAYER_MANUAL.en.md#safe-jump-example) for the landing block and how to check it.
 
 ### Examine moves
 
@@ -58,8 +60,8 @@ The dummy performs the action you build here when something triggers it, such as
 
 | Goal | How to use the tool |
 |---|---|
-| **Use actions you can perform yourself** | [Recording Wizard](docs/PLAYER_MANUAL.en.md#05-recording) captures your inputs from start to finish, then lets you review and save the recording |
-| **Reproduce execution beyond your own** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
+| **Use actions you can perform yourself** | [Recording Wizard](docs/PLAYER_MANUAL.en.md#05-recording) captures your inputs from start to finish, then lets you review and save the recording. Recording and playback use displayed frames |
+| **Reproduce difficult sequences** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
 | **Run several sequences at random** | [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns) saves sequences by name and picks one at random from those you select |
 
 ## Windows installation

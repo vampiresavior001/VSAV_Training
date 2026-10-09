@@ -1255,10 +1255,10 @@ local recording_random_start_wait_item = random_start_wait_item(
 -- a run is and when its facing is taken.
 local AUTO_FLIP_HELP =
   "On: the dummy's recordings, Action Steps and Specified inputs swap left and\n"
-  .. "right to keep working when the characters switch sides. Off: a playback, run\n"
-  .. "or Loop Steps lap keeps the left / right of its first input through a switch,\n"
-  .. "to see what the same input does after a cross-up - an option select, say.\n"
-  .. "The next playback, run or lap takes the side again. Not the dummy's guard.\n"
+  .. "right when the characters switch sides. Off: each playback, run or loop lap\n"
+  .. "uses the orientation at its first input, with no automatic left/right swap.\n"
+  .. "Direction changes in the recording or Steps still occur as defined.\n"
+  .. "Use Off to test cross-up option selects. The dummy's guard is unaffected.\n"
 local dummy_auto_flip_item = checkbox_menu_item("Auto-Flip Inputs on Side Switch",
   training_settings, "auto_flip_inputs", true,
   AUTO_FLIP_HELP .. "The same setting as Recording > Auto-Flip Inputs on Side Switch.")

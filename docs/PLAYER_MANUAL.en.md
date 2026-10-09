@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.24 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.24.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -1091,7 +1091,16 @@ The two rows under the table average each step of the command over `Pass` attemp
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](images/meaty_safe_jump.png)
 
-After Demitri lands a heavy Demon Cradle on Morrigan, holding up-forward and pressing jumping LP puts the attack on her wake-up. Meaty Timing reads `Wake-up  Reversal +0t  Active 2t`: the jumping LP connected on Morrigan's reversal Tick, on its second active Tick. A jump attack like this lands almost at once, so even if Morrigan answers with a reversal Shadow Blade, Demitri can block it on the ground: a safe jump. To check it yourself, set the dummy's response (`Reversal - Specified`) to Shadow Blade and repeat the same setup.
+The screenshot shows a forward-jump LP after Demitri hits Morrigan with a heavy Demon Cradle. `Wake-up  Reversal +0t  Active 2t` means the LP connected on Morrigan's reversal Tick, on its second active Tick. A jump attack like this lands almost at once, so even if Morrigan answers with a reversal Shadow Blade, Demitri can block it on the ground: a safe jump. **The first screenshot and its readout show only the meaty timing; the second one, after the steps, shows the landing block. To check it yourself, try both with these steps.**
+
+1. **Check the meaty timing.** Set Morrigan's `Wakeup = None` and `Guard Action Type = None`. Hit her with a heavy Demon Cradle, hold up-forward to jump as soon as possible, and press LP while descending. Adjust the LP timing toward the screenshot's `Reversal +0t / Active 2t`. These values describe contact, not when to press LP.
+2. **Check that you can land and block.** Set the dummy to `Reversal - Specified` and configure Shadow Blade (or use `Reversal - Action Steps` with step 1 set to `Auto (Fastest)` `Special : Shadow Blade + LP`). Use `Random Guard Action % = 100%`, `Random Start Wait = 0`, `Button Wait = 0` and `Random Delay = 0`, then repeat the setup. After pressing jumping LP, switch to a blocking direction for landing. Confirm that the dummy performs its reversal and that you land and block it.
+
+![Demitri lands and blocks Morrigan's reversal Shadow Blade. REVERSAL on the right, G on the input bar](images/safe_jump_guard.png)
+
+On the developer's machine, with Morrigan set to reverse (Action Steps, step 1 `Auto (Fastest)` `Special : Shadow Blade + LP`, a light Shadow Blade). `REVERSAL` shows on the right, and Demitri has landed and blocked (`G` on the input bar). Her attack reached first, so Meaty Timing reads `Reversal +4t  P2 Hit First`.
+
+The screenshots do not identify the exact LP input Tick. Keep the starting position, knockdown and reversal strength fixed when comparing attempts.
 
 Do not judge whether a normal came out as early as possible solely by whether the game displays REVERSAL.
 
@@ -1132,7 +1141,7 @@ Selecting PB under `Guard` leaves `Guard Action Type` available for the response
 
 **When a cross-up switches the sides, see what the same input turns into.** Does a dragon-punch motion still come out against the cross-up? Does the lever held back still block? Recreate an option select, one input that becomes different actions depending on the situation, on the dummy and study it.
 
-Normally the dummy flips its inputs when the sides switch, so it keeps doing the same move. With `Auto-Flip Inputs on Side Switch = no`, **it keeps holding the left and right it started the input with**, just like a player who keeps the lever the same way while getting crossed up.
+Normally, the dummy automatically swaps left and right when the sides switch. With `Auto-Flip Inputs on Side Switch = no`, **the entire sequence uses the orientation at its first input, without automatically swapping left and right after a side switch.** Direction changes within the recording or Steps still occur as defined; this setting does not hold one direction throughout the sequence.
 
 1. Set `Auto-Flip Inputs on Side Switch = no` on the Dummy or Recording tab (both rows are the same setting).
 2. Prepare the input you want to test as a recording or as Action Steps (`Reversal - Action Steps`, for example).
@@ -1142,10 +1151,9 @@ Normally the dummy flips its inputs when the sides switch, so it keeps doing the
 The result depends on how the game reads the input, so `no` does not guarantee an option select.
 
 <details>
-<summary>When the side is taken, and what it applies to</summary>
+<summary>When the orientation is locked, and which inputs are affected</summary>
 
-- The side is taken on each playback, reversal or loop pass, **the moment it first presses something**. A switch before that is taken into account. However many times the sides switch after that, it stays until that playback, reversal or pass ends; the next one takes it again.
-- Direction changes written in the recording or steps are sent as written.
+- Each playback, response or loop pass locks its orientation **at the first direction or button input**, including buffered inputs. A side switch before that affects the initial orientation. Later switches do not change it; the next playback, response or pass locks its own orientation.
 - Applies to: recording playback (including the Recording guard actions), Action Steps, Action Patterns and `Reversal / Counter Attack - Specified`. The Recording Wizard's check playback, Guard Cancel, Push Block and the dummy's guard still follow the switch.
 - A change to the setting applies from the next playback or reversal.
 
@@ -1222,6 +1230,7 @@ Keep these limits in mind:
 - The conventions follow strategy sites, but a match with every published value is not guaranteed. When comparing, check move conditions and counting conventions too.
 - A chain may be measured as one continuous sequence. Do not copy its result directly into a single-move data table.
 - Moves with a super flash may produce large Total or Recovery values.
+- A jump normal ends on the Tick it lands. Its landing motion can be cancelled into a grounded normal, so it is left out of Recovery, Total and Advantage. A move that ends in the air ends there, and an air special's landing recovery is counted.
 - Projectile active time does not represent all the time the projectile continues flying after the character's measurement ends.
 - Startup and active share the first hitbox Tick. For a basic single move, read `Total = Startup + Active + Recovery − 1`: startup 4, active 3 and recovery 7 give Total 13.
 
@@ -1327,7 +1336,7 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 | Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup. Not shown while hit, knocked down or getting up |
 | Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change. Not shown while hit, knocked down or getting up |
 | Light blue | Jump or dash (with `Include Jumps / Dashes` ON) |
-| Dark gray | Doing nothing |
+| Dark gray | Doing nothing. A jump normal's landing motion is drawn this way and not counted too, since it can be cancelled into a grounded normal (as in Tick Data) |
 | Magenta bar along the top | Reversal-only Tick: only blocking and special moves are available (see below) |
 | Gray bar along the top | A Tick the character spent frozen in hitstop; left out of the numbers and run counts (see below) |
 | Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
@@ -1569,10 +1578,10 @@ For reports, include version, P1/P2 characters, which character is on each side,
 
 > This manual was checked against the target version's source code and release notes. The procedures in it were not run through in an emulator as a whole. What was confirmed in the game is noted in each release-notes entry. Example drills do not guarantee success with every character or setup.
 
-- Documentation updated: 2026-10-09. This does not include running the procedures in an emulator.
+- Documentation updated: 2026-10-10. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.24. On 2026-10-09 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.24.1. On 2026-10-10 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

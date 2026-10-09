@@ -6,7 +6,7 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 **自分では出せない相手の動きを、内部フレーム単位で指定してダミーに再現させ、守りの練習と攻めの検証ができる、Fightcade 2／FBNeo用のトレーニングモードです。** 入力がどこで受け付けられたか、攻撃がいつ当たったかを画面で確かめながら、自分の対処を直せます。
 
-[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.24** です。
+[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.24.1** です。
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [守りを練習する](#first-ag-drill) · [起き攻めを調べる](docs/PLAYER_MANUAL.ja.md#wakeup-pressure-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
 
@@ -21,6 +21,8 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 1. **相手を再現する。** 中足払いキャンセル天雷破のような、自分では難しい動きも、Action Stepsで動作とタイミングを指定すればダミーが再現します。起き上がり・ガード後・着地後には、必殺技のリバーサルだけでなく、**小技・投げによる暴れ、ジャンプ、ダッシュ**も出させられます。
 2. **練習する・試す。** 同じ攻めを繰り返させてAG・GC・空中ガード後の割り込みを練習したり、自分の起き攻めや連係を、決まった反撃に当てて試したりします。
 3. **結果を見て直す。** 入力が受付のどこに入ったか、攻撃が何Tick目に当たったかを画面で確かめ、次の一手を直します。PB Stats（英語UIのPBはAGのこと）とGC Statsで、成功率と入力時間の変化も追えます。
+
+AGの成立判定やGCの入力受付には乱数が関わるため、成功・失敗だけでなく、実際に受け付けられた入力から改善点を探せます。
 
 ## 何を調べ、練習できるか
 
@@ -43,7 +45,7 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンの起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pが、モリガンの起き上がりに `Reversal +0t`（リバーサルTickちょうど）で重なった例です。すぐ着地するので、リバーサルのシャドウブレイドも地上でガードできる詐欺飛びになります。手順は[起き攻めの練習レシピ](docs/PLAYER_MANUAL.ja.md#safe-jump-example)へ。
+デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pが、モリガンの起き上がりに `Reversal +0t`（リバーサルTickちょうど）で重なった例です。すぐ着地するので、リバーサルのシャドウブレイドも地上でガードできる詐欺飛びになります。画像は重なった瞬間です。リバーサルを着地してガードした画面と確かめ方は、[起き攻めの練習レシピ](docs/PLAYER_MANUAL.ja.md#safe-jump-example)へ。
 
 ### 技の性能を見る
 
@@ -58,7 +60,7 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 | 目的 | 使い方 |
 |---|---|
-| **自分で操作できる動きを使う** | [Recording Wizard](docs/PLAYER_MANUAL.ja.md#05-recording)で、操作の開始から終了までを自動で記録し、確認して保存する |
+| **自分で操作できる動きを使う** | [Recording Wizard](docs/PLAYER_MANUAL.ja.md#05-recording)で、操作の開始から終了までを自動で記録し、確認して保存する。記録・再生は表示フレーム単位 |
 | **自分では難しい動きを再現する** | [Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)で、動作とタイミングをTick単位で指定する |
 | **複数の動きをランダムに出す** | [Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)で、作った動きを名前付きで保存し、使う候補からランダムに実行する |
 
