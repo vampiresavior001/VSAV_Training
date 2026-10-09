@@ -4,9 +4,9 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 English | [日本語](README.ja.md)
 
-**A training mode for Fightcade 2 / FBNeo that reproduces opponent actions with internal-frame (Tick) precision, so you can test your offense and practice your defense.** Practice against execution you cannot perform yourself, then use input and contact timing feedback to improve your response.
+**A training mode for Fightcade 2 / FBNeo that has the dummy reproduce execution you cannot perform yourself, specified in the game's internal frames, so you can practice your defense and test your offense.** See where your inputs were accepted and when your attacks connected, then adjust your response.
 
-This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.23.1**.
+This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.24**.
 
 **[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [Practice defense](#first-pb-drill) · [Test wake-up pressure](docs/PLAYER_MANUAL.en.md#wakeup-pressure-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 
@@ -16,51 +16,51 @@ This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Tr
 
 Left: check whether you still fit six presses when delaying PB. Right: see which GC directions and button presses the game accepted. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
 
-## Reproduce, practice and improve in Ticks
+## Reproduce, practice and adjust
 
-A Tick is an internal game frame. This fork controls the dummy's inputs on that internal clock.
-
-| Game speed | Displayed frames and internal frames |
-|---|---|
-| Normal | One displayed frame = one Tick |
-| Turbo 3 | Three displayed frames = four Ticks |
-
-1. **Reproduce the opponent.** Define actions and timing in Action Steps to reproduce execution you could not perform yourself: a dash followed by an attack, both as early as possible, or crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, you can specify **light attacks, throws, jumps and dashes** as well as special-move reversals.
-2. **Practice.** Make the dummy repeat the same offense and try PB, GC or an interrupt after air guarding.
-3. **Read the result and adjust.** See where your inputs landed in the window and where you were late, then adjust your next attempt. PB Stats and GC Stats track your success rate and input time.
-
-See [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) for the conditions required to act at the earliest possible moment.
-
-### Look beyond success or failure to see your inputs
-
-In Vampire Savior, randomness affects PB activation and the time allowed to complete GC command inputs. Attempts that feel the same can succeed or fail, making it hard to tell what to improve from the outcome alone.
-
-**PB Counter and GC Command Trace help you review what actually happened.** For PB, check when you pressed and how many valid presses registered. For GC, see which directions and button presses the game accepted and where an input window expired. Use that feedback alongside the result to decide what to adjust on your next attempt.
-
-![PB Counter and PB Stats showing PB input count, timing, simultaneous presses and practice results](docs/images/pb_counter_stats.png)
-
-Here, six presses on Ticks 5–13 of the window activated PB. **Once you can fit six presses consistently, start a little later and see whether you can still fit all six.** If you fall short, check for simultaneous presses or inputs after the window closes. See [PB practice](docs/PLAYER_MANUAL.en.md#08-pb) for the full readout guide.
+1. **Reproduce the opponent.** Define actions and timing in Action Steps, and the dummy reproduces execution beyond your own, such as crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, it can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
+2. **Practice and test.** Have the dummy repeat the same offense to practice PB, GC or interrupts after air guarding, or test your own wake-up pressure and strings against a fixed response.
+3. **Read the result and adjust.** See where your inputs landed in the window and on which Tick your attack connected, then adjust your next attempt. PB Stats and GC Stats track your success rate and input time.
 
 ## What you can test and practice
+
+### Practice defense
+
+| Goal | How to use the tool |
+|---|---|
+| **Fix your PB execution** | Use [PB Counter](docs/PLAYER_MANUAL.en.md#08-pb) to see where in the window you pressed and how many presses counted. PB Stats tracks your success rate and averages |
+| **Find why a GC failed** | Use [GC Command Trace](docs/PLAYER_MANUAL.en.md#09-gc) to see which directions and buttons the game accepted and where the input expired. Compare the left and right sides with [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) |
+| **Practice defense with varied attacks** | Randomize attacks or their timing to practice PB and GC without relying on a fixed rhythm. See [which setting to use](docs/PLAYER_MANUAL.en.md#dummy-button-timing) |
+| **Explore situations after air guarding** | Use [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps) to check gaps in air chains, interrupt timing and landing advantage |
+
+### Test your offense
 
 | Goal | How to use the tool |
 |---|---|
 | **Test wake-up pressure and attack strings** | Fix the dummy’s response, then use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to compare contact timing with the actual outcome |
-| **Practice defense with varied attacks** | Randomize attacks or their timing to practice PB and GC without relying on a fixed rhythm. See [which setting to use](docs/PLAYER_MANUAL.en.md#dummy-button-timing) |
 | **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
-| **Explore situations after air guarding** | Use [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps) to check gaps in air chains, interrupt timing and landing advantage |
+| **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
 
-**Tick Data** avoids the turbo-frame variation of the original display-frame measurements. Its counting conventions for startup, active time, recovery and frame advantage are aligned with those used by strategy sites. See [manual Section 11](docs/PLAYER_MANUAL.en.md#10-data) for measurement conditions and how to read Action Timeline.
+![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-**See move properties visually:** [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) displays startup, active frames, recovery, invulnerability and other states for normals and special moves as colored bars. If colors and lengths are easier for you to follow, use it alongside the numerical readouts to see how a move unfolds.
+After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up at `Reversal +0t`, right on her reversal Tick. It lands almost at once, so even a reversal Shadow Blade can be blocked on the ground: a safe jump. See the [wake-up pressure drill](docs/PLAYER_MANUAL.en.md#safe-jump-example) for the steps.
 
-### Choose easy recording or precise action control
+### Examine moves
 
-For actions you can perform yourself, **[Recording Wizard](docs/PLAYER_MANUAL.en.md#05-recording)** offers a quick way to record them. It automatically captures your inputs from start to finish, then lets you review and save the recording.
+| Goal | How to use the tool |
+|---|---|
+| **In numbers** | [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data) measures startup, active time, recovery and advantage in internal frames, with counting conventions aligned with those used by strategy sites |
+| **As colored bars** | [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) lays out startup, active frames, recovery, invulnerability and other states for both players, one tile per Tick |
 
-**Recording and playback operate in displayed frames.** Use Action Steps for difficult execution or precise Tick-level timing.
+### Build the opponent
 
-**Define a sequence in Action Steps, then use Action Patterns to save and manage multiple sequences and run them at random.**
+The dummy performs the action you build here when something triggers it, such as blocking, being hit or waking up ([how the dummy works](docs/PLAYER_MANUAL.en.md#dummy-model)). Recordings can also be played back right away.
+
+| Goal | How to use the tool |
+|---|---|
+| **Use actions you can perform yourself** | [Recording Wizard](docs/PLAYER_MANUAL.en.md#05-recording) captures your inputs from start to finish, then lets you review and save the recording |
+| **Reproduce execution beyond your own** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
+| **Run several sequences at random** | [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns) saves sequences by name and picks one at random from those you select |
 
 ## Windows installation
 
@@ -123,19 +123,42 @@ Start by trying either PB or GC; looping and building your own actions can wait 
 4. **Repeat it.** Set `Loop Steps = yes` and `Loop Wait = Auto (Landing)` to repeat short-dash LP as soon as the dummy lands.
 5. **Expand your practice.** The imported pattern is ready to use next time. When comfortable, build other attacks in Action Steps and save them in Action Patterns to practice against randomly selected sequences.
 
+## Look beyond success or failure to see your inputs
+
+In Vampire Savior, randomness affects PB activation and the time allowed to complete GC command inputs. Attempts that feel the same can succeed or fail, making it hard to tell what to improve from the outcome alone.
+
+**PB Counter and GC Command Trace help you review what actually happened.** For PB, check when you pressed and how many valid presses registered. For GC, see which directions and button presses the game accepted and where an input window expired. Use that feedback alongside the result to decide what to adjust on your next attempt.
+
+![PB Counter and PB Stats showing PB input count, timing, simultaneous presses and practice results](docs/images/pb_counter_stats.png)
+
+Here, six presses on Ticks 5–13 of the window activated PB. **Once you can fit six presses consistently, start a little later and see whether you can still fit all six.** If you fall short, check for simultaneous presses or inputs after the window closes. See [PB practice](docs/PLAYER_MANUAL.en.md#08-pb) for the full readout guide.
+
+## Why Ticks
+
+A Tick is an internal game frame. At Turbo 3, four Ticks pass in three displayed frames, so counting in displayed frames can throw off both input timing and move measurements. This fork controls the dummy's inputs on that internal clock.
+
+| Game speed | Displayed frames and internal frames |
+|---|---|
+| Normal | One displayed frame = one Tick |
+| Turbo 3 | Three displayed frames = four Ticks |
+
+See [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) for the conditions required to act at the earliest possible moment.
+
+**Recording and playback operate in displayed frames.** Define actions that need precise Tick-level timing in Action Steps. Measurement such as **Tick Data**, by contrast, is in Ticks, which avoids the turbo-frame variation of the original display-frame measurements. See [manual Section 11](docs/PLAYER_MANUAL.en.md#10-data) for measurement conditions and how to read the results.
+
+Some older readouts, such as the dash trainers, still count displayed frames. See the list in [manual 11.1](docs/PLAYER_MANUAL.en.md#ticks-and-frames) for which unit each display uses.
+
 ## Manual
 
 The **[English player manual](docs/PLAYER_MANUAL.en.md)** covers controls, settings and how to interpret the readouts.
 
 - **Build the opponent:** [Dummy defense, recovery and counter actions](docs/PLAYER_MANUAL.en.md#04-dummy), [Recording and looping](docs/PLAYER_MANUAL.en.md#05-recording), [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps), [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns)
 - **Practice:** [PB practice](docs/PLAYER_MANUAL.en.md#08-pb), [GC practice](docs/PLAYER_MANUAL.en.md#09-gc), [Practice recipes](docs/PLAYER_MANUAL.en.md#11-drills)
-- **Analyze:** [Tick Data and air-guard analysis](docs/PLAYER_MANUAL.en.md#10-data), [Troubleshooting](docs/PLAYER_MANUAL.en.md#14-troubleshooting)
+- **Analyze:** [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data), [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing), [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter), [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps), [Troubleshooting](docs/PLAYER_MANUAL.en.md#14-troubleshooting)
 
 ### Scope
 
 These installation instructions target Windows. Linux launch scripts are included, but support for every feature of this fork on Linux/macOS was not verified when this README was prepared. Action Patterns naming and file dialogs are implemented for Windows.
-
-Some timing readouts use internal frames and others use displayed frames. Existing dash trainers and other displays have not all been converted to Ticks. See the [manual's unit guide](docs/PLAYER_MANUAL.en.md#10-data).
 
 ## Updates and backups
 
@@ -160,7 +183,7 @@ When reporting a problem, include the version, P1/P2 characters, which character
 
 ## Original project and credits
 
-This project is based on [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). The original already includes recording, reversal settings, a PB counter and a GC-window display. This fork builds on them with more precise action reproduction and more detailed feedback; see the [feature comparison](docs/PLAYER_MANUAL.en.md). Thanks to the creators and contributors of the original training mode and its scripts, and to the VSAV community.
+This project is based on [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). The original already includes recording, reversal settings, a PB counter and a GC-window display. This fork builds on them with more precise action reproduction and more detailed feedback; see the [feature comparison](docs/PLAYER_MANUAL.en.md#fork-comparison). Thanks to the creators and contributors of the original training mode and its scripts, and to the VSAV community.
 
 The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
 

@@ -1249,6 +1249,23 @@ local recording_random_start_wait_item = random_start_wait_item(
   .. "The Recording Wizard's check playback does not wait.\n"
   .. "The same setting as Dummy > Random Start Wait.")
 
+-- AUTO-FLIP INPUTS ON SIDE SWITCH (user, 2026-10-09). One setting, two rows, as
+-- Random Start Wait: on the Dummy tab after the guard action rows, and on the
+-- Recording tab under Reset Distance Each Loop. inputOrientation.lua says what
+-- a run is and when its facing is taken.
+local AUTO_FLIP_HELP =
+  "On: the dummy's recordings, Action Steps and Specified inputs swap left and\n"
+  .. "right to keep working when the characters switch sides. Off: a playback, run\n"
+  .. "or Loop Steps lap keeps the left / right of its first input through a switch,\n"
+  .. "to see what the same input does after a cross-up - an option select, say.\n"
+  .. "The next playback, run or lap takes the side again. Not the dummy's guard.\n"
+local dummy_auto_flip_item = checkbox_menu_item("Auto-Flip Inputs on Side Switch",
+  training_settings, "auto_flip_inputs", true,
+  AUTO_FLIP_HELP .. "The same setting as Recording > Auto-Flip Inputs on Side Switch.")
+local recording_auto_flip_item = checkbox_menu_item("Auto-Flip Inputs on Side Switch",
+  training_settings, "auto_flip_inputs", true,
+  AUTO_FLIP_HELP .. "The same setting as Dummy > Auto-Flip Inputs on Side Switch.")
+
 function set_p1_reversal_names()
   return charMovesModule.get_player_movelists().P1.reversal_names
 end
@@ -1745,6 +1762,7 @@ return {
           interval_popup_menu_item(training_settings),
           recording_random_start_wait_item,
           checkbox_menu_item("Reset Distance Each Loop", training_settings, "restore_recorded_position", 0, "Puts both characters back to the distance the recording was made from, at the\nstart of every loop. Without it the two drift apart over the passes and the\nsetup you were practising stops happening.\nOnly works on recordings made from v11.4.1 on - the distance is stored in the\nrecording itself.\nNot used with Use Savestate Upon Recording, which restores everything anyway."),
+          recording_auto_flip_item,
           checkbox_menu_item("Use Savestate Upon Recording", training_settings, "use_recording_savestate", 0, "BETA! EXPERIMENTAL! (But works!)\nCreates a savestate when you hit record, and loads it before playback.\nUse this for timing sensitive training. VERY USEFUL!!!!"),
           checkbox_menu_item("Use Random Recording Slot", training_settings, "random_playback", 0, "This can be used in two ways:\n 1) Random playback file on reversal\n 2) Using looped playback mode a random playback file will be \n    played back when the current recording ends"),
           indent(1, enable_slot_1_menu_item),
@@ -1843,6 +1861,7 @@ return {
             indent(1, reversal_action_steps_item),
             indent(1, action_steps_loop_switch),
             indent(2, action_steps_loop_wait_item),
+            dummy_auto_flip_item,
             pit_of_blame_item,
         }
     },

@@ -92,6 +92,10 @@ local frameMeterModule   = require "./scripts/framemeter"
 local idleSoundModule    = require "./scripts/idleSound"
 -- Diagnostic: the invulnerability bytes per tick, while Knockdown Logger is on.
 local invulnLogModule    = require "./scripts/invulnLog"
+-- Auto-Flip Inputs on Side Switch (Dummy / Recording tabs). guardCancel,
+-- controller and actionSequenceRunner require it too; required here so it is
+-- loaded at start-up whatever loads first.
+local inputOrientationModule = require "./scripts/inputOrientation"
 
 -- this module provides clocks and game data from memory
 -- data and clock signals are provided every tick
@@ -333,6 +337,7 @@ local function return_to_character_select()
 	-- reading (playing) and the loop kept trying to restart. The wizard has to
 	-- come down too, or it would sit there owning the screen at character
 	-- select with no match behind it.
+	inputOrientationModule.reset()
 	if globals.macroLua ~= nil then
 		if globals.macroLua.stop_macro_playback ~= nil then globals.macroLua.stop_macro_playback() end
 		if globals.macroLua.end_temporary_playback ~= nil then globals.macroLua.end_temporary_playback() end
@@ -381,6 +386,15 @@ local function macro_playback_flipped()
 	             and globals.macroLua.get_playback_facing() or nil
 	if _rec ~= nil then return _now ~= _rec end
 	return _now ~= 0
+end
+
+-- Whether this frame of a playback presses anything on P2 - the frame the
+-- facing is taken on when Auto-Flip Inputs on Side Switch is off.
+local function p2_keys_down(_keys)
+	for k, v in pairs(_keys) do
+		if v and type(k) == "string" and k:sub(1, 3) == "P2 " then return true end
+	end
+	return false
 end
 
 local function merge_macro_keys(_out, _keys, _flip)
@@ -732,8 +746,13 @@ emu.registerbefore(function()
 		-- from, so the standing convention is used: recordings are made with
 		-- P2 on the right, and the playback is mirrored once the sides have
 		-- swapped.
-		merge_macro_keys(globals._input, globals.macroLua.get_keytable(),
-			macro_playback_flipped())
+		--
+		-- Auto-Flip Inputs on Side Switch off: the swap this playback's first
+		-- pressing frame got is kept for the rest of it (inputOrientation.lua).
+		local _keys = globals.macroLua.get_keytable()
+		merge_macro_keys(globals._input, _keys,
+			inputOrientationModule.rec_flip(globals.macroLua.playback_serial,
+				macro_playback_flipped(), p2_keys_down(_keys)))
 	else
 		local dummy_neutral_keys = neutralModule.registerBefore(globals._input)
 		autoguardModule.registerBefore(dummy_neutral_keys, player_objects)
@@ -849,6 +868,8 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 	end)
 	
 	savestate.registerload(function(slot)
+		-- A loaded state is not the run that was going on (inputOrientation.lua).
+		inputOrientationModule.reset()
 		globals.show_menu = false
 		globals.debounceStarted = nil
 		globals.controllerModule.enable_both_players()

@@ -6,20 +6,21 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.23.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.24 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
 See the [README](../README.md) for a feature overview. This manual explains how to set up drills and interpret the results.
 
+<a id="fork-comparison"></a>
 <details>
 <summary>Tick control and comparison with the original</summary>
 
-At Normal speed, one displayed frame equals one Tick. At Turbo 3, four Ticks pass in three displayed frames. This fork controls dummy inputs on those internal frames. It improves on the original version’s ability to reproduce actions at the earliest possible moment and lets you specify actions on wake-up, after blocking and after landing. Alongside special-move reversals, you can make the dummy use light attacks or throws, jump or dash when it becomes able to act.
+This fork controls dummy inputs on internal frames (Ticks; see [11.1](#ticks-and-frames) for how they relate to displayed frames). It improves on the original version’s ability to reproduce actions at the earliest possible moment and lets you specify actions on wake-up, after blocking and after landing. Alongside special-move reversals, you can make the dummy use light attacks or throws, jump or dash when it becomes able to act.
 
 Action Steps builds on this control to define actions in internal frames. It supports individual responses, strings and complex combos, including definitions that can complete infinite combos for Bulleta (B.B. Hood) or Bishamon. Repeat these sequences to test your responses against more demanding offense.
 
-Recording and playback operate in displayed frames, so they do not reproduce input timing with Tick-level precision. Use Action Steps for drills that require precise internal-frame timing, especially at turbo speeds. Recording Wizard, added in this fork, makes it easy to capture an input sequence from start to finish.
+Recording and playback operate in displayed frames; use Action Steps for drills that need Tick-level timing ([Section 5](#05-recording)). Recording Wizard, added in this fork, makes it easy to capture an input sequence from start to finish.
 
 For PB, you can check whether you delayed your input while still fitting six presses inside the window. For GC, you can see which inputs the game accepted and where you were late. For air guarding, you can see whether an interruptible gap existed, whether your press was well timed and who could act first after landing. This fork combines accurate dummy actions with detailed feedback on your response.
 
@@ -61,9 +62,17 @@ The distinction is **the precision of reproduced actions and the detail availabl
 - [9. Practice guard cancels](#09-gc)
 - [10. Practice recipes](#11-drills)
 
-**Part 4: Analyze and configure**
+**Part 4: Analyze**
 
 - [11. Read move data and gaps](#10-data)
+  - [11.2 Tick Data](#tick-data)
+  - [11.3 Meaty Timing](#meaty-timing)
+  - [11.4 Frame Meter](#frame-meter)
+  - [11.5 Action Timeline](#action-timeline)
+  - [11.6 Air Guard Gaps](#air-guard-gaps)
+
+**Appendix**
+
 - [12. Display and game settings](#12-options)
 - [13. Saving, backups and updates](#13-save)
 - [14. Troubleshooting](#14-troubleshooting)
@@ -74,25 +83,47 @@ The distinction is **the precision of reproduced actions and the detail availabl
 
 ### Choose what to practice
 
+**Practice defense**
+
+| Goal | Feature | Where to start |
+|---|---|---|
+| Improve PB execution | `Show PB Counter`, `Show PB Stats` | [Section 8](#08-pb) |
+| Find why a GC failed | GC Command Trace, input history | [Section 9](#09-gc) |
+| Track your GC success rate on the 1P and 2P sides | `Show GC Stats` | [Section 9.4](#gc-stats) |
+| Defend against offense with varied timing | `Random Start Wait`, `Random Delay` | [4.4](#dummy-button-timing) |
+| Examine interrupts and landing after air guarding | Air Guard Gaps | [11.6](#air-guard-gaps) |
+
+**Test your offense**
+
 | Goal | Feature | Where to start |
 |---|---|---|
 | Test combos and pressure strings | Dummy stance, blocking and health recovery | `Dummy`, `Gauge` |
 | Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
+| Measure how long a setup takes | Action Timeline | [11.5](#action-timeline) |
+| Study option selects on a side switch | `Auto-Flip Inputs on Side Switch` | [Section 10.F](#side-switch-os) |
+
+**Examine moves**
+
+| Goal | Feature | Where to start |
+|---|---|---|
+| See startup, active time, recovery and advantage as numbers | Tick Data | [11.2](#tick-data) |
+| See startup, active frames, invulnerability and recovery as colored bars | Frame Meter | [11.4](#frame-meter) |
+
+**Build the opponent** ([how the dummy works](#dummy-model))
+
+| Goal | Feature | Where to start |
+|---|---|---|
 | Make the dummy challenge on wake-up or after blocking | Individual counter actions, Action Steps | `Dummy > Guard Action Type` |
 | Repeat offense seen in matches | Recording and looping | `Recording > Recording Wizard` |
 | Specify a dash into an attack precisely | Action Steps | [Section 6](#06-steps) |
 | Randomize several offensive sequences | Recording slots, Action Patterns | [Section 5](#05-recording), [Section 7](#07-patterns) |
-| Improve PB execution | `Show PB Counter`, `Show PB Stats` | [Section 8](#08-pb) |
-| Find why a GC failed | GC Command Trace, input history | [Section 9](#09-gc) |
-| Track your GC success rate on the 1P and 2P sides | `Show GC Stats` | [Section 9.4](#gc-stats) |
-| Examine advantage, interrupts and landing situations | Tick Data, Air Guard Gaps | [Section 11](#10-data) |
 
 Start with [installation](#02-install) and [basic controls](#03-controls), then [practice PB and GC against Sasquatch](#sasquatch-pb-tutorial).
 
 <a id="screen-map"></a>
 ### The screen
 
-Show only the displays for the drill you are practicing; they are easier to read that way. You can also show PB and GC displays together.
+Show only the displays for the drill you are practicing; they are easier to read that way. The PB and GC displays can also be shown together.
 
 **Practicing PB** (`Show PB Counter` and `Show PB Stats` on the `Trainer` tab)
 
@@ -114,6 +145,16 @@ Show only the displays for the drill you are practicing; they are easier to read
 | 5 | GC Stats | Your GC success rate and input time, split into the 1P and 2P sides. Top left while PB Stats and the other top-left displays are off, bottom right otherwise | [9.4](#gc-stats) |
 | 6 | Input bar | Your inputs, with the guard and GC marks (`G`, `GC`, `SUCCESS`) | [9.3](#gc-timing) |
 | 7 | P2 inputs (`Show P2 Inputs`) | The dummy's inputs | [Section 12](#12-options) |
+
+**Examining your offense** (`Tick Data` on the `Trainer` tab, with `Show Meaty Timing` under it on by default; `Frame Meter` on the `Display` tab)
+
+![The screen while examining offense. From the top: Tick Data, Meaty Timing and Frame Meter](images/meaty_timing.png)
+
+| Position | Display | What it shows | More |
+|---|---|---|---|
+| Top two rows | Tick Data | Startup, active time, recovery and advantage, in Ticks | [11.2](#tick-data) |
+| Third row | Meaty Timing | How many Ticks after the opponent's recovery, and on which active Tick, your attack connected | [11.3](#meaty-timing) |
+| Bar at the bottom | Frame Meter | Both players' states, one tile per Tick; P1 on the upper row, P2 on the lower | [11.4](#frame-meter) |
 
 # Part 1: Get started
 
@@ -496,6 +537,15 @@ To return to `Short LP` alone, uncheck `Long LP > MP` and leave only `Short LP` 
 
 Set up what the dummy does. Practice starts with building the opponent.
 
+<a id="dummy-model"></a>
+**When something triggers it, the dummy performs the action you set.** The triggers are mainly blocking, being hit and waking up (which ones apply depends on the type; see [4.2](#dummy-guard-action)). There are three main ways to build the action, all chosen under `Dummy > Guard Action Type`:
+
+- **Specify one move:** `Reversal / Counter Attack - Specified` ([4.3](#dummy-normal-response), [4.4](#dummy-button-timing))
+- **Play a recording:** `Reversal / Counter Attack - Recording` ([Section 5](#05-recording))
+- **Build a sequence:** `Reversal - Action Steps`, `Reversal - Action Patterns` ([Section 6](#06-steps), [Section 7](#07-patterns))
+
+Building an action does not start it; it starts when a trigger comes. To repeat Steps or Patterns continuously, use `Loop Steps`. Recordings alone can also be played right away with `Recording > Play Recording`, without waiting for a trigger, and repeated with `Looped Playback`.
+
 <a id="04-dummy"></a>
 ## 4. Dummy defense, recovery and counter actions
 
@@ -588,7 +638,7 @@ What happens when the press comes too late is up to the game. A special's comman
 
 A timing measured after blocking may not also work after being hit. Changing the `Button Lever` direction on a dash cancel can overwrite the reverse direction needed for the cancel.
 
-`Button Wait` was `Guard Action Delay (Ticks)` up to v11.7.21.1, and saved values carry over. With `Guard Action Type` set to `Push Block` or `PB Recording`, the same setting is the wait before the presses start.
+With `Guard Action Type` set to `Push Block` or `PB Recording`, the same setting is the wait before the presses start. Its former name is `Guard Action Delay (Ticks)`, and saved values carry over.
 
 **Choose which part of the timing to vary.**
 
@@ -620,7 +670,7 @@ Recording and playback operate in displayed frames, so they do not reproduce inp
 
 ### 5.1 Record with Recording Wizard
 
-Added in this fork, Recording Wizard makes it easy to capture an input sequence from start to finish. It simplifies starting and ending a recording; it does not make recording Tick-accurate.
+Recording Wizard, added in this fork, captures an input sequence from start to finish automatically. It saves you starting and ending the recording yourself; the recording itself is in displayed frames, as with standard recording.
 
 1. Choose the desired dummy character as P2 and arrange the starting position.
 2. Open `Recording > Recording Wizard` with Right or LP.
@@ -645,7 +695,7 @@ Use `Before / After` in `Loop Interval (Frames)` to adjust pauses. `After` waits
 
 `Random Start Wait` (Ticks, 0–60) delays the start of playback by a fresh random number from 0 up to the setting each time: `Play Recording`, `Volume Down`, each `Looped Playback` pass (after `Loop Interval`) and the Recording responses. Pressing again while it waits stops it. The Recording Wizard's check playback does not wait. It is the same setting as `Random Start Wait` on the Dummy tab.
 
-`Reset Distance Each Loop = yes` restores recorded spacing each pass. It works with recordings made from v11.4.1 onward that contain distance information. Playback directions are also mirrored when sides switch, but this alone does not guarantee identical spacing or game state.
+`Reset Distance Each Loop = yes` restores recorded spacing each pass. It works with recordings made from v11.4.1 onward that contain distance information. Playback directions are also mirrored when sides switch, but this alone does not guarantee identical spacing or game state. With `Auto-Flip Inputs on Side Switch = no`, a switch during a playback is not mirrored ([10.F](#side-switch-os)).
 
 ### 5.3 Randomize recordings
 
@@ -809,7 +859,7 @@ Naming and file dialogs are implemented for Windows. These operations have not b
 
 # Part 3: Practice
 
-Try PB and GC against that opponent, read the results and adjust your input.
+Try PB and GC against that opponent, read the results and adjust your input. Section 10 collects step-by-step recipes for both defense and offense.
 
 <a id="08-pb"></a>
 ## 8. Practice PB
@@ -1016,6 +1066,8 @@ The two rows under the table average each step of the command over `Pass` attemp
 
 ### A. Hit confirms and stopping on block
 
+**Practice continuing a combo only on hit and stopping when it is blocked.**
+
 1. Set `Guard = All Guard` and `Random Guard % = 50%`.
 2. Set `Guard Action Type = None`.
 3. Repeat the same starter, continue the combo on hit and stop on block.
@@ -1024,17 +1076,28 @@ The two rows under the table average each step of the command over `Pass` attemp
 <a id="wakeup-pressure-drill"></a>
 ### B. Can your wake-up pressure beat the opponent’s fastest response?
 
+**Find the timing at which your wake-up pressure beats the opponent's fastest response.**
+
 1. Select `Guard Action Type = Reversal - Specified`, with `Random Guard Action % = 100%` and `Random Start Wait = 0`.
 2. Configure the desired normal or special. Set `Button Wait = 0` and the `Random Delay` directly below it to `0`. See [4.3](#dummy-normal-response) for a normal example.
 3. Start with `Wakeup = None` to keep conditions fixed.
 4. Knock the dummy down and test your setup.
 5. Enable `Trainer > Tick Data` and `Show Meaty Timing`. Use [Meaty Timing](#meaty-timing) to check how many Ticks after the reversal Tick your attack connected and which active Tick made contact. Test whether the setup works against the dummy’s response, then use the readout to review the timing.
-6. Keep the knockdown, spacing, attack and dummy response the same, and change only when you start the attack. Compare Meaty Timing with the outcome—your attack hits, is blocked, or loses to the response—to find the timing that produces the result you want. Whiffs can leave an older result on screen, so check that the readout updated.
+6. Keep the knockdown, spacing, attack and dummy response the same, and change only when you start the attack. Compare Meaty Timing with the outcome—your attack hits, is blocked, or loses to the response—to find the timing that produces the result you want.
 7. Once you understand the conditions, switch the dummy to another response and test the same timing. Then vary wake-up movement and response probability. Spreading the response with `Random Start Wait` or `Random Delay` checks that the setup does not rely on one fixed timing.
+
+<a id="safe-jump-example"></a>
+**Example: Demitri's safe jump**
+
+![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](images/meaty_safe_jump.png)
+
+After Demitri lands a heavy Demon Cradle on Morrigan, holding up-forward and pressing jumping LP puts the attack on her wake-up. Meaty Timing reads `Wake-up  Reversal +0t  Active 2t`: the jumping LP connected on Morrigan's reversal Tick, on its second active Tick. A jump attack like this lands almost at once, so even if Morrigan answers with a reversal Shadow Blade, Demitri can block it on the ground: a safe jump. To check it yourself, set the dummy's response (`Reversal - Specified`) to Shadow Blade and repeat the same setup.
 
 Do not judge whether a normal came out as early as possible solely by whether the game displays REVERSAL.
 
 ### C. What reaches after your attack is pushblocked?
+
+**After your string is pushed back with PB, check whether your attacks still reach and whether they beat the dummy's response.**
 
 1. Set `Guard = Push Block (All Light)` and `Random Guard % = 100%`.
 2. Start with `Guard Action Type = None` and examine spacing and reach after pushback.
@@ -1044,6 +1107,8 @@ Do not judge whether a normal came out as early as possible solely by whether th
 Selecting PB under `Guard` leaves `Guard Action Type` available for the response.
 
 ### D. Examine air-guard interrupts and landing situations
+
+**After air guarding, find out whether there is a gap to interrupt and who can act first after landing.**
 
 1. Use a recording or Action Steps to prepare the dummy's air string.
 2. Enable `Show Air Guard Gaps`.
@@ -1055,18 +1120,45 @@ Selecting PB under `Guard` leaves `Guard Action Type` available for the response
 
 ### E. Defend against mixed offense
 
+**Practice reacting when you do not know which attack is coming.**
+
 1. Save different offensive sequences in recording slots or Action Patterns.
 2. Play each one individually and verify the intended moves.
 3. Enable several candidates and randomize playback.
 4. For repeatable spacing in recordings, use `Reset Distance Each Loop`. For Steps, check positioning and the situation after each pass separately.
 
-# Part 4: Analyze and configure
+<a id="side-switch-os"></a>
+### F. Study option selects on a side switch
 
-Measure moves and gaps, and adjust displays and settings.
+**When a cross-up switches the sides, see what the same input turns into.** Does a dragon-punch motion still come out against the cross-up? Does the lever held back still block? Recreate an option select, one input that becomes different actions depending on the situation, on the dummy and study it.
+
+Normally the dummy flips its inputs when the sides switch, so it keeps doing the same move. With `Auto-Flip Inputs on Side Switch = no`, **it keeps holding the left and right it started the input with**, just like a player who keeps the lever the same way while getting crossed up.
+
+1. Set `Auto-Flip Inputs on Side Switch = no` on the Dummy or Recording tab (both rows are the same setting).
+2. Prepare the input you want to test as a recording or as Action Steps (`Reversal - Action Steps`, for example).
+3. Partway through that input, cross up or jump over the dummy with P1, and watch what comes out.
+4. Set it back to `yes`, try the same thing and compare.
+
+The result depends on how the game reads the input, so `no` does not guarantee an option select.
+
+<details>
+<summary>When the side is taken, and what it applies to</summary>
+
+- The side is taken on each playback, reversal or loop pass, **the moment it first presses something**. A switch before that is taken into account. However many times the sides switch after that, it stays until that playback, reversal or pass ends; the next one takes it again.
+- Direction changes written in the recording or steps are sent as written.
+- Applies to: recording playback (including the Recording guard actions), Action Steps, Action Patterns and `Reversal / Counter Attack - Specified`. The Recording Wizard's check playback, Guard Cancel, Push Block and the dummy's guard still follow the switch.
+- A change to the setting applies from the next playback or reversal.
+
+</details>
+
+# Part 4: Analyze
+
+Measure moves and gaps.
 
 <a id="10-data"></a>
 ## 11. Read move data and gaps
 
+<a id="ticks-and-frames"></a>
 ### 11.1 Ticks versus displayed frames
 
 **A Tick (`t`) is an internal game frame.** Distinguish it from a displayed frame.
@@ -1090,7 +1182,7 @@ Match the measured side, game speed and units before comparing numbers.
 <a id="tick-data"></a>
 ### 11.2 Tick Data
 
-The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. This fork’s **Tick Data** measures internal frames to avoid variation caused by turbo frames. Its **counting conventions for startup, active time, recovery and frame advantage are aligned with those used by strategy sites**. This does not guarantee a match with every published value; check move conditions and counting conventions when comparing results.
+**Tick Data measures startup, active time, recovery and frame advantage in internal frames.** The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. Tick Data avoids the variation caused by turbo frames, and its **counting conventions are aligned with those used by strategy sites**.
 
 Enable `Trainer > Tick Data` and select P1 or P2 under `Tick Data Side`. P2 is useful for checking a move performed by a recording or Action Steps.
 
@@ -1111,7 +1203,7 @@ Here, `Total 45t` is 4 + 3 + 20 + 19 − 1. Startup and active time both include
 
 </details>
 
-Below the move data come [Meaty Timing](#meaty-timing), when it has a result, and the green history, [Action Timeline](#action-timeline). The next section explains how to read the history separately from the move data.
+Below the move data come [Meaty Timing](#meaty-timing) (11.3), when it has a result, and the green history, [Action Timeline](#action-timeline) (11.5). Each has its own section on how to read it.
 
 | Field | Meaning |
 |---|---|
@@ -1127,15 +1219,16 @@ Startup, active and recovery use the attack hitbox; startup is not simply the mo
 
 Keep these limits in mind:
 
+- The conventions follow strategy sites, but a match with every published value is not guaranteed. When comparing, check move conditions and counting conventions too.
 - A chain may be measured as one continuous sequence. Do not copy its result directly into a single-move data table.
 - Moves with a super flash may produce large Total or Recovery values.
 - Projectile active time does not represent all the time the projectile continues flying after the character's measurement ends.
 - Startup and active share the first hitbox Tick. For a basic single move, read `Total = Startup + Active + Recovery − 1`: startup 4, active 3 and recovery 7 give Total 13.
 
 <a id="meaty-timing"></a>
-#### Meaty Timing: check when your attack connects
+### 11.3 Meaty Timing: check when your attack connects
 
-**See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from block stun or hit stun, and air recovery. Test your setup against the dummy’s response, then use this readout to review its timing. It does not automatically judge whether a setup worked or a jump was stopped.
+**See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from block stun or hit stun, and air recovery. Test your setup against the dummy’s response, then use this readout to review its timing.
 
 ![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 3t. On the Frame Meter below, P2's magenta bar sits under the third of P1's four red tiles](images/meaty_timing.png)
 
@@ -1155,7 +1248,7 @@ The readout appears between the basic Tick Data and Action Timeline. `Show Meaty
 ![On the Trainer tab, Show Meaty Timing is indented under Tick Data, with its help text at the bottom](images/meaty_timing_menu.png)
 
 <a id="meaty-timing-strategy"></a>
-##### Choose your attack and timing based on the opponent’s response
+#### Choose your attack and timing based on the opponent’s response
 
 **Hitting as early as possible is not always the best choice.** Choose the attack and its timing based on what you expect the opponent to do.
 
@@ -1183,10 +1276,10 @@ Against a jump, `+0t` targets the opponent **before the jump starts**, while `+2
 
 **Start by fixing the opponent’s response.** Vary when the same attack connects, and compare the Meaty Timing readout with the actual outcome. Once you understand the conditions, mix the opponent’s responses to practice making reads.
 
-Meaty Timing reports contact timing. Whiffs and contacts outside its measurement window leave the previous result on screen, so check that the readout updated for the exchange you just tested.
+Meaty Timing reports contact timing; it does not judge whether a setup worked or a jump was stopped. Whiffs and contacts outside its measurement window leave the previous result on screen, so check that the readout updated for the exchange you just tested.
 
 <a id="meaty-timing-qbee"></a>
-**Q-Bee’s wake-up uses `Actionable`, measured from the first Tick she can start a normal action.** See below for her head-shake invulnerability and timing targets.
+**Q-Bee’s wake-up uses `Actionable`, measured from the first Tick she can start any action, specials and normals alike.** See below for her head-shake invulnerability and timing targets.
 
 <details>
 <summary>Against Q-Bee: Actionable timing and the head shake</summary>
@@ -1204,15 +1297,83 @@ Meaty Timing reports contact timing. Whiffs and contacts outside its measurement
 <summary>Measurement conditions and special readouts</summary>
 
 - The first word is the situation: `Wake-up` (after a knockdown), `After Guard` (block stun), `After Hit` (hit stun) or `Air Recovery` (recovering in the air from a hit).
-- `Reversal +0t` is the contact Tick minus the opponent's reversal Tick. The reversal Tick is the first Tick the opponent can act again, when only blocking and special moves are available: the Tick Frame Meter marks with a magenta bar ([11.6](#frame-meter)). It is not the Tick an input was sent, nor the first Tick a normal can come out. Contact on that same Tick is `+0t`.
+- `Reversal +0t` is the contact Tick minus the opponent's reversal Tick. The reversal Tick is the first Tick the opponent can act again, when only blocking and special moves are available: the Tick Frame Meter marks with a magenta bar ([11.4](#frame-meter)). It is not the Tick an input was sent, nor the first Tick a normal can come out. Contact on that same Tick is `+0t`.
 - `Active 4t` means contact on the fourth active Tick, counted from 1 the way Tick Data counts `Active`: Ticks frozen in hitstop are not counted, and moves that keep animating through hitstop are. For a move with several active periods, `Active 2:3t` is the third Tick of the second one. `Active -` means a projectile or a throw made contact; which Tick of the move that was cannot be told. A projectile's contact reads `-` even while your own attack box is out.
 - For each recovery, the first hit or block from `+0t` to `+30t` is recorded; later hits of the same string do not change it. A contact before the reversal Tick, while the opponent is still in stun, is not recorded. If the opponent's attack struck you first (an invulnerable reversal, for example), the row ends with their side and `Hit First`, such as `P2 Hit First`, instead of `Active`.
 - The opponent is the side opposite `Tick Data Side`. Q-Bee's wake-up is counted as `Actionable` ([above](#meaty-timing-qbee)). Changing characters, the end of a round, loading a state, changing `Tick Data Side` or turning it off clears the row, and a recovery already under way when measuring starts is not measured.
 
 </details>
 
+<a id="frame-meter"></a>
+### 11.4 Frame Meter
+
+**Frame Meter gives you a visual view of normal and special moves.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
+
+With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the three rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
+
+![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 6 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
+
+In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players’ states on the same Tick.
+
+![On the Display tab, Frame Meter : yes opens three indented rows under it](images/frame_meter_menu.png)
+
+| Tile color | State |
+|---|---|
+| Green | Startup; also Dark Force activation |
+| Red | Attack box out, or a throw: a throw has no attack box, so the Ticks the game tries the grab (whiffs included) and the Tick the opponent is grabbed are shown |
+| Blue | Recovery |
+| Yellow | Hit or block stun, or being thrown |
+| Orange | Projectile out |
+| Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup. Not shown while hit, knocked down or getting up |
+| Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change. Not shown while hit, knocked down or getting up |
+| Light blue | Jump or dash (with `Include Jumps / Dashes` ON) |
+| Dark gray | Doing nothing |
+| Magenta bar along the top | Reversal-only Tick: only blocking and special moves are available (see below) |
+| Gray bar along the top | A Tick the character spent frozen in hitstop; left out of the numbers and run counts (see below) |
+| Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
+| Tile borders in yellow-green | PB succeeded |
+
+**The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks.
+
+When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
+
+| Child row | What it does |
+|---|---|
+| `Show Throw Invulnerability` | Marks throw-invulnerable Ticks with stripes on the lower half of the tile (on by default). Display only; the numbers do not change |
+| `Include Jumps / Dashes` | Shows jumps and dashes too (on by default). Off: attacks and hit or block stun only. Walking is not shown either way |
+| `Show P1 Inputs` | Draws P1's inputs above the meter on each Tick they change. While on, hitstop Ticks and the PB window are shown too: inputs are accepted during hitstop, and this is for seeing when yours went in |
+
+Frame Meter counts differently from [Tick Data](#tick-data). Switching the throw-invulnerability or P1-input display does not change the numbers. The developer checked the values using Demitri's 12 standing and crouching normals ([release notes](RELEASE_NOTES.md#v117223)). This does not cover every character or move.
+
+<details>
+<summary>Details of the marks and measurement rules</summary>
+
+The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
+
+**Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
+
+**A magenta bar along the top of a tile marks a reversal-only Tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
+
+**Invulnerability marks use hurtbox data and the game’s invulnerability and strike-acceptance flags.** They do not exactly match the hitbox display: a character can have a visible hurtbox while rejecting ordinary strikes. Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab covers only some forms of invulnerability, so its coverage differs. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF, hitstop Ticks in which neither attacking character advanced are omitted, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
+
+**To make invulnerability during actionable periods easier to see, the meter omits white marks and throw-invulnerability stripes during hit stun, block stun, knockdown and wake-up.** This display rule applies on the ground and in the air; it does not mean those states are always invulnerable. Q-Bee's head shake at the end of her wake-up is shown white from `Actionable +0t`, the first Tick she can act: the hitbox display draws her hurtbox, but ordinary strikes are turned away and she is throw invulnerable.
+
+**Being in hitstop does not always mean an attack has stopped advancing.** Some moves keep animating through hitstop; excluding those Ticks would make their measured active duration too short.
+
+- `Show P1 Inputs` ON: every hitstop Tick is displayed.
+- OFF: a hitstop Tick is kept if either attacking character advanced. It is omitted if neither did.
+- **Among the displayed tiles, a gray top means that character was frozen, so the Tick is excluded from its numbers.** Ticks in which the attack advanced are counted. A column can be kept because the opponent’s attack advanced while your character’s tile has a gray top.
+
+Switching the input display can therefore change the number of visible tiles, but not the measured values.
+
+**PB (Push Block):** on the defender's row, the tile borders join in yellow while the PB window is open. Most of the window falls in hitstop, so it is shown only with `Show P1 Inputs` ON. When a PB succeeds, the borders on the pushing side's row turn yellow-green; that is always shown.
+
+</details>
+
+The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
+
 <a id="action-timeline"></a>
-### 11.3 Action Timeline and Step Wait Ticks
+### 11.5 Action Timeline and Step Wait Ticks
 
 **Action Timeline in Tick Data** displays a sequence of actions so you can examine the total time a setup takes in Ticks, as well as individual move data.
 
@@ -1229,11 +1390,11 @@ The green `ACTION TIMELINE` in Tick Data shows the stages of an action on a shar
 `Show Step Wait Ticks` displays the actual wait between Action Steps. `Step.2 Wait:13` is the measured interval from the preceding step. `Act` is the Ticks spent entering that step's own inputs. `Loop Wait` measures the boundary between passes. This lets you distinguish a configured timing from its measured result.
 
 <a id="air-guard-gaps"></a>
-### 11.4 Air Guard Gaps
-
-**Check `Gap` for time in which you could act. A gap alone does not mean your chosen attack is fast enough.**
+### 11.6 Air Guard Gaps
 
 **This feature visualizes where you could act after air guarding, whether your actual interrupt was well timed and who can act first after landing.** Use it against jump attacks and air-dash attacks as well as air chains.
+
+**Check `Gap` for time in which you could act. A gap alone does not mean your chosen attack is fast enough.**
 
 Enable `Trainer > Show Air Guard Gaps` and air-block the dummy's offense.
 
@@ -1267,7 +1428,7 @@ Change the timing of your air guard against the same attack to compare gaps and 
 
 An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The script and the game count from different starting points. Do not compare those values as if they started from the same Tick.
 
-### 11.5 Other trainers
+### 11.7 Other trainers
 
 | Option | What it measures |
 |---|---|
@@ -1281,73 +1442,9 @@ An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The scri
 | `Show Short Hop Counter (Sas)` | Consecutive Sasquatch short hops |
 | `Show Bishamon UBK Trainer` | Standing/crouching unblockable-range aid on P2 for the supported Bishamon moves |
 
-<a id="frame-meter"></a>
-### 11.6 Frame Meter
+# Appendix
 
-**Frame Meter gives you a visual view of normal and special moves.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
-
-With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the three rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
-
-![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 6 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
-
-In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players’ states on the same Tick.
-
-![On the Display tab, Frame Meter : yes opens three indented rows under it](images/frame_meter_menu.png)
-
-| Tile color | State |
-|---|---|
-| Green | Startup; also Dark Force activation |
-| Red | Attack box out, or a throw: a throw has no attack box, so the Ticks the game tries the grab (whiffs included) and the Tick the opponent is grabbed are shown |
-| Blue | Recovery |
-| Yellow | Hit or block stun, or being thrown |
-| Orange | Projectile out |
-| Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup. Not shown while hit, knocked down or getting up |
-| Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change. Not shown while hit, knocked down or getting up |
-| Light blue | Jump or dash (with `Include Jumps / Dashes` ON) |
-| Dark gray | Doing nothing |
-| Magenta bar along the top | Reversal-only tick: only blocking and special moves are available (see below) |
-| Gray bar along the top | A Tick the character spent frozen in hitstop; left out of the numbers and run counts (see below) |
-| Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
-| Tile borders in yellow-green | PB succeeded |
-
-**The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks.
-
-When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
-
-| Child row | What it does |
-|---|---|
-| `Show Throw Invulnerability` | Marks throw-invulnerable Ticks with stripes on the lower half of the tile (on by default). Display only; the numbers do not change |
-| `Include Jumps / Dashes` | Shows jumps and dashes too (on by default). Off: attacks and hit or block stun only. Walking is not shown either way |
-| `Show P1 Inputs` | Draws P1's inputs above the meter on each Tick they change. While on, hitstop Ticks and the PB window are shown too: inputs are accepted during hitstop, and this is for seeing when yours went in |
-
-Frame Meter counts differently from [Tick Data](#tick-data). Switching the throw-invulnerability or P1-input display does not change the numbers. The [v11.7.22.3 release notes](RELEASE_NOTES.md#v117223) report that the developer checked the values using Demitri's 12 standing and crouching normals. This does not cover every character or move.
-
-<details>
-<summary>Details of the marks and measurement rules</summary>
-
-The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
-
-**Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
-
-**A magenta bar along the top of a tile marks a reversal-only tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
-
-**Invulnerability marks use hurtbox data and the game’s invulnerability and strike-acceptance flags.** They do not exactly match the hitbox display: a character can have a visible hurtbox while rejecting ordinary strikes. Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab covers only some forms of invulnerability, so its coverage differs. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF, hitstop Ticks in which neither attacking character advanced are omitted, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
-
-**To make invulnerability during actionable periods easier to see, the meter omits white marks and throw-invulnerability stripes during hit stun, block stun, knockdown and wake-up.** This display rule applies on the ground and in the air; it does not mean those states are always invulnerable. Q-Bee's head shake at the end of her wake-up is shown white from `Actionable +0t`, the first Tick she can act: the hitbox display draws her hurtbox, but ordinary strikes are turned away and she is throw invulnerable.
-
-**Being in hitstop does not always mean an attack has stopped advancing.** Some moves keep animating through hitstop; excluding those Ticks would make their measured active duration too short.
-
-- `Show P1 Inputs` ON: every hitstop Tick is displayed.
-- OFF: a hitstop Tick is kept if either attacking character advanced. It is omitted if neither did.
-- **Among the displayed tiles, a gray top means that character was frozen, so the Tick is excluded from its numbers.** Ticks in which the attack advanced are counted. A column can be kept because the opponent’s attack advanced while your character’s tile has a gray top.
-
-Switching the input display can therefore change the number of visible tiles, but not the measured values.
-
-**PB (Push Block):** on the defender's row, the tile borders join in yellow while the PB window is open. Most of the window falls in hitstop, so it is shown only with `Show P1 Inputs` ON. When a PB succeeds, the borders on the pushing side's row turn yellow-green; that is always shown.
-
-</details>
-
-The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
+Display and game settings, saving and updates, troubleshooting and the glossary.
 
 <a id="12-options"></a>
 ## 12. Display and game settings
@@ -1370,7 +1467,7 @@ Enable only the readouts you need under `Display`.
 | `Show Button Releases` | Marks button releases |
 | `Hide Negative Edge Inputs` | Omits columns with no new input; does not remove dedicated release markers |
 | `Show P2 Inputs` | Dummy inputs on the right |
-| `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Turning it on opens three more rows under it ([11.6](#frame-meter)) |
+| `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Turning it on opens three more rows under it ([11.4](#frame-meter)) |
 
 Child options are hidden when their parent is OFF. The GC input bar requires `Show Scrolling Input`; some other readouts require `HUD (Life / Meter)`.
 
@@ -1389,7 +1486,7 @@ With Anakaris as the dummy, `Pit of Blame` offers `None / Normal / ES / Random`.
 
 `Analysis` provides internal timers for invulnerability, throw invulnerability, PB and other states. Leave these OFF for ordinary practice unless you need them.
 
-`Random Guard Action % Check` checks how often `Random Guard Action %` allows the dummy to act. It shows the setting, the number of opportunities (`opp`) and how many passed the probability check (`roll+`). After eight chances it turns green when the measured rate is within five percentage points of the setting, and red otherwise. It was the GC Frequency Counter on the Trainer tab before v11.7.16.1.
+`Random Guard Action % Check` checks how often `Random Guard Action %` allows the dummy to act. It shows the setting, the number of opportunities (`opp`) and how many passed the probability check (`roll+`). After eight chances it turns green when the measured rate is within five percentage points of the setting, and red otherwise.
 
 `Knockdown Logger` writes diagnostic logs under `scripts/reversal_logs`, including air-guard situations. `Show Pursuit Indicator` is explicitly marked incomplete; do not rely on it as a definitive OTG eligibility indicator.
 
@@ -1430,7 +1527,7 @@ When resetting settings for diagnosis, move the JSON aside instead of deleting i
 | Dummy actions or readouts behave incorrectly | Whether you launched the separate training copy and selected `Video > Runahead > Disabled`. The absence of a warning does not confirm that Runahead is disabled. If a red warning appears, recheck the setting and installation, then restart |
 | Menu will not open | Whether the match has started and `Lua Hotkey 1` is assigned; do not rely on Start to open the menu |
 | Dummy will not block | Check `Random Guard %` as well as `Guard`; an orange row means it is 0%. Set it to 100% |
-| Dummy will not respond | `Random Guard Action %` (an orange row means 0%), whether the required button is None, and whether a trigger occurred |
+| Dummy will not respond | `Random Guard Action %` (an orange row means 0%), whether the required button is None, and whether a trigger occurred ([how the dummy works](#dummy-model)) |
 | Response or step timing changes every time, or is never the fastest | Whether `Random Start Wait` (one setting shared by Dummy and Recording), the Specified `Random Delay` and each step's `Random Delay` are 0. For the earliest normal or special under Specified, also set `Button Wait = 0`; for Action Steps, check the Wait condition |
 | Steps will not run | `Guard Action Type`, `Random Guard Action %`, whether you saved, and whether this is the current dummy's list |
 | Patterns will not run | At least one `[x]`, the correct dummy character and `Random Guard Action %` above 0% |
@@ -1455,7 +1552,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 |---|---|
 | PB / Push Block | The defensive mechanic that pushes the opponent away while blocking |
 | GC / Guard Cancel | Guard cancel |
-| Tick / t | Internal frame: Normal has one Tick per displayed frame; Turbo 3 has four Ticks in three displayed frames |
+| Tick / t | Internal frame; see [11.1](#ticks-and-frames) for how it relates to displayed frames |
 | Frame | Displayed/emulator frame in this guide; check the option's label and description |
 | Forward / Back | Relative to the character's facing, unlike screen-left/right position shortcuts |
 | 1P side / 2P side | Screen left / right. Your character is on the 1P side on the left (facing right) and on the 2P side on the right (facing left). Not the same as players P1 / P2 |
@@ -1465,23 +1562,24 @@ For reports, include version, P1/P2 characters, which character is on each side,
 | 360 | One full-circle stick motion, 360 degrees |
 | 720 | Two full-circle stick motions, 720 degrees |
 | Hold | Maintain the direction until the next step |
-| Trigger | An event that starts a sequence |
+| Trigger | An event that starts a sequence ([how the dummy works](#dummy-model)) |
 
 <a id="verification-scope"></a>
 ### Reference version and sources
 
-> This manual was checked against the target version's source code and release notes. The procedures were not tested in an emulator during preparation of this document. Example drills do not guarantee success with every character or setup.
+> This manual was checked against the target version's source code and release notes. The procedures in it were not run through in an emulator as a whole. What was confirmed in the game is noted in each release-notes entry. Example drills do not guarantee success with every character or setup.
 
-- Documentation updated and checked for consistency: 2026-10-06. This does not include testing the procedures in an emulator.
+- Documentation updated: 2026-10-09. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.23.1; labels checked 2026-10-04. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.24. On 2026-10-09 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).
 - Recording: [recordingWizard.lua](../scripts/recordingWizard.lua), [macro.lua](../scripts/macro.lua).
 - Steps/patterns: [actionSequenceEditor.lua](../scripts/actionSequenceEditor.lua), [actionSequenceRunner.lua](../scripts/actionSequenceRunner.lua).
 - PB/GC displays: [hud.lua](../scripts/hud.lua), [guardCancel.lua](../scripts/guardCancel.lua), [inputHistory.lua](../scripts/inputHistory.lua), [gcStats.lua](../scripts/gcStats.lua).
-- Measurements: [tickData.lua](../scripts/tickData.lua), [airGuardGap.lua](../scripts/airGuardGap.lua).
+- Measurements: [tickData.lua](../scripts/tickData.lua), [meatyTiming.lua](../scripts/meatyTiming.lua), [framemeter.lua](../scripts/framemeter.lua), [airGuardGap.lua](../scripts/airGuardGap.lua).
+- Side switches (10.F): [inputOrientation.lua](../scripts/inputOrientation.lua).
 
 When labels or behavior change in a later version, update the affected sections and reference version.

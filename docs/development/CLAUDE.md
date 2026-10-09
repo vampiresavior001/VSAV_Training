@@ -194,6 +194,10 @@ python -c "s=open('FILE',encoding='utf-8',newline='').read(); c=s.count(chr(13)+
 走らせ方は `lua5.1 scripts/tests/<name>.lua` とだけ書けばよく、run_all_tests.py の
 判定もそこしか見ていない。絶対パスの例を書いてよいのは配られない `analysis/` だけ。
 
+**リリースノートは、版の見出しのすぐ下に要点を 1〜2 行書く。** 項目の見出しは「新機能：」「変更：」
+「修正：」「マニュアル」で始める (v11.7.24 から。2026-10-09、本人)。過去の版は書き直さない。
+マニュアルの用語は「Tick」(「ティック」と書かない)。
+
 ## GitHub への公開手順
 
 公開先は `origin` = `https://github.com/vampiresavior001/VSAV_Training.git`、

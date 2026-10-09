@@ -34,6 +34,13 @@
 -- Kept apart, every list is one motion with at most one button on its last
 -- entry, which is the shape the hold was written for.
 local M = {}
+-- Auto-Flip Inputs on Side Switch: one arm or one Loop Steps lap is one run,
+-- and every segment queued for it carries the run's id (inputOrientation.lua).
+local _io_ok, inputOrientation = pcall(require, "./scripts/inputOrientation")
+-- The offline tests run from scripts/; anything else that fails here fails loudly.
+if not _io_ok then inputOrientation = require "./inputOrientation" end
+-- guardCancel.lua reaches it through here (its main chunk has no local to spare).
+M.orientation = inputOrientation
 
 local WAIT_AUTO = -1
 local TIMING_CHAIN = "chain"
@@ -1476,6 +1483,8 @@ function M.cancel()
 	-- the next time the mode was selected the walker asserted it before
 	-- anything had been armed.
 	held_after = nil
+	-- Interrupted: the facing it kept goes too.
+	inputOrientation.steps_end()
 end
 
 -- Steps still waiting. Zero and nil read the same to the caller.
@@ -1493,6 +1502,7 @@ function M.arm(which)
 	rd_head = nil
 	local sched = M.schedule(which)
 	if sched == nil then return nil end
+	inputOrientation.steps_begin()
 	pending = {}
 	for i = 2, #sched do pending[#pending + 1] = sched[i] end
 	if #pending == 0 then pending = nil end
@@ -1677,6 +1687,7 @@ function M.arm_deferred(which, o)
 	local first = start_steps(sched[1], o or {})
 	if first == nil then return false end
 	start_reset()
+	inputOrientation.steps_begin()
 	pending = first
 	for i = 2, #sched do pending[#pending + 1] = sched[i] end
 	loop_sched = sched
@@ -1694,6 +1705,7 @@ function M.arm_oneshot(owner, list, o)
 	                            op_ticks = list_ticks(list) }, o or {})
 	if first == nil then return false end
 	start_reset()
+	inputOrientation.steps_begin()
 	pending = first
 	loop_sched = nil
 	loop_which = nil
@@ -2289,6 +2301,10 @@ local function service_body(defender)
 	rd_head = nil
 
 	M.steps_fired = M.steps_fired + 1
+	-- A Loop Steps lap is a run of its own. Its step one is queued only once
+	-- the last lap's last segment has been delivered (queue_input_sequence
+	-- waits for the slot), so nothing of that lap is resolved under this one.
+	if step.is_loop then inputOrientation.steps_begin() end
 	queue_input_sequence(defender, step.sequence)
 	-- Hand it to the tick hook rather than the frame path. Tagged after
 	-- queueing because queue_input_sequence builds the record; without this the
@@ -2298,6 +2314,7 @@ local function service_body(defender)
 	if q ~= nil then
 		q.seq_tick = true
 		q.tick_held = 0
+		q.orient_run = inputOrientation.steps_run()
 		-- AIMED AT A TOUCHDOWN THAT HAS NOT HAPPENED YET.
 		--
 		-- lead is the cost of every entry BUT THE LAST (lead_ticks), so the

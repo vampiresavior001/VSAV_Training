@@ -4,9 +4,9 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 [English](README.md) | 日本語
 
-**内部フレーム（Tick）単位で相手の動きを再現し、攻めの検証と守りの練習に使える、Fightcade 2／FBNeo用トレーニングモードです。** 自分では出せない相手の動きを練習相手にし、入力や当たり方を見ながら、自分の対処を改善できます。
+**自分では出せない相手の動きを、内部フレーム単位で指定してダミーに再現させ、守りの練習と攻めの検証ができる、Fightcade 2／FBNeo用のトレーニングモードです。** 入力がどこで受け付けられたか、攻撃がいつ当たったかを画面で確かめながら、自分の対処を直せます。
 
-[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.23.1** です。
+[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.24** です。
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [守りを練習する](#first-ag-drill) · [起き攻めを調べる](docs/PLAYER_MANUAL.ja.md#wakeup-pressure-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
 
@@ -16,51 +16,51 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 左：遅らせAGでも6回入力できたかを確認。右：GCの方向入力やボタンが、どこまで受け付けられたかを確認。各表示の読み方は[画面の見方](docs/PLAYER_MANUAL.ja.md#screen-map)へ。
 
-## Tick単位で、再現・練習・改善する
+## 再現して、練習して、直す
 
-Tickはゲームの内部フレームです。本フォークは、この内部フレームに合わせてダミーの入力を制御します。
-
-| ゲーム速度 | 表示フレームと内部フレームの関係 |
-|---|---|
-| ノーマル | 表示1フレーム＝1 Tick |
-| ターボ3 | 表示3フレーム＝4 Tick |
-
-1. **相手を再現する。** 自分では難しい操作も、Action Stepsで動作とタイミングを指定するだけで再現できます。「最速ダッシュからの最速攻撃」「中足払いキャンセル天雷破」など、達人の動きを練習相手にできます。起き上がり・ガード後・着地後には、必殺技のリバーサルだけでなく、**小技・投げによる暴れ、ジャンプ、ダッシュ**も指定できます。
-2. **練習する。** 同じ攻めを繰り返させて、AG・GC・空中ガード後の割り込みを試します。
-3. **結果を見て直す。** 入力が受付のどこに入ったか、どこで遅れたかを画面で確かめ、次の入力を直します。PB StatsとGC Statsで、成功率と入力時間の変化も追えます。
-
-行動ごとの最速入力の条件は[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)を参照してください。
-
-### 成功・失敗だけでは分からない、入力の中身を見る
-
-ヴァンパイア セイヴァーでは、AGの成立判定やGCコマンドの入力受付猶予に乱数が関わります。同じつもりの操作でも成功したり失敗したりするため、結果だけでは入力のどこを改善すべきか判断しにくいことがあります。
-
-**PB CounterとGC Command Traceは、その振り返りを助けるための機能です。** AGでは「いつ、何回の有効入力が入ったか」、GCでは「どの方向・ボタンが受け付けられ、どこで受付が切れたか」を確認できます。一度の成功・失敗に加え、受け付けられた入力とタイミングを見て、次に直す点を判断します。
-
-![AGの入力回数・タイミング・同時押しと練習結果を示すPB Counter／PB Stats](docs/images/pb_counter_stats.png)
-
-この例では、受付の5～13 Tick目に6回入力してAGが成立しています。**6回入力が安定したら、入力開始を少し遅らせても6回を保てるか試します。** 足りないときは、同時押しや受付終了後の入力を確認できます。英語UIのPush Block／PBはAGを指します。詳しい読み方は[AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)へ。
+1. **相手を再現する。** 中足払いキャンセル天雷破のような、自分では難しい動きも、Action Stepsで動作とタイミングを指定すればダミーが再現します。起き上がり・ガード後・着地後には、必殺技のリバーサルだけでなく、**小技・投げによる暴れ、ジャンプ、ダッシュ**も出させられます。
+2. **練習する・試す。** 同じ攻めを繰り返させてAG・GC・空中ガード後の割り込みを練習したり、自分の起き攻めや連係を、決まった反撃に当てて試したりします。
+3. **結果を見て直す。** 入力が受付のどこに入ったか、攻撃が何Tick目に当たったかを画面で確かめ、次の一手を直します。PB Stats（英語UIのPBはAGのこと）とGC Statsで、成功率と入力時間の変化も追えます。
 
 ## 何を調べ、練習できるか
+
+### 守りを練習する
+
+| 目的 | 使い方 |
+|---|---|
+| **AGの押し方を直す** | [PB Counter](docs/PLAYER_MANUAL.ja.md#08-pb)で、受付のどこで何回押したかを見る。PB Statsで成功率と平均も追える |
+| **GCの失敗原因を見つける** | [GC Command Trace](docs/PLAYER_MANUAL.ja.md#09-gc)で、どの方向・ボタンが受け付けられ、どこで切れたかを見る。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右の成功率を比べる |
+| **実戦に近い守りを練習する** | 複数の攻めや入力タイミングをランダムにし、固定のリズムに頼らずAG・GCする。[設定の使い分け](docs/PLAYER_MANUAL.ja.md#dummy-button-timing) |
+| **空中ガード後の攻防を調べる** | [Air Guard Gaps](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)で、空中チェーンの隙間、割り込みタイミング、着地後の有利不利を確認する |
+
+### 攻めを調べる
 
 | 目的 | 使い方 |
 |---|---|
 | **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
-| **実戦に近い守りを練習する** | 複数の攻めや入力タイミングをランダムにし、固定のリズムに頼らずAG・GCする。[設定の使い分け](docs/PLAYER_MANUAL.ja.md#dummy-button-timing) |
 | **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
-| **空中ガード後の攻防を調べる** | [Air Guard Gaps](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)で、空中チェーンの隙間、割り込みタイミング、着地後の有利不利を確認する |
+| **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
 
-**Tick Data**は、従来の表示フレーム単位の測定で生じていたターボによる数値の揺れを抑え、発生・持続・戻り・有利不利の数え方・考え方を攻略サイトのフレームデータに合わせています。測定条件とAction Timelineの読み方は[マニュアル11章](docs/PLAYER_MANUAL.ja.md#10-data)で説明しています。
+![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンの起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-**技の性質をグラフィカルに見る：** [Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)は、通常技や必殺技の発生・攻撃判定・戻り・無敵などを色分けされた帯で表示します。数値とあわせて、色や長さで技の流れをつかみたい方に向いています。
+デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pが、モリガンの起き上がりに `Reversal +0t`（リバーサルTickちょうど）で重なった例です。すぐ着地するので、リバーサルのシャドウブレイドも地上でガードできる詐欺飛びになります。手順は[起き攻めの練習レシピ](docs/PLAYER_MANUAL.ja.md#safe-jump-example)へ。
 
-### 手軽な記録と、精密な動作指定を使い分ける
+### 技の性能を見る
 
-自分で操作できる動きは、**[Recording Wizard](docs/PLAYER_MANUAL.ja.md#05-recording)**で手軽に記録できます。操作の開始から終了までを自動で記録し、確認して保存できます。
+| 目的 | 使い方 |
+|---|---|
+| **数値で見る** | [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)で、発生・持続・戻り・有利不利を内部フレーム単位で測る。数え方・考え方は攻略サイトのフレームデータに合わせている |
+| **色の帯で見る** | [Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)で、発生・攻撃判定・戻り・無敵などを、両プレイヤーとも1 Tickごとのマスで並べて見る |
 
-**記録・再生は表示フレーム単位です。** 自分では難しい操作や、Tick単位の正確なタイミングはAction Stepsで定義してください。
+### 練習相手を作る
 
-**Action Stepsで一連の動きを定義し、Action Patternsで複数を保存・管理してランダムに実行できます。**
+ダミーは、ガードした後・攻撃を受けた後・起き上がりなどのきっかけで、ここで作った行動を出します（[ダミーが動くしくみ](docs/PLAYER_MANUAL.ja.md#dummy-model)）。記録は、きっかけを待たずに再生することもできます。
+
+| 目的 | 使い方 |
+|---|---|
+| **自分で操作できる動きを使う** | [Recording Wizard](docs/PLAYER_MANUAL.ja.md#05-recording)で、操作の開始から終了までを自動で記録し、確認して保存する |
+| **自分では難しい動きを再現する** | [Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)で、動作とタイミングをTick単位で指定する |
+| **複数の動きをランダムに出す** | [Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)で、作った動きを名前付きで保存し、使う候補からランダムに実行する |
 
 ## Windowsでの導入
 
@@ -122,19 +122,42 @@ Tickはゲームの内部フレームです。本フォークは、この内部�
 4. **連続で練習する。** `Loop Steps = yes`、`Loop Wait = Auto (Landing)`にして、着地からショートダッシュ小Pを繰り返させます。
 5. **自分の練習へ広げる。** 取り込んだパターンは次回も使えます。慣れたらAction Stepsで別の攻めを作り、Action Patternsに保存して、複数候補のランダム練習へ発展させられます。
 
+## 成功・失敗だけでは分からない、入力の中身を見る
+
+ヴァンパイア セイヴァーでは、AGの成立判定やGCコマンドの入力受付猶予に乱数が関わります。同じつもりの操作でも成功したり失敗したりするため、結果だけでは入力のどこを改善すべきか判断しにくいことがあります。
+
+**PB CounterとGC Command Traceは、その振り返りを助けるための機能です。** AGでは「いつ、何回の有効入力が入ったか」、GCでは「どの方向・ボタンが受け付けられ、どこで受付が切れたか」を確認できます。一度の成功・失敗に加え、受け付けられた入力とタイミングを見て、次に直す点を判断します。
+
+![AGの入力回数・タイミング・同時押しと練習結果を示すPB Counter／PB Stats](docs/images/pb_counter_stats.png)
+
+この例では、受付の5～13 Tick目に6回入力してAGが成立しています。**6回入力が安定したら、入力開始を少し遅らせても6回を保てるか試します。** 足りないときは、同時押しや受付終了後の入力を確認できます。詳しい読み方は[AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)へ。
+
+## なぜTick単位なのか
+
+Tickはゲームの内部フレームです。ターボ3では表示3フレームの間に4 Tick進むので、表示フレームで数えると、入力のタイミングも技の測定値もずれることがあります。本フォークは、この内部フレームに合わせてダミーの入力を制御します。
+
+| ゲーム速度 | 表示フレームと内部フレームの関係 |
+|---|---|
+| ノーマル | 表示1フレーム＝1 Tick |
+| ターボ3 | 表示3フレーム＝4 Tick |
+
+行動ごとの最速入力の条件は[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)を参照してください。
+
+**記録・再生は表示フレーム単位です。** Tick単位の正確なタイミングが必要な動きは、Action Stepsで定義してください。一方、**Tick Data**などの測定はTick単位で、従来の表示フレーム単位の測定で生じていたターボによる数値の揺れを抑えています。測定条件と読み方は[マニュアル11章](docs/PLAYER_MANUAL.ja.md#10-data)で説明しています。
+
+ただし、ダッシュ系の既存トレーナーなど、表示フレームで数える表示も残っています。どの表示がどちらの単位かは、[マニュアル11.1](docs/PLAYER_MANUAL.ja.md#ticks-and-frames)の一覧を確認してください。
+
 ## マニュアル
 
 **[日本語プレイヤーマニュアル](docs/PLAYER_MANUAL.ja.md)** に、操作・設定・表示の読み方をまとめています。
 
 - **相手を作る：** [ダミーのガード・受け身・反撃](docs/PLAYER_MANUAL.ja.md#04-dummy)、[記録とループ再生](docs/PLAYER_MANUAL.ja.md#05-recording)、[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)、[Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)
 - **練習する：** [AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)、[GC練習](docs/PLAYER_MANUAL.ja.md#09-gc)、[目的別の練習レシピ](docs/PLAYER_MANUAL.ja.md#11-drills)
-- **調べる：** [Tick Data・空中ガードの分析](docs/PLAYER_MANUAL.ja.md#10-data)、[困ったとき](docs/PLAYER_MANUAL.ja.md#14-troubleshooting)
+- **調べる：** [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)、[Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)、[空中ガードの分析](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)、[困ったとき](docs/PLAYER_MANUAL.ja.md#14-troubleshooting)
 
 ### 対応範囲
 
 このREADMEの導入手順はWindows向けです。Linux用の起動スクリプトも同梱していますが、本フォークの全機能についてLinux／macOSで動作することは、このREADMEの作成時には確認していません。Action Patternsの名前入力・ファイル選択はWindows向けの実装です。
-
-時間表示には、内部フレームを使うものと表示フレームを使うものがあります。ダッシュ系の既存トレーナーなども含め、すべての表示がTickに統一されているわけではありません。単位は[マニュアル](docs/PLAYER_MANUAL.ja.md#10-data)を確認してください。
 
 ## 更新とバックアップ
 
@@ -159,7 +182,7 @@ FBNeoを終了する前に編集内容を保存し、次のファイルをバッ
 
 ## フォーク元・クレジット
 
-本プロジェクトは、[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基にしています。フォーク元にも記録・反撃設定・AGカウンター・GC受付表示があります。本フォークはそれらを土台に、動作再現の精度と振り返りの詳しさを拡張しています。[機能比較](docs/PLAYER_MANUAL.ja.md)も参照してください。基盤となるトレーニングモードと、各スクリプトを作成・改善してきた貢献者、VSAVコミュニティに感謝します。
+本プロジェクトは、[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基にしています。フォーク元にも記録・反撃設定・AGカウンター・GC受付表示があります。本フォークはそれらを土台に、動作再現の精度と振り返りの詳しさを拡張しています。[機能比較](docs/PLAYER_MANUAL.ja.md#fork-comparison)も参照してください。基盤となるトレーニングモードと、各スクリプトを作成・改善してきた貢献者、VSAVコミュニティに感謝します。
 
 Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter)から取り込みました。
 

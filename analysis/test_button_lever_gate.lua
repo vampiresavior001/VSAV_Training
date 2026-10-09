@@ -135,6 +135,9 @@ print("[3] ga_sequence - 空のシーケンスは何も出さない")
 local runner_list = nil
 actionSequenceRunnerModule.arm = function() return runner_list end
 make_input_sequence = function(stick, button) return { { stick, button } } end
+-- Auto-Flip Inputs on Side Switch (2026-10-09): ga_sequence starts a run for a
+-- Specified list and leaves the list and its run on GA for the queue to tag.
+actionSequenceRunnerModule.orientation = dofile("inputOrientation.lua")
 assert(loadstring((slice("local function ga_sequence(", "\nend\n"):gsub("^local ", ""))))()
 globals.dummy.guard_action = "sequence"
 runner_list = nil
@@ -142,8 +145,11 @@ eq("リストが無ければ nil (Specified の動きではない)", ga_sequence
 runner_list = { { "forward" } }
 eq("リストがあればそのリスト", ga_sequence("up-forward", "HK", "", 0), runner_list)
 globals.dummy.guard_action = "reversal"
+local run_before = actionSequenceRunnerModule.orientation.steps_run() or 0
 local spec = ga_sequence("up-forward", "HK", "", 0)
 eq("Specified は設定の動き", spec and spec[1] and spec[1][1], "up-forward")
+eq("Specified は新しい回を始める", (actionSequenceRunnerModule.orientation.steps_run() or 0) > run_before, true)
+eq("渡したリストとその回を GA に残す", GA.af_list == spec and GA.af_run == actionSequenceRunnerModule.orientation.steps_run(), true)
 
 -- ---------------------------------------------------------------------------
 print("[4] 咎めの穴はアナカリスのときだけ")

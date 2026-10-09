@@ -1,3 +1,9 @@
+-- Auto-Flip Inputs on Side Switch: the frame path reads the facing a run
+-- kept, as guardCancel.lua's facing_for_input does (inputOrientation.lua).
+local _io_ok, inputOrientation = pcall(require, "./scripts/inputOrientation")
+-- The offline tests run from scripts/; anything else that fails here fails loudly.
+if not _io_ok then inputOrientation = require "./inputOrientation" end
+
 function swap_inputs(_out_input_table)
   function swap(_input)
     local carry = _out_input_table["P1 ".._input]
@@ -965,6 +971,9 @@ function process_pending_input_sequence(_player_obj, _input, delay)
       _face = 0
     end
   end
+  -- Auto-Flip Inputs on Side Switch off: the run's kept facing. Read only -
+  -- the tick path, a tick ahead of this one, is what fixes it.
+  _face = inputOrientation.steps_face(_face, _player_obj.pending_input_sequence.orient_run, false)
   local _flip = _face ~= 0
 
   -- REMOVED (v38): a block here used to return early once the character was

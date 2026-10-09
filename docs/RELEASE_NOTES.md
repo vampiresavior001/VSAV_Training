@@ -6,6 +6,36 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.24
+
+You can now see, on the dummy, what the same input turns into after a
+cross-up. The README and the manual are reorganized so the feature you are
+after is easier to find.
+
+### New: study option selects on a side switch
+
+- Set `Auto-Flip Inputs on Side Switch = no` on the Dummy or Recording tab, and
+  the dummy keeps holding the left and right it started the input with, like a
+  player who keeps the lever the same way while getting crossed up. The default
+  stays `yes`, the behavior so far
+- Applies to recording playback, Action Steps, Action Patterns and the
+  Specified reversal and counter. See
+  [10.F](PLAYER_MANUAL.en.md#side-switch-os) for how to use it and the details
+
+### Manual and README
+
+- The README now opens with what the tool does and what you can test and
+  practice. Demitri's safe jump, with a screenshot, shows how to examine your
+  offense (also in manual recipe 10.B)
+- Some manual section numbers changed. Section 11 now runs 11.3 Meaty Timing,
+  11.4 Frame Meter, 11.5 Action Timeline, 11.6 Air Guard Gaps and 11.7 Other
+  trainers, and Sections 12 to 15 form an appendix. Existing links still work
+- Part 2 opens with how the dummy works, and "Choose what to practice" uses the
+  README's four groups: defense, offense, examining moves and building the
+  opponent
+
+---
+
 ## v11.7.23.1
 
 ### Meaty Timing: the opponent's answer, and Q-Bee's wake-up

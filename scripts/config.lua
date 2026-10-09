@@ -143,6 +143,10 @@ local default_training_settings = {
   loop_interval_before_frames = 0,
   loop_interval_after_frames = 0,
   restore_recorded_position = false,
+  -- AUTO-FLIP INPUTS ON SIDE SWITCH (inputOrientation.lua). On, as in every
+  -- version before it: the dummy's automated inputs follow a side switch. A
+  -- settings file without the key reads on.
+  auto_flip_inputs = true,
   display_pb_stats = false,
   -- OFF, like the GC Command Trace it sits with. Counting runs either way.
   display_gc_stats = false,

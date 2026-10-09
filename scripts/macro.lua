@@ -549,6 +549,11 @@ local function rsw_roll()
 	return 0
 end
 local playback_facing = nil      -- from the header of the file being played
+-- One more each time a playback starts (Play Recording, a Looped Playback
+-- pass, a Recording guard action). inputOrientation.lua keeps the facing of
+-- one playback under its number, so a pass that restarts on the same frame the
+-- last one ended is still a new one.
+local playback_serial = 0
 
 function get_playback_facing()
 	return playback_facing
@@ -932,6 +937,7 @@ function stop_macro_playback()
 end
 function start_macro_playback()
 		playing = true
+		playback_serial = playback_serial + 1
 end
 
 local function playcontrol(silent)
@@ -972,6 +978,7 @@ local function playcontrol(silent)
 		end
 		dostate(frame)
 		playing = true
+		playback_serial = playback_serial + 1
 		framediff = emu.framecount()
 	else 
 		playing = false
@@ -1283,6 +1290,7 @@ macroLuaModule = {
 			start_wait = nil
 			dostate(frame)
 			playing = true
+			playback_serial = playback_serial + 1
 			framediff = emu.framecount()
 		end
 
@@ -1384,6 +1392,7 @@ macroLuaModule = {
 				["start_macro_playback"] = start_macro_playback,
 				["recording"] = recording,
 				["playing"] = playing,
+				["playback_serial"] = playback_serial,
 				-- Waiting out a Random Start Wait. Nothing is playing yet, so
 				-- the dummy's own settings still drive it; asking for playback
 				-- again in this state would call it off (playcontrol toggles).

@@ -83,9 +83,15 @@ print("[4] 印が付いた列だけ facing_for_input が $b を読む")
 -- guardCancel 側は 20 箇所以上から entry_to_bits を呼ぶので、フラグは
 -- 引き回さず「いま配っている列」に訊いている。その形を固定する。
 local gsrc = io.open("guardCancel.lua"):read("*a")
-local fs = gsrc:find("local function facing_for_input()", 1, true)
+-- The live facing moved to GA.af_live (2026-10-09); facing_for_input passes it
+-- through inputOrientation for Auto-Flip Inputs on Side Switch.
+local fs = gsrc:find("function GA.af_live()", 1, true)
 local fe = gsrc:find(NL .. "end", fs, true)
-eq("facing_for_input がある", fs ~= nil, true)
+eq("facing_for_input がある (今の向きは GA.af_live)", fs ~= nil, true)
+local ws = gsrc:find("local function facing_for_input(_press)", 1, true)
+local we = ws and gsrc:find(NL .. "end", ws, true)
+eq("facing_for_input は GA.af_live を inputOrientation に通す",
+   ws ~= nil and gsrc:sub(ws, we):find("orientation.steps_face(GA.af_live(), GA.af_run_now()", 1, true) ~= nil, true)
 local body = gsrc:sub(fs, fe)
 eq("配送中の列に訊いている",
    body:find("pending_input_sequence", 1, true) ~= nil, true)

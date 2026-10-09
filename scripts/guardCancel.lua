@@ -1,5 +1,9 @@
 local debugKnockdownModule = require "./scripts/debugKnockdown"
 local actionSequenceRunnerModule = require "./scripts/actionSequenceRunner"
+-- Auto-Flip Inputs on Side Switch (see facing_for_input) reaches
+-- inputOrientation.lua through actionSequenceRunnerModule.orientation and keeps
+-- its helpers on GA as af_*: this file's main chunk is at Lua's 200-local
+-- limit, so it adds no local of its own.
 
 local function maybe(x)
 	if 100 * math.random() < x then 
@@ -1342,15 +1346,37 @@ function GA.button()
 	return globals.dummy.counter_attack_button
 end
 
+-- GA.af_list / .run: the list ga_sequence last handed out and the run it
+-- starts (Auto-Flip Inputs on Side Switch), so the queue that takes it can tag
+-- the record.
 local function ga_sequence(_stick, _button, _delay_type, _delay)
+	local _list
 	if globals.dummy.guard_action == 'sequence' then
 		-- NOTHING TO RUN IS NOTHING (v11.7.21.3). An empty Action Steps list or
 		-- no pattern ticked used to fall through to the Specified motion and
 		-- button below - rows hidden on these types, so the dummy did whatever
 		-- a Specified session last left there (an up-forward HK, say).
-		return actionSequenceRunnerModule.arm("reversal")
+		-- The arm starts the run.
+		_list = actionSequenceRunnerModule.arm("reversal")
+	else
+		_list = make_input_sequence(_stick, _button, _delay_type, _delay)
+		if _list ~= nil then actionSequenceRunnerModule.orientation.steps_begin() end
 	end
-	return make_input_sequence(_stick, _button, _delay_type, _delay)
+	GA.af_list = _list
+	GA.af_run = (_list ~= nil) and actionSequenceRunnerModule.orientation.steps_run() or nil
+	return _list
+end
+
+-- Queues a guard action's list and, when it is the one ga_sequence handed out,
+-- tags the new record with its run. queue_input_sequence does nothing while
+-- the slot is taken, so a record that was already there is left alone.
+function GA.af_queue(_defender, _list, _hold_last)
+	local _before = _defender.pending_input_sequence
+	queue_input_sequence(_defender, _list, _hold_last)
+	local _q = _defender.pending_input_sequence
+	if _q ~= nil and _q ~= _before and _list ~= nil and _list == GA.af_list then
+		_q.orient_run = GA.af_run
+	end
 end
 
 -- Ticks before the actionable tick to arm the LANDING branch. Returns the
@@ -2127,7 +2153,7 @@ local function facing_unsettled()
 	return memory.readbyte(0xFF880B) ~= side_flag_now()
 end
 
-local function facing_for_input()
+function GA.af_live()
 	if memory.readbyte(0xFF8838) ~= 0 or memory.readbyte(0xFF8915) ~= 0 then
 		return memory.readbyte(0xFF880B)
 	end
@@ -2161,6 +2187,33 @@ local function facing_for_input()
 		return memory.readbyte(0xFF880B)
 	end
 	return side_flag_now()
+end
+
+-- AUTO-FLIP INPUTS ON SIDE SWITCH (user, 2026-10-09; inputOrientation.lua).
+--
+-- Off, a run keeps the facing its first input was resolved under, so after a
+-- side switch the same left / right goes in and the game reads it against its
+-- own new facing. Which run the input being resolved belongs to: the list in
+-- the delivery slot says (orient_run, nil when it is not a run's - a guard
+-- cancel, a push block); with the slot empty - a Hold left down, a dash
+-- cancel's reverse, a lever held for a timing step - the run whose guard
+-- action owns the dummy. On, or for anything not a run's, this is the live
+-- facing as before. controller.lua's frame path asks the same module.
+function GA.af_run_now()
+	local _d = player_objects and player_objects[2]
+	local _s = _d and _d.pending_input_sequence
+	if _s ~= nil then return _s.orient_run end
+	if globals ~= nil and globals.dummy ~= nil
+	   and actionSequenceRunnerModule.owns(globals.dummy.guard_action) then
+		return actionSequenceRunnerModule.orientation.steps_run()
+	end
+	return nil
+end
+
+-- _press: false when resolving an entry that presses nothing (a neutral).
+-- The first resolution that presses something fixes the run's facing.
+local function facing_for_input(_press)
+	return actionSequenceRunnerModule.orientation.steps_face(GA.af_live(), GA.af_run_now(), _press ~= false)
 end
 
 -- THE LEVER AT THE MOMENT THE BUTTON GOES IN.
@@ -2272,7 +2325,7 @@ local LEVER_BACK = 0x01
 local function entry_to_bits(_entry)
 	local _lev, _btn = 0, 0
 	if _entry == nil then return 0, 0 end
-	local _facing  = facing_for_input()
+	local _facing  = facing_for_input(#_entry > 0)
 	local _forward = (_facing == 0) and 0x02 or 0x01
 	local _back    = (_facing == 0) and 0x01 or 0x02
 	for _i = 1, #_entry do
@@ -8253,7 +8306,7 @@ local function guardCancelCheck(run_dummy_input, macroLua_funcs)
 			debugKnockdownModule.mark_write("arm_kind",
 				memory.readbyte(0xFF8940) * 256 + memory.readbyte(0xFF8805),
 				(globals.dummy.guard_action == 'sequence') and 1 or 0)
-			queue_input_sequence(_defender, _mk, true)
+			GA.af_queue(_defender, _mk, true)
 			local _after = _defender.pending_input_sequence
 			-- A FIXED SEQUENCE: buttons before the last entry, so
 			-- queue_input_sequence would not hold it.
@@ -8455,7 +8508,7 @@ local function guardCancelCheck(run_dummy_input, macroLua_funcs)
 		  if _debug then
 			print(frame_number.." - queue ca")
 		  end
-		  queue_input_sequence(_defender, _defender.counter.sequence)
+		  GA.af_queue(_defender, _defender.counter.sequence)
 		  -- HAND A PUSH BLOCK TO THE TICK HOOK (v184).
 		  --
 		  -- Its taps are counted by the game inside a 12 tick window, so they
