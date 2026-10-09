@@ -4,7 +4,7 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 English | [日本語](README.ja.md)
 
-**A training mode for Fightcade 2 / FBNeo. Reproduce demanding sequences with precise internal-frame timing, practice your defense, and test your offense.** See where your inputs were accepted and when your attacks connected, then adjust your response.
+**Make expert-level execution your training partner.** This training mode for Fightcade 2 / FBNeo lets you define dummy actions with precise internal-frame (Tick) timing to practice your defense and test your offense. See where your inputs were accepted and when your attacks connected, then adjust your response.
 
 This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.24.1**.
 
@@ -18,7 +18,7 @@ Left: check whether you still fit six presses when delaying PB. Right: see which
 
 ## Reproduce, practice and adjust
 
-1. **Reproduce the opponent.** Define actions and timing in Action Steps, and the dummy performs even sequences you find difficult, such as crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, it can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
+1. **Reproduce the opponent.** Define actions and timing in Action Steps to repeatedly reproduce precise sequences, such as the earliest possible dash into an attack or crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, it can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
 2. **Practice and test.** Have the dummy repeat the same offense to practice PB, GC or interrupts after air guarding, or test your own wake-up pressure and strings against a fixed response.
 3. **Read the result and adjust.** See where your inputs landed in the window and on which Tick your attack connected, then adjust your next attempt. PB Stats and GC Stats track your success rate and input time.
 
@@ -61,7 +61,7 @@ The dummy performs the action you build here when something triggers it, such as
 | Goal | How to use the tool |
 |---|---|
 | **Use actions you can perform yourself** | [Recording Wizard](docs/PLAYER_MANUAL.en.md#05-recording) captures your inputs from start to finish, then lets you review and save the recording. Recording and playback use displayed frames |
-| **Reproduce difficult sequences** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
+| **Reproduce precise sequences** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
 | **Run several sequences at random** | [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns) saves sequences by name and picks one at random from those you select |
 
 ## Windows installation
@@ -125,15 +125,7 @@ Start by trying either PB or GC; looping and building your own actions can wait 
 4. **Repeat it.** Set `Loop Steps = yes` and `Loop Wait = Auto (Landing)` to repeat short-dash LP as soon as the dummy lands.
 5. **Expand your practice.** The imported pattern is ready to use next time. When comfortable, build other attacks in Action Steps and save them in Action Patterns to practice against randomly selected sequences.
 
-## Look beyond success or failure to see your inputs
-
-In Vampire Savior, randomness affects PB activation and the time allowed to complete GC command inputs. Attempts that feel the same can succeed or fail, making it hard to tell what to improve from the outcome alone.
-
-**PB Counter and GC Command Trace help you review what actually happened.** For PB, check when you pressed and how many valid presses registered. For GC, see which directions and button presses the game accepted and where an input window expired. Use that feedback alongside the result to decide what to adjust on your next attempt.
-
-![PB Counter and PB Stats showing PB input count, timing, simultaneous presses and practice results](docs/images/pb_counter_stats.png)
-
-Here, six presses on Ticks 5–13 of the window activated PB. **Once you can fit six presses consistently, start a little later and see whether you can still fit all six.** If you fall short, check for simultaneous presses or inputs after the window closes. See [PB practice](docs/PLAYER_MANUAL.en.md#08-pb) for the full readout guide.
+See [PB practice](docs/PLAYER_MANUAL.en.md#08-pb) and [GC practice](docs/PLAYER_MANUAL.en.md#09-gc) for how to read the input displays and decide what to adjust.
 
 ## Why Ticks
 

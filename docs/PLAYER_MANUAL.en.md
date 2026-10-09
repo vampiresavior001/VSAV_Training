@@ -715,7 +715,7 @@ To record without the wizard, select the destination in `Recording Slot`. Use `P
 <a id="06-steps"></a>
 ## 6. Build actions with Action Steps
 
-**Reproduce expert-level execution without having to perform it yourself.** To make a recording, you need to perform the sequence yourself using the opponent's character. With Action Steps, you can define difficult sequences such as a dash followed by an attack, both timed as early as possible, or crouching medium kick canceled into Tenraiha. Specify the actions and their timing, then practice PB, GC and interrupting those sequences.
+**Define a sequence in Ticks and reproduce it repeatedly under the same conditions.** Recording captures inputs as you control the opponent's character. Action Steps lets you specify actions and timing to build precise sequences, such as a dash followed by an attack, both timed as early as possible, or crouching medium kick canceled into Tenraiha. Adjust the timing without recording another take, then practice PB, GC and interrupts against expert-level execution.
 
 Action Steps defines a sequence by pairing “when” with “what” for each action. Saving does not immediately start the sequence; it begins at a response opportunity such as recovery from blocking, being hit or knockdown.
 
@@ -1094,7 +1094,10 @@ The two rows under the table average each step of the command over `Pass` attemp
 The screenshot shows a forward-jump LP after Demitri hits Morrigan with a heavy Demon Cradle. `Wake-up  Reversal +0t  Active 2t` means the LP connected on Morrigan's reversal Tick, on its second active Tick. A jump attack like this lands almost at once, so even if Morrigan answers with a reversal Shadow Blade, Demitri can block it on the ground: a safe jump. **The first screenshot and its readout show only the meaty timing; the second one, after the steps, shows the landing block. To check it yourself, try both with these steps.**
 
 1. **Check the meaty timing.** Set Morrigan's `Wakeup = None` and `Guard Action Type = None`. Hit her with a heavy Demon Cradle, hold up-forward to jump as soon as possible, and press LP while descending. Adjust the LP timing toward the screenshot's `Reversal +0t / Active 2t`. These values describe contact, not when to press LP.
-2. **Check that you can land and block.** Set the dummy to `Reversal - Specified` and configure Shadow Blade (or use `Reversal - Action Steps` with step 1 set to `Auto (Fastest)` `Special : Shadow Blade + LP`). Use `Random Guard Action % = 100%`, `Random Start Wait = 0`, `Button Wait = 0` and `Random Delay = 0`, then repeat the setup. After pressing jumping LP, switch to a blocking direction for landing. Confirm that the dummy performs its reversal and that you land and block it.
+2. **Set up light Shadow Blade.** Select `Guard Action Type = Reversal - Action Steps` and open `Reversal Action Steps`. Use only one step, with `Wait = Auto (Fastest)`, `Special : Shadow Blade + LP` and that step's `Random Delay = 0`, then select `Save`. Set `Random Guard Action % = 100%`, `Random Start Wait = 0` and `Loop Steps = no`.
+3. **Check that you can land and block.** Repeat the setup. After pressing jumping LP, switch to a blocking direction for landing. Confirm that the dummy performs its reversal and that you land and block it.
+
+For single responses configured with `Reversal - Specified`, see [Section 4](#dummy-normal-response). This example uses the Action Steps setup shown in the screenshot below.
 
 ![Demitri lands and blocks Morrigan's reversal Shadow Blade. REVERSAL on the right, G on the input bar](images/safe_jump_guard.png)
 
@@ -1230,7 +1233,7 @@ Keep these limits in mind:
 - The conventions follow strategy sites, but a match with every published value is not guaranteed. When comparing, check move conditions and counting conventions too.
 - A chain may be measured as one continuous sequence. Do not copy its result directly into a single-move data table.
 - Moves with a super flash may produce large Total or Recovery values.
-- A jump normal ends on the Tick it lands. Its landing motion can be cancelled into a grounded normal, so it is left out of Recovery, Total and Advantage. A move that ends in the air ends there, and an air special's landing recovery is counted.
+- A jump normal ends on the Tick it lands. Its landing motion can be canceled into a grounded normal, so it is left out of Recovery, Total and Advantage. A move that ends in the air ends there, and an air special's landing recovery is counted.
 - Projectile active time does not represent all the time the projectile continues flying after the character's measurement ends.
 - Startup and active share the first hitbox Tick. For a basic single move, read `Total = Startup + Active + Recovery − 1`: startup 4, active 3 and recovery 7 give Total 13.
 
@@ -1336,7 +1339,7 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 | Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup. Not shown while hit, knocked down or getting up |
 | Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change. Not shown while hit, knocked down or getting up |
 | Light blue | Jump or dash (with `Include Jumps / Dashes` ON) |
-| Dark gray | Doing nothing. A jump normal's landing motion is drawn this way and not counted too, since it can be cancelled into a grounded normal (as in Tick Data) |
+| Dark gray | Idle, or a landing motion that is not counted. A jump normal's landing motion uses this color because it can be canceled into a grounded normal, and it is left out of Recovery, Total and Advantage (as in Tick Data) |
 | Magenta bar along the top | Reversal-only Tick: only blocking and special moves are available (see below) |
 | Gray bar along the top | A Tick the character spent frozen in hitstop; left out of the numbers and run counts (see below) |
 | Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
