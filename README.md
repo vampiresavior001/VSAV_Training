@@ -31,6 +31,16 @@ A Tick is an internal game frame. This fork controls the dummy's inputs on that 
 
 See [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) for the conditions required to act at the earliest possible moment.
 
+### Look beyond success or failure to see your inputs
+
+In Vampire Savior, randomness affects PB activation and the time allowed to complete GC command inputs. Attempts that feel the same can succeed or fail, making it hard to tell what to improve from the outcome alone.
+
+**PB Counter and GC Command Trace help you review what actually happened.** For PB, check when you pressed and how many valid presses registered. For GC, see which directions and button presses the game accepted and where an input window expired. Use that feedback alongside the result to decide what to adjust on your next attempt.
+
+![PB Counter and PB Stats showing PB input count, timing, simultaneous presses and practice results](docs/images/pb_counter_stats.png)
+
+Here, six presses on Ticks 5–13 of the window activated PB. **Once you can fit six presses consistently, start a little later and see whether you can still fit all six.** If you fall short, check for simultaneous presses or inputs after the window closes. See [PB practice](docs/PLAYER_MANUAL.en.md#08-pb) for the full readout guide.
+
 ## What you can test and practice
 
 | Goal | How to use the tool |
@@ -41,16 +51,6 @@ See [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) for the conditions require
 | **Explore situations after air guarding** | Use [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps) to check gaps in air chains, interrupt timing and landing advantage |
 
 **Tick Data** avoids the turbo-frame variation of the original display-frame measurements. Its counting conventions for startup, active time, recovery and frame advantage are aligned with those used by strategy sites. See [manual Section 11](docs/PLAYER_MANUAL.en.md#10-data) for measurement conditions and how to read Action Timeline.
-
-### Look beyond success or failure to see your inputs
-
-In Vampire Savior, randomness affects PB activation and the time allowed to complete GC command inputs. Attempts that feel the same can succeed or fail, making it hard to tell what to improve from the outcome alone.
-
-**PB Counter and GC Command Trace help you review what actually happened.** For PB, check when you pressed and how many valid presses registered. For GC, see which directions and button presses the game accepted and where an input window expired. Use that feedback alongside the result to decide what to adjust on your next attempt.
-
-![PB Counter and PB Stats showing PB input count, timing, simultaneous presses and practice results](docs/images/pb_counter_stats.png)
-
-Here, six presses on Ticks 5–13 of the window activated PB. **Once you can fit six presses consistently, start a little later and see whether you can still fit all six.** If you fall short, check for simultaneous presses or inputs after the window closes. See [PB practice](docs/PLAYER_MANUAL.en.md#08-pb) for the full readout guide.
 
 **See move properties visually:** [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) displays startup, active frames, recovery, invulnerability and other states for normals and special moves as colored bars. If colors and lengths are easier for you to follow, use it alongside the numerical readouts to see how a move unfolds.
 

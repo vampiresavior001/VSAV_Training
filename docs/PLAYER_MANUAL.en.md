@@ -888,7 +888,7 @@ The `4 / 5 / 6` choices under `Game > P1 Min PB Presses` **modify game behavior 
 
 The time allowed to complete GC command inputs involves randomness, so attempts that feel the same can produce different results. GC Command Trace shows the directions and button presses the game accepted, the intervals between them and where a window expired. Use it to identify what to adjust rather than judging by success or failure alone.
 
-**Look for `Success` first. If GC fails, check the accepted directions and finishing button.**
+**First check `Success` to see whether the GC activated. Then review the accepted directions and button presses, along with the input intervals, to decide what to adjust next.**
 
 ### 9.1 Set up the drill
 
