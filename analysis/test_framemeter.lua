@@ -65,6 +65,7 @@ memory = {
 local BLACK = "#000000FF"
 local startup_tiles, active_tiles, recovery_tiles, tiles, boxes, numbers = 0, 0, 0, {}, {}, {}
 local measures, ag_window, ag_success = {}, 0, 0
+local texts = {}
 gui = {
 	image = function(x, y, img)
 		-- The AG overlays are drawn over a tile; counted, not recorded as one.
@@ -76,6 +77,7 @@ gui = {
 		tiles[x .. "," .. y] = img
 	end,
 	text = function(x, y, t)
+		texts[#texts + 1] = t
 		if type(t) == "string" and t:match("^%d+$") then numbers[#numbers + 1] = t end
 		if type(t) == "string" and t:match("^Startup") then measures[#measures + 1] = t end
 	end,
@@ -120,6 +122,7 @@ local function draw_once(fm)
 	for _ = 1, 120 do fm.guiRegister() end
 	startup_tiles, active_tiles, recovery_tiles, tiles, boxes, numbers = 0, 0, 0, {}, {}, {}
 	measures, ag_window, ag_success = {}, 0, 0
+	texts = {}
 	fm.guiRegister()
 end
 local function startup_drawn(fm)
@@ -226,8 +229,10 @@ print("[4b] ヒットストップは「動かなかった Tick」だけ飛ばす
 -- Demitri, measured on the real thing (2026-10-05): the close LP stands still
 -- through hitstop, the crouching HK keeps animating through it. Whiff and
 -- block have to read the same, as Tick Data does:
---   close LP   startup 3 tiles, 3 red, 6 blue    (Startup 4 / Active 3 / Recovery 7)
---   crouch HK  startup 9 tiles, 4 red, 24 blue   (Startup 10 / Active 4 / Recovery 25)
+--   close LP   startup 3 tiles, 3 red, 7 blue    (Startup 4 / Active 3 / Recovery 7)
+--   crouch HK  startup 9 tiles, 4 red, 25 blue   (Startup 10 / Active 4 / Recovery 25)
+-- The last blue tile is the tick $105 drops, the last of the table's 硬直
+-- (THE MOVE'S LAST TICK IS BLUE, 2026-10-10); `rec` below is the ticks before it.
 -- The HK's box ticks and its first recovery tick all play while $5C is set:
 -- the contact tick, then 3 box ticks and 1 recovery tick inside the freeze.
 -- A tick where the animation advanced changes $20 (the cel's remaining
@@ -316,10 +321,10 @@ local function still_marks()
 	end
 	return n
 end
-eq("近距離 LP 空振り: 緑 3 / 赤 3 / 青 6", read(3, 3, 6, 0, 0), "3/3/6")
-eq("近距離 LP ガード (11 Tick 止まる): 同じ", read(3, 3, 6, 11, 0), "3/3/6")
-eq("しゃがみ大 K 空振り: 緑 9 / 赤 4 / 青 24", read(9, 4, 24, 0, 0), "9/4/24")
-eq("しゃがみ大 K ガード (止まる間に 4 Tick 動く): 同じ", read(9, 4, 24, 11, 4), "9/4/24")
+eq("近距離 LP 空振り: 緑 3 / 赤 3 / 青 7 (表の 3 | 3 | 7)", read(3, 3, 6, 0, 0), "3/3/7")
+eq("近距離 LP ガード (11 Tick 止まる): 同じ", read(3, 3, 6, 11, 0), "3/3/7")
+eq("しゃがみ大 K 空振り: 緑 9 / 赤 4 / 青 25", read(9, 4, 24, 0, 0), "9/4/25")
+eq("しゃがみ大 K ガード (止まる間に 4 Tick 動く): 同じ", read(9, 4, 24, 11, 4), "9/4/25")
 
 -- ---------------------------------------------------------------------------
 print("[4f] Show P1 Inputs でヒットストップも並べるが、数値は変わらない (2026-10-07)")
@@ -355,9 +360,9 @@ local function numbers_for(su, act, rec)
 	table.sort(numbers)
 	return table.concat(numbers, ",")
 end
-eq("緑 4・赤 3・青 4: 数字なし", numbers_for(4, 3, 4), "")
-eq("緑 5・赤 3・青 4: 緑の 5 だけ", numbers_for(5, 3, 4), "5")
-eq("緑 5・赤 3・青 6: 5 と 6", numbers_for(5, 3, 6), "5,6")
+eq("緑 4・赤 3・青 4: 数字なし", numbers_for(4, 3, 3), "")
+eq("緑 5・赤 3・青 4: 緑の 5 だけ", numbers_for(5, 3, 3), "5")
+eq("緑 5・赤 3・青 6: 5 と 6", numbers_for(5, 3, 5), "5,6")
 box(false) ; stop(0) ; ram[A1 + 0x105] = 1 ; ram[A1 + 0x20] = 0 ; ram[A2 + 0x1C] = 0 ; ram[A2 + 0x20] = 0
 
 -- ---------------------------------------------------------------------------
@@ -789,7 +794,7 @@ local function jump_attack(state, cancel_at, movement)
 	return p1_numbers()
 end
 eq("着地のティックまで: Tick Data と同じ", jump_attack(0x06), "Startup 4 / Total 9 / Recovery 4")
-eq("着地モーションは青にしない", recovery_tiles, 3)
+eq("着地の Tick まで青、着地モーションは青にしない", recovery_tiles, 4)
 eq("空中の $06 が 0x0A でも同じ", jump_attack(0x0A), "Startup 4 / Total 9 / Recovery 4")
 eq("Include Jumps / Dashes が ON でも同じ", jump_attack(0x06, nil, true), "Startup 4 / Total 9 / Recovery 4")
 eq("空中必殺技の着地硬直は硬直のまま", jump_attack(0x0E), "Startup 4 / Total 13 / Recovery 8")
@@ -797,6 +802,81 @@ eq("空中必殺技の着地硬直は硬直のまま", jump_attack(0x0E), "Start
 -- move, so it starts over with green tiles and is measured as itself.
 jump_attack(0x06, 11)
 eq("地上の通常技でキャンセルしたら、そこから新しい技 (発生のマス)", startup_tiles, 3 + 2)
+ram[A1 + 0x105] = 1
+
+-- ---------------------------------------------------------------------------
+print("[4n] 技の最後の Tick を青に。数値と Advantage は変わらない (2026-10-10)")
+-- The table's time chart draws 硬直 up to and including that tick (Midnight
+-- Pleasure 1 | 29 | 1). The numbers stay as they were: Recovery is the blue
+-- count now instead of the blue count + 1, and Advantage is measured from the
+-- tile before it.
+eq("持続の直後に動ける技 (ミッドナイトプレジャー): 青 1", read(1, 29, 0, 0, 0), "1/29/1")
+eq("その数値", p1_numbers(), "Startup 2 / Total 31 / Recovery 1")
+-- P1's close LP whiffs into a P2 in stun ($05 = 2) on ticks 4-16: P1's move
+-- ends on tick 13 (its 13th tick, $105 0), P2 can act on 17.
+local function advantage_case()
+	fm = fresh(true)
+	local frames = {}
+	for i = 1, 40 do frames[i] = 9700 + i end
+	feed(frames, function(i)
+		ram[A1 + 0x105] = (i <= 12) and 1 or 0
+		box(i >= 4 and i <= 6)
+		ram[A1 + 0x20] = 300 - i
+		ram[A2 + 0x05] = (i >= 4 and i <= 16) and 2 or 0
+	end)
+	box(false) ; ram[A1 + 0x20] = 0 ; ram[A2 + 0x05] = 0
+	draw_once(fm)
+	for k, t in ipairs(texts) do
+		if t == measures[1] then return p1_numbers(), texts[k + 2], recovery_tiles end
+	end
+end
+local nums, adv, blue = advantage_case()
+eq("数値はこれまでどおり", nums, "Startup 4 / Total 13 / Recovery 7")
+eq("Advantage もこれまでどおり (17 - 13)", adv, "4")
+eq("青は 7 (最後が技の終わりの Tick)", blue, 7)
+-- A jump attack whose $105 drops in the air, Include Jumps / Dashes on: the
+-- tick it drops is blue, the fall after it light blue, and Recovery is the
+-- same as Tick Data's (4: three recovery ticks and that one).
+fm = fresh(true)
+globals.options.fm_movement_data = true
+local frames = {}
+for i = 1, 30 do frames[i] = 9800 + i end
+feed(frames, function(i)
+	ram[A1 + 0x38] = (i <= 14) and 0xFF or 0
+	ram[A1 + 0x06] = (i <= 14) and 0x06 or 0
+	ram[A1 + 0x105] = (i <= 8) and 1 or 0
+	box(i >= 4 and i <= 5)
+	ram[A1 + 0x20] = 300 - i
+end)
+box(false) ; ram[A1 + 0x20] = 0 ; ram[A1 + 0x38] = 0 ; ram[A1 + 0x06] = 0
+draw_once(fm)
+eq("空中で技が終わったジャンプ攻撃: 数値は Tick Data と同じ", p1_numbers(), "Startup 4 / Total 9 / Recovery 4")
+eq("その青は 4 (技の終わりの Tick まで)", recovery_tiles, 4)
+globals.options.fm_movement_data = false
+ram[A1 + 0x105] = 1
+-- A move made on the tick after another ends: a jump held through a knockdown
+-- move (Demitri's heavy Demon Cradle, then a jumping LP; user's screenshot
+-- 2026-10-10). The first move ends on tick 21, drawn blue; the jump starts on
+-- it. The jumping LP starts on 30, its box is out on 33-34, it lands on 36
+-- (the landing motion runs to 39). Measured alone: Startup 4 / Total 7 /
+-- Recovery 2. It read the two moves together once the first one's last tick
+-- was no longer idle.
+fm = fresh(true)
+globals.options.fm_movement_data = true
+frames = {}
+for i = 1, 50 do frames[i] = 9900 + i end
+feed(frames, function(i)
+	local air = i >= 21 and i <= 35
+	ram[A1 + 0x38] = air and 0xFF or 0
+	ram[A1 + 0x06] = (i >= 21 and i <= 39) and 0x06 or 0
+	ram[A1 + 0x105] = (i <= 20 or (i >= 30 and i <= 39)) and 1 or 0
+	box((i >= 4 and i <= 6) or (i >= 33 and i <= 34))
+	ram[A1 + 0x20] = 300 - i
+end)
+box(false) ; ram[A1 + 0x20] = 0 ; ram[A1 + 0x38] = 0 ; ram[A1 + 0x06] = 0
+draw_once(fm)
+eq("前の技の直後に跳んだジャンプ攻撃は、それだけを数える", p1_numbers(), "Startup 4 / Total 7 / Recovery 2")
+globals.options.fm_movement_data = false
 ram[A1 + 0x105] = 1
 
 -- ---------------------------------------------------------------------------

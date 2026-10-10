@@ -6,6 +6,32 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.24.2
+
+Frame Meter now draws recovery the way frame data time charts do. The numbers
+do not change.
+
+### Change: the move's last Tick is blue
+
+- The Tick a move ends (the Tick `$105` drops to 0; for a jump normal, the Tick
+  it lands) is now drawn blue, as the last recovery tile. Demitri's close
+  standing LP reads 3 green, 3 red and 7 blue, the same as the table's time
+  chart, 3 | 3 | 7. Midnight Pleasure, which ends right after its active
+  frames, now shows one blue tile
+- Recovery is now the blue count (it was one more than the blue tiles).
+  Recovery, Total and Advantage read the same values as before
+- The gap between the attacker's last blue tile and the defender's tile with a
+  magenta top (the Tick it comes out of stun) is the Advantage
+- The tables count recovery as the move's follow-through frames, and their time
+  charts draw it up to the frame the move ends
+
+### Manual
+
+- The Frame Meter section's description of Recovery and the blue tiles is
+  corrected, with how to read Advantage from the tiles
+
+---
+
 ## v11.7.24.1
 
 A jump normal's recovery and total now end when it lands, and Tick Data

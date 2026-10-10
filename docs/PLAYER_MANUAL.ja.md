@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.24.1／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.24.2／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [守りを練習する：AG・GC](#sasquatch-ag-tutorial) · [攻めを調べる：起き攻め](#wakeup-pressure-drill) · [対象環境・確認範囲](#verification-scope)
 
@@ -1321,7 +1321,7 @@ Meaty Timingは当たったタイミングを示す機能で、連係の成否�
 
 `Display` タブの末尾にある `Frame Meter = yes` にすると、画面の下に両プレイヤーの状態が1 Tickごとに1マスずつ並びます。ONにすると、その下に次の表の3行が字下げして開きます。上の段がP1、下の段がP2です。メーターの上にP1、下にP2の `Startup / Total / Recovery / Advantage` を表示します。
 
-![Frame Meter。上の段がP1（デミトリ）で緑3・赤3・青6マス。下の段がP2（モリガン）で、上端が灰色のマスを先頭に黄14マス（数字は13）、続いて上端がマゼンタのマスから下半分が縞の5マス](images/frame_meter.png)
+![Frame Meter。上の段がP1（デミトリ）で緑3・赤3・青7マス。下の段がP2（モリガン）で、上端が灰色のマスを先頭に黄14マス（数字は13）、続いて上端がマゼンタのマスから下半分が縞の5マス](images/frame_meter.png)
 
 この例では、P1（デミトリ）の技をP2（モリガン）がガードしています。上の段は発生・攻撃判定・戻り、下の段はガード硬直と、その後のリバーサルフレーム・投げ無敵を示します。両者の状態を同じTickで見比べられます。
 
@@ -1345,6 +1345,8 @@ Meaty Timingは当たったタイミングを示す機能で、連係の成否�
 
 **マスに付く数字は、同じ状態が続いたTick数から、上端が灰色の「停止していたTick」を除いた値です。** 画像では黄色が14マスありますが、先頭の1マスは上端が灰色なので数えず、数字は13になります。数字は、数える対象が5 Tick以上のときだけ表示します。
 
+**攻める側の最後の青と、守る側の上端がマゼンタのマスとの差が、Advantageです（画像では5）。** 最後の青は技が終わったTick、マゼンタは守る側が硬直から戻ったTickです（技表のタイムチャートと同じく、技が終わったTickまでを硬直に含めて描きます）。
+
 両プレイヤーが5 Tick続けて何もしていないと、メーターは止まります。止まっている間に下後ろか下前を押し続けると、記録を前後にスクロールできます。次の動きが始まると、新しく記録し直します。
 
 | 子の行 | 内容 |
@@ -1358,7 +1360,7 @@ Meaty Timingは当たったタイミングを示す機能で、連係の成否�
 <details>
 <summary>各マークと計測条件を詳しく見る</summary>
 
-行の数値とは数え方が違います。`Startup` は最初の攻撃判定のTickまで含めるので、緑の数より1多くなります（緑3マスで `Startup 4`）。`Recovery` も青の数より1多く表示されます（青6マスで `Recovery 7`）。
+行の数値とは数え方が違います。`Startup` は最初の攻撃判定のTickまで含めるので、緑の数より1多くなります（緑3マスで `Startup 4`）。`Recovery` は青の数と同じです（青7マスで `Recovery 7`）。最後の青は技が終わったTickで、技表の硬直とタイムチャートも、このTickまでを戻りとして数えています。
 
 **黒い点は、同じ表示フレーム内で処理された2 Tickの組を示します。** ターボ3では、表示3フレームの間に内部処理が4 Tick進みます。同じ表示フレームに属する2マスの境目をはさんで、黒い点を付けます。何もしていないマスには付けません。ノーマル（`Game Speed = 0`）では付きません。
 
@@ -1582,7 +1584,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新：2026-10-10。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.24.1。項目名は2026-10-10に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.24.2。項目名は2026-10-10に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

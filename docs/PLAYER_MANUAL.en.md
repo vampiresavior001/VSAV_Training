@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.24.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.24.2 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -1323,7 +1323,7 @@ Meaty Timing reports contact timing; it does not judge whether a setup worked or
 
 With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the three rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
 
-![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 6 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
+![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 7 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
 
 In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players’ states on the same Tick.
 
@@ -1347,6 +1347,8 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 
 **The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks.
 
+**The gap between the attacker's last blue tile and the defender's tile with a magenta top is the Advantage (5 in the screenshot).** The last blue tile is the Tick the move ends; the magenta one is the Tick the defender comes out of stun (recovery is drawn up to and including the Tick the move ends, as in frame data time charts).
+
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
 | Child row | What it does |
@@ -1360,7 +1362,7 @@ Frame Meter counts differently from [Tick Data](#tick-data). Switching the throw
 <details>
 <summary>Details of the marks and measurement rules</summary>
 
-The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is also one more than the blue tiles (6 blue tiles read `Recovery 7`).
+The figures in the text rows count differently. `Startup` includes the first active Tick, so it is one more than the green tiles (3 green tiles read `Startup 4`). `Recovery` is the blue count (7 blue tiles read `Recovery 7`). The last blue tile is the Tick the move ends; frame data tables count up to that frame as recovery and draw it in their time charts too.
 
 **Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
 
@@ -1584,7 +1586,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-10. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.24.1. On 2026-10-10 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.24.2. On 2026-10-10 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

@@ -92,6 +92,8 @@ local input_images = {
 -- [13] = Throw invulnerable ($143), player 2
 -- [14] = Invulnerable, player 1 (VSAV_Training, display only - see mark_lower)
 -- [15] = Invulnerable, player 2
+-- [16] = The move's last tick, drawn blue, player 1 (VSAV_Training, see read_move_end)
+-- [17] = The move's last tick, drawn blue, player 2
 -- breakdown_log[] shows number of grouped frames counted @ specific positions 
 -- [1] = Player 1
 -- [2] = Player 2
@@ -101,7 +103,7 @@ local state_log = {}
 local breakdown_log = {{},{},true}
 
 local function reset_state_log()
-	state_log = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}} -- VSAV_Training: [7]..[15]
+	state_log = {{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}} -- VSAV_Training: [7]..[17]
 	breakdown_log = {{},{},true}
 end
 reset_state_log()
@@ -550,11 +552,45 @@ local function read_landing()
 	end
 end
 
+-- VSAV_Training: THE MOVE'S LAST TICK IS BLUE (user, 2026-10-10). The frame
+-- data tables this tool follows (darkstalkers.web.fc2.com, the standard for
+-- VSAV) count 硬直 as the move's follow-through frames, and their time chart
+-- draws them all: Demitri's close standing LP is 3 | 3 | 7 for 発生 4 / 持続 3 /
+-- 硬直 7, Midnight Pleasure 1 | 29 | 1. Tick Data reads the same numbers by
+-- counting up to and including the tick $105 drops - the touchdown tick for a
+-- jump normal (A JUMP NORMAL ENDS ON TOUCHDOWN) - and the meter drew that tick
+-- as doing nothing and added it to Recovery as a number only (6 blue tiles,
+-- Recovery 7; no blue tile at all for Midnight Pleasure, Recovery 1). It is now
+-- drawn blue, after a red or blue tile, so the tiles are the time chart and
+-- Recovery is the blue count. The numbers do not change: measure_player adds
+-- the tick only when it was not drawn, and Advantage is still measured from
+-- the tile before it - the last blue tile is then one tick after the
+-- defender's, which is the defender's magenta reversal tick, so the gap
+-- between those two tiles is the Advantage. A move whose last tile is
+-- something else (a projectile still out) is counted as before.
+local attacking_before = { false, false }
+local landing_before = { false, false }
+local move_end_now = { false, false }
+local function read_move_end()
+	for p = 1, 2 do
+		local attacking = game.attacking(game.address[p])
+		local touchdown = landing_motion[p] and not landing_before[p]
+		-- The end of a landing motion is not the end of the move: that was the
+		-- touchdown.
+		move_end_now[p] = (attacking_before[p] and not attacking and not landing_before[p])
+			or touchdown
+		attacking_before[p] = attacking
+		landing_before[p] = landing_motion[p]
+	end
+end
+
 local function log_player_state(tick)
     local player = get_player_objects()
 	for p = 1, 2 do
 		-- set current frame's state for each player @ log_position
 		local previousState = state_log[p][log_position-1%log_length]
+		-- VSAV_Training: the move's last tick (read_move_end).
+		local ends_here = move_end_now[p] and (previousState == 3 or previousState == 4)
 
 		local priolist = {
 			-- VSAV_Training: invulnerability is not a state any more (user,
@@ -579,7 +615,9 @@ local function log_player_state(tick)
 			-- (Startup 43 / Total 43 for Bishamon's).
 			{player[p].dfstart, 2},
 			{player[p].projectile, 6},
-			-- VSAV_Training: a jump normal's landing motion (read_landing).
+			-- VSAV_Training: the move's last tick, then a jump normal's landing
+			-- motion (read_move_end, read_landing).
+			{ends_here, 4},
 			{landing_motion[p], 0},
 			{player[p].attacking and (previousState == 3 or previousState == 4 or previousState == 6) and (not player[p].walking), 4},
 			{player[p].attacking and (not player[p].walking or player[p].throwing), 2},
@@ -587,12 +625,15 @@ local function log_player_state(tick)
 		}
 
 		state_log[p][log_position] = 0
+		local won = nil
 		for _, item in ipairs(priolist) do
 			if item[1] then
 				state_log[p][log_position] = item[2]
+				won = item
 				break
 			end
 		end
+		state_log[15 + p][log_position] = (won ~= nil and won[1] == ends_here and ends_here == true) or nil
 
 		state_log[p+2][log_position] = 0
 		if player[p].pbtimer > 0 then
@@ -637,6 +678,7 @@ local function measure_player(player)
 	local last_state_seen = 0
 	local states_counted = 0
 	local counting_rec = true
+	local end_drawn = false
 
 	local function state(at)
 		local index = at % log_length
@@ -678,8 +720,23 @@ local function measure_player(player)
 		end
 
 		if idle_offset ~= nil then
+			-- VSAV_Training: another move's last tick is where this one starts.
+			-- It used to be an idle tile, and a move made on the very next tick
+			-- (a jump held through Demitri's heavy Demon Cradle) was measured
+			-- from there; drawn blue, it let the count run on into the move
+			-- before: Startup 12 / Total 44 for the jumping LP that reads 5 / 7
+			-- (user's screenshot, 2026-10-10). Only this move's own last tick is
+			-- counted - the first one met, before anything else of it.
+			if s == 4 and state_log[15 + player][i % log_length]
+			   and (end_drawn or active > 0 or startup > 0) then
+				break
+			end
 			if s == 4 then
-				if counting_rec then recovery = recovery + 1 end
+				if counting_rec then
+					recovery = recovery + 1
+					-- VSAV_Training: the move's last tick, drawn (read_move_end).
+					if state_log[15 + player][i % log_length] then end_drawn = true end
+				end
 			elseif s == 3 then
 				active = active + 1
 				counting_rec = false
@@ -722,14 +779,20 @@ local function measure_player(player)
 	-- and Tick Data read recovery 1 there; this read 0. So the tick is added
 	-- once the move has ended - the last tick logged is idle - not only after
 	-- a blue tile. While the move is still running nothing is added.
+	-- VSAV_Training: not when that tick is drawn blue - it is counted already
+	-- (THE MOVE'S LAST TICK IS BLUE).
 	local ended = is_idle_state(state(log_position - 1))
-	if recovery > 0 or (active > 0 and ended) then recovery = recovery + 1 end
+	if not end_drawn and (recovery > 0 or (active > 0 and ended)) then recovery = recovery + 1 end
 	local total = (startup + active + recovery)
 	if active > 0 then startup = startup + 1 end
 	total = total
 	if total < 0 then total = 0 end
 
-	return tostring(startup), tostring(total), tostring(recovery), idle_offset
+	-- VSAV_Training: Advantage from the tile before the move's last tick, as
+	-- before it was drawn (THE MOVE'S LAST TICK IS BLUE).
+	local zero = idle_offset
+	if zero ~= nil and state_log[15 + player][zero % log_length] then zero = zero - 1 end
+	return tostring(startup), tostring(total), tostring(recovery), zero
 end
 
 -- Awaits for the player to idle for 5 frames before restarting variables and clearing meter.
@@ -1097,6 +1160,9 @@ local function reset_after_load()
 	air_normal_before = { false, false }
 	landing_motion = { false, false }
 	landing_seq = { nil, nil }
+	attacking_before = { false, false }
+	landing_before = { false, false }
+	move_end_now = { false, false }
 end
 
 -- Update function called by the subscription made when the module first registers. Calls every method above this to produce the meter. 
@@ -1109,6 +1175,7 @@ local function update(tick)
 	local moved = read_motion()
 	read_reversal_ticks()
 	read_landing()
+	read_move_end()
 	read_pb_success()
 	read_throw_checks()
 	local frozen = (game.hitfreeze(game.address[1]) or game.hitfreeze(game.address[2]))
