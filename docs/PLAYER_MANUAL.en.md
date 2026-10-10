@@ -1195,7 +1195,7 @@ Match the measured side, game speed and units before comparing numbers.
 
 **Tick Data measures startup, active time, recovery and frame advantage in internal frames.** The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. Tick Data avoids the variation caused by turbo frames, and its **counting conventions are aligned with the frame data tables below**.
 
-**The tables it follows:** [Darkstalkers Frame Data (Vampire Savior)](http://darkstalkers.web.fc2.com/savior/savior.html), in Japanese. There, startup (発生) is the frame the attack box appears, active (持続) the frames it stays out, recovery (硬直) the move's follow-through frames, and advantage (硬直差) the difference from the frame the first side can act to the frame the other can. The tables were measured on the same 1997/05/19 version as this tool, at Normal game speed, where one displayed frame is one Tick, so Tick Data's values compare directly. Tick Data counts internal frames at Turbo 3 too, so the basis is the same.
+**The tables it follows:** [Darkstalkers Frame Data (Vampire Savior)](http://darkstalkers.web.fc2.com/savior/savior.html), in Japanese. There, startup (発生) is the frame the attack box appears, active (持続) the frames it stays out, recovery (硬直) the move's follow-through frames, and advantage (硬直差) the difference from the frame the first side can act to the frame the other can. The tables were measured on the same 1997/05/19 version as this tool, at Normal game speed, where one displayed frame is one Tick. This lets you compare the values in the same units. Tick Data also counts internal frames at Turbo 3. Measurement conditions and ranges can differ; see the limits below.
 
 Enable `Trainer > Tick Data` and select P1 or P2 under `Tick Data Side`. P2 is useful for checking a move performed by a recording or Action Steps.
 
@@ -1235,7 +1235,7 @@ Keep these limits in mind:
 - The conventions follow the tables, but a match with every published value is not guaranteed. The tables measure advantage mostly point-blank in the corner, a multi-hit move from its last hit, and leave out values that vary a lot with the situation, such as jump attacks. When comparing Advantage, match the spacing, the corner and the hit you landed.
 - A chain may be measured as one continuous sequence. Do not copy its result directly into a single-move data table.
 - Moves with a super flash may produce large Total or Recovery values.
-- A jump normal ends on the Tick it lands. Its landing motion can be canceled into a grounded normal, so it is left out of Recovery, Total and Advantage; the tables do not treat landing as a vulnerable window either, since you can block right after landing. If the move's state ends in the air, it ends there, and an air special's landing recovery is counted.
+- For a jump normal that lasts until landing, the landing Tick counts as the final recovery Tick in Recovery and Total. The landing animation that follows can be canceled into a grounded normal, so it adds no recovery, and Advantage is measured without waiting for that animation to end. The tables do not treat landing as a vulnerable window either, since you can block right after landing. If the move's state ends in the air, it ends there, and an air special's landing recovery is counted.
 - The tables give jump attacks as whiffed in the air and played out. Startup and active match Tick Data (checked on Demitri's jumping LP, MP, HP, MK and HK), but recovery differs: the tables count only the follow-through frames after the box (3 for the jumping LP), while Tick Data counts until landing, as long as the move's state (`$105`) lasts (14 for the same whiff). Landed low, a jump attack is cut short by the landing, so its active and recovery read shorter than the tables.
 - Projectile active time does not represent all the time the projectile continues flying after the character's measurement ends.
 - Startup and active share the first hitbox Tick. For a basic single move, read `Total = Startup + Active + Recovery − 1`: startup 4, active 3 and recovery 7 give Total 13.
@@ -1336,13 +1336,13 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 |---|---|
 | Green | Startup; also Dark Force activation |
 | Red | Attack box out, or a throw: a throw has no attack box, so the Ticks the game tries the grab (whiffs included) and the Tick the opponent is grabbed are shown |
-| Blue | Recovery (up to the Tick the move ends, as the tables count 硬直) |
+| Blue | Recovery, up to and including the Tick the move ends. For a jump normal that lasts until landing, the landing Tick is the last blue tile |
 | Yellow | Hit or block stun, or being thrown |
 | Orange | Projectile out |
 | Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup. Not shown while hit, knocked down or getting up |
 | Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change. Not shown while hit, knocked down or getting up |
 | Light blue | Jump or dash (with `Include Jumps / Dashes` ON) |
-| Dark gray | Idle, or a landing motion that is not counted. A jump normal's landing motion uses this color because it can be canceled into a grounded normal, and it is left out of Recovery, Total and Advantage (as in Tick Data) |
+| Dark gray | Idle, or the landing animation after a jump normal's landing Tick. That animation adds no recovery (as in Tick Data) |
 | Magenta bar along the top | Reversal-only Tick: only blocking and special moves are available (see below) |
 | Gray bar along the top | A Tick the character spent frozen in hitstop; left out of the numbers and run counts (see below) |
 | Tile borders joined in yellow | PB window open (only with `Show P1 Inputs` ON) |
@@ -1350,7 +1350,7 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 
 **The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks.
 
-**The gap between the attacker's last blue tile and the defender's tile with a magenta top is the Advantage (5 in the screenshot).** The last blue tile is the Tick the move ends; the magenta one is the Tick the defender comes out of stun (recovery is drawn up to and including the Tick the move ends, as in frame data time charts).
+**The gap between the attacker's last blue tile and the defender's tile with a magenta top is the Advantage.** In this screenshot, the attacker's last blue tile is 5 Ticks earlier, giving the attacker `+5` and the defender `−5`. The last blue tile is the Tick the move ends; the magenta one is the Tick the defender comes out of stun (recovery is drawn up to and including the Tick the move ends, as in frame data time charts).
 
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
@@ -1570,7 +1570,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 | PB / Push Block | The defensive mechanic that pushes the opponent away while blocking |
 | GC / Guard Cancel | Guard cancel |
 | Tick / t | Internal frame; see [11.1](#ticks-and-frames) for how it relates to displayed frames |
-| Startup / Active / Recovery | As defined in the frame data tables ([11.2](#tick-data)); recovery is the move's follow-through, counted up to the Tick the move ends |
+| Startup / Active / Recovery | Based on the frame data tables. Recovery is the move's follow-through, counted up to and including the Tick the move ends. See [11.2](#tick-data) for differences in measurement ranges, including jump attack recovery |
 | Advantage | The difference from the Tick the first side can act to the Tick the other can ([11.2](#tick-data)) |
 | Frame | Displayed/emulator frame in this guide; check the option's label and description |
 | Forward / Back | Relative to the character's facing, unlike screen-left/right position shortcuts |
