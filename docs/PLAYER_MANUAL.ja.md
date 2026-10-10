@@ -335,7 +335,7 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 
 ![手動作成前のDummyタブ。Guard Action TypeはReversal - Action Steps](images/tut_dummy_setup.png)
 
-画像は手動作成前の例です。既存の定義がなければ`Reversal Action Steps`は`Empty`と表示されます。
+画像は手動作成前の例で、`Reversal Action Steps`は`1 step`です。一度も保存していなければ`Empty`と表示されます。
 
 `Reversal Action Steps`を右またはLPで開き、次の**2ステップだけ**を作ります。既存の定義がある場合は、先に[Action Patterns](#07-patterns)へ保存しておくと残せます。
 
@@ -475,7 +475,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 
 `Guard Action Type`を切り替えます。
 
-![Guard Action Type : Reversal - Action Patterns。Reversal Action Patternsはまだ空](images/tut_patterns_type.png)
+![Guard Action TypeをReversal - Action Patternsに切り替えたDummyタブ](images/tut_patterns_type.png)
 
 `Add from current Steps`で取り込みます。
 

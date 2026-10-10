@@ -336,7 +336,7 @@ Switch to `Guard Action Type = Reversal - Action Steps` and follow the steps bel
 
 ![The Dummy tab before building the action, with Guard Action Type set to Reversal - Action Steps](images/tut_dummy_setup.png)
 
-This image shows the setup before building the action manually. `Reversal Action Steps` reads `Empty` if no definition exists yet.
+This image shows the setup before building the action manually, with `Reversal Action Steps` at `1 step`. It reads `Empty` if nothing has been saved yet.
 
 Open `Reversal Action Steps` with Right or LP and create **only these two steps**. To preserve an existing definition, save it in [Action Patterns](#07-patterns) first.
 
@@ -477,7 +477,7 @@ This is a copy: editing the pattern later does not change the original Action St
 
 Switch `Guard Action Type`.
 
-![Guard Action Type : Reversal - Action Patterns, with Reversal Action Patterns still Empty](images/tut_patterns_type.png)
+![The Dummy tab with Guard Action Type switched to Reversal - Action Patterns](images/tut_patterns_type.png)
 
 Choose `Add from current Steps`.
 
