@@ -29,7 +29,7 @@ For PB, you can check whether you delayed your input while still fitting six pre
 | Feature | Original | This fork |
 |---|---|---|
 | Counter actions and reversals | Specified inputs and character-specific move activation, with limitations on earliest timing at turbo speed and delays from entering motions | Input control in internal frames, with improved wake-up, post-block and landing timing; the start and the button press can also be varied at random each time |
-| Move data | Frame Data uses displayed frames, giving unstable measurements at turbo speeds | Tick Data measures internal frames, with startup, active time, recovery and advantage conventions aligned with strategy sites |
+| Move data | Frame Data uses displayed frames, giving unstable measurements at turbo speeds | Tick Data measures internal frames, with startup, active time, recovery and advantage conventions aligned with the frame data tables ([11.2](#tick-data)) |
 | Building dummy behavior | Recording playback and individual counter actions | Recording Wizard simplifies recording; Action Steps defines Tick-based sequences, and Action Patterns saves, selects and shares them |
 | PB practice | Input counter and success/failure statistics | Tick-by-Tick window history, simultaneous presses, late inputs and counts that include presses after activation; PB Stats shows averages and the success rate |
 | GC practice | GC window in the input viewer | Tracks accepted commands, input intervals, expiry and contact during guard-pose persistence |
@@ -1193,7 +1193,9 @@ Match the measured side, game speed and units before comparing numbers.
 <a id="tick-data"></a>
 ### 11.2 Tick Data
 
-**Tick Data measures startup, active time, recovery and frame advantage in internal frames.** The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. Tick Data avoids the variation caused by turbo frames, and its **counting conventions are aligned with those used by strategy sites**.
+**Tick Data measures startup, active time, recovery and frame advantage in internal frames.** The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. Tick Data avoids the variation caused by turbo frames, and its **counting conventions are aligned with the frame data tables below**.
+
+**The tables it follows:** [Darkstalkers Frame Data (Vampire Savior)](http://darkstalkers.web.fc2.com/savior/savior.html), in Japanese. There, startup (発生) is the frame the attack box appears, active (持続) the frames it stays out, recovery (硬直) the move's follow-through frames, and advantage (硬直差) the difference from the frame the first side can act to the frame the other can. The tables were measured on the same 1997/05/19 version as this tool, at Normal game speed, where one displayed frame is one Tick, so Tick Data's values compare directly. Tick Data counts internal frames at Turbo 3 too, so the basis is the same.
 
 Enable `Trainer > Tick Data` and select P1 or P2 under `Tick Data Side`. P2 is useful for checking a move performed by a recording or Action Steps.
 
@@ -1230,10 +1232,11 @@ Startup, active and recovery use the attack hitbox; startup is not simply the mo
 
 Keep these limits in mind:
 
-- The conventions follow strategy sites, but a match with every published value is not guaranteed. When comparing, check move conditions and counting conventions too.
+- The conventions follow the tables, but a match with every published value is not guaranteed. The tables measure advantage mostly point-blank in the corner, a multi-hit move from its last hit, and leave out values that vary a lot with the situation, such as jump attacks. When comparing Advantage, match the spacing, the corner and the hit you landed.
 - A chain may be measured as one continuous sequence. Do not copy its result directly into a single-move data table.
 - Moves with a super flash may produce large Total or Recovery values.
-- A jump normal ends on the Tick it lands. Its landing motion can be canceled into a grounded normal, so it is left out of Recovery, Total and Advantage. A move that ends in the air ends there, and an air special's landing recovery is counted.
+- A jump normal ends on the Tick it lands. Its landing motion can be canceled into a grounded normal, so it is left out of Recovery, Total and Advantage; the tables do not treat landing as a vulnerable window either, since you can block right after landing. If the move's state ends in the air, it ends there, and an air special's landing recovery is counted.
+- The tables give jump attacks as whiffed in the air and played out. Startup and active match Tick Data (checked on Demitri's jumping LP, MP, HP, MK and HK), but recovery differs: the tables count only the follow-through frames after the box (3 for the jumping LP), while Tick Data counts until landing, as long as the move's state (`$105`) lasts (14 for the same whiff). Landed low, a jump attack is cut short by the landing, so its active and recovery read shorter than the tables.
 - Projectile active time does not represent all the time the projectile continues flying after the character's measurement ends.
 - Startup and active share the first hitbox Tick. For a basic single move, read `Total = Startup + Active + Recovery − 1`: startup 4, active 3 and recovery 7 give Total 13.
 
@@ -1242,18 +1245,18 @@ Keep these limits in mind:
 
 **See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from block stun or hit stun, and air recovery. Test your setup against the dummy’s response, then use this readout to review its timing.
 
-![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 3t. On the Frame Meter below, P2's magenta bar sits under the third of P1's four red tiles](images/meaty_timing.png)
+![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 2t. On the Frame Meter below, P2's magenta bar sits under the second of P1's three red tiles](images/meaty_timing.png)
 
-In this example, P1’s attack connects on P2’s wake-up, on the third of its four active Ticks.
+In this example, Demitri's jumping LP connects on Morrigan's wake-up, on the second of its three active Ticks (the same scene as the safe jump in [10.B](#safe-jump-example)).
 
 | Readout and field | What it means in this example |
 |---|---|
-| Tick Data: `Active 4t` | The attack has four active Ticks in total |
+| Tick Data: `Active 3t` | The attack has three active Ticks in total |
 | Meaty Timing: `Wake-up` | The attack connects on wake-up |
 | Meaty Timing: `Reversal +0t` | Contact occurs on the opponent’s reversal Tick |
-| Meaty Timing: `Active 3t` | Contact occurs on the third active Tick |
+| Meaty Timing: `Active 2t` | Contact occurs on the second active Tick |
 
-Frame Meter shows the same timing: P2’s magenta bar sits directly below P1’s third red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hit stun from the meaty; it is one color, so the number on the run (113) counts both.
+Frame Meter shows the same timing: P2’s magenta bar sits directly below P1’s second red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hit stun from the meaty; it is one color, so the number on the run (113) counts both.
 
 The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` (on by default) opens indented under `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
 
@@ -1333,7 +1336,7 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 |---|---|
 | Green | Startup; also Dark Force activation |
 | Red | Attack box out, or a throw: a throw has no attack box, so the Ticks the game tries the grab (whiffs included) and the Tick the opponent is grabbed are shown |
-| Blue | Recovery |
+| Blue | Recovery (up to the Tick the move ends, as the tables count 硬直) |
 | Yellow | Hit or block stun, or being thrown |
 | Orange | Projectile out |
 | Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup. Not shown while hit, knocked down or getting up |
@@ -1567,6 +1570,8 @@ For reports, include version, P1/P2 characters, which character is on each side,
 | PB / Push Block | The defensive mechanic that pushes the opponent away while blocking |
 | GC / Guard Cancel | Guard cancel |
 | Tick / t | Internal frame; see [11.1](#ticks-and-frames) for how it relates to displayed frames |
+| Startup / Active / Recovery | As defined in the frame data tables ([11.2](#tick-data)); recovery is the move's follow-through, counted up to the Tick the move ends |
+| Advantage | The difference from the Tick the first side can act to the Tick the other can ([11.2](#tick-data)) |
 | Frame | Displayed/emulator frame in this guide; check the option's label and description |
 | Forward / Back | Relative to the character's facing, unlike screen-left/right position shortcuts |
 | 1P side / 2P side | Screen left / right. Your character is on the 1P side on the left (facing right) and on the 2P side on the right (facing left). Not the same as players P1 / P2 |
@@ -1583,10 +1588,10 @@ For reports, include version, P1/P2 characters, which character is on each side,
 
 > This manual was checked against the target version's source code and release notes. The procedures in it were not run through in an emulator as a whole. What was confirmed in the game is noted in each release-notes entry. Example drills do not guarantee success with every character or setup.
 
-- Documentation updated: 2026-10-10. This does not include running the procedures in an emulator.
+- Documentation updated: 2026-10-11. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.24.2. On 2026-10-10 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.24.2. On 2026-10-11 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

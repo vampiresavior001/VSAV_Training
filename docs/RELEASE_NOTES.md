@@ -43,8 +43,8 @@ reports advantage for a meaty that lands right on the reversal Tick.
 
 - Its landing motion can be canceled into a grounded normal, so it is no
   longer counted in Tick Data's Recovery and Total or in Frame Meter's
-  Recovery, Total and Advantage. The Tick it lands is counted as the Tick it
-  can act. Until now only advantage was measured to the landing, and Recovery
+  Recovery, Total and Advantage. The Tick it lands is counted as the last
+  Tick of recovery. Until now only advantage was measured to the landing, and Recovery
   and Total ran through the landing motion
 - Frame Meter draws the landing motion as doing nothing (dark gray)
 - A move that ends in the air ends there. An air special's landing recovery is

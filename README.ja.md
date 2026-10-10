@@ -51,7 +51,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、成功・�
 
 | 目的 | 使い方 |
 |---|---|
-| **数値で見る** | [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)で、発生・持続・戻り・有利不利を内部フレーム単位で測る。数え方・考え方は攻略サイトのフレームデータに合わせている |
+| **数値で見る** | [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)で、発生・持続・戻り・有利不利を内部フレーム単位で測る。数え方・考え方は[技表](http://darkstalkers.web.fc2.com/savior/savior.html)に合わせている |
 | **色の帯で見る** | [Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)で、発生・攻撃判定・戻り・無敵などを、両プレイヤーとも1 Tickごとのマスで並べて見る |
 
 ### 練習相手を作る

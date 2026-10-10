@@ -40,7 +40,7 @@ Tick Dataが有利不利を出します。
 
 - 着地モーションは地上の通常技でキャンセルできるので、Tick DataのRecovery・Totalと、
   Frame MeterのRecovery・Total・Advantageに入れないようにしました。着地したTickを、
-  動けるTickとして数えます。これまでは有利不利だけを着地で測り、RecoveryとTotalには
+  戻りの最後のTickとして数えます。これまでは有利不利だけを着地で測り、RecoveryとTotalには
   着地モーションまで入れていました
 - Frame Meterでは、着地モーションを何もしていないマス（暗い灰色）で表示します
 - 空中で技が終わった場合はそこで終わりです。空中必殺技の着地硬直は今までどおり数えます。

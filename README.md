@@ -51,7 +51,7 @@ After Demitri's heavy Demon Cradle, a forward-jump LP connects at `Reversal +0t`
 
 | Goal | How to use the tool |
 |---|---|
-| **In numbers** | [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data) measures startup, active time, recovery and advantage in internal frames, with counting conventions aligned with those used by strategy sites |
+| **In numbers** | [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data) measures startup, active time, recovery and advantage in internal frames, with counting conventions aligned with [the frame data tables](http://darkstalkers.web.fc2.com/savior/savior.html) |
 | **As colored bars** | [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) lays out startup, active frames, recovery, invulnerability and other states for both players, one tile per Tick |
 
 ### Build the opponent
