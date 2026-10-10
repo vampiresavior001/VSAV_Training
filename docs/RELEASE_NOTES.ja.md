@@ -8,7 +8,9 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ## v11.7.24.2
 
-Frame Meterの硬直の描き方を、技表のタイムチャートに合わせました。数値は変わりません。
+Frame Meterの硬直の描き方を、下記サイトの技表のタイムチャートに合わせました。数値は変わりません。
+
+http://darkstalkers.web.fc2.com/savior/savior.html
 
 ### 変更：技の最後のTickを青で描く
 

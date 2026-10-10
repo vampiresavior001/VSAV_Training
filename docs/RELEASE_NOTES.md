@@ -8,8 +8,10 @@ Newest first. Older releases are kept below.
 
 ## v11.7.24.2
 
-Frame Meter now draws recovery the way frame data time charts do. The numbers
-do not change.
+Frame Meter now draws recovery the way the frame data time charts on the site
+below do. The numbers do not change.
+
+http://darkstalkers.web.fc2.com/savior/savior.html
 
 ### Change: the move's last Tick is blue
 
