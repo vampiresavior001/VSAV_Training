@@ -31,7 +31,7 @@ Randomness affects PB activation and GC input windows, so success or failure alo
 | Goal | How to use the tool |
 |---|---|
 | **Improve your PB execution** | Use [PB Counter](docs/PLAYER_MANUAL.en.md#08-pb) to check when you pressed within the input window and how many presses counted. PB Stats shows your success rate, average press count and average input timing |
-| **Find out why a GC failed** | Use [GC Command Trace](docs/PLAYER_MANUAL.en.md#09-gc) to see which directions and buttons the game accepted and where the input window expired. Compare the left and right sides with [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) |
+| **Find out why a GC failed** | Use [GC Command Trace](docs/PLAYER_MANUAL.en.md#09-gc) to see which directions and buttons the game accepted and where the input broke off. Compare the left and right sides with [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) |
 | **Practice defense with varied attacks** | Randomize attacks or their timing to practice PB and GC without relying on a fixed rhythm. See [which setting to use](docs/PLAYER_MANUAL.en.md#dummy-button-timing) |
 | **Explore situations after air guarding** | Use [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps) to check gaps in air chains, interrupt timing and landing advantage |
 

@@ -634,7 +634,7 @@ With `Reversal - Specified` and `Counter Attack - Specified`, three rows decide 
 - Dash attack: `Forward Dash` + `HP` with `Button Wait = Auto` and `Random Delay` at `0-5` adds a newly drawn 0–5 Ticks to the Auto timing.
 - Jump attack: with `Up Forward` + a button, put the Tick to start pressing in `Button Wait` and the spread in `Random Delay`, and you can vary the height at which the jump attack comes out.
 
-What happens when the press comes too late is up to the game. A special's command is kept for only 14–19 Ticks, so a normal comes out instead. Once a dash or jump is over, there is no dash attack or jump attack. The direction stays held while the button waits, so the character may jump again immediately after landing.
+What happens when the press comes too late is up to the game. A special's command is kept for only 14–19 Ticks, so a normal comes out instead. Once a dash or jump is over, there is no dash attack or jump attack. The direction stays held while the button waits, so the character may jump again after landing.
 
 A timing measured after blocking may not also work after being hit. Changing the `Button Lever` direction on a dash cancel can overwrite the reverse direction needed for the cancel.
 
@@ -1322,7 +1322,7 @@ Meaty Timing reports contact timing; it does not judge whether a setup worked or
 <a id="frame-meter"></a>
 ### 11.4 Frame Meter
 
-**Frame Meter shows the properties of normal and special moves as colored bars.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
+**Frame Meter shows the properties of normal and special moves as colored bars.** They show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
 
 Set `Frame Meter = yes` at the bottom of the `Display` tab to show both players' states along the bottom of the screen, one tile per Tick. Enabling it displays three additional settings beneath it, described in the table below. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
 
@@ -1350,7 +1350,7 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 
 **The number on a run counts Ticks in that state, excluding frozen Ticks marked with a gray top.** The screenshot has 14 yellow tiles, but the first has a gray top and is excluded, so the number is 13. A number is shown only when the counted duration is at least five Ticks.
 
-**The gap between the attacker's last blue tile and the defender's tile with a magenta top is the Advantage.** In this screenshot, the attacker's last blue tile is 5 Ticks earlier, giving the attacker `+5` and the defender `−5`. The last blue tile is the Tick the move ends; the magenta one is the Tick the defender comes out of stun (recovery is drawn up to and including the Tick the move ends, as in frame data time charts).
+**The gap between the attacker's last blue tile and the defender's tile with a magenta top is the Advantage.** In this screenshot, the attacker's last blue tile is 5 Ticks earlier, so the readout shows `5` for the attacker and `-5` for the defender. The last blue tile is the Tick the move ends; the magenta one is the Tick the defender comes out of stun (recovery is drawn up to and including the Tick the move ends, as in frame data time charts).
 
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
