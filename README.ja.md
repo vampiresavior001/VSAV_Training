@@ -42,11 +42,16 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 | **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
 | **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
 | **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
-| **順押しコマンドを安定させる** | [Command Trainer](docs/PLAYER_MANUAL.ja.md#command-trainer)で、入力の失敗箇所と、乱数に左右される入力間隔を確認する |
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンの起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
 デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pが、モリガンの起き上がりに `Reversal +0t`（リバーサルTickちょうど）で重なった例です。すぐ着地するので、リバーサルのシャドウブレイドも地上でガードできる詐欺飛びになります。画像は重なった瞬間です。リバーサルを着地してガードした画面と確かめ方は、[起き攻めの練習レシピ](docs/PLAYER_MANUAL.ja.md#safe-jump-example)へ。
+
+### コマンド入力を練習する
+
+| 目的 | 使い方 |
+|---|---|
+| **順押しコマンドを安定させる** | [Command Trainer](docs/PLAYER_MANUAL.ja.md#command-trainer)で、入力の失敗箇所と、乱数に左右される入力間隔を確認する |
 
 ### 技の性能を見る
 
@@ -55,7 +60,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 | **数値で見る** | [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)で、発生・持続・戻り・有利不利を内部フレーム単位で測る。数え方・考え方は[技表](http://darkstalkers.web.fc2.com/savior/savior.html)に合わせている |
 | **色の帯で見る** | [Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)で、発生・攻撃判定・戻り・無敵などを、両プレイヤーとも1 Tickごとのマスで並べて見る |
 
-### 練習相手を作る
+### 練習相手を設定する
 
 ダミーは、ガードした後・攻撃を受けた後・起き上がりなどのきっかけで、ここで設定した行動を実行します（[ダミーが動くしくみ](docs/PLAYER_MANUAL.ja.md#dummy-model)）。記録は、きっかけを待たずに再生することもできます。
 
@@ -146,7 +151,7 @@ Tickはゲームの内部フレームです。ターボ3では表示3フレー�
 
 **[日本語プレイヤーマニュアル](docs/PLAYER_MANUAL.ja.md)** に、操作・設定・表示の読み方をまとめています。
 
-- **相手を作る：** [ダミーのガード・受け身・反撃](docs/PLAYER_MANUAL.ja.md#04-dummy)、[記録とループ再生](docs/PLAYER_MANUAL.ja.md#05-recording)、[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)、[Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)
+- **練習相手を設定する：** [ダミーのガード・受け身・反撃](docs/PLAYER_MANUAL.ja.md#04-dummy)、[記録とループ再生](docs/PLAYER_MANUAL.ja.md#05-recording)、[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)、[Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)
 - **練習する：** [AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)、[GC練習](docs/PLAYER_MANUAL.ja.md#09-gc)、[目的別の練習レシピ](docs/PLAYER_MANUAL.ja.md#11-drills)
 - **調べる：** [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)、[Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)、[空中ガードの分析](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)、[困ったとき](docs/PLAYER_MANUAL.ja.md#14-troubleshooting)
 

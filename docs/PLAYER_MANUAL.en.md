@@ -49,7 +49,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 - [2. Controls and position shortcuts](#03-controls)
 - [3. Guided practice: PB and GC against Sasquatch](#sasquatch-pb-tutorial)
 
-**Part 2: Build the opponent**
+**Part 2: Set up your training opponent**
 
 - [4. Dummy defense, recovery and counter actions](#04-dummy)
 - [5. Record opponent actions](#05-recording)
@@ -101,7 +101,12 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
 | Measure how long a setup takes | Action Timeline | [11.5](#action-timeline) |
 | Study option selects on a side switch | `Auto-Flip Inputs on Side Switch` | [Section 10.F](#side-switch-os) |
-| Land sequence supers such as Darkness Illusion consistently | Command Trainer | [Section 10.G](#command-trainer) |
+
+**Practice command inputs**
+
+| Goal | Tool | Start here |
+|---|---|---|
+| Perform sequence supers such as Darkness Illusion consistently | Command Trainer | [Section 10.G](#command-trainer) |
 
 **Examine moves**
 
@@ -110,7 +115,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | See startup, active time, recovery and advantage as numbers | Tick Data | [11.2](#tick-data) |
 | See startup, active frames, invulnerability and recovery as colored bars | Frame Meter | [11.4](#frame-meter) |
 
-**Build the opponent** ([how the dummy works](#dummy-model))
+**Set up your training opponent** ([how the dummy works](#dummy-model))
 
 | Goal | Feature | Where to start |
 |---|---|---|
@@ -534,9 +539,9 @@ To return to `Short LP` alone, uncheck `Long LP > MP` and leave only `Short LP` 
 - **Practice against another character or offensive sequence:** [Record actions](#05-recording) / [Build a sequence in Steps](#06-steps) / [Manage multiple patterns and run them at random](#07-patterns).
 - **Test your own pressure and wake-up setups:** [Practice recipes](#11-drills) / [Read move data and gaps](#10-data).
 
-# Part 2: Build the opponent
+# Part 2: Set up your training opponent
 
-Set up what the dummy does. Practice starts with building the opponent.
+Set up the dummy’s actions for the situation you want to practice.
 
 <a id="dummy-model"></a>
 **When something triggers it, the dummy performs the action you set.** The triggers are mainly blocking, being hit and waking up (which ones apply depends on the type; see [4.2](#dummy-guard-action)). There are three main ways to build the action, all chosen under `Dummy > Guard Action Type`:
@@ -1164,39 +1169,26 @@ The result depends on how the game reads the input, so `no` does not guarantee a
 </details>
 
 <a id="command-trainer"></a>
-### G. Land sequence supers consistently (Command Trainer)
+### G. Perform sequence supers consistently (Command Trainer)
 
-**See, step by step, which inputs the game accepted and where the command fell apart.** Sequence commands such as Darkness Illusion are buttons and directions entered in a fixed order. Command Trainer shows which inputs the game's command recognizer accepted, how many Ticks after the previous one each was accepted, and where the command expired.
+**See which inputs the game accepted and where the sequence stopped.** Sequence commands such as Darkness Illusion are buttons and directions entered in a fixed order. Command Trainer shows which inputs the game's command recognizer accepted, the time in Ticks between accepted inputs, and where the command expired.
 
-| Move | Character | Command |
-|---|---|---|
-| `Darkness Illusion` | Morrigan | LP LP forward LK HP |
-| `Finishing Shower` | Morrigan | MP LP back LK MK |
-| `Cryptic Needle` | Morrigan | forward HP MP LP forward |
-| `Luminous Illusion` | Lilith | LP LP forward LK HP |
-| `Midnight Pleasure` | Demitri | LP MP forward MK MK |
-| `Moment Slice` | Gallon | LP MP forward LK MK |
-| `Pharaoh Magic` | Anakaris | MK LP down LK MP |
-| `Pharaoh Salvation` | Anakaris | HK MP down MK HP |
-| `Pharaoh Decoration` | Anakaris | HK MP LK down LP MK HP |
-| `Tenraiha` | Lei-Lei | LK HK MP MP up |
-
-1. Make P1 the move's character.
-2. Pick the move under `Trainer > Command Trainer`. Left and right go through `Off` and P1's character's moves only. Anything other than `Off` turns it on. While it is on, changing characters switches to that character's move (the one you last picked for that character since starting FBNeo, otherwise the first in the list). With a character that has no such move, nothing is shown; the selection stays, so it comes back with the character.
-3. Enter the command and watch the box at the top right. GC Command Trace is hidden only while Command Trainer is displayed for a supported character.
+1. Choose the character whose move you want to practice as P1.
+2. Under `Trainer > Command Trainer`, press Left or Right to select a move. Only moves for your character are listed. Select `Off` to turn the trainer off.
+3. Enter the command and check the result in the upper-right corner.
 
 ![Darkness Illusion came out. The second LP at 17t in orange, then 13t, 6t and 8t, Success 44t](images/command_trainer_success.png)
 
-Above, a success. The second LP came 17 Ticks after the first and was accepted only because the random window ran long (orange).
+The move came out, but the 17-Tick gap before the second LP depended on the random input window (orange). **Aim to shorten that gap to 13 Ticks or less.**
 
 ![The Darkness Illusion command expired. An orange F on row 2, a red x and HP on row 3, Expired 17t](images/command_trainer_expired.png)
 
-Above, an expiry. Forward was pressed while the second LP was waited for (the `F` on row 2) and held from then on, so the third step, forward, was never accepted and the command expired after 17 Ticks (the red `x` on row 3).
+In this example, the input window expired. Forward was pressed while the game was waiting for the second LP (the `F` on row 2) and held from then on, so the third step, forward, was never accepted and the command expired after 17 Ticks (the red `x` on row 3). **On your next attempt, press forward again after the second LP.**
 
 | What you see | Meaning |
 |---|---|
 | First line | The move you picked |
-| Buttons and arrows | One step of the command per row. Steps after the one being waited for are dimmed |
+| Buttons and arrows | One step of the command per row. Steps after the next required input are dimmed |
 | Number on a row | Ticks from accepting the previous input to accepting this one |
 | Orange number, arrow or buttons | Accepted, but only because the random window allowed it (see "window" below) |
 | Text beside a row (such as `LK+F`) | The last input that was not accepted while waiting for that step. `F` is forward and `B` is back. Orange on a step that was then accepted, red on the step where the command expired |
@@ -1214,10 +1206,29 @@ The result stays until the first input of the next attempt is accepted. P1 only.
 
 **How the game accepts the inputs (verified in FBNeo)**
 
-- **Only the input being waited for, pressed on that Tick and nothing else.** If another button or direction is also pressed on the same Tick, the step is not accepted. For example, pressing forward and LK together while forward is waited for does not count as forward (shown as `LK+F`). The command keeps waiting, so entering forward again afterward still works.
+- **Press only the required input on that Tick.** If another button or direction is also pressed on the same Tick, the step is not accepted. For example, pressing forward and LK together while the game is waiting for forward does not count as forward (shown as `LK+F`). The command keeps waiting, so entering forward again afterward still works.
 - **A held input does not count.** Only the moment an input starts is accepted. Pressing forward before the second LP and holding it does not count as the third step (the second image above). Start pressing forward after the second LP.
 - **The window is random.** Each time an input is accepted, the game rolls the window for the next one. Within 13 Ticks of the previous input always works, 14 to 18 Ticks depends on the roll, and 19 or more never does. Steps accepted 14 or more Ticks after the previous one are shown in orange.
 - This tool keeps the super meter stock at 99, so a move never fails for lack of meter.
+
+**Supported moves**
+
+| Move | Character | Command |
+|---|---|---|
+| `Darkness Illusion` | Morrigan | LP LP forward LK HP |
+| `Finishing Shower` | Morrigan | MP LP back LK MK |
+| `Cryptic Needle` | Morrigan | forward HP MP LP forward |
+| `Luminous Illusion` | Lilith | LP LP forward LK HP |
+| `Midnight Pleasure` | Demitri | LP MP forward MK MK |
+| `Moment Slice` | Gallon | LP MP forward LK MK |
+| `Pharaoh Magic` | Anakaris | MK LP down LK MP |
+| `Pharaoh Salvation` | Anakaris | HK MP down MK HP |
+| `Pharaoh Decoration` | Anakaris | HK MP LK down LP MK HP |
+| `Tenraiha` | Lei-Lei | LK HK MP MP up |
+
+**When you change characters:** If the trainer is on, it switches to a move for the new character: the last move you selected for that character during the current FBNeo session, or the first listed move. Nothing is displayed for unsupported characters; the panel returns when you choose a supported character. If you select `Off`, the trainer stays off when you change characters.
+
+GC Command Trace is hidden only while Command Trainer is displayed for a supported character.
 
 # Part 4: Analyze
 

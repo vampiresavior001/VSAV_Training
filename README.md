@@ -42,11 +42,16 @@ Randomness affects PB activation and GC input windows, so success or failure alo
 | **Test wake-up pressure and attack strings** | Fix the dummy’s response, then use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to compare contact timing with the actual outcome |
 | **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
 | **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
-| **Practice sequence commands** | Use [Command Trainer](docs/PLAYER_MANUAL.en.md#command-trainer) to see where an input sequence failed and which input gaps depend on the random window |
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
 After Demitri's heavy Demon Cradle, a forward-jump LP connects at `Reversal +0t`, right on Morrigan's reversal Tick. It lands almost at once, so even a reversal Shadow Blade can be blocked on the ground: a safe jump. The screenshot shows the moment of contact; see the [wake-up pressure drill](docs/PLAYER_MANUAL.en.md#safe-jump-example) for the landing block and how to check it.
+
+### Practice command inputs
+
+| Goal | How to use the tool |
+|---|---|
+| **Practice sequence commands** | Use [Command Trainer](docs/PLAYER_MANUAL.en.md#command-trainer) to see where an input sequence failed and which input gaps depend on the random window |
 
 ### Examine moves
 
@@ -55,7 +60,7 @@ After Demitri's heavy Demon Cradle, a forward-jump LP connects at `Reversal +0t`
 | **In numbers** | [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data) measures startup, active time, recovery and advantage in internal frames, with counting conventions aligned with [the frame data tables](http://darkstalkers.web.fc2.com/savior/savior.html) |
 | **As colored bars** | [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) lays out startup, active frames, recovery, invulnerability and other states for both players, one tile per Tick |
 
-### Build the opponent
+### Set up your training opponent
 
 The dummy performs the action you build here when something triggers it, such as blocking, being hit or waking up ([how the dummy works](docs/PLAYER_MANUAL.en.md#dummy-model)). Recordings can also be played back right away.
 
@@ -147,7 +152,7 @@ Some older readouts, such as the dash trainers, still count displayed frames. Se
 
 The **[English player manual](docs/PLAYER_MANUAL.en.md)** covers controls, settings and how to interpret the readouts.
 
-- **Build the opponent:** [Dummy defense, recovery and counter actions](docs/PLAYER_MANUAL.en.md#04-dummy), [Recording and looping](docs/PLAYER_MANUAL.en.md#05-recording), [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps), [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns)
+- **Set up your training opponent:** [Dummy defense, recovery and counter actions](docs/PLAYER_MANUAL.en.md#04-dummy), [Recording and looping](docs/PLAYER_MANUAL.en.md#05-recording), [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps), [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns)
 - **Practice:** [PB practice](docs/PLAYER_MANUAL.en.md#08-pb), [GC practice](docs/PLAYER_MANUAL.en.md#09-gc), [Practice recipes](docs/PLAYER_MANUAL.en.md#11-drills)
 - **Analyze:** [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data), [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing), [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter), [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps), [Troubleshooting](docs/PLAYER_MANUAL.en.md#14-troubleshooting)
 

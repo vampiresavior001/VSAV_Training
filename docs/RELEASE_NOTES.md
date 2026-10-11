@@ -45,7 +45,7 @@ game accepted. Ten moves, Darkness Illusion among them.
 
 ### Manual
 
-- New section 10.G, "Land sequence supers consistently (Command Trainer)"
+- New section 10.G, "Perform sequence supers consistently (Command Trainer)"
 - The Dummy and Trainer tab screenshots are retaken from the current menus
 - The safe-jump and Meaty Timing screenshots are replaced, and the frame data
   tables the tool follows (darkstalkers.web.fc2.com) are named
