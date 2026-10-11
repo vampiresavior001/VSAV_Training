@@ -18,7 +18,11 @@ DEFAULT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "script
                        "reversal_logs", "command_log.jsonl")
 NAMES = [(0x0100, "LP"), (0x0200, "MP"), (0x0400, "HP"), (0x1000, "LK"), (0x2000, "MK"),
          (0x4000, "HK"), (0x0001, "back"), (0x0002, "forward"), (0x0004, "down"), (0x0008, "up")]
-STEPS = ["LP", "LP", "forward", "LK", "HP"]
+STEPS = {"di": ["LP", "LP", "forward", "LK", "HP"], "fs": ["MP", "LP", "back", "LK", "MK"],
+         "cn": ["forward", "HP", "MP", "LP", "forward"], "li": ["LP", "LP", "forward", "LK", "HP"],
+         "mp": ["LP", "MP", "forward", "MK", "MK"], "ms": ["LP", "MP", "forward", "LK", "MK"],
+         "pm": ["MK", "LP", "down", "LK", "MP"], "ps": ["HK", "MP", "down", "MK", "HP"],
+         "pd": ["HK", "MP", "LK", "down", "LP", "MK", "HP"], "tr": ["LK", "HK", "MP", "MP", "up"]}
 
 
 def keys(edge_hex):
@@ -43,11 +47,12 @@ def main():
     gaps = []        # (from step, to step, calls, ticks, timer set by the from step)
     expiries = []    # (waiting for, calls since the last step, timer it set, ticks)
     ends = collections.Counter()
-    for p in (1, 2):
-        mine = [r for r in rows if r["p"] == p]
-        if not mine:
-            continue
-        print("\n== P%d" % p)
+    # Version 1 logs (Darkness Illusion only) carry no "cmd".
+    groups = sorted({(r.get("cmd", "di"), r["p"]) for r in rows})
+    for cmd, p in groups:
+        steps = STEPS.get(cmd, STEPS["di"])
+        mine = [r for r in rows if r.get("cmd", "di") == cmd and r["p"] == p]
+        print("\n== %s P%d" % (cmd, p))
         last_step = None      # the row of the last accepted step
         calls_since = 0
         for r in mine:
@@ -71,7 +76,7 @@ def main():
                       % (tick, keys(r["edge"]), calls_since))
                 last_step, calls_since = None, 0
                 ends["complete"] += 1
-            elif k == "met":
+            elif k == "met":   # version 1 logs only
                 print("  tick %6d  meter test: meter %d" % (tick, r["meter"]))
             elif k == "started":
                 print("  tick %6d  STARTED: move %s state %s" % (tick, r["move"], r["state"]))
@@ -80,7 +85,7 @@ def main():
                 if last_step is not None:
                     expiries.append((r["step"], calls_since, last_step["tm2"], tick - last_step["tick"]))
                     print("  tick %6d  EXPIRED waiting for step %d (%s): %d calls after step %d, which set %d"
-                          % (tick, r["step"], STEPS[r["step"] - 1], calls_since, last_step["step"], last_step["tm2"]))
+                          % (tick, r["step"], steps[r["step"] - 1], calls_since, last_step["step"], last_step["tm2"]))
                 else:
                     print("  tick %6d  EXPIRED waiting for step %d (the step before it is not in the log)"
                           % (tick, r["step"]))
@@ -89,7 +94,7 @@ def main():
             elif k == "miss":
                 if r["step"] > 1:
                     print("  tick %6d    miss: %-9s while waiting for step %d (%s)"
-                          % (tick, keys(r["edge"]), r["step"], STEPS[r["step"] - 1]))
+                          % (tick, keys(r["edge"]), r["step"], steps[r["step"] - 1]))
             elif k == "cleared":
                 print("  tick %6d  CLEARED from outside while waiting for step %d (state %s)"
                       % (tick, r["step"], r["state"]))

@@ -1718,6 +1718,50 @@ local function reset_tab_item(_tab_name)
 end
 
 local function get_menu() 
+-- COMMAND TRAINER'S VALUES AND HELP (commandTrainer.lua, user 2026-10-11): one
+-- line per command - its name, character and inputs - with the same rules
+-- under each. Names and inputs are commandLog.lua's PROFILES in order, grouped
+-- by character; analysis/test_command_trainer.lua holds the two equal. The
+-- settings file keeps the index, so the order is fixed once released.
+local _ct = {
+  { "Darkness Illusion",  "Morrigan", "LP LP forward LK HP" },
+  { "Finishing Shower",   "Morrigan", "MP LP back LK MK" },
+  { "Cryptic Needle",     "Morrigan", "forward HP MP LP forward" },
+  { "Luminous Illusion",  "Lilith",   "LP LP forward LK HP" },
+  { "Midnight Pleasure",  "Demitri",  "LP MP forward MK MK" },
+  { "Moment Slice",       "Gallon",   "LP MP forward LK MK" },
+  { "Pharaoh Magic",      "Anakaris", "MK LP down LK MP" },
+  { "Pharaoh Salvation",  "Anakaris", "HK MP down MK HP" },
+  { "Pharaoh Decoration", "Anakaris", "HK MP LK down LP MK HP" },
+  { "Tenraiha",           "Lei-Lei",  "LK HK MP MP up" },
+}
+local _ct_rules = "A press counts only when it is the step waited for and nothing else starts\n"
+  .. "that tick: LK+F is not forward. A held input does not count - press it anew.\n"
+  .. "The next step must come within 13 to 18 ticks of the last, rolled at random:\n"
+  .. "13 or less always gets through, 14 or more only on the roll - shown orange.\n"
+  .. "Red x: where it expired. Beside a step: what was pressed instead (F forward)."
+local _ct_names = { "Off" }
+local _ct_help = { "What the game's own command recognizer took, step by step, for one command\n"
+  .. "P1 can do: the ticks between the inputs it accepted and how the attempt ended.\n"
+  .. "Left / right: Off and P1's character's commands. Picking one turns it on.\n"
+  .. "GC Command Trace is not shown while it is on." }
+for _, _c in ipairs(_ct) do
+  _ct_names[#_ct_names + 1] = _c[1]
+  _ct_help[#_ct_help + 1] = _c[1] .. ", " .. _c[2] .. ": " .. _c[3] .. ".\n" .. _ct_rules
+end
+local _ct_item = list_menu_item("Command Trainer", training_settings, "command_trainer", _ct_names, 1, _ct_help)
+-- Left and right stop at Off and P1's own commands only (user, 2026-10-11):
+-- commandTrainer.step. Looked up when pressed, not required here - the master
+-- script has it loaded by then, and the menu tests load this file without it,
+-- in which case the row goes round the whole list as before.
+local _ct_left, _ct_right = _ct_item.left, _ct_item.right
+local function _ct_press(self, d, plain)
+  local _m = package.loaded["./scripts/commandTrainer"]
+  if type(_m) ~= "table" or _m.step == nil then return plain(self) end
+  self.object[self.property_name] = _m.step(self.object[self.property_name], d, memory.readbyte(0xFF8782))
+end
+_ct_item.left = function(self) _ct_press(self, -1, _ct_left) end
+_ct_item.right = function(self) _ct_press(self, 1, _ct_right) end
 return {
     {
         name = "Recording",
@@ -1966,6 +2010,15 @@ return {
         -- だから要らない).
         checkbox_menu_item("Show GC Stats", training_settings, "display_gc_stats", false, "Guard cancels, one per blocked string in which the game took a direction of your\nGC motion (begun before the block counts too). Pass: a GC came out. Fail: none.\n1P / 2P: the side your character was on - on the left, facing right, is 1P.\nAverages of ticks to the GC, over Passes only. Smaller is a faster GC.\nGC t: from the window opening. Input t: from the final motion's first direction.\nOff and on starts at 0. Counts stop at 99999."),
         checkbox_menu_item("Show Air Guard Gaps", training_settings, "display_air_guard_gap", false,"After each hit of an air chain you BLOCKED. Gap: the ticks you could act before\nthe next hit (|) or your landing (L). 1t is your first tick. A press before it:\nIn Blockstun 14t at 9,13t and P/K after | (row above): thrown away. * your hit.\nPress>Hit: LP 1t>5t (5t) = LP pressed on tick 1, hit on tick 5. (nt) is startup\nas Tick Data counts it. LATE 4t: 4t past the last winning press. NO GAP: (nt)>Gap\nDash > 12t J.LK(5t): theirs, Auto (10) in Action Steps. PreJump > Guard: yours."),
+        -- COMMAND TRAINER (commandTrainer.lua, user 2026-10-11). One row: picking
+        -- a command turns it on (analysis/COMMAND_TRAINER_DESIGN.ja.md, section
+        -- 5 - the tab has room for one). Under Show Air Guard Gaps (user,
+        -- 2026-10-11). Its longest value, selected, runs past where the second
+        -- column starts; that is clear only while the second column has no row
+        -- on its line, which holds with Tick Data and Action Timeline on or off
+        -- (analysis/test_command_trainer.lua works it out). Values and help: _ct
+        -- at the top of get_menu().
+        _ct_item,
         checkbox_menu_item("Show Frame Trap Trainer", training_settings, "display_frame_trap_trainer", false,"Shows the gap between p2 recovering from hit or block stun\nand the next one, in game Ticks."),
         checkbox_menu_item("Show Jump In Trainer", training_settings, "display_jump_in_trainer", false,"Displays the gap between p2 getting hit and your character landing,\nin DISPLAYED frames - not game Ticks."),
         checkbox_menu_item("Show IAD Trainer", training_settings, "display_airdash_trainer", 0,"This option shows the HEIGHT of your last few aidashes.\nGreen is best! Red is Worst!"),

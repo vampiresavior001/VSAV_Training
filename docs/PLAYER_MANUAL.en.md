@@ -6,7 +6,7 @@ Practice offense, defense and execution in Vampire Savior with repeatable dummy 
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.24.2 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.25 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -101,6 +101,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
 | Measure how long a setup takes | Action Timeline | [11.5](#action-timeline) |
 | Study option selects on a side switch | `Auto-Flip Inputs on Side Switch` | [Section 10.F](#side-switch-os) |
+| Land sequence supers such as Darkness Illusion consistently | Command Trainer | [Section 10.G](#command-trainer) |
 
 **Examine moves**
 
@@ -1162,6 +1163,58 @@ The result depends on how the game reads the input, so `no` does not guarantee a
 
 </details>
 
+<a id="command-trainer"></a>
+### G. Land sequence supers consistently (Command Trainer)
+
+**See, step by step, which inputs the game accepted and where the command fell apart.** Sequence commands such as Darkness Illusion are buttons and directions entered in a fixed order. Command Trainer shows which inputs the game's command recognizer accepted, how many Ticks after the previous one each was accepted, and where the command expired.
+
+| Move | Character | Command |
+|---|---|---|
+| `Darkness Illusion` | Morrigan | LP LP forward LK HP |
+| `Finishing Shower` | Morrigan | MP LP back LK MK |
+| `Cryptic Needle` | Morrigan | forward HP MP LP forward |
+| `Luminous Illusion` | Lilith | LP LP forward LK HP |
+| `Midnight Pleasure` | Demitri | LP MP forward MK MK |
+| `Moment Slice` | Gallon | LP MP forward LK MK |
+| `Pharaoh Magic` | Anakaris | MK LP down LK MP |
+| `Pharaoh Salvation` | Anakaris | HK MP down MK HP |
+| `Pharaoh Decoration` | Anakaris | HK MP LK down LP MK HP |
+| `Tenraiha` | Lei-Lei | LK HK MP MP up |
+
+1. Make P1 the move's character.
+2. Pick the move under `Trainer > Command Trainer`. Left and right go through `Off` and P1's character's moves only. Anything other than `Off` turns it on. While it is on, changing characters switches to that character's move (the one you last picked for that character since starting FBNeo, otherwise the first in the list). With a character that has no such move, nothing is shown; the selection stays, so it comes back with the character.
+3. Enter the command and watch the box at the top right. GC Command Trace is not shown while this is on.
+
+![Darkness Illusion came out. The second LP at 17t in orange, then 13t, 6t and 8t, Success 44t](images/command_trainer_success.png)
+
+Above, a success. The second LP came 17 Ticks after the first and was accepted only because the random window ran long (orange).
+
+![The Darkness Illusion command expired. An orange F on row 2, a red x and HP on row 3, Expired 17t](images/command_trainer_expired.png)
+
+Above, an expiry. Forward was pressed while the second LP was waited for (the `F` on row 2) and held from then on, so the third step, forward, was never accepted and the command expired after 17 Ticks (the red `x` on row 3).
+
+| What you see | Meaning |
+|---|---|
+| First line | The move you picked |
+| Buttons and arrows | One step of the command per row. Steps after the one being waited for are dimmed |
+| Number on a row | Ticks from accepting the previous input to accepting this one |
+| Orange number, arrow or buttons | Accepted, but only because the random window allowed it (see "window" below) |
+| Text beside a row (such as `LK+F`) | An input pressed while that step was waited for that was not accepted. `F` is forward and `B` is back. Orange on a step that was then accepted, red on the step where the command expired |
+| Red `x` | The step the command expired on (`Expired`) or was cleared on (`Interrupted`). How long it was waited for is on the last line |
+| `Success` and a number | The move came out. The number is Ticks from the first input to the last |
+| `Expired` and a number | The command expired. The number is Ticks since the last accepted input |
+| `Not started` | The command was complete but the move did not come out (for example, entered again while the super was still running) |
+| `Interrupted` | The command was cleared partway, for example by getting hit |
+
+The result stays until the first input of the next attempt is accepted. P1 only.
+
+**How the game accepts the inputs (checked on hardware)**
+
+- **Only the input being waited for, pressed on that Tick and nothing else.** If another button or direction is also pressed on the same Tick, the step is not accepted. For example, pressing forward and LK together while forward is waited for does not count as forward (shown as `LK+F`). The command keeps waiting, so entering forward again afterward still works.
+- **A held input does not count.** Only the moment an input starts is accepted. Pressing forward before the second LP and holding it does not count as the third step (the second image above). Start pressing forward after the second LP.
+- **The window is random.** Each time an input is accepted, the game rolls the window for the next one. Within 13 Ticks of the previous input always works, 14 to 18 Ticks depends on the roll, and 19 or more never does. Steps accepted 14 or more Ticks after the previous one are shown in orange.
+- This tool keeps the super meter stock at 99, so a move never fails for lack of meter.
+
 # Part 4: Analyze
 
 Measure moves and gaps.
@@ -1591,7 +1644,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-11. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.24.2. On 2026-10-11 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.25. On 2026-10-11 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

@@ -150,6 +150,9 @@ local default_training_settings = {
   display_pb_stats = false,
   -- OFF, like the GC Command Trace it sits with. Counting runs either way.
   display_gc_stats = false,
+  -- Command Trainer, on the Trainer tab: 1 is Off, then the commands in
+  -- commandLog.lua's PROFILES order.
+  command_trainer = 1,
   display_jump_in_trainer = false,
   game_speed = 3,
   bgm_on = false,

@@ -758,6 +758,9 @@ end
 
 local function draw_gc_command_trace()
 	if globals.options.display_gc_command_trace ~= true then return end
+	-- Off while the Command Trainer (commandTrainer.lua) is on: its box, to the
+	-- right of this one, would overlap it. 1 is its Off.
+	if type(globals.options.command_trainer) == "number" and globals.options.command_trainer > 1 then return end
 	local _t = globals.gc_trace
 	if _t == nil or _t.guard == nil or #_t.rows == 0 then return end
 	-- Moved in from 250: the block sat under the P2 input column and the

@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.24.2／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.25／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [守りを練習する：AG・GC](#sasquatch-ag-tutorial) · [攻めを調べる：起き攻め](#wakeup-pressure-drill) · [対象環境・確認範囲](#verification-scope)
 
@@ -101,6 +101,7 @@
 | 起き攻めを重ねるタイミングを調べる | ダミーの反撃、Meaty Timing | [起き攻めの練習レシピ](#wakeup-pressure-drill) |
 | セットプレイの所要時間を測る | Action Timeline | [11.5](#action-timeline) |
 | 振り向いたときのオプションセレクトを調べる | `Auto-Flip Inputs on Side Switch` | [10章F](#side-switch-os) |
+| 順押しの超必殺技（ダークネスイリュージョンなど）を安定させる | Command Trainer | [10章G](#command-trainer) |
 
 **技の性能を見る**
 
@@ -1160,6 +1161,58 @@ AGを `Guard` 側で設定することで、`Guard Action Type` を反撃用に�
 
 </details>
 
+<a id="command-trainer"></a>
+### G. 順押しの超必殺技を安定させる（Command Trainer）
+
+**ゲームが受け付けた入力を1歩ずつ見て、どこで崩れたかを確かめます。** ダークネスイリュージョンのような順押しのコマンドは、ボタンと方向を決まった順に入れます。Command Trainerは、ゲームのコマンド認識がどの入力を受け付けたか、前の入力から何Tickで次を受け付けたか、どこで受付が切れたかを表示します。
+
+| 技 | キャラ | コマンド |
+|---|---|---|
+| `Darkness Illusion` | モリガン | 弱P 弱P 前 弱K 強P |
+| `Finishing Shower` | モリガン | 中P 弱P 後 弱K 中K |
+| `Cryptic Needle` | モリガン | 前 強P 中P 弱P 前 |
+| `Luminous Illusion` | リリス | 弱P 弱P 前 弱K 強P |
+| `Midnight Pleasure` | デミトリ | 弱P 中P 前 中K 中K |
+| `Moment Slice` | ガロン | 弱P 中P 前 弱K 中K |
+| `Pharaoh Magic` | アナカリス | 中K 弱P 下 弱K 中P |
+| `Pharaoh Salvation` | アナカリス | 強K 中P 下 中K 強P |
+| `Pharaoh Decoration` | アナカリス | 強K 中P 弱K 下 弱P 中K 強P |
+| `Tenraiha` | レイレイ | 弱K 強K 中P 中P 上 |
+
+1. P1をその技のキャラにします。
+2. `Trainer > Command Trainer` で技を選びます。左右で回るのは、`Off` とP1のキャラの技だけです。`Off` 以外を選ぶとONになります。ONのままキャラを替えると、そのキャラの技に切り替わります（同じ起動の中で前にそのキャラで選んでいた技があればその技、なければ一覧の最初の技）。順押しの技がないキャラのときは何も表示しません。選んでいた技は残るので、元のキャラに戻れば表示します。
+3. コマンドを入れて、画面右上の表示を見ます。ONの間、GC Command Traceは表示しません。
+
+![Darkness Illusionが出た表示。2回目の弱Pは17tでオレンジ、続いて13t・6t・8t、Success 44t](images/command_trainer_success.png)
+
+上の画像は成功した例です。2回目の弱Pは17tで、乱数で猶予が伸びたので受け付けられました（オレンジ）。
+
+![Darkness Illusionの受付が切れた表示。2行目にオレンジのF、3行目に赤いxとHP、Expired 17t](images/command_trainer_expired.png)
+
+上の画像は受付が切れた例です。2回目の弱Pを待つ間に前を押し（2行目の `F`）、前を押したまま進めたので、3歩目の前が受け付けられず、17tで切れました（3行目の赤い `x`）。
+
+| 表示 | 意味 |
+|---|---|
+| 1行目 | 選んだ技の名前 |
+| 各行のボタン・矢印 | コマンドの1歩ずつ。待っている歩より後は暗く表示します |
+| 各行の数字 | 前の入力を受け付けてから、その入力を受け付けるまでのTick |
+| オレンジの数字・矢印・ボタン | 受け付けられたが、乱数しだいの間隔だった（下の「猶予」） |
+| 行の横の文字（例：`LK+F`） | その歩を待っている間に押した、受け付けられなかった入力。`F` は前、`B` は後ろ。受け付けられた歩ではオレンジ、受付が切れた歩では赤 |
+| 赤い `x` | 受付が切れた歩（`Expired`）、または途中で消えた歩（`Interrupted`）。待った時間は最後の行に出します |
+| `Success` と数字 | 技が出た。数字は最初の入力から最後の入力までのTick |
+| `Expired` と数字 | 受付が切れた。数字は最後に受け付けた入力からのTick |
+| `Not started` | 入力は成立したが、技が出なかった（超必殺技の動作中にもう一度入れたときなど） |
+| `Interrupted` | 攻撃を受けるなどして、途中で受付が消えた |
+
+表示は、次の試行の最初の入力を受け付けるまで残ります。対象はP1だけです。
+
+**受付のしくみ（実機で確認）**
+
+- **待っている入力だけを、そのTickに押し始めたときに受け付けます。** 同じTickにほかのボタンや方向も押し始めると、受け付けません。たとえば前を待っているときに前と弱Kを同時に入れると、前は受け付けられません（`LK+F` と表示）。受付は続くので、その後に前を入れ直せば進みます。
+- **押しっぱなしは数えません。** 受け付けるのは押し始めだけです。2回目の弱Pより先に前を入れて押したままにすると、3歩目の前になりません（上の2枚目の画像）。前は2回目の弱Pの後に押し始めます。
+- **猶予は乱数です。** 入力を受け付けるたびに、ゲームは次の入力までの猶予を乱数で決めます。前の入力から13Tick以内なら必ず間に合い、14〜18Tickは乱数しだい、19Tick以上は間に合いません。14Tick以上で受け付けられた歩をオレンジで表示します。
+- このツールはゲージの本数を常に99に保つので、ゲージ不足で技が出ないことはありません。
+
 # 第4部　調べる
 
 技の性能や攻防の隙間を測ります。
@@ -1589,7 +1642,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新：2026-10-11。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.24.2。項目名は2026-10-11に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.25。項目名は2026-10-11に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

@@ -6,6 +6,54 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.25
+
+Command Trainer is new: see, step by step, which inputs of a sequence super the
+game accepted. Ten moves, Darkness Illusion among them.
+
+### New: Command Trainer (sequence supers, step by step)
+
+- Pick a move under `Trainer > Command Trainer` (below `Show Air Guard Gaps`)
+  and it shows at the top right. Left and right go through `Off` and P1's
+  character's moves only, and changing characters switches to that
+  character's move. Nothing is shown for a character without one. P1 only
+- Moves: Darkness Illusion, Finishing Shower and Cryptic Needle (Morrigan),
+  Luminous Illusion (Lilith), Midnight Pleasure (Demitri), Moment Slice
+  (Gallon), Pharaoh Magic, Pharaoh Salvation and Pharaoh Decoration
+  (Anakaris), Tenraiha (Lei-Lei)
+- Each row is an input the game accepted, with the Ticks since the one before.
+  A step accepted 14 or more Ticks later is orange (the random window ran
+  long), an input that was not accepted is written beside the row (such as
+  `LK+F`), and the step the command expired on gets a red `x`. The last line
+  is `Success` (Ticks from the first input to the last), `Expired` (Ticks
+  since the last accepted input), `Not started` (the command was complete but
+  the move did not come out) or `Interrupted` (cleared partway)
+- How the game accepts the inputs was checked on the developer's hardware for
+  all ten moves. Only the input being waited for, pressed on that Tick, is
+  accepted: another input started on the same Tick, or a held one, does not
+  count. Each accepted input rolls the window for the next: within 13 Ticks
+  always works, 14 to 18 depends on the roll, and 19 or more never does
+- GC Command Trace is not shown while this is on (the two would overlap). This
+  tool keeps the super meter stock at 99, so a move never fails for lack of
+  meter
+
+### Change: Knockdown Logger
+
+- With `Analysis > Knockdown Logger` on, it also writes the sequence command
+  log (`scripts/reversal_logs/command_log.jsonl`), for investigation
+
+### Manual
+
+- New section 10.G, "Land sequence supers consistently (Command Trainer)"
+- The Dummy and Trainer tab screenshots are retaken from the current menus
+- The safe-jump and Meaty Timing screenshots are replaced, and the frame data
+  tables the tool follows (darkstalkers.web.fc2.com) are named
+- Section 11.2 explains how the tables' jump-attack recovery differs from Tick
+  Data's
+- Wording reviewed in both languages
+
+---
+
 ## v11.7.24.2
 
 Frame Meter now draws recovery the way the frame data time charts on the site

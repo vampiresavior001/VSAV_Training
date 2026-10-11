@@ -257,6 +257,9 @@ ROM内に複数の呼び出し経路がある技は全経路を列挙する。
 - 待っている入力と違う押しが同時に入ると受理されず（例：2回目のLP待ちに「LP＋前」、前待ちに「LK＋前」）、待機は続く。§2の完全一致のとおり。
 - 完成32回はすべて技が出た（`0x0399A2`）。外から消えた（cleared）ことは無かった。
 
+Command Trainerの実機確認（2026-10-11、1366行のログ。退避する前にFBNeoの再起動で上書きされ、数は上書きの前の集計。VSAV_MEMORY_NOTES §9）で、LIとMidnight Pleasureも同じ結果だった（LI：受理186回、MP：受理58回。タイマーはすべて14〜19、期限切れはすべてT回目、次の歩はすべてT−1回目以内）。完成しても技が出なかった2回は、どちらも超必殺技の動作中（`$04`＝`0x020012xx`）に入れ直したもので、認識器は動作中も呼ばれる。止めたのは状態の確認`0x02918A`（ゲージは99）。
+残りの7技（Finishing Shower、Cryptic Needle、Moment Slice、Pharaoh Magic／Salvation／Decoration、Tenraiha）も実機で同じ結果だった（2026-10-11、`scripts/reversal_logs_archive/v11.7.24.2_9/command_log.jsonl`）。10技とも対応済み。詳細はVSAV_MEMORY_NOTES §9。
+
 | 検証 | 合格条件 |
 |---|---|
 | DI／LI、P1／P2、左右 | 表示した受理入力と向きが内部判定・ログに一致 |

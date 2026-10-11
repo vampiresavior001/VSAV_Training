@@ -95,6 +95,8 @@ local invulnLogModule    = require "./scripts/invulnLog"
 -- Diagnostic: what Darkness Illusion's command recognizer did, while Knockdown
 -- Logger is on (analysis/COMMAND_TRAINER_DESIGN.ja.md). Exec hooks, at start-up.
 local commandLogModule   = require "./scripts/commandLog"
+-- Command Trainer (Trainer tab): draws from commandLog's rows.
+local commandTrainerModule = require "./scripts/commandTrainer"
 -- Auto-Flip Inputs on Side Switch (Dummy / Recording tabs). guardCancel,
 -- controller and actionSequenceRunner require it too; required here so it is
 -- loaded at start-up whatever loads first.
@@ -458,6 +460,7 @@ emu.registerstart(function()
 	idleSoundModule.registerStart()
 	invulnLogModule.registerStart()
 	commandLogModule.registerStart()
+	commandTrainerModule.registerStart()
 
 end)
 
@@ -845,6 +848,7 @@ emu.registerafter(function() --recording is done after the frame, not before, to
 	idleSoundModule.registerAfter()
 	invulnLogModule.registerAfter()
 	commandLogModule.registerAfter()
+	commandTrainerModule.registerAfter()
 	if globals.game_state.match_begun == false then
 		if globals == nil or globals.options == nil then
 			return
@@ -887,6 +891,7 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 		vsavScriptModule.registerLoad(slot)
 		cps2HitboxModule.registerLoad()
 		frameMeterModule.registerLoad()
+		commandTrainerModule.reset()
 		macroLuaModule.registerLoad(slot)
 		globals.dmg_calc.red_life = 0
 		globals.dmg_calc.white_life = 0
@@ -1004,6 +1009,11 @@ while true do
 			return
 		end
 		hudModule.guiRegister()
+		-- Protected like hud.lua's newest drawings: an error here would take
+		-- the input column and the menu after it off the screen. Shown, not
+		-- swallowed, so a fault cannot pass for "nothing to draw".
+		local _ct_ok, _ct_err = pcall(commandTrainerModule.draw)
+		if not _ct_ok then gui.text(210, 38, "Command Trainer: " .. tostring(_ct_err):sub(1, 60), "#FF0000") end
 		vsavScriptModule.guiRegister(display_hud, display_movelist)
 		cps2HitboxModule.guiRegister(globals.options.display_hitbox_default, use_hb_config)
 		vsavScriptModule.runCheats()
