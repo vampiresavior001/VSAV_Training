@@ -23,7 +23,7 @@ Crouching MK into Tenraiha on Cancel now combos.
   Dashes and normals are unchanged, because the game does not use inputs made
   during hit stop for them. Mashed moves (SxP) and Pit of Blame are also
   unchanged, as they have not been checked
-- In FBNeo on the developer's side, crouching MK into Tenraiha on Cancel came
+- Tested on the developer's side, crouching MK into Tenraiha on Cancel came
   out during the hit stop and combo'd all 7 times (it used to come out 6 Ticks
   after the hit stop). Motion specials have not been checked yet
 
