@@ -88,7 +88,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | Goal | Feature | Where to start |
 |---|---|---|
 | Improve PB execution | `Show PB Counter`, `Show PB Stats` | [Section 8](#08-pb) |
-| Find why a GC failed | GC Command Trace, input history | [Section 9](#09-gc) |
+| Find out why a GC failed | GC Command Trace, input history | [Section 9](#09-gc) |
 | Track your GC success rate on the 1P and 2P sides | `Show GC Stats` | [Section 9.4](#gc-stats) |
 | Defend against offense with varied timing | `Random Start Wait`, `Random Delay` | [4.4](#dummy-button-timing) |
 | Examine interrupts and landing after air guarding | Air Guard Gaps | [11.6](#air-guard-gaps) |
@@ -249,14 +249,14 @@ LP/MP/HP mean light/medium/heavy punch; LK/MK/HK mean light/medium/heavy kick.
 
 Moving beyond either end of a list returns to the tab selection. MP has different meanings in different screens: it toggles a pattern's selection in Action Patterns and records another take at the recording confirmation screen. Follow the on-screen control guide.
 
-An indented row is a setting of the nearest less-indented row above it, its parent. Most such rows appear or disappear with the parent's value (for example, `Frame Meter = yes` opens three indented rows under it).
+An indented row is a setting of the nearest less-indented row above it, its parent. Most such rows appear or disappear with the parent's value (for example, `Frame Meter = yes` displays three additional settings indented beneath it).
 
 `Reset This Tab` on `Display`, `Trainer` and `Analysis` resets all settings on that tab. A confirmation dialog opens with `Cancel` selected. This also resets any child settings hidden because their parent setting is OFF.
 
 ### 2.2 Controlled side and character select
 
-- During a match, `P1 Coin` switches the side you control.
-- You cannot switch sides during recording playback. Stop playback first.
+- During a match, `P1 Coin` switches which character you control.
+- You cannot switch which character you control during recording playback. Stop playback first.
 - Use `Lua Hotkey 4` or `Game > Return to Character Select` to choose characters again.
 - Returning to character select stops playback and clears the match's recording savestate, input history and previous PB/GC readouts.
 
@@ -634,7 +634,7 @@ With `Reversal - Specified` and `Counter Attack - Specified`, three rows decide 
 - Dash attack: `Forward Dash` + `HP` with `Button Wait = Auto` and `Random Delay` at `0-5` adds a newly drawn 0–5 Ticks to the Auto timing.
 - Jump attack: with `Up Forward` + a button, put the Tick to start pressing in `Button Wait` and the spread in `Random Delay`, and you can vary the height at which the jump attack comes out.
 
-What happens when the press comes too late is up to the game. A special's command is kept for only 14–19 Ticks, so a normal comes out instead. Once a dash or jump is over, there is no dash attack or jump attack. The direction stays held while the button waits, so a jump may jump again after landing.
+What happens when the press comes too late is up to the game. A special's command is kept for only 14–19 Ticks, so a normal comes out instead. Once a dash or jump is over, there is no dash attack or jump attack. The direction stays held while the button waits, so the character may jump again immediately after landing.
 
 A timing measured after blocking may not also work after being hit. Changing the `Button Lever` direction on a dash cancel can overwrite the reverse direction needed for the cancel.
 
@@ -1091,7 +1091,7 @@ The two rows under the table average each step of the command over `Pass` attemp
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](images/meaty_safe_jump.png)
 
-The screenshot shows a forward-jump LP after Demitri hits Morrigan with a heavy Demon Cradle. `Wake-up  Reversal +0t  Active 2t` means the LP connected on Morrigan's reversal Tick, on its second active Tick. A jump attack like this lands almost at once, so even if Morrigan answers with a reversal Shadow Blade, Demitri can block it on the ground: a safe jump. **The first screenshot and its readout show only the meaty timing; the second one, after the steps, shows the landing block. To check it yourself, try both with these steps.**
+The screenshot shows a forward-jump LP after Demitri hits Morrigan with a heavy Demon Cradle. `Wake-up  Reversal +0t  Active 2t` means the LP connected on Morrigan's reversal Tick, on its second active Tick. Demitri lands shortly after this jump attack, so even if Morrigan answers with a reversal Shadow Blade, Demitri can block it on the ground: a safe jump. **The first screenshot and its readout show only the meaty timing; the second one, after the steps, shows the landing block. To check it yourself, try both with these steps.**
 
 1. **Check the meaty timing.** Set Morrigan's `Wakeup = None` and `Guard Action Type = None`. Hit her with a heavy Demon Cradle, hold up-forward to jump as soon as possible, and press LP while descending. Adjust the LP timing toward the screenshot's `Reversal +0t / Active 2t`. These values describe contact, not when to press LP.
 2. **Set up light Shadow Blade.** Select `Guard Action Type = Reversal - Action Steps` and open `Reversal Action Steps`. Use only one step, with `Wait = Auto (Fastest)`, `Special : Shadow Blade + LP` and that step's `Random Delay = 0`, then select `Save`. Set `Random Guard Action % = 100%`, `Random Start Wait = 0` and `Loop Steps = no`.
@@ -1101,7 +1101,7 @@ For single responses configured with `Reversal - Specified`, see [Section 4](#du
 
 ![Demitri lands and blocks Morrigan's reversal Shadow Blade. REVERSAL on the right, G on the input bar](images/safe_jump_guard.png)
 
-On the developer's machine, with Morrigan set to reverse (Action Steps, step 1 `Auto (Fastest)` `Special : Shadow Blade + LP`, a light Shadow Blade). `REVERSAL` shows on the right, and Demitri has landed and blocked (`G` on the input bar). Her attack reached first, so Meaty Timing reads `Reversal +4t  P2 Hit First`.
+This screenshot was captured on the developer's machine with Morrigan set to perform a light Shadow Blade reversal (Action Steps, step 1: `Auto (Fastest)` `Special : Shadow Blade + LP`). `REVERSAL` shows on the right, and Demitri has landed and blocked (`G` on the input bar). Her attack reached first, so Meaty Timing reads `Reversal +4t  P2 Hit First`.
 
 The screenshots do not identify the exact LP input Tick. Keep the starting position, knockdown and reversal strength fixed when comparing attempts.
 
@@ -1142,7 +1142,7 @@ Selecting PB under `Guard` leaves `Guard Action Type` available for the response
 <a id="side-switch-os"></a>
 ### F. Study option selects on a side switch
 
-**When a cross-up switches the sides, see what the same input turns into.** Does a dragon-punch motion still come out against the cross-up? Does the lever held back still block? Recreate an option select, one input that becomes different actions depending on the situation, on the dummy and study it.
+**See how the same input is interpreted after a cross-up switches the characters’ positions.** Does the dragon-punch input still produce the intended move after a cross-up? Does holding the same direction still result in a block? Recreate an option select, one input that becomes different actions depending on the situation, on the dummy and study it.
 
 Normally, the dummy automatically swaps left and right when the sides switch. With `Auto-Flip Inputs on Side Switch = no`, **the entire sequence uses the orientation at its first input, without automatically swapping left and right after a side switch.** Direction changes within the recording or Steps still occur as defined; this setting does not hold one direction throughout the sequence.
 
@@ -1258,7 +1258,7 @@ In this example, Demitri's jumping LP connects on Morrigan's wake-up, on the sec
 
 Frame Meter shows the same timing: P2’s magenta bar sits directly below P1’s second red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hit stun from the meaty; it is one color, so the number on the run (113) counts both.
 
-The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` (on by default) opens indented under `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
+The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` (on by default) appears as an indented setting beneath `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
 
 ![On the Trainer tab, Show Meaty Timing is indented under Tick Data, with its help text at the bottom](images/meaty_timing_menu.png)
 
@@ -1322,15 +1322,15 @@ Meaty Timing reports contact timing; it does not judge whether a setup worked or
 <a id="frame-meter"></a>
 ### 11.4 Frame Meter
 
-**Frame Meter gives you a visual view of normal and special moves.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
+**Frame Meter shows the properties of normal and special moves as colored bars.** Colored bars show how startup, active frames, recovery, invulnerability and other states unfold. Use it alongside the numbers if colors and lengths make move properties easier to understand.
 
-With `Frame Meter = yes`, the last row on the `Display` tab, both players' states run along the bottom of the screen, one tile per Tick. Turning it on opens the three rows in the table below, indented under it. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
+Set `Frame Meter = yes` at the bottom of the `Display` tab to show both players' states along the bottom of the screen, one tile per Tick. Enabling it displays three additional settings beneath it, described in the table below. The upper row is P1 and the lower row is P2. P1's `Startup / Total / Recovery / Advantage` sits above the meter and P2's below it.
 
 ![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 7 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
 
 In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players’ states on the same Tick.
 
-![On the Display tab, Frame Meter : yes opens three indented rows under it](images/frame_meter_menu.png)
+![On the Display tab, Frame Meter : yes displays three additional settings beneath it](images/frame_meter_menu.png)
 
 | Tile color | State |
 |---|---|
@@ -1354,7 +1354,7 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 
 When neither player has done anything for five Ticks, the meter stops. While it is stopped, hold down-back or down-forward to scroll the log back and forth. The next action starts a new log.
 
-| Child row | What it does |
+| Related setting | What it does |
 |---|---|
 | `Show Throw Invulnerability` | Marks throw-invulnerable Ticks with stripes on the lower half of the tile (on by default). Display only; the numbers do not change |
 | `Include Jumps / Dashes` | Shows jumps and dashes too (on by default). Off: attacks and hit or block stun only. Walking is not shown either way |
@@ -1484,7 +1484,7 @@ Enable only the readouts you need under `Display`.
 | `Show Button Releases` | Marks button releases |
 | `Hide Negative Edge Inputs` | Omits columns with no new input; does not remove dedicated release markers |
 | `Show P2 Inputs` | Dummy inputs on the right |
-| `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Turning it on opens three more rows under it ([11.4](#frame-meter)) |
+| `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Enabling it displays three additional settings beneath it ([11.4](#frame-meter)) |
 
 Child options are hidden when their parent is OFF. The GC input bar requires `Show Scrolling Input`; some other readouts require `HUD (Life / Meter)`.
 

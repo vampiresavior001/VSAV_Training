@@ -16,13 +16,13 @@ This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Tr
 
 Left: check whether you still fit six presses when delaying PB. Right: see which GC directions and button presses the game accepted. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
 
-## Reproduce, practice and adjust
+## Reproduce, practice and improve
 
-1. **Reproduce the opponent.** Define actions and timing in Action Steps to repeatedly reproduce precise sequences, such as the earliest possible dash into an attack or crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, it can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
-2. **Practice and test.** Have the dummy repeat the same offense to practice PB, GC or interrupts after air guarding, or test your own wake-up pressure and strings against a fixed response.
-3. **Read the result and adjust.** See where your inputs landed in the window and on which Tick your attack connected, then adjust your next attempt. PB Stats and GC Stats track your success rate and input time.
+1. **Reproduce the opponent’s actions.** Define actions and timing in Action Steps to repeatedly reproduce precise sequences, such as the earliest possible dash into an attack or crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, it can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
+2. **Practice your defense and test your offense.** Have the dummy repeat the same offense to practice PB, GC or interrupts after air guarding, or test your own wake-up pressure and strings against a fixed response.
+3. **Use the results to improve.** Check when your inputs registered within the input window and on which Tick your attack connected, then adjust your inputs or timing on the next attempt. PB Stats and GC Stats track your success rate and input time.
 
-Randomness affects PB activation and GC input windows. These displays help you identify what to improve from the inputs the game accepted, rather than success or failure alone.
+Randomness affects PB activation and GC input windows, so success or failure alone may not show what to improve. The tool shows which inputs the game accepted and when, helping you decide what to adjust.
 
 ## What you can test and practice
 
@@ -30,8 +30,8 @@ Randomness affects PB activation and GC input windows. These displays help you i
 
 | Goal | How to use the tool |
 |---|---|
-| **Fix your PB execution** | Use [PB Counter](docs/PLAYER_MANUAL.en.md#08-pb) to see where in the window you pressed and how many presses counted. PB Stats tracks your success rate and averages |
-| **Find why a GC failed** | Use [GC Command Trace](docs/PLAYER_MANUAL.en.md#09-gc) to see which directions and buttons the game accepted and where the input expired. Compare the left and right sides with [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) |
+| **Improve your PB execution** | Use [PB Counter](docs/PLAYER_MANUAL.en.md#08-pb) to check when you pressed within the input window and how many presses counted. PB Stats shows your success rate, average press count and average input timing |
+| **Find out why a GC failed** | Use [GC Command Trace](docs/PLAYER_MANUAL.en.md#09-gc) to see which directions and buttons the game accepted and where the input window expired. Compare the left and right sides with [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) |
 | **Practice defense with varied attacks** | Randomize attacks or their timing to practice PB and GC without relying on a fixed rhythm. See [which setting to use](docs/PLAYER_MANUAL.en.md#dummy-button-timing) |
 | **Explore situations after air guarding** | Use [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps) to check gaps in air chains, interrupt timing and landing advantage |
 
