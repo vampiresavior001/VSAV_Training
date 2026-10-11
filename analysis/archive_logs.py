@@ -39,11 +39,13 @@ def main():
     # silently overwrites it. idle_sound.json (Mute Idle Sounds, written while
     # Knockdown Logger is on) is the same kind of file, and so is
     # invulnLog.lua's log: invuln_log.jsonl since 2026-10-08 (the Q-Bee fields,
-    # appended a line per row), invuln_log.json before it.
+    # appended a line per row), invuln_log.json before it. command_log.jsonl
+    # is commandLog.lua's (Darkness Illusion's recognizer, 2026-10-11).
     extra = [p for p in (os.path.join(log_dir, "ag_prox.json"),
                          os.path.join(log_dir, "idle_sound.json"),
                          os.path.join(log_dir, "invuln_log.json"),
-                         os.path.join(log_dir, "invuln_log.jsonl"))
+                         os.path.join(log_dir, "invuln_log.jsonl"),
+                         os.path.join(log_dir, "command_log.jsonl"))
              if os.path.exists(p)]
     if not paths and not extra:
         print("nothing to archive in", log_dir)

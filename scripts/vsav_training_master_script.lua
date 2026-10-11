@@ -92,6 +92,9 @@ local frameMeterModule   = require "./scripts/framemeter"
 local idleSoundModule    = require "./scripts/idleSound"
 -- Diagnostic: the invulnerability bytes per tick, while Knockdown Logger is on.
 local invulnLogModule    = require "./scripts/invulnLog"
+-- Diagnostic: what Darkness Illusion's command recognizer did, while Knockdown
+-- Logger is on (analysis/COMMAND_TRAINER_DESIGN.ja.md). Exec hooks, at start-up.
+local commandLogModule   = require "./scripts/commandLog"
 -- Auto-Flip Inputs on Side Switch (Dummy / Recording tabs). guardCancel,
 -- controller and actionSequenceRunner require it too; required here so it is
 -- loaded at start-up whatever loads first.
@@ -454,6 +457,7 @@ emu.registerstart(function()
 	frameMeterModule.registerStart()
 	idleSoundModule.registerStart()
 	invulnLogModule.registerStart()
+	commandLogModule.registerStart()
 
 end)
 
@@ -840,6 +844,7 @@ emu.registerafter(function() --recording is done after the frame, not before, to
 	-- Mute Idle Sounds' log: gathered in its exec hook, written here.
 	idleSoundModule.registerAfter()
 	invulnLogModule.registerAfter()
+	commandLogModule.registerAfter()
 	if globals.game_state.match_begun == false then
 		if globals == nil or globals.options == nil then
 			return
