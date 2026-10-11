@@ -408,6 +408,9 @@ do
 	package.preload["./scripts/pbStats"] = function() return dofile("pbStats.lua") end
 	-- hud.lua と同じ表を見るため、このテストの M を渡す。
 	package.preload["./scripts/gcStats"] = function() return M end
+	-- hud.lua requires commandTrainer: GC Command Trace makes way for its box.
+	package.preload["./scripts/commandLog"] = function() return dofile("commandLog.lua") end
+	package.preload["./scripts/commandTrainer"] = function() return dofile("commandTrainer.lua") end
 	local saved = globals
 	images = {}
 	gui.image = function(x, y, img) images[#images + 1] = { x = x, y = y, img = img } end

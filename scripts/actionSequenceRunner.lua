@@ -807,6 +807,25 @@ local DIRECTION_NAME = {
 	["forward"] = true, ["back"] = true, ["up"] = true, ["down"] = true,
 }
 
+-- What goes through hit stop (see seq_through_freeze below). Special kinds from
+-- charMoves' registry, and a Custom step's lever when it is a plain direction
+-- (the editor's CUSTOM_LEVERS) - anything else there is a command motion.
+-- Asked of the EDITOR'S step, so compile asks it and the record carries the
+-- answer: the record has no action or lever, and asked there this was always
+-- false (the first two builds of it did nothing on the machine).
+local FREEZE_OK_SPECIAL = { motion = true, sequence = true }
+local PLAIN_LEVER = {
+	["none"] = true, ["forward"] = true, ["back"] = true, ["up"] = true, ["down"] = true,
+	["up-forward"] = true, ["up-back"] = true, ["down-forward"] = true, ["down-back"] = true,
+}
+local function through_freeze(step)
+	local sp = special_command(step)
+	if sp ~= nil then return FREEZE_OK_SPECIAL[sp.type] == true end
+	return step.action == "custom" and step.lever ~= nil and not PLAIN_LEVER[step.lever]
+end
+-- For analysis/test_seq_hold.lua.
+M.through_freeze = through_freeze
+
 local function hold_lever(list)
 	local last = list[#list]
 	if last == nil then return nil end
@@ -1014,6 +1033,9 @@ function M.compile(seq, mis)
 			-- Carried on the record so the answer survives compilation; the
 			-- step itself is gone by the time guardCancel asks.
 			press_free0 = (_sp_cmd ~= nil and _sp_cmd.press_free0 == true) or nil,
+			-- Walked through hit stop (seq_through_freeze). Same reason as the
+			-- two above: only the step can answer it.
+			through_freeze = through_freeze(step) or nil,
 			-- STEP ONE'S WAIT IS NOT COUNTED HERE.
 			--
 			-- It is the press offset the arm already applies - kd_delay_ticks
@@ -2332,6 +2354,28 @@ local function service_body(defender)
 		q.seq_hold_btn_ticks = step.hold_btn_ticks
 		-- Same ride for the dash cancel's reverse direction.
 		q.seq_rev = step.rev
+		-- A SPECIAL MOVE IS TAKEN THROUGH HIT STOP (user, 2026-10-11).
+		--
+		-- The walker does not count a press made during hit stop and enters
+		-- a motion again after ten frozen ticks, because a dash and a normal
+		-- lose such a press: the dash is only taken by a $06 handler
+		-- (0x027B80) and a rapid-fire press only by one, and those do not run
+		-- during hit stop (0x022552). A special does not lose it - the
+		-- character's special check runs through hit stop. Measured on the
+		-- sequence recognizer (0x02A0C8): Lei-Lei's crouching MK into
+		-- Tenraiha, on a numbered Wait, had MP and up accepted and the super
+		-- started with $5C still at 10 and 9. On Cancel the same walker held
+		-- LK through the freeze, entered the whole command again after it,
+		-- and the super started six ticks after the freeze - too late to
+		-- combo (reversal_logs_archive/mixed-v11.7.24.2+v11.7.25, command_log
+		-- and invuln_log side by side). A command motion goes through the
+		-- same special check (Morrigan's calls 0x029E32 before 0x029E7A), so
+		-- motions count too - the user's rule: specials take presses made in
+		-- hit stop, dashes do not. Repeat (mash) and dedicated moves keep the
+		-- old rule: nothing has measured them.
+		--
+		-- `step` here is the compiled record, so the answer comes from compile.
+		q.seq_through_freeze = step.through_freeze
 	end
 end
 

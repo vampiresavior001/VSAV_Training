@@ -5551,8 +5551,12 @@ memory.registerexec(0x02211A, function()
 				-- this one with saw_freeze did not fix what it was aimed at
 				-- (Morrigan's looped dash MK). Both are recorded in
 				-- handoff_v11.5_action_steps.md; neither belongs here.
+				-- Not for a special move: the game takes its presses during hit
+				-- stop, so nothing goes stale there (seq_through_freeze, set by
+				-- actionSequenceRunner.through_freeze).
 				if (_pl ~= 0 or _pb ~= 0)
 				   and memory.readbyte(0xFF885C) ~= 0
+				   and not _s0.seq_through_freeze
 				   and _s0.entry_ticks
 				       > (actionSequenceRunnerModule.DASH_GRACE_TICKS or 10) then
 					_s0.restart_pending = true
@@ -5617,8 +5621,17 @@ memory.registerexec(0x02211A, function()
 				-- ticks, and the motion expired - breaking a case that had
 				-- been working. The same freeze on a DIRECTION is the case
 				-- this whole guard exists for, so the two are split here.
+				-- EXCEPT A SPECIAL MOVE (user, 2026-10-11: specials take presses
+				-- made in hit stop, dashes do not). The character's special check
+				-- runs through hit stop - measured on Tenraiha, accepted and
+				-- started with $5C at 10 and 9 - so a frozen tick IS a tick
+				-- delivered, and the command can complete inside the freeze the
+				-- way a numbered Wait already made it do. Dashes and normals keep
+				-- the rule: they are only taken by $06 handlers, which 0x022552
+				-- skips during hit stop.
 				if (_pl ~= 0 or _pb ~= 0)
-				   and memory.readbyte(0xFF885C) ~= 0 then
+				   and memory.readbyte(0xFF885C) ~= 0
+				   and not _s0.seq_through_freeze then
 					-- asserted, but the game is not looking: not delivered
 				else
 					_s0.tick_held = (_s0.tick_held or 0) + 1

@@ -6,6 +6,35 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.25.1
+
+Action Steps no longer stops a special's input when it runs into hit stop.
+Crouching MK into Tenraiha on Cancel now combos.
+
+### Fix: a special on Cancel came out late
+
+- When a special step's input ran into hit stop, it stopped for the hit stop,
+  and after a long stop it started over from the first input. With Wait at
+  `Cancel` the input starts right on contact, so most of it fell in the hit
+  stop and the move came out too late to combo (for example, Lei-Lei's
+  crouching MK into Tenraiha)
+- Specials (the specials under `Action`, and command inputs in Custom) now keep
+  going through hit stop, because the game accepts special commands during it.
+  Dashes and normals are unchanged, because the game does not use inputs made
+  during hit stop for them. Mashed moves (SxP) and Pit of Blame are also
+  unchanged, as they have not been checked
+- In FBNeo on the developer's side, crouching MK into Tenraiha on Cancel came
+  out during the hit stop and combo'd all 7 times (it used to come out 6 Ticks
+  after the hit stop). Motion specials have not been checked yet
+
+### Fix: GC Command Trace not shown
+
+- In v11.7.25, GC Command Trace was not shown while Command Trainer was on,
+  even for a character without a sequence super. It is now hidden only while
+  Command Trainer is displayed for a supported character
+
+---
+
 ## v11.7.25
 
 Command Trainer is new: see, step by step, which inputs of a sequence super the
@@ -28,13 +57,12 @@ game accepted. Ten moves, Darkness Illusion among them.
   is `Success` (Ticks from the first input to the last), `Expired` (Ticks
   since the last accepted input), `Not started` (the command was complete but
   the move did not come out) or `Interrupted` (cleared partway)
-- How the game accepts the inputs was verified in FBNeo for
-  all ten moves. Only the input being waited for, pressed on that Tick, is
+- How the game accepts the inputs was confirmed by ROM analysis
+  for all ten moves. Only the input being waited for, pressed on that Tick, is
   accepted: another input started on the same Tick, or a held one, does not
   count. Each accepted input rolls the window for the next: within 13 Ticks
   always works, 14 to 18 depends on the roll, and 19 or more never does
-- GC Command Trace is hidden only while Command Trainer is displayed for a
-  supported character (the two would overlap). This
+- GC Command Trace is not shown while this is on (the two would overlap). This
   tool keeps the super meter stock at 99, so a move never fails for lack of
   meter
 

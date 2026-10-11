@@ -103,6 +103,7 @@ local function tick()
 			local lev, btn = to_bits(s.sequence[i])
 			s.entry_ticks = (s.entry_ticks or 0) + 1
 			if (lev ~= 0 or btn ~= 0) and (ram[P2 + 0x5C] or 0) ~= 0
+			   and not s.seq_through_freeze
 			   and s.entry_ticks > (R.DASH_GRACE_TICKS or 10) then
 				s.restart_pending = true
 				wrote = { lev = 0, btn = 0, src = "wait" }
@@ -115,7 +116,9 @@ local function tick()
 			-- 凍結中のティックはゲームが処理しないので数えない。
 			-- 何かを押しているエントリだけ。ニュートラルは登録される押しが無いので
 			-- 待っても得が無く、猶予だけ食う。
-			if (lev ~= 0 or btn ~= 0) and (ram[P2 + 0x5C] or 0) ~= 0 then
+			-- 必殺技の歩 (seq_through_freeze) は例外で、凍結中も数える。
+			if (lev ~= 0 or btn ~= 0) and (ram[P2 + 0x5C] or 0) ~= 0
+			   and not s.seq_through_freeze then
 				-- 出してはいるが、ゲームは見ていない
 			else
 				s.tick_held = (s.tick_held or 0) + 1
@@ -393,15 +396,100 @@ do
 	-- 上は代役の歩進を見ている。実装そのものは読んで固定する。
 	-- (これが無いと、実装から条件を外しても上は通ってしまう)
 	local gsrc = io.open("guardCancel.lua"):read("*a")
-	local g = gsrc:find("and memory.readbyte(0xFF885C) ~= 0 then", 1, true)
+	-- 必殺技は例外 (本人、2026-10-11: 必殺技はヒットストップ中の入力を受け付け、
+	-- ダッシュは受け付けない)。凍結中のティックも配送に数える (seq_through_freeze)。
+	-- ダッシュと通常技はこれまでどおり数えない。
+	local g = gsrc:find("and memory.readbyte(0xFF885C) ~= 0\n\t\t\t\t   and not _s0.seq_through_freeze then", 1, true)
 	local i = g and gsrc:find("_s0.tick_held = (_s0.tick_held or 0) + 1", g, true)
 	if g == nil or i == nil or (i - g) > 1200 then
 		fail("実装が凍結中のティックを数えない", "守られていない", "$5C の分岐の内側")
 	end
+	-- 例外の範囲は runner の through_freeze が決める。歩の種類ごとに確かめる。
+	local keep_lookup = seq_special_command
+	seq_special_command = function(name)
+		local t = { ["Tenraiha"] = { type = "sequence" }, ["Shadow Blade"] = { type = "motion" },
+		            ["Mash"] = { type = "repeat" }, ["Dedicated"] = { type = "dedicated" } }
+		return t[name]
+	end
+	local cases = {
+		{ "順押しの必殺技 (sequence)", { action = "sp.Tenraiha" }, true },
+		{ "方向入力の必殺技 (motion)", { action = "sp.Shadow Blade" }, true },
+		{ "連打の必殺技 (repeat) はこれまでどおり", { action = "sp.Mash" }, false },
+		{ "dedicated はこれまでどおり", { action = "sp.Dedicated" }, false },
+		{ "Custom の QCF", { action = "custom", lever = "QCF", button = "LP" }, true },
+		{ "Custom の溜め (HCharge)", { action = "custom", lever = "HCharge", button = "LP" }, true },
+		{ "Custom の前+中K (通常技)", { action = "custom", lever = "forward", button = "MK" }, false },
+		{ "Custom のニュートラル+強P", { action = "custom", lever = "none", button = "HP" }, false },
+		{ "Attack (通常技)", { action = "atk", lever = "down", button = "MK" }, false },
+		{ "Dash", { action = "dash", lever = "forward" }, false },
+	}
+	for _, c in ipairs(cases) do
+		local got = R.through_freeze(c[2]) == true
+		if got ~= c[3] then fail("ヒットストップを跨ぐか: " .. c[1], tostring(got), tostring(c[3])) end
+	end
+	seq_special_command = keep_lookup
 	if gsrc:find("if (_pl ~= 0 or _pb ~= 0)", 1, true) == nil then
 		fail("ニュートラルは待たない", "限定が無い", "_pl/_pb のどちらかが非ゼロのときだけ")
 	end
 	if fails == 0 then print("  ok 凍った 1 ティックは配送に数えず、その分だけ出し続ける") end
+end
+
+print("[9b] 必殺技の歩は凍結中も配送に数え、入れ直さない (本物の runner を通す)")
+-- 実機 2026-10-11 (reversal_logs_archive/v11.7.25、51 回): 中足払い Cancel 天雷破で、
+-- 弱K の後はヒットストップの間ずっと進まず、明けてから入れ直して 6 Tick 後に出た。
+-- 例外を入れたのに効いていなかった。runner が例外を「コンパイル済みの記録」に
+-- 尋ねていて、記録には action も lever も無いので常に偽だった。上の [9] は
+-- エディタの歩を直接渡していたので通っていた。ここは R.service が積んだ記録を見る。
+do
+	local keep_lookup = seq_special_command
+	seq_special_command = function(name)
+		if name == "Tenraiha" then
+			return { type = "sequence", sequence = { { "LK" }, { "HK" }, { "MP" }, {}, { "MP" }, { "up" } } }
+		end
+		return nil
+	end
+	local sched = R.compile({ version = 1, steps = {
+		{ action = "atk", lever = "none", button = "LP", wait = 0 },
+		{ action = "sp.Tenraiha", wait = -1 },
+		{ action = "custom", lever = "QCF", button = "LP", wait = -1 },
+		{ action = "atk", lever = "down", button = "MK", wait = -1 },
+		{ action = "dash.f", wait = -1 },
+	} })
+	local want = { false, true, true, false, false }
+	for k = 1, #want do
+		local got = sched ~= nil and sched[k] ~= nil and sched[k].through_freeze == true
+		if got ~= want[k] then fail("compile の through_freeze (" .. k .. " 歩目)", tostring(got), tostring(want[k])) end
+	end
+	-- 2 歩目の天雷破。1 エントリ目を出した次のティックから凍らせる
+	-- (Cancel では弱K が当たったティックに出て、残りがヒットストップに入る)。
+	local function walk(freeze)
+		install({
+			{ action = "atk", lever = "none", button = "LP", wait = 0 },
+			{ action = "sp.Tenraiha", wait = -1 },
+		})
+		start()
+		set_free()
+		local sent, other = 0, 0
+		for _ = 1, 30 do
+			ram[P2 + 0x5C] = (freeze and queued ~= nil) and 11 or 0
+			local e = tick()
+			if e.src == "step" then sent = sent + 1
+			elseif e.src == "wait" or e.src == "reenter" then other = other + 1 end
+		end
+		ram[P2 + 0x5C] = 0
+		return sent, other
+	end
+	local plain = walk(false)
+	local tagged = queued ~= nil and queued.seq_through_freeze == true
+	if not tagged then fail("runner が積んだ記録の seq_through_freeze", tostring(queued and queued.seq_through_freeze), "true") end
+	local frozen, other = walk(true)
+	if plain < 6 then fail("凍結なしで出したティック", plain, ">= 6") end
+	if frozen ~= plain then fail("凍結中も同じティック数で出し切る", frozen, plain) end
+	if other ~= 0 then fail("待ち・入れ直しのティック", other, 0) end
+	seq_special_command = keep_lookup
+	if fails == 0 then
+		print(string.format("  ok 天雷破は凍結中も %d ティックで出し切り、入れ直さない", frozen))
+	end
 end
 
 print("[10] 窓が切れるほど長い凍結なら、待たずに頭から入れ直す")
