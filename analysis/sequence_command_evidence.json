@@ -1,0 +1,536 @@
+{
+  "status": "static_analysis_runtime_pending",
+  "baseline_commit": "7745eb19f15cc7961280e07adaa60c493585a107",
+  "rom_set": "vsavj (970519 Japan)",
+  "program_data_sha256": "80954d7005ed321868456b95ba0a293b39cbe8990df3b787074d07077ac2f5a0",
+  "recognizer": "0x02A0C8",
+  "tables": [
+    {
+      "wrapper": "0x029E6A",
+      "table": "0x02A6BA",
+      "steps": [
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x0200",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": false
+        },
+        {
+          "word": "0x0002",
+          "edge_equals": "0x0002",
+          "label": "forward",
+          "terminal": false
+        },
+        {
+          "word": "0x2000",
+          "edge_equals": "0x2000",
+          "label": "MK",
+          "terminal": false
+        },
+        {
+          "word": "0x2010",
+          "edge_equals": "0x2000",
+          "label": "MK",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x02FF9C",
+          "opcode": "0x4EB9",
+          "return_pc": "0x02FFA2",
+          "block_offset": "0x330",
+          "character": "Demitri",
+          "sequence_name": "Midnight Pleasure",
+          "move_id": "0x14",
+          "commit_end_pc": "0x030134",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    },
+    {
+      "wrapper": "0x029E72",
+      "table": "0x02A6C4",
+      "steps": [
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x0200",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": false
+        },
+        {
+          "word": "0x0002",
+          "edge_equals": "0x0002",
+          "label": "forward",
+          "terminal": false
+        },
+        {
+          "word": "0x1000",
+          "edge_equals": "0x1000",
+          "label": "LK",
+          "terminal": false
+        },
+        {
+          "word": "0x2010",
+          "edge_equals": "0x2000",
+          "label": "MK",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x031D36",
+          "opcode": "0x4EB9",
+          "return_pc": "0x031D3C",
+          "block_offset": "0x340",
+          "character": "Gallon",
+          "sequence_name": "Moment Slice",
+          "move_id": "0x06",
+          "commit_end_pc": "0x031EC0",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    },
+    {
+      "wrapper": "0x029E7A",
+      "table": "0x02A6CE",
+      "steps": [
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x0002",
+          "edge_equals": "0x0002",
+          "label": "forward",
+          "terminal": false
+        },
+        {
+          "word": "0x1000",
+          "edge_equals": "0x1000",
+          "label": "LK",
+          "terminal": false
+        },
+        {
+          "word": "0x0410",
+          "edge_equals": "0x0400",
+          "label": "HP",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x035632",
+          "opcode": "0x4EB9",
+          "return_pc": "0x035638",
+          "block_offset": "0x360",
+          "status": "unclassified_call_path"
+        },
+        {
+          "pc": "0x039802",
+          "opcode": "0x4EB9",
+          "return_pc": "0x039808",
+          "block_offset": "0x330",
+          "character": "Morrigan",
+          "sequence_name": "Darkness Illusion",
+          "move_id": "0x08",
+          "commit_end_pc": "0x0399A2",
+          "status": "static_move_path_confirmed"
+        },
+        {
+          "pc": "0x04DCFA",
+          "opcode": "0x4EB9",
+          "return_pc": "0x04DD00",
+          "block_offset": "0x348",
+          "character": "Lilith",
+          "sequence_name": "Luminous Illusion",
+          "move_id": "0x18",
+          "commit_end_pc": "0x04DDA4",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    },
+    {
+      "wrapper": "0x029E82",
+      "table": "0x02A6D8",
+      "steps": [
+        {
+          "word": "0x0200",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": false
+        },
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x0001",
+          "edge_equals": "0x0001",
+          "label": "back",
+          "terminal": false
+        },
+        {
+          "word": "0x1000",
+          "edge_equals": "0x1000",
+          "label": "LK",
+          "terminal": false
+        },
+        {
+          "word": "0x2010",
+          "edge_equals": "0x2000",
+          "label": "MK",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x0397F4",
+          "opcode": "0x4EB9",
+          "return_pc": "0x0397FA",
+          "block_offset": "0x300",
+          "character": "Morrigan",
+          "sequence_name": "Finishing Shower",
+          "move_id": "0x00",
+          "commit_end_pc": "0x0398EC",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    },
+    {
+      "wrapper": "0x029E8A",
+      "table": "0x02A6E2",
+      "steps": [
+        {
+          "word": "0x0002",
+          "edge_equals": "0x0002",
+          "label": "forward",
+          "terminal": false
+        },
+        {
+          "word": "0x0400",
+          "edge_equals": "0x0400",
+          "label": "HP",
+          "terminal": false
+        },
+        {
+          "word": "0x0200",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": false
+        },
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x0012",
+          "edge_equals": "0x0002",
+          "label": "forward",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x0397D8",
+          "opcode": "0x4EB9",
+          "return_pc": "0x0397DE",
+          "block_offset": "0x340",
+          "character": "Morrigan",
+          "sequence_name": "Cryptic Needle",
+          "move_id": "0x0A",
+          "commit_end_pc": "0x0399D0",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    },
+    {
+      "wrapper": "0x029E92",
+      "table": "0x02A6EC",
+      "steps": [
+        {
+          "word": "0x2000",
+          "edge_equals": "0x2000",
+          "label": "MK",
+          "terminal": false
+        },
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x0004",
+          "edge_equals": "0x0004",
+          "label": "down",
+          "terminal": false
+        },
+        {
+          "word": "0x1000",
+          "edge_equals": "0x1000",
+          "label": "LK",
+          "terminal": false
+        },
+        {
+          "word": "0x0210",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x03B88A",
+          "opcode": "0x4EB9",
+          "return_pc": "0x03B890",
+          "block_offset": "0x340",
+          "character": "Anakaris",
+          "sequence_name": "Pharaoh Magic",
+          "move_id": "0x10",
+          "commit_end_pc": "0x03BA98",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    },
+    {
+      "wrapper": "0x029E9A",
+      "table": "0x02A6F6",
+      "steps": [
+        {
+          "word": "0x4000",
+          "edge_equals": "0x4000",
+          "label": "HK",
+          "terminal": false
+        },
+        {
+          "word": "0x0200",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": false
+        },
+        {
+          "word": "0x0004",
+          "edge_equals": "0x0004",
+          "label": "down",
+          "terminal": false
+        },
+        {
+          "word": "0x2000",
+          "edge_equals": "0x2000",
+          "label": "MK",
+          "terminal": false
+        },
+        {
+          "word": "0x0410",
+          "edge_equals": "0x0400",
+          "label": "HP",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x03B86E",
+          "opcode": "0x4EB9",
+          "return_pc": "0x03B874",
+          "block_offset": "0x348",
+          "character": "Anakaris",
+          "sequence_name": "Pharaoh Salvation",
+          "move_id": "0x14",
+          "commit_end_pc": "0x03BAD4",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    },
+    {
+      "wrapper": "0x029EA2",
+      "table": "0x02A70A",
+      "steps": [
+        {
+          "word": "0x4000",
+          "edge_equals": "0x4000",
+          "label": "HK",
+          "terminal": false
+        },
+        {
+          "word": "0x0200",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": false
+        },
+        {
+          "word": "0x1000",
+          "edge_equals": "0x1000",
+          "label": "LK",
+          "terminal": false
+        },
+        {
+          "word": "0x0004",
+          "edge_equals": "0x0004",
+          "label": "down",
+          "terminal": false
+        },
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x2000",
+          "edge_equals": "0x2000",
+          "label": "MK",
+          "terminal": false
+        },
+        {
+          "word": "0x0410",
+          "edge_equals": "0x0400",
+          "label": "HP",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x03B87C",
+          "opcode": "0x4EB9",
+          "return_pc": "0x03B882",
+          "block_offset": "0x358",
+          "character": "Anakaris",
+          "sequence_name": "Pharaoh Decoration",
+          "move_id": "0x1C",
+          "commit_end_pc": "0x03BB10",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    },
+    {
+      "wrapper": "0x029EAA",
+      "table": "0x02A700",
+      "steps": [
+        {
+          "word": "0x4000",
+          "edge_equals": "0x4000",
+          "label": "HK",
+          "terminal": false
+        },
+        {
+          "word": "0x0100",
+          "edge_equals": "0x0100",
+          "label": "LP",
+          "terminal": false
+        },
+        {
+          "word": "0x0004",
+          "edge_equals": "0x0004",
+          "label": "down",
+          "terminal": false
+        },
+        {
+          "word": "0x1000",
+          "edge_equals": "0x1000",
+          "label": "LK",
+          "terminal": false
+        },
+        {
+          "word": "0x0410",
+          "edge_equals": "0x0400",
+          "label": "HP",
+          "terminal": true
+        }
+      ],
+      "direct_references": []
+    },
+    {
+      "wrapper": "0x029EB2",
+      "table": "0x02A718",
+      "steps": [
+        {
+          "word": "0x1000",
+          "edge_equals": "0x1000",
+          "label": "LK",
+          "terminal": false
+        },
+        {
+          "word": "0x4000",
+          "edge_equals": "0x4000",
+          "label": "HK",
+          "terminal": false
+        },
+        {
+          "word": "0x0200",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": false
+        },
+        {
+          "word": "0x0200",
+          "edge_equals": "0x0200",
+          "label": "MP",
+          "terminal": false
+        },
+        {
+          "word": "0x0018",
+          "edge_equals": "0x0008",
+          "label": "up",
+          "terminal": true
+        }
+      ],
+      "direct_references": [
+        {
+          "pc": "0x04B364",
+          "opcode": "0x4EB9",
+          "return_pc": "0x04B36A",
+          "block_offset": "0x330",
+          "character": "Lei-Lei",
+          "sequence_name": "Tenraiha",
+          "move_id": "0x0C",
+          "commit_end_pc": "0x04B4EA",
+          "status": "static_move_path_confirmed"
+        }
+      ]
+    }
+  ],
+  "direct_recognizer_references": [
+    "0x029E6E",
+    "0x029E76",
+    "0x029E7E",
+    "0x029E86",
+    "0x029E8E",
+    "0x029E96",
+    "0x029E9E",
+    "0x029EA6",
+    "0x029EAE",
+    "0x029EB6"
+  ],
+  "scope": "Direct absolute JSR/JMP and relative BRA/BSR candidates; indirect flow not exhaustive",
+  "name_reference": {
+    "url": "https://darkstalkers.web.fc2.com/savior/data-s/anakaris-s/anakaris-s-ex-move.html",
+    "checked": "2026-10-07",
+    "scope": "Pharaoh names, commands and gauge costs"
+  },
+  "warning": "Existing Anakaris move-id labels are reversed: Salvation=0x14, Decoration=0x1C. See SEQUENCE_COMMAND_ROM_SURVEY.ja.md"
+}

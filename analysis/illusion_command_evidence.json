@@ -1,0 +1,159 @@
+{
+  "status": "static_verified_runtime_pending",
+  "repository_commit": "7745eb19f15cc7961280e07adaa60c493585a107",
+  "rom_set": "vsavj (970519 Japan)",
+  "program_data_sha256": "80954d7005ed321868456b95ba0a293b39cbe8990df3b787074d07077ac2f5a0",
+  "listing_sha256": {
+    "c20.txt": "74c219d74ffe7810cecb2b9844dcaab641e33a0ce7161770ee0808b393d5042e",
+    "c28.txt": "be4ded15b090eced22baa4cd0b5d8cf6955053d29590a3392b157327b9b6dd3f",
+    "c38.txt": "e2ce322e80e0d792b2f77f816e6290d6b97a4fa8f14c690e481178aab2d999ff",
+    "c040000.txt": "88904cce5b6c41ed1f94ac458c42bfa9db3435fed7587a15a531bddb258677ad"
+  },
+  "opcode_signature_checks_passed": [
+    "0x0397FE",
+    "0x04DCF6",
+    "0x029E7A",
+    "0x02A0E4",
+    "0x02A112",
+    "0x02A53A",
+    "0x02A57A",
+    "0x02A580",
+    "0x039994",
+    "0x04DD96"
+  ],
+  "shared_recognizer": "0x02A0C8",
+  "wrapper": "0x029E7A",
+  "table_address": "0x02A6CE",
+  "steps": [
+    {
+      "index": 1,
+      "label": "LP",
+      "table_word": "0x0100",
+      "edge_equals": "0x0100",
+      "terminal": false
+    },
+    {
+      "index": 2,
+      "label": "LP",
+      "table_word": "0x0100",
+      "edge_equals": "0x0100",
+      "terminal": false
+    },
+    {
+      "index": 3,
+      "label": "forward",
+      "table_word": "0x0002",
+      "edge_equals": "0x0002",
+      "terminal": false
+    },
+    {
+      "index": 4,
+      "label": "LK",
+      "table_word": "0x1000",
+      "edge_equals": "0x1000",
+      "terminal": false
+    },
+    {
+      "index": 5,
+      "label": "HP",
+      "table_word": "0x0410",
+      "edge_equals": "0x0400",
+      "terminal": true
+    }
+  ],
+  "profiles": [
+    {
+      "character": "Morrigan",
+      "character_id": "0x05",
+      "move_id": "0x08",
+      "name": "Darkness Illusion",
+      "block_offset": "0x330",
+      "call_pc": "0x039802",
+      "return_pc": "0x039808",
+      "move_commit_end_pc": "0x0399A2"
+    },
+    {
+      "character": "Lilith",
+      "character_id": "0x0E",
+      "move_id": "0x18",
+      "name": "Luminous Illusion",
+      "block_offset": "0x348",
+      "call_pc": "0x04DCFA",
+      "return_pc": "0x04DD00",
+      "move_commit_end_pc": "0x04DDA4"
+    }
+  ],
+  "timer_evidence": {
+    "address": "0x02A55A",
+    "status": "memory_view_requires_runtime_confirmation",
+    "data_view_bytes": [
+      3,
+      232,
+      71,
+      167,
+      141,
+      59,
+      125,
+      150,
+      72,
+      181,
+      194,
+      36,
+      12,
+      92,
+      120,
+      102,
+      195,
+      99,
+      175,
+      238,
+      6,
+      134,
+      84,
+      150,
+      75,
+      45,
+      42,
+      170,
+      48,
+      162,
+      75,
+      87
+    ],
+    "listing_view_bytes": [
+      14,
+      15,
+      14,
+      16,
+      14,
+      17,
+      14,
+      18,
+      14,
+      19,
+      14,
+      15,
+      14,
+      16,
+      14,
+      17,
+      14,
+      18,
+      14,
+      19,
+      14,
+      15,
+      14,
+      16,
+      14,
+      17,
+      14,
+      18,
+      14,
+      15,
+      14,
+      16
+    ],
+    "rule": "Measure block+4 and actual return events; do not hardcode a window."
+  }
+}
