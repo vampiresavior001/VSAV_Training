@@ -42,6 +42,7 @@ Randomness affects PB activation and GC input windows, so success or failure alo
 | **Test wake-up pressure and attack strings** | Fix the dummy’s response, then use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to compare contact timing with the actual outcome |
 | **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
 | **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
+| **Practice sequence commands** | Use [Command Trainer](docs/PLAYER_MANUAL.en.md#command-trainer) to see where an input sequence failed and which input gaps depend on the random window |
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 

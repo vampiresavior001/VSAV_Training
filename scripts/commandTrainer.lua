@@ -31,7 +31,7 @@
 -- Here only Tick Data's longest lines reach it - a multi-hit move's Active
 -- list, a long Action Timeline - and the P2 input column starts at 353
 -- (vsavscriptv2.lua: screen width minus three icons). GC Command Trace stays
--- off while this is on (hud.lua): the two boxes would overlap. The result
+-- off while this panel is displayed (hud.lua): the two boxes would overlap. The result
 -- stays until the next attempt's first step is taken.
 
 local M = {}
@@ -62,6 +62,13 @@ function M.fits(prof, cid)
 		if id == cid then return true end
 	end
 	return false
+end
+
+-- Share the visibility condition with GC Command Trace, so unsupported
+-- characters do not hide both trainers.
+function M.is_visible()
+	local prof = M.selected()
+	return prof ~= nil and M.fits(prof, memory.readbyte(P1 + 0x382))
 end
 
 -- THE ROW'S LEFT AND RIGHT STOP AT OFF AND P1'S OWN COMMANDS ONLY (user,
@@ -229,7 +236,7 @@ function M.draw()
 	-- Morrigan only"; a character with a command of its own is switched to it
 	-- by M.follow_p1, so what is left here is one with none, and a box saying
 	-- so is clutter. The selection stays for when that character comes back.
-	if not M.fits(prof, memory.readbyte(P1 + 0x382)) then return end
+	if not M.is_visible() then return end
 	if warn_img == nil then load_warn_images() end
 	-- hud.lua's blocks_top(): under the PB Count line, lower with the Guard
 	-- Action Frequency Check on. x: see the note at the top.

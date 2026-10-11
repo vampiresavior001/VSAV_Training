@@ -1744,7 +1744,7 @@ local _ct_names = { "Off" }
 local _ct_help = { "What the game's own command recognizer took, step by step, for one command\n"
   .. "P1 can do: the ticks between the inputs it accepted and how the attempt ended.\n"
   .. "Left / right: Off and P1's character's commands. Picking one turns it on.\n"
-  .. "GC Command Trace is not shown while it is on." }
+  .. "GC Command Trace is hidden only while this trainer is displayed." }
 for _, _c in ipairs(_ct) do
   _ct_names[#_ct_names + 1] = _c[1]
   _ct_help[#_ct_help + 1] = _c[1] .. ", " .. _c[2] .. ": " .. _c[3] .. ".\n" .. _ct_rules

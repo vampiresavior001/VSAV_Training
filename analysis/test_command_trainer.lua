@@ -373,8 +373,16 @@ globals.options.command_trainer = 2
 print("[5] つなぎ込み")
 local hud = slurp("hud.lua")
 local g = hud:find("local function draw_gc_command_trace()", 1, true)
-eq("ON の間は GC Command Trace が描かない",
-	hud:sub(g or 1, (g or 1) + 400):find("globals.options.command_trainer > 1 then return end", 1, true) ~= nil, true)
+eq("表示できる場合だけ GC Command Trace を隠す",
+	hud:sub(g or 1, (g or 1) + 400):find("commandTrainerModule.is_visible() then return end", 1, true) ~= nil, true)
+globals.options.command_trainer = 2
+ram[0xFF8782] = 0x05
+eq("DI 選択中のモリガンでは GC を隠す", T.is_visible(), true)
+ram[0xFF8782] = 0x08
+eq("対象外キャラでは GC を隠さない", T.is_visible(), false)
+globals.options.command_trainer = 1
+ram[0xFF8782] = 0x05
+eq("Off では GC を隠さない", T.is_visible(), false)
 local master = slurp("vsav_training_master_script.lua")
 eq("起動時に require", master:find('= require "./scripts/commandTrainer"', 1, true) ~= nil, true)
 eq("registerStart を呼ぶ", master:find("commandTrainerModule.registerStart()", 1, true) ~= nil, true)

@@ -312,6 +312,9 @@ do
 	for i = 1, 9 do img_dir[i] = "dir" .. i end
 	img_no_button, img_L_button, img_M_button, img_H_button = "n", "l", "m", "h"
 	globals = { options = { display_gc_command_trace = true } }
+	-- Load the real Command Trainer visibility check used by the HUD.
+	package.preload["./scripts/commandLog"] = function() return dofile("commandLog.lua") end
+	package.preload["./scripts/commandTrainer"] = function() return dofile("commandTrainer.lua") end
 	hud_mod = dofile("hud.lua")
 	want("描画が外に出ている", type(hud_mod.draw_gc_command_trace), "function")
 

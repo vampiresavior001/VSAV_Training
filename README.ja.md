@@ -42,6 +42,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 | **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
 | **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
 | **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
+| **順押しコマンドを安定させる** | [Command Trainer](docs/PLAYER_MANUAL.ja.md#command-trainer)で、入力の失敗箇所と、乱数に左右される入力間隔を確認する |
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンの起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 

@@ -28,12 +28,13 @@ game accepted. Ten moves, Darkness Illusion among them.
   is `Success` (Ticks from the first input to the last), `Expired` (Ticks
   since the last accepted input), `Not started` (the command was complete but
   the move did not come out) or `Interrupted` (cleared partway)
-- How the game accepts the inputs was checked on the developer's hardware for
+- How the game accepts the inputs was verified in FBNeo for
   all ten moves. Only the input being waited for, pressed on that Tick, is
   accepted: another input started on the same Tick, or a held one, does not
   count. Each accepted input rolls the window for the next: within 13 Ticks
   always works, 14 to 18 depends on the roll, and 19 or more never does
-- GC Command Trace is not shown while this is on (the two would overlap). This
+- GC Command Trace is hidden only while Command Trainer is displayed for a
+  supported character (the two would overlap). This
   tool keeps the super meter stock at 99, so a move never fails for lack of
   meter
 

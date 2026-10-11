@@ -1183,7 +1183,7 @@ The result depends on how the game reads the input, so `no` does not guarantee a
 
 1. Make P1 the move's character.
 2. Pick the move under `Trainer > Command Trainer`. Left and right go through `Off` and P1's character's moves only. Anything other than `Off` turns it on. While it is on, changing characters switches to that character's move (the one you last picked for that character since starting FBNeo, otherwise the first in the list). With a character that has no such move, nothing is shown; the selection stays, so it comes back with the character.
-3. Enter the command and watch the box at the top right. GC Command Trace is not shown while this is on.
+3. Enter the command and watch the box at the top right. GC Command Trace is hidden only while Command Trainer is displayed for a supported character.
 
 ![Darkness Illusion came out. The second LP at 17t in orange, then 13t, 6t and 8t, Success 44t](images/command_trainer_success.png)
 
@@ -1199,16 +1199,20 @@ Above, an expiry. Forward was pressed while the second LP was waited for (the `F
 | Buttons and arrows | One step of the command per row. Steps after the one being waited for are dimmed |
 | Number on a row | Ticks from accepting the previous input to accepting this one |
 | Orange number, arrow or buttons | Accepted, but only because the random window allowed it (see "window" below) |
-| Text beside a row (such as `LK+F`) | An input pressed while that step was waited for that was not accepted. `F` is forward and `B` is back. Orange on a step that was then accepted, red on the step where the command expired |
-| Red `x` | The step the command expired on (`Expired`) or was cleared on (`Interrupted`). How long it was waited for is on the last line |
+| Text beside a row (such as `LK+F`) | The last input that was not accepted while waiting for that step. `F` is forward and `B` is back. Orange on a step that was then accepted, red on the step where the command expired |
+| Red `x` | The step the command expired on (`Expired`) or was cleared on (`Interrupted`). For `Expired`, the last line shows the Ticks since the last accepted input |
 | `Success` and a number | The move came out. The number is Ticks from the first input to the last |
 | `Expired` and a number | The command expired. The number is Ticks since the last accepted input |
 | `Not started` | The command was complete but the move did not come out (for example, entered again while the super was still running) |
 | `Interrupted` | The command was cleared partway, for example by getting hit |
 
+**Orange has two meanings depending on where it appears.** Orange timing numbers and input icons indicate a late input accepted thanks to the random window. Orange text beside a step indicates an incorrect input followed by an accepted input. The orange `F` in the second image does not mean that `11t` was late.
+
+**Practice goal:** First complete the command. Then keep the gap between each pair of inputs to 13 Ticks or less and eliminate unintended simultaneous inputs.
+
 The result stays until the first input of the next attempt is accepted. P1 only.
 
-**How the game accepts the inputs (checked on hardware)**
+**How the game accepts the inputs (verified in FBNeo)**
 
 - **Only the input being waited for, pressed on that Tick and nothing else.** If another button or direction is also pressed on the same Tick, the step is not accepted. For example, pressing forward and LK together while forward is waited for does not count as forward (shown as `LK+F`). The command keeps waiting, so entering forward again afterward still works.
 - **A held input does not count.** Only the moment an input starts is accepted. Pressing forward before the second LP and holding it does not count as the third step (the second image above). Start pressing forward after the second LP.
