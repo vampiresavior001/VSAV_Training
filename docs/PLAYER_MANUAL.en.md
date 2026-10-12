@@ -16,7 +16,7 @@ See the [README](../README.md) for a feature overview. This manual explains how 
 <details>
 <summary>Tick control and comparison with the original</summary>
 
-This fork controls dummy inputs on internal frames (Ticks; see [11.1](#ticks-and-frames) for how they relate to displayed frames). It improves on the original version’s ability to reproduce actions at the earliest possible moment and lets you specify actions on wake-up, after blocking and after landing. Alongside special-move reversals, you can make the dummy use light attacks or throws, jump or dash when it becomes able to act.
+This fork controls dummy inputs on internal frames (Ticks; see [11.1](#ticks-and-frames) for how they relate to displayed frames). It improves on the original version's ability to reproduce actions at the earliest possible moment and lets you specify actions on wake-up, after blocking and after landing. Alongside special-move reversals, you can make the dummy use light attacks or throws, jump or dash when it becomes able to act.
 
 Action Steps builds on this control to define actions in internal frames. It supports individual responses, strings and complex combos, including definitions that can complete infinite combos for Bulleta (B.B. Hood) or Bishamon. Repeat these sequences to test your responses against more demanding offense.
 
@@ -104,7 +104,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 
 **Practice command inputs**
 
-| Goal | Tool | Start here |
+| Goal | Feature | Where to start |
 |---|---|---|
 | Perform sequence supers such as Darkness Illusion consistently | Command Trainer | [Section 10.G](#command-trainer) |
 
@@ -413,11 +413,12 @@ You can leave PB Counter / PB Stats enabled. GC Command Trace sits to the right 
 1. Make Sasquatch block P1's attack to trigger the short-dash LP response.
 2. Block the LP and enter **the GC command for your P1 character**.
 3. Check `Success` in the trace or `SUCCESS` in the input history. **Activating GC and hitting the opponent with that move are separate outcomes.** First practice the input using the success indicator as your reference.
+
+   ![Demitri guard-cancels Sasquatch's LP: the trace reads Success 14t and the input bar SUCCESS 14t](images/tut_gc_success.png)
+
+   This example shows a successful GC with Demitri. **Orange highlights alone do not mean failure.** Use the GC command for your own character.
+
 4. If it fails, check whether you blocked, whether the directions were accepted in order and whether the final button was pressed in time. Adjust one part of your input at a time. See [Section 9](#09-gc) for the readouts.
-
-![Demitri guard-cancels Sasquatch's LP: the trace reads Success 14t and the input bar SUCCESS 14t](images/tut_gc_success.png)
-
-This example shows a successful GC with Demitri. **Orange highlights alone do not mean failure.** Use the GC command for your own character.
 
 **Once comfortable, practice on both sides:** Set `Trainer > Show GC Stats = yes` and compare your success rate against the same attack on each side. Review failed attempts on your weaker side in the trace, adjust your input and try again ([Section 9.4: GC Stats](#gc-stats)).
 
@@ -468,9 +469,10 @@ Save the base sequence you built manually as `Short LP`. If you are using the in
 3. Open `Reversal Action Patterns` and choose **`Add from current Steps`**.
 4. Enter **`Short LP`** in the separate name window and confirm. This copies your currently saved Steps.
 5. Mark only `Short LP` as `[x]` in the list. MP toggles whether a pattern is selected.
-6. Keep `Random Guard Action % = 100%` and make the dummy block your attack to test it. Use `Loop Steps = no` for individual responses, or `yes` with `Auto (Landing)` for repeated practice.
 
-![The pattern list showing [x] 01 Short LP](images/tut_patterns_ticked.png)
+   ![The pattern list showing [x] 01 Short LP](images/tut_patterns_ticked.png)
+
+6. Keep `Random Guard Action % = 100%` and make the dummy block your attack to test it. Use `Loop Steps = no` for individual responses, or `yes` with `Auto (Landing)` for repeated practice.
 
 **Check: Select `Short LP` and trigger a response. If the saved short-dash LP plays, you are done.**
 
@@ -521,9 +523,9 @@ Set `Dummy > Guard Action Type = Reversal - Action Patterns` and `Loop Steps = n
 1. Open `Reversal Action Patterns` and use `Import from a File` to import `scripts/patterns/Sasquatch_Long_LP_MP.json` from the release. It appears under `Short LP` in the list.
 2. Mark only `Long LP > MP` as `[x]` and check that `Random Start Wait = 0`. Make the dummy block your attack and check that it dashes in with LP into MP.
 
-![Action Steps for Long LP > MP: Dash : Forward, Auto (0) Attack : LP, +26t Attack : MP](images/tut_sasquatch_long_lp_mp_steps.png)
+   ![Action Steps for Long LP > MP: Dash : Forward, Auto (0) Attack : LP, +26t Attack : MP](images/tut_sasquatch_long_lp_mp_steps.png)
 
-The third step's `+26t` inputs MP 26 Ticks after LP. It is a fixed gap, not `Auto (Chain)`.
+   The third step's `+26t` inputs MP 26 Ticks after LP. It is a fixed gap, not `Auto (Chain)`.
 
 3. Mark both `Short LP` and `Long LP > MP` as `[x]`. On each counter opportunity, one of the two is chosen at random. The same one can come up several times in a row.
 
@@ -541,7 +543,7 @@ To return to `Short LP` alone, uncheck `Long LP > MP` and leave only `Short LP` 
 
 # Part 2: Set up your training opponent
 
-Set up the dummy’s actions for the situation you want to practice.
+Set up the dummy's actions for the situation you want to practice.
 
 <a id="dummy-model"></a>
 **When something triggers it, the dummy performs the action you set.** The triggers are mainly blocking, being hit and waking up (which ones apply depends on the type; see [4.2](#dummy-guard-action)). There are three main ways to build the action, all chosen under `Dummy > Guard Action Type`:
@@ -721,9 +723,9 @@ To record without the wizard, select the destination in `Recording Slot`. Use `P
 <a id="06-steps"></a>
 ## 6. Build actions with Action Steps
 
-**Build precise sequences without recording yourself performing them.** Action Steps lets you specify each action and its timing in Ticks. Reproduce expert-level execution, such as the earliest possible dash followed by the earliest possible attack, or crouching medium kick canceled into Tenraiha, to practice PB, GC and interrupts.
+**Build precise sequences without having to perform them yourself.** Action Steps lets you specify each action and its timing in Ticks. Reproduce expert-level execution, such as the earliest possible dash followed by the earliest possible attack, or crouching medium kick canceled into Tenraiha, to practice PB, GC and interrupts.
 
-Adjust the timing without recording another take. The sequence starts at the configured trigger, such as recovery from blocking, being hit or knockdown.
+Adjust the timing without recording another take. The sequence starts at a trigger, such as recovery from blocking, being hit or knockdown.
 
 ### 6.1 Open, edit and save
 
@@ -833,15 +835,17 @@ If a dash stops coming out from the second pass onward, check whether the preced
 2. Open `Reversal Action Patterns`.
 3. Create one with `New` or import the current Steps with `Add from current Steps`.
 4. Edit the contents and Save.
-5. Press MP on the list to mark a pattern `[x]`, or set `Use in Random = Yes` in its individual screen.
+5. Press MP on the list to mark a pattern `[x]`.
+
+   ![The Action Patterns list](images/action_patterns.png)
+
+   `[x]` marks the patterns in use; MP checks or unchecks the pattern under the cursor. If several are checked, as in this example, one is chosen at random each time.
+
+   You can also set `Use in Random = Yes` in a pattern's individual screen.
 
    ![A pattern's own screen with Use in Random : Yes](images/patterns_use_in_random.png)
 
 6. Set `Random Guard Action % = 100%` and create a response opportunity.
-
-![The Action Patterns list](images/action_patterns.png)
-
-`[x]` marks the patterns in use; MP checks or unchecks the pattern under the cursor. If several are checked, as in this example, one is chosen at random each time.
 
 With one pattern checked, that pattern runs. With several checked, one is chosen at random. **Whole sequences are selected**, not individual steps mixed between patterns. With `Loop Steps`, another selection is made on the next pass.
 
@@ -966,7 +970,7 @@ First make GC consistent against the same single attack. Then practice on both s
 
 **If your 1P-side inputs are slow on an arcade stick, try adjusting its position**
 
-On the 1P side (left side of the screen, facing right), if the transition from → to ↓ is especially slow, try repositioning the arcade stick so the lever sits slightly farther to the right relative to your body. In the author’s experience, this can make the downward movement easier and improve input speed. The effect depends on your grip and posture; compare the per-direction averages and success rate before and after the adjustment, using the same attack for practice.
+On the 1P side (left side of the screen, facing right), if the transition from → to ↓ is especially slow, try repositioning the arcade stick so the lever sits slightly farther to the right relative to your body. In the author's experience, this can make the downward movement easier and improve input speed. The effect depends on your grip and posture; compare the per-direction averages and success rate before and after the adjustment, using the same attack for practice.
 
 ### 9.2 Input history versus command trace
 
@@ -1080,7 +1084,7 @@ The two rows under the table average each step of the command over `Pass` attemp
 4. Then set a light normal under `Reversal - Specified` to check the gaps you leave after being blocked.
 
 <a id="wakeup-pressure-drill"></a>
-### B. Can your wake-up pressure beat the opponent’s fastest response?
+### B. Can your wake-up pressure beat the opponent's fastest response?
 
 **Find the timing at which your wake-up pressure beats the opponent's fastest response.**
 
@@ -1088,7 +1092,7 @@ The two rows under the table average each step of the command over `Pass` attemp
 2. Configure the desired normal or special. Set `Button Wait = 0` and the `Random Delay` directly below it to `0`. See [4.3](#dummy-normal-response) for a normal example.
 3. Start with `Wakeup = None` to keep conditions fixed.
 4. Knock the dummy down and test your setup.
-5. Enable `Trainer > Tick Data` and `Show Meaty Timing`. Use [Meaty Timing](#meaty-timing) to check how many Ticks after the reversal Tick your attack connected and which active Tick made contact. Test whether the setup works against the dummy’s response, then use the readout to review the timing.
+5. Enable `Trainer > Tick Data` and `Show Meaty Timing`. Use [Meaty Timing](#meaty-timing) to check how many Ticks after the reversal Tick your attack connected and which active Tick made contact. Test whether the setup works against the dummy's response, then use the readout to review the timing.
 6. Keep the knockdown, spacing, attack and dummy response the same, and change only when you start the attack. Compare Meaty Timing with the outcome—your attack hits, is blocked, or loses to the response—to find the timing that produces the result you want.
 7. Once you understand the conditions, switch the dummy to another response and test the same timing. Then vary wake-up movement and response probability. Spreading the response with `Random Start Wait` or `Random Delay` checks that the setup does not rely on one fixed timing.
 
@@ -1148,7 +1152,7 @@ Selecting PB under `Guard` leaves `Guard Action Type` available for the response
 <a id="side-switch-os"></a>
 ### F. Study option selects on a side switch
 
-**See how the same input is interpreted after a cross-up switches the characters’ positions.** Does the dragon-punch input still produce the intended move after a cross-up? Does holding the same direction still result in a block? Recreate an option select, one input that becomes different actions depending on the situation, on the dummy and study it.
+**See how the same input is interpreted after a cross-up switches the characters' positions.** Does the dragon-punch input still produce the intended move after a cross-up? Does holding the same direction still result in a block? Recreate an option select, one input that becomes different actions depending on the situation, on the dummy and study it.
 
 Normally, the dummy automatically swaps left and right when the sides switch. With `Auto-Flip Inputs on Side Switch = no`, **the entire sequence uses the orientation at its first input, without automatically swapping left and right after a side switch.** Direction changes within the recording or Steps still occur as defined; this setting does not hold one direction throughout the sequence.
 
@@ -1261,7 +1265,7 @@ Match the measured side, game speed and units before comparing numbers.
 <a id="tick-data"></a>
 ### 11.2 Tick Data
 
-**Tick Data measures startup, active time, recovery and frame advantage in internal frames.** The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. Tick Data avoids the variation caused by turbo frames, and its **counting conventions are aligned with published frame data tables**.
+**Tick Data measures startup, active time, recovery and frame advantage in internal frames.** The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. Tick Data avoids the variation caused by turbo frames, and its **counting conventions are aligned with [published frame data tables](http://darkstalkers.web.fc2.com/savior/savior.html)**.
 
 Enable `Trainer > Tick Data` and select P1 or P2 under `Tick Data Side`. P2 is useful for checking a move performed by a recording or Action Steps.
 
@@ -1296,6 +1300,8 @@ Below the move data come [Meaty Timing](#meaty-timing) (11.3), when it has a res
 
 Startup, active and recovery use the attack hitbox; startup is not simply the moment the move contacts the opponent. The attacker's own hitstop is excluded from these values.
 
+However, Tick Data is not guaranteed to match every value in the tables. Open "Comparison with frame data tables and measurement limits" below for the conditions to match.
+
 <details>
 <summary>Comparison with frame data tables and measurement limits</summary>
 
@@ -1303,7 +1309,7 @@ Startup, active and recovery use the attack hitbox; startup is not simply the mo
 
 Keep these limits in mind:
 
-- The conventions follow the tables, but a match with every published value is not guaranteed. The tables measure advantage mostly point-blank in the corner, a multi-hit move from its last hit, and leave out values that vary a lot with the situation, such as jump attacks. When comparing Advantage, match the spacing, the corner and the hit you landed.
+- The tables measure advantage mostly point-blank in the corner, a multi-hit move from its last hit, and leave out values that vary a lot with the situation, such as jump attacks. When comparing Advantage, match the spacing, the corner and the hit you landed.
 - A chain may be measured as one continuous sequence. Do not copy its result directly into a single-move data table.
 - Moves with a super flash may produce large Total or Recovery values.
 - For a jump normal that lasts until landing, the landing Tick counts as the final recovery Tick in Recovery and Total. The landing animation that follows can be canceled into a grounded normal, so it adds no recovery, and Advantage is measured without waiting for that animation to end. The tables do not treat landing as a vulnerable window either, since you can block right after landing. If the move's state ends in the air, it ends there, and an air special's landing recovery is counted.
@@ -1316,7 +1322,7 @@ Keep these limits in mind:
 <a id="meaty-timing"></a>
 ### 11.3 Meaty Timing: check when your attack connects
 
-**See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from block stun or hit stun, and air recovery. Test your setup against the dummy’s response, then use this readout to review its timing.
+**See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from block stun or hit stun, and air recovery. Test your setup against the dummy's response, then use this readout to review its timing.
 
 ![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 2t. On the Frame Meter below, P2's magenta bar sits under the second of P1's three red tiles](images/meaty_timing.png)
 
@@ -1326,17 +1332,17 @@ In this example, Demitri's jumping LP connects on Morrigan's wake-up, on the sec
 |---|---|
 | Tick Data: `Active 3t` | The attack has three active Ticks in total |
 | Meaty Timing: `Wake-up` | The attack connects on wake-up |
-| Meaty Timing: `Reversal +0t` | Contact occurs on the opponent’s reversal Tick |
+| Meaty Timing: `Reversal +0t` | Contact occurs on the opponent's reversal Tick |
 | Meaty Timing: `Active 2t` | Contact occurs on the second active Tick |
 
-Frame Meter shows the same timing: P2’s magenta bar sits directly below P1’s second red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hit stun from the meaty; it is one color, so the number on the run (113) counts both.
+Frame Meter shows the same timing: P2's magenta bar sits directly below P1's second red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hit stun from the meaty; it is one color, so the number on the run (113) counts both.
 
 The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` (on by default) appears as an indented setting beneath `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
 
 ![On the Trainer tab, Show Meaty Timing is indented under Tick Data, with its help text at the bottom](images/meaty_timing_menu.png)
 
 <a id="meaty-timing-strategy"></a>
-#### Choose your attack and timing based on the opponent’s response
+#### Choose your attack and timing based on the opponent's response
 
 **Hitting as early as possible is not always the best choice.** Choose the attack and its timing based on what you expect the opponent to do.
 
@@ -1345,29 +1351,29 @@ The readout appears between the basic Tick Data and Action Timeline. `Show Meaty
 | Dark Force activation or jump | **A low at `+0t`** | Hit before the opponent starts the action. Holding up-back will not block a low |
 | Jump or a light normal while holding a guard direction | **A non-low attack around `+2t`** | Catch the transition from guarding to acting. This also helps cover certain actions that avoid lows |
 
-Against a jump, `+0t` targets the opponent **before the jump starts**, while `+2t` targets **the start of the jump**. Results depend on spacing and the attack’s hitbox, so set the dummy to the response you want to test.
+Against a jump, `+0t` targets the opponent **before the jump starts**, while `+2t` targets **the start of the jump**. Results depend on spacing and the attack's hitbox, so set the dummy to the response you want to test.
 
 <details>
 <summary>Timing reference: +0t through +6t</summary>
 
-`Reversal +0t` means contact on the opponent’s reversal Tick; `+2t` means two Ticks later. The following assumes the opponent acts as early as possible. Move-specific properties, such as invulnerability, still apply.
+`Reversal +0t` means contact on the opponent's reversal Tick; `+2t` means two Ticks later. The following assumes the opponent acts as early as possible. Move-specific properties, such as invulnerability, still apply.
 
 | Readout | What to expect |
 |---|---|
 | **`+0t`** | Only blocking and reversal specials are available. An opponent pressing a light normal while holding a guard direction blocks because the normal cannot start yet. Against up-back, a low hits; an attack that can be blocked standing is blocked |
-| **`+1t–+3t`** | Can catch a light normal or the start of a jump. However, Zabel’s jump, Sasquatch’s wake-up dash and Anakaris’s float can avoid lows. The opponent can also activate Dark Force |
-| **`+4t`** | Can trade with a normal that starts in four Ticks. Watch especially for B.B. Hood’s and Lilith’s crouching normals. A jump started at the earliest opportunity can avoid lows |
+| **`+1t–+3t`** | Can catch a light normal or the start of a jump. However, Zabel's jump, Sasquatch's wake-up dash and Anakaris's float can avoid lows. The opponent can also activate Dark Force |
+| **`+4t`** | Can trade with a normal that starts in four Ticks. Watch especially for B.B. Hood's and Lilith's crouching normals. A jump started at the earliest opportunity can avoid lows |
 | **`+5t`** | The boundary where throw invulnerability expires. At the same timing, a throw may succeed or fail depending on character processing order |
 | **`+6t`** | Can target the end of throw invulnerability without depending on processing order. The opponent must still be in throw range and must not be avoiding the throw by jumping or through another form of invulnerability |
 
 </details>
 
-**Start by fixing the opponent’s response.** Vary when the same attack connects, and compare the Meaty Timing readout with the actual outcome. Once you understand the conditions, mix the opponent’s responses to practice making reads.
+**Start by fixing the opponent's response.** Vary when the same attack connects, and compare the Meaty Timing readout with the actual outcome. Once you understand the conditions, mix the opponent's responses to practice making reads.
 
 Meaty Timing reports contact timing; it does not judge whether a setup worked or a jump was stopped. Whiffs and contacts outside its measurement window leave the previous result on screen, so check that the readout updated for the exchange you just tested.
 
 <a id="meaty-timing-qbee"></a>
-**Q-Bee’s wake-up uses `Actionable`, measured from the first Tick she can start any action, specials and normals alike.** See below for her head-shake invulnerability and timing targets.
+**Q-Bee's wake-up uses `Actionable`, measured from the first Tick she can start any action, specials and normals alike.** See below for her head-shake invulnerability and timing targets.
 
 <details>
 <summary>Against Q-Bee: Actionable timing and the head shake</summary>
@@ -1401,7 +1407,7 @@ Set `Frame Meter = yes` at the bottom of the `Display` tab to show both players'
 
 ![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 7 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
 
-In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players’ states on the same Tick.
+In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players' states on the same Tick.
 
 ![On the Display tab, Frame Meter : yes displays three additional settings beneath it](images/frame_meter_menu.png)
 
@@ -1444,7 +1450,7 @@ The figures in the text rows count differently. `Startup` includes the first act
 
 **A magenta bar along the top of a tile marks a reversal-only Tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
 
-**Invulnerability marks use hurtbox data and the game’s invulnerability and strike-acceptance flags.** They do not exactly match the hitbox display: a character can have a visible hurtbox while rejecting ordinary strikes. Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab covers only some forms of invulnerability, so its coverage differs. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF, hitstop Ticks in which neither attacking character advanced are omitted, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
+**Invulnerability marks use hurtbox data and the game's invulnerability and strike-acceptance flags.** They do not exactly match the hitbox display: a character can have a visible hurtbox while rejecting ordinary strikes. Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab covers only some forms of invulnerability, so its coverage differs. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF, hitstop Ticks in which neither attacking character advanced are omitted, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
 
 **To make invulnerability during actionable periods easier to see, the meter omits white marks and throw-invulnerability stripes during hit stun, block stun, knockdown and wake-up.** This display rule applies on the ground and in the air; it does not mean those states are always invulnerable. Q-Bee's head shake at the end of her wake-up is shown white from `Actionable +0t`, the first Tick she can act: the hitbox display draws her hurtbox, but ordinary strikes are turned away and she is throw invulnerable.
 
@@ -1452,7 +1458,7 @@ The figures in the text rows count differently. `Startup` includes the first act
 
 - `Show P1 Inputs` ON: every hitstop Tick is displayed.
 - OFF: a hitstop Tick is kept if either attacking character advanced. It is omitted if neither did.
-- **Among the displayed tiles, a gray top means that character was frozen, so the Tick is excluded from its numbers.** Ticks in which the attack advanced are counted. A column can be kept because the opponent’s attack advanced while your character’s tile has a gray top.
+- **Among the displayed tiles, a gray top means that character was frozen, so the Tick is excluded from its numbers.** Ticks in which the attack advanced are counted. A column can be kept because the opponent's attack advanced while your character's tile has a gray top.
 
 Switching the input display can therefore change the number of visible tiles, but not the measured values.
 
@@ -1467,9 +1473,9 @@ The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/
 
 **Action Timeline in Tick Data** displays a sequence of actions so you can examine the total time a setup takes in Ticks, as well as individual move data.
 
-For example, you can test **how many Ticks to spend setting up an attack timed to the opponent’s wake-up**, or **how far away you can start a walk-up throw and still perform it within 15 displayed frames (20 Ticks at Turbo 3)**. Check the elapsed time in Action Timeline, vary the starting distance and compare the actual results to develop practical setups.
+For example, you can test **how many Ticks to spend setting up an attack timed to the opponent's wake-up**, or **how far away you can start a walk-up throw and still perform it within 15 displayed frames (20 Ticks at Turbo 3)**. Check the elapsed time in Action Timeline, vary the starting distance and compare the actual results to develop practical setups.
 
-Enable `Trainer > Tick Data` to show the green history below the move data. Timestamps start at 1t; subtract them to find the interval between events. In the screenshot, `20t Demon Cradle` to `23t Guard` is a three-Tick interval, or the fourth Tick when counting the move’s starting Tick. `Total 45t` measures the move, while `65t Free` marks when you could act again on the history’s clock; they cover different spans.
+Enable `Trainer > Tick Data` to show the green history below the move data. Timestamps start at 1t; subtract them to find the interval between events. In the screenshot, `20t Demon Cradle` to `23t Guard` is a three-Tick interval, or the fourth Tick when counting the move's starting Tick. `Total 45t` measures the move, while `65t Free` marks when you could act again on the history's clock; they cover different spans.
 
 To hide only the green history, set `Show Action Timeline = no` under `Tick Data`. The Tick Data rows stay.
 

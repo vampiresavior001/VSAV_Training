@@ -4,7 +4,7 @@ See what the Warlord sees, and practice what the Warlord practices, in VSAV trai
 
 English | [日本語](README.ja.md)
 
-**Make expert-level execution your training partner.** This training mode for Fightcade 2 / FBNeo lets you define dummy actions with precise internal-frame (Tick) timing to practice your defense and test your offense. Reproduce your opponent’s actions precisely, then review your inputs and attack timing to find what to improve on your next attempt.
+**Make expert-level execution your training partner.** This training mode for Fightcade 2 / FBNeo lets you define dummy actions with precise internal-frame (Tick) timing to practice your defense and test your offense. Reproduce your opponent's actions precisely, then review your inputs and attack timing to find what to improve on your next attempt.
 
 This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.25.1**.
 
@@ -18,7 +18,7 @@ Left: check whether you still fit six presses when delaying PB. Right: see which
 
 ## Reproduce, practice and improve
 
-1. **Reproduce the opponent’s actions.** Define actions and timing in Action Steps to repeatedly reproduce precise sequences, such as the earliest possible dash into an attack or crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, it can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
+1. **Reproduce the opponent's actions.** Define actions and timing in Action Steps to repeatedly reproduce precise sequences, such as the earliest possible dash into an attack or crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, the dummy can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
 2. **Practice your defense and test your offense.** Have the dummy repeat the same offense to practice PB, GC or interrupts after air guarding, or test your own wake-up pressure and strings against a fixed response.
 3. **Use the results to improve.** Check when your inputs registered within the input window and on which Tick your attack connected, then adjust your inputs or timing on the next attempt. PB Stats and GC Stats track your success rate and input time.
 
@@ -127,7 +127,7 @@ Start by trying either PB or GC; looping and building your own actions can wait 
 
 1. **Import it.** Choose Sasquatch as the dummy. Under `Reversal - Action Patterns`, use `Import from a File` to load `scripts/patterns/Sasquatch_Short_LP.json` from the release. Select only `Short LP` for use.
 2. **Practice PB.** Make the dummy block your attack to trigger short-dash LP, then use PB against it. Use PB Counter and PB Stats to check, for example, whether you delayed your first press and still fit six valid presses within the window.
-3. **Try GC too.** Block the same LP and enter your character’s GC command. Check the success indicator, accepted directions and buttons, and input intervals. Use [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) to compare your success rate on the left and right sides.
+3. **Try GC too.** Block the same LP and enter your character's GC command. Check the success indicator, accepted directions and buttons, and input intervals. Use [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) to compare your success rate on the left and right sides.
 4. **Repeat it.** Set `Loop Steps = yes` and `Loop Wait = Auto (Landing)` to repeat short-dash LP as soon as the dummy lands.
 5. **Expand your practice.** The imported pattern is ready to use next time. When comfortable, build other attacks in Action Steps and save them in Action Patterns to practice against randomly selected sequences.
 
@@ -158,7 +158,7 @@ The **[English player manual](docs/PLAYER_MANUAL.en.md)** covers controls, setti
 
 ### Scope
 
-These installation instructions target Windows. Linux launch scripts are included, but support for every feature of this fork on Linux/macOS was not verified when this README was prepared. Action Patterns naming and file dialogs are implemented for Windows.
+These installation instructions target Windows. Linux launch scripts are included, but not every feature has been verified on Linux or macOS. Action Patterns naming and file dialogs are implemented for Windows.
 
 ## Updates and backups
 

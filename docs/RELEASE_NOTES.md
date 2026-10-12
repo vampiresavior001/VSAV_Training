@@ -8,7 +8,7 @@ Newest first. Older releases are kept below.
 
 ## v11.7.25.1
 
-In Action Steps, Lei-Lei’s crouching MK canceled into Tenraiha now combos. Fixed
+In Action Steps, Lei-Lei's crouching MK canceled into Tenraiha now combos. Fixed
 an issue that prevented special-move input sequences from advancing during
 hitstop.
 
@@ -18,7 +18,7 @@ hitstop.
   of advancing through the sequence. After a long freeze, it restarted the
   sequence from the beginning. With Wait set to `Cancel`, input begins on
   contact, so most of the sequence overlaps hitstop. This delayed the special
-  too much to combo, as with Lei-Lei’s crouching MK into Tenraiha
+  too much to combo, as with Lei-Lei's crouching MK into Tenraiha
 - Specials (the specials under `Action`, and command inputs in Custom) now keep
   going through hitstop, because the game accepts special commands during it.
   Dashes and normals are unchanged, because the game does not use inputs made
