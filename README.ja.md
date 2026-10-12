@@ -43,9 +43,9 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 | **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
 | **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
 
-![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンの起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
+![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンのその場起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pが、モリガンの起き上がりに `Reversal +0t`（リバーサルTickちょうど）で重なった例です。デミトリはすぐ着地するので、リバーサルのシャドウブレイドも地上でガードできる詐欺飛びになります。画像は重なった瞬間です。リバーサルを着地してガードした画面と確かめ方は、[起き攻めの練習レシピ](docs/PLAYER_MANUAL.ja.md#safe-jump-example)へ。
+デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pが、モリガンのその場起き上がりに `Reversal +0t`（リバーサルTickちょうど）で重なった例です。デミトリはすぐ着地するので、リバーサルのシャドウブレイドも地上でガードできる詐欺飛びになります。その場起き上がりに重ねる詐欺飛びなので、試すときはダミーを `Wakeup = None` にしてください。画像は重なった瞬間です。リバーサルを着地してガードした画面と確かめ方は、[起き攻めの練習レシピ](docs/PLAYER_MANUAL.ja.md#safe-jump-example)へ。
 
 ### コマンド入力を練習する
 

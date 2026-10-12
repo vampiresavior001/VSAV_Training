@@ -43,9 +43,9 @@ Randomness affects PB activation and GC input windows, so success or failure alo
 | **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
 | **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
 
-![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
+![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's in-place wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-After Demitri's heavy Demon Cradle, a forward-jump LP connects at `Reversal +0t`, right on Morrigan's reversal Tick. Demitri lands immediately after the LP connects, allowing him to block even a reversal Shadow Blade on the ground: a safe jump. The screenshot shows the moment of contact; see the [wake-up pressure drill](docs/PLAYER_MANUAL.en.md#safe-jump-example) for the landing block and how to check it.
+After Demitri's heavy Demon Cradle, a forward-jump LP connects at `Reversal +0t`, right on the reversal Tick of Morrigan's in-place wake-up (no roll). Demitri lands immediately after the LP connects, allowing him to block even a reversal Shadow Blade on the ground: a safe jump. It is timed for an in-place wake-up, so set the dummy to `Wakeup = None` when you try it. The screenshot shows the moment of contact; see the [wake-up pressure drill](docs/PLAYER_MANUAL.en.md#safe-jump-example) for the landing block and how to check it.
 
 ### Practice command inputs
 

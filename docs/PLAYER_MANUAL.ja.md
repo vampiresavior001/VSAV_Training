@@ -1097,12 +1097,12 @@ GCコマンドの入力受付猶予には乱数が関わるため、同じつも
 <a id="safe-jump-example"></a>
 **例：デミトリの詐欺飛び**
 
-![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンの起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](images/meaty_safe_jump.png)
+![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンのその場起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](images/meaty_safe_jump.png)
 
-画像は、モリガンに強デモンクレイドルを当てた後、前ジャンプからの小Pを重ねた例です。`Wake-up  Reversal +0t  Active 2t` は、モリガンのリバーサルTickちょうどに、ジャンプ小Pの持続の2 Tick目で接触したことを示します。このようなジャンプ攻撃はすぐ着地するので、モリガンがリバーサルでシャドウブレイドを出しても、デミトリは地上でガードできます（詐欺飛び）。**1枚目の画像と数値が示すのは重なりまでです。着地ガードは、手順の後の2枚目で示します。自分で確かめるときは、次の手順で両方を試します。**
+画像は、モリガンに強デモンクレイドルを当てた後、前ジャンプからの小Pを、モリガンのその場起き上がりに重ねた例です。`Wake-up  Reversal +0t  Active 2t` は、モリガンのリバーサルTickちょうどに、ジャンプ小Pの持続の2 Tick目で接触したことを示します。このようなジャンプ攻撃はすぐ着地するので、モリガンがリバーサルでシャドウブレイドを出しても、デミトリは地上でガードできます（詐欺飛び）。その場起き上がりに重ねる詐欺飛びなので、モリガンの `Wakeup = None` が必要です。**1枚目の画像と数値が示すのは重なりまでです。着地ガードは、手順の後の2枚目で示します。自分で確かめるときは、次の手順で両方を試します。**
 
-1. **重なりを確認する。** モリガンの `Wakeup = None`、`Guard Action Type = None` にします。強デモンクレイドルを当て、前ジャンプを入れっぱなしにして跳び、下降中に小Pを押します。小Pを押すタイミングを調整し、画像の `Reversal +0t / Active 2t` を目安に重なりを確認します。これはボタンを押す時刻ではなく、接触した結果です。
-2. **弱シャドウブレイドを設定する。** `Guard Action Type = Reversal - Action Steps` にし、`Reversal Action Steps`を開きます。ステップを1つだけにして、`Wait = Auto (Fastest)`、`Special : Shadow Blade + LP`、そのステップの`Random Delay = 0`を設定し、`Save`します。`Random Guard Action % = 100%`、`Random Start Wait = 0`、`Loop Steps = no`にします。
+1. **重なりを確認する。** モリガンの `Wakeup = None`（その場起き上がり）、`Guard Action Type = None` にします。強デモンクレイドルを当て、前ジャンプを入れっぱなしにして跳び、下降中に小Pを押します。小Pを押すタイミングを調整し、画像の `Reversal +0t / Active 2t` を目安に重なりを確認します。これはボタンを押す時刻ではなく、接触した結果です。
+2. **弱シャドウブレイドを設定する。** `Guard Action Type = Reversal - Action Steps` にし、`Reversal Action Steps`を開きます。ステップを1つだけにして、`Wait = Auto (Fastest)`、`Special : Shadow Blade + LP`、そのステップの`Random Delay = 0`を設定し、`Save`します。`Random Guard Action % = 100%`、`Random Start Wait = 0`、`Loop Steps = no`にします。`Wakeup = None` はそのままにします。
 3. **着地ガードを確認する。** 同じ重ね方を試し、ジャンプ小Pを押した後、着地に向けてガード方向へ切り替えます。相手のリバーサルが出て、自分が着地してガードできるか確認してください。
 
 単発の反撃を`Reversal - Specified`で設定する方法は[4章](#dummy-normal-response)を参照してください。ここでは、下の画像で確認したAction Stepsの設定を使います。
