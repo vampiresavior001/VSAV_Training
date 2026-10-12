@@ -721,9 +721,9 @@ To record without the wizard, select the destination in `Recording Slot`. Use `P
 <a id="06-steps"></a>
 ## 6. Build actions with Action Steps
 
-**Define a sequence in Ticks and reproduce it repeatedly under the same conditions.** Recording captures inputs as you control the opponent's character. Action Steps lets you specify actions and timing to build precise sequences, such as a dash followed by an attack, both timed as early as possible, or crouching medium kick canceled into Tenraiha. Adjust the timing without recording another take, then practice PB, GC and interrupts against expert-level execution.
+**Build precise sequences without recording yourself performing them.** Action Steps lets you specify each action and its timing in Ticks. Reproduce expert-level execution, such as the earliest possible dash followed by the earliest possible attack, or crouching medium kick canceled into Tenraiha, to practice PB, GC and interrupts.
 
-Action Steps defines a sequence by pairing “when” with “what” for each action. Saving does not immediately start the sequence; it begins at a response opportunity such as recovery from blocking, being hit or knockdown.
+Adjust the timing without recording another take. The sequence starts at the configured trigger, such as recovery from blocking, being hit or knockdown.
 
 ### 6.1 Open, edit and save
 
@@ -1261,9 +1261,7 @@ Match the measured side, game speed and units before comparing numbers.
 <a id="tick-data"></a>
 ### 11.2 Tick Data
 
-**Tick Data measures startup, active time, recovery and frame advantage in internal frames.** The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. Tick Data avoids the variation caused by turbo frames, and its **counting conventions are aligned with the frame data tables below**.
-
-**The tables it follows:** [Darkstalkers Frame Data (Vampire Savior)](http://darkstalkers.web.fc2.com/savior/savior.html), in Japanese. There, startup (発生) is the frame the attack box appears, active (持続) the frames it stays out, recovery (硬直) the move's follow-through frames, and advantage (硬直差) the difference from the frame the first side can act to the frame the other can. The tables were measured on the same 1997/05/19 version as this tool, at Normal game speed, where one displayed frame is one Tick. This lets you compare the values in the same units. Tick Data also counts internal frames at Turbo 3. Measurement conditions and ranges can differ; see the limits below.
+**Tick Data measures startup, active time, recovery and frame advantage in internal frames.** The original Frame Data measured displayed frames, which made its results unstable at turbo speeds. Tick Data avoids the variation caused by turbo frames, and its **counting conventions are aligned with published frame data tables**.
 
 Enable `Trainer > Tick Data` and select P1 or P2 under `Tick Data Side`. P2 is useful for checking a move performed by a recording or Action Steps.
 
@@ -1298,6 +1296,11 @@ Below the move data come [Meaty Timing](#meaty-timing) (11.3), when it has a res
 
 Startup, active and recovery use the attack hitbox; startup is not simply the moment the move contacts the opponent. The attacker's own hitstop is excluded from these values.
 
+<details>
+<summary>Comparison with frame data tables and measurement limits</summary>
+
+**The tables it follows:** [Darkstalkers Frame Data (Vampire Savior)](http://darkstalkers.web.fc2.com/savior/savior.html), in Japanese. There, startup (発生) is the frame the attack box appears, active (持続) the frames it stays out, recovery (硬直) the move's follow-through frames, and advantage (硬直差) the difference from the frame the first side can act to the frame the other can. The tables were measured on the same 1997/05/19 version as this tool, at Normal game speed, where one displayed frame is one Tick. This lets you compare the values in the same units. Tick Data also counts internal frames at Turbo 3. Measurement conditions and ranges can differ; see the limits below.
+
 Keep these limits in mind:
 
 - The conventions follow the tables, but a match with every published value is not guaranteed. The tables measure advantage mostly point-blank in the corner, a multi-hit move from its last hit, and leave out values that vary a lot with the situation, such as jump attacks. When comparing Advantage, match the spacing, the corner and the hit you landed.
@@ -1307,6 +1310,8 @@ Keep these limits in mind:
 - The tables give jump attacks as whiffed in the air and played out. Startup and active match Tick Data (checked on Demitri's jumping LP, MP, HP, MK and HK), but recovery differs: the tables count only the follow-through frames after the box (3 for the jumping LP), while Tick Data counts until landing, as long as the move's state (`$105`) lasts (14 for the same whiff). Landed low, a jump attack is cut short by the landing, so its active and recovery read shorter than the tables.
 - Projectile active time does not represent all the time the projectile continues flying after the character's measurement ends.
 - Startup and active share the first hitbox Tick. For a basic single move, read `Total = Startup + Active + Recovery − 1`: startup 4, active 3 and recovery 7 give Total 13.
+
+</details>
 
 <a id="meaty-timing"></a>
 ### 11.3 Meaty Timing: check when your attack connects

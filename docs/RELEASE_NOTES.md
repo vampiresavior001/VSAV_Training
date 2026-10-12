@@ -8,24 +8,24 @@ Newest first. Older releases are kept below.
 
 ## v11.7.25.1
 
-Action Steps no longer stops a special's input when it runs into hit stop.
-Crouching MK into Tenraiha on Cancel now combos.
+Action Steps can now cancel Lei-Lei’s crouching MK into Tenraiha. Fixed an issue
+that prevented special-move input sequences from advancing during hitstop.
 
-### Fix: a special on Cancel came out late
+### Fix: delayed special moves with Wait set to Cancel
 
-- When a special step's input ran into hit stop, it stopped for the hit stop,
-  and after a long stop it started over from the first input. With Wait at
-  `Cancel` the input starts right on contact, so most of it fell in the hit
-  stop and the move came out too late to combo (for example, Lei-Lei's
-  crouching MK into Tenraiha)
+- During hitstop, a special-move step kept holding the current input instead
+  of advancing through the sequence. After a long freeze, it restarted the
+  sequence from the beginning. With Wait set to `Cancel`, input begins on
+  contact, so most of the sequence overlaps hitstop. This delayed the special
+  too much to combo, as with Lei-Lei’s crouching MK into Tenraiha
 - Specials (the specials under `Action`, and command inputs in Custom) now keep
-  going through hit stop, because the game accepts special commands during it.
+  going through hitstop, because the game accepts special commands during it.
   Dashes and normals are unchanged, because the game does not use inputs made
-  during hit stop for them. Mashed moves (SxP) and Pit of Blame are also
+  during hitstop for them. Mashed moves (SxP) and Pit of Blame are also
   unchanged, as they have not been checked
-- Tested on the developer's side, crouching MK into Tenraiha on Cancel came
-  out during the hit stop and combo'd all 7 times (it used to come out 6 Ticks
-  after the hit stop). Motion specials have not been checked yet
+- In testing, crouching MK into Tenraiha connected in all seven attempts with
+  Wait set to `Cancel`. Tenraiha activated during hitstop; before the fix, it
+  activated 6 Ticks after hitstop ended. Motion specials have not been tested yet
 
 ### Fix: GC Command Trace not shown
 
