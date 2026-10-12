@@ -8,8 +8,9 @@ Newest first. Older releases are kept below.
 
 ## v11.7.25.1
 
-Action Steps can now cancel Lei-Lei’s crouching MK into Tenraiha. Fixed an issue
-that prevented special-move input sequences from advancing during hitstop.
+In Action Steps, Lei-Lei’s crouching MK canceled into Tenraiha now combos. Fixed
+an issue that prevented special-move input sequences from advancing during
+hitstop.
 
 ### Fix: delayed special moves with Wait set to Cancel
 
@@ -23,7 +24,7 @@ that prevented special-move input sequences from advancing during hitstop.
   Dashes and normals are unchanged, because the game does not use inputs made
   during hitstop for them. Mashed moves (SxP) and Pit of Blame are also
   unchanged, as they have not been checked
-- In testing, crouching MK into Tenraiha connected in all seven attempts with
+- In testing, crouching MK into Tenraiha comboed in all seven attempts with
   Wait set to `Cancel`. Tenraiha activated during hitstop; before the fix, it
   activated 6 Ticks after hitstop ended. Motion specials have not been tested yet
 
