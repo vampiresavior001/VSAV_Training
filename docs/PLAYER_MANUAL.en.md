@@ -324,9 +324,9 @@ Keep Sasquatch as the dummy, as set in Step 1.
 2. Choose `Import from a File` and import `scripts/patterns/Sasquatch_Short_LP.json` from the release.
 3. Press MP on `Short LP` in the list to mark it `[x]`. Uncheck any other selected patterns.
 
-The imported pattern is already saved. You do not need the save procedure in Step 6.
+   The imported pattern is already saved. You do not need the save procedure in Step 6.
 
-![The Dummy tab after the import: Reversal Action Patterns : Sasquatch : 1 saved, 1 ticked](images/tut_patterns_imported.png)
+   ![The Dummy tab after the import: Reversal Action Patterns : Sasquatch : 1 saved, 1 ticked](images/tut_patterns_imported.png)
 
 <a id="tutorial-check"></a>
 Close the menu, make Sasquatch block a ground attack from P1, then immediately block his response.
@@ -352,24 +352,26 @@ Open `Reversal Action Steps` with Right or LP and create **only these two steps*
 | 2 | `Attack`, with Button `LP` | `Auto (8)` | Direction `Neutral` (no Hold row appears) |
 
 1. For step one, select `Action > Dash > Forward Cancel`. Leave Wait at its default, `Auto (Fastest)`.
+
+   Find `Forward Cancel` under `Action > Dash`.
+
+   ![STEP 1 > Action > Dash with Forward Cancel under the cursor](images/tut_action_dash_cancel.png)
+
 2. Use `+ Add Step` to add step two. Under Wait, **select `Fastest (8)`**. It will appear as `Auto (8)` after editing. This is different from manually entering a fixed `8 Ticks` wait.
+
+   The line below the Wait list describes the selected option. For step one, `Auto (Fastest)` is the lowest value under `Fixed Ticks`.
+
+   ![Step two's Wait screen with Fastest (8) under the cursor](images/tut_wait_fastest8.png)
+
+   `Auto (8)` is the wait from the dash to the LP input. It does not mean LP has eight-Tick startup.
+
 3. Check that both steps have `Random Delay = 0`. When your list matches the one below, select **`Save`**.
 
-![The finished list: Auto (Fastest) Dash : Forward Cancel, then Auto (8) Attack : LP](images/tut_steps_list.png)
+   ![The finished list: Auto (Fastest) Dash : Forward Cancel, then Auto (8) Attack : LP](images/tut_steps_list.png)
 
-Find `Forward Cancel` under `Action > Dash`.
+   After saving, the Dummy tab shows `Reversal Action Steps : Sasquatch : 2 steps`.
 
-![STEP 1 > Action > Dash with Forward Cancel under the cursor](images/tut_action_dash_cancel.png)
-
-The line below the Wait list describes the selected option. For step one, `Auto (Fastest)` is the lowest value under `Fixed Ticks`. For step two, select `Fastest (8)`.
-
-![Step two's Wait screen with Fastest (8) under the cursor](images/tut_wait_fastest8.png)
-
-`Auto (8)` is the wait from the dash to the LP input. It does not mean LP has eight-Tick startup.
-
-After saving, the Dummy tab shows `Reversal Action Steps : Sasquatch : 2 steps`.
-
-![After Save, the Dummy tab reads Reversal Action Steps : Sasquatch : 2 steps](images/tut_steps_saved.png)
+   ![After Save, the Dummy tab reads Reversal Action Steps : Sasquatch : 2 steps](images/tut_steps_saved.png)
 
 </details>
 
@@ -529,7 +531,7 @@ Set `Dummy > Guard Action Type = Reversal - Action Patterns` and `Loop Steps = n
 
 3. Mark both `Short LP` and `Long LP > MP` as `[x]`. On each counter opportunity, one of the two is chosen at random. The same one can come up several times in a row.
 
-![The pattern list with only Short LP and Long LP > MP marked [x]](images/tut_sasquatch_patterns_mixed.png)
+   ![The pattern list with only Short LP and Long LP > MP marked [x]](images/tut_sasquatch_patterns_mixed.png)
 
 **This moves you from practicing against one fixed sequence to reading which attack is coming and responding to it.**
 
@@ -975,11 +977,12 @@ On the 1P side (left side of the screen, facing right), if the transition from �
 ### 9.2 Input history versus command trace
 
 - **Input history** shows your inputs over time. Newer inputs appear on the right of the bottom bar.
+
 - **GC Command Trace** shows the directions the game accepted toward a GC, the finishing button and the result. It also follows motions begun before the block. It appears without a title in a dark box, placed to the right of PB Stats so the two can be shown together.
 
-![GC Command Trace of a guard cancel that succeeded](images/gc_trace.png)
+  ![GC Command Trace of a guard cancel that succeeded](images/gc_trace.png)
 
-In this example the game accepted → 3 Ticks after the attack was blocked, ↓ 4 Ticks later, ↘ 6 Ticks later and the button 1 Tick after that. The dots represent buttons: punches on the top row and kicks below. In this example, all three punches were pressed. `Success 13t` is counted from the opening of the GC window (see [9.3](#gc-timing)).
+  In this example the game accepted → 3 Ticks after the attack was blocked, ↓ 4 Ticks later, ↘ 6 Ticks later and the button 1 Tick after that. The dots represent buttons: punches on the top row and kicks below. In this example, all three punches were pressed. `Success 13t` is counted from the opening of the GC window (see [9.3](#gc-timing)).
 
 The raw direction history and the sequence accepted by the game's command parser need not match exactly.
 
@@ -1101,17 +1104,19 @@ The two rows under the table average each step of the command over `Pass` attemp
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's in-place wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](images/meaty_safe_jump.png)
 
-The screenshot shows a forward-jump LP after Demitri hits Morrigan with a heavy Demon Cradle, timed for her in-place wake-up. `Wake-up  Reversal +0t  Active 2t` means the LP connected on Morrigan's reversal Tick, on its second active Tick. Demitri lands shortly after this jump attack, so even if Morrigan answers with a reversal Shadow Blade, Demitri can block it on the ground: a safe jump. Because it is timed for an in-place wake-up, Morrigan needs `Wakeup = None`. **The first screenshot and its readout show only the meaty timing; the second one, after the steps, shows the landing block. To check it yourself, try both with these steps.**
+The screenshot shows a forward-jump LP after Demitri hits Morrigan with a heavy Demon Cradle, timed for her in-place wake-up. `Wake-up  Reversal +0t  Active 2t` means the LP connected on Morrigan's reversal Tick, on its second active Tick. Demitri lands shortly after this jump attack, so even if Morrigan answers with a reversal Shadow Blade, Demitri can block it on the ground: a safe jump. Because it is timed for an in-place wake-up, Morrigan needs `Wakeup = None`. **The first screenshot and its readout show only the meaty timing; the second one, in step 3, shows the landing block. To check it yourself, try both with these steps.**
 
 1. **Check the meaty timing.** Set Morrigan's `Wakeup = None` (in-place wake-up) and `Guard Action Type = None`. Hit her with a heavy Demon Cradle, hold up-forward to jump as soon as possible, and press LP while descending. Adjust the LP timing toward the screenshot's `Reversal +0t / Active 2t`. These values describe contact, not when to press LP.
+
 2. **Set up light Shadow Blade.** Select `Guard Action Type = Reversal - Action Steps` and open `Reversal Action Steps`. Use only one step, with `Wait = Auto (Fastest)`, `Special : Shadow Blade + LP` and that step's `Random Delay = 0`, then select `Save`. Set `Random Guard Action % = 100%`, `Random Start Wait = 0` and `Loop Steps = no`. Leave `Wakeup = None` as it is.
+
+   For single responses configured with `Reversal - Specified`, see [Section 4](#dummy-normal-response). This example uses the Action Steps setup shown in the screenshot in step 3.
+
 3. **Check that you can land and block.** Repeat the setup. After pressing jumping LP, switch to a blocking direction for landing. Confirm that the dummy performs its reversal and that you land and block it.
 
-For single responses configured with `Reversal - Specified`, see [Section 4](#dummy-normal-response). This example uses the Action Steps setup shown in the screenshot below.
+   ![Demitri lands and blocks Morrigan's reversal Shadow Blade. REVERSAL on the right, G on the input bar](images/safe_jump_guard.png)
 
-![Demitri lands and blocks Morrigan's reversal Shadow Blade. REVERSAL on the right, G on the input bar](images/safe_jump_guard.png)
-
-This screenshot was captured on the developer's machine with Morrigan set to perform a light Shadow Blade reversal (Action Steps, step 1: `Auto (Fastest)` `Special : Shadow Blade + LP`). `REVERSAL` shows on the right, and Demitri has landed and blocked (`G` on the input bar). Her attack reached first, so Meaty Timing reads `Reversal +4t  P2 Hit First`.
+   This screenshot was captured on the developer's machine with Morrigan set to perform a light Shadow Blade reversal (Action Steps, step 1: `Auto (Fastest)` `Special : Shadow Blade + LP`). `REVERSAL` shows on the right, and Demitri has landed and blocked (`G` on the input bar). Her attack reached first, so Meaty Timing reads `Reversal +4t  P2 Hit First`.
 
 The screenshots do not identify the exact LP input Tick. Keep the starting position, knockdown and reversal strength fixed when comparing attempts.
 
@@ -1178,16 +1183,18 @@ The result depends on how the game reads the input, so `no` does not guarantee a
 **See which inputs the game accepted and where the sequence stopped.** Sequence commands such as Darkness Illusion are buttons and directions entered in a fixed order. Command Trainer shows which inputs the game's command recognizer accepted, the time in Ticks between accepted inputs, and where the command expired.
 
 1. Choose the character whose move you want to practice as P1.
+
 2. Under `Trainer > Command Trainer`, press Left or Right to select a move. Only moves for your character are listed. Select `Off` to turn the trainer off.
+
 3. Enter the command and check the result in the upper-right corner.
 
-![Darkness Illusion came out. The second LP at 17t in orange, then 13t, 6t and 8t, Success 44t](images/command_trainer_success.png)
+   ![Darkness Illusion came out. The second LP at 17t in orange, then 13t, 6t and 8t, Success 44t](images/command_trainer_success.png)
 
-The move came out, but the 17-Tick gap before the second LP depended on the random input window (orange). **Aim to shorten that gap to 13 Ticks or less.**
+   The move came out, but the 17-Tick gap before the second LP depended on the random input window (orange). **Aim to shorten that gap to 13 Ticks or less.**
 
-![The Darkness Illusion command expired. An orange F on row 2, a red x and HP on row 3, Expired 17t](images/command_trainer_expired.png)
+   ![The Darkness Illusion command expired. An orange F on row 2, a red x and HP on row 3, Expired 17t](images/command_trainer_expired.png)
 
-In this example, the input window expired. Forward was pressed while the game was waiting for the second LP (the `F` on row 2) and held from then on, so the third step, forward, was never accepted and the command expired after 17 Ticks (the red `x` on row 3). **On your next attempt, press forward again after the second LP.**
+   In this example, the input window expired. Forward was pressed while the game was waiting for the second LP (the `F` on row 2) and held from then on, so the third step, forward, was never accepted and the command expired after 17 Ticks (the red `x` on row 3). **On your next attempt, press forward again after the second LP.**
 
 | What you see | Meaning |
 |---|---|

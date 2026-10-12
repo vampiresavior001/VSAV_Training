@@ -323,9 +323,9 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 2. `Import from a File`で、配布物の`scripts/patterns/Sasquatch_Short_LP.json`を取り込みます。
 3. 一覧の`Short LP`でMPを押し、使用チェックを`[x]`にします。ほかのパターンが選ばれていればチェックを外します。
 
-取り込んだパターンは保存済みです。ステップ6の保存操作は不要です。
+   取り込んだパターンは保存済みです。ステップ6の保存操作は不要です。
 
-![取り込み後のDummyタブ。Reversal Action Patterns : Sasquatch : 1 saved, 1 ticked](images/tut_patterns_imported.png)
+   ![取り込み後のDummyタブ。Reversal Action Patterns : Sasquatch : 1 saved, 1 ticked](images/tut_patterns_imported.png)
 
 <a id="tutorial-check"></a>
 メニューを閉じ、P1でサスカッチに地上の技をガードさせてから、すぐにガードしてください。
@@ -351,24 +351,26 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 | 2 | `Attack`、Buttonを`LP` | `Auto (8)` | Directionは`Neutral`（Holdの行は出ません） |
 
 1. 1ステップ目は`Action > Dash > Forward Cancel`を選びます。Waitは初期値の`Auto (Fastest)`のままにします。
+
+   `Forward Cancel`は`Action > Dash`の中にあります。
+
+   ![STEP 1 > Action > Dash。カーソルはForward Cancel](images/tut_action_dash_cancel.png)
+
 2. `+ Add Step`で2ステップ目を追加します。Waitでは**`Fastest (8)`を選択**してください。編集後は`Auto (8)`と表示されます。数値の`8 Ticks`を手入力する設定とは異なります。
+
+   Waitの一覧の下には、選択肢の説明が出ます。1ステップ目の`Auto (Fastest)`は`Fixed Ticks`の最小値です。
+
+   ![2ステップ目のWait画面。カーソルはFastest (8)](images/tut_wait_fastest8.png)
+
+   `Auto (8)`は、ダッシュから小Pを入力するまでの待ち時間です。小Pの発生が8 Tickという意味ではありません。
+
 3. 両ステップの`Random Delay = 0`を確認し、次の一覧になったら**`Save`**します。
 
-![完成した一覧。1がAuto (Fastest) Dash : Forward Cancel、2がAuto (8) Attack : LP](images/tut_steps_list.png)
+   ![完成した一覧。1がAuto (Fastest) Dash : Forward Cancel、2がAuto (8) Attack : LP](images/tut_steps_list.png)
 
-`Forward Cancel`は`Action > Dash`の中にあります。
+   保存すると、Dummyタブに`Reversal Action Steps : Sasquatch : 2 steps`と表示されます。
 
-![STEP 1 > Action > Dash。カーソルはForward Cancel](images/tut_action_dash_cancel.png)
-
-Waitの一覧の下には、選択肢の説明が出ます。1ステップ目の`Auto (Fastest)`は`Fixed Ticks`の最小値です。2ステップ目では`Fastest (8)`を選びます。
-
-![2ステップ目のWait画面。カーソルはFastest (8)](images/tut_wait_fastest8.png)
-
-`Auto (8)`は、ダッシュから小Pを入力するまでの待ち時間です。小Pの発生が8 Tickという意味ではありません。
-
-保存すると、Dummyタブに`Reversal Action Steps : Sasquatch : 2 steps`と表示されます。
-
-![Save後のDummyタブ。Reversal Action Steps : Sasquatch : 2 steps](images/tut_steps_saved.png)
+   ![Save後のDummyタブ。Reversal Action Steps : Sasquatch : 2 steps](images/tut_steps_saved.png)
 
 </details>
 
@@ -527,7 +529,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 
 3. `Short LP`と`Long LP > MP`の両方を`[x]`にします。反撃の機会ごとに、どちらか一方がランダムに選ばれます。同じほうが続くこともあります。
 
-![Short LPとLong LP > MPの2つだけが[x]のパターン一覧](images/tut_sasquatch_patterns_mixed.png)
+   ![Short LPとLong LP > MPの2つだけが[x]のパターン一覧](images/tut_sasquatch_patterns_mixed.png)
 
 **同じ動きを固定で練習する段階から、どちらの攻めが来るかを見て対応する練習へ進めます。**
 
@@ -973,11 +975,12 @@ GCコマンドの入力受付猶予には乱数が関わるため、同じつも
 ### 9.2 入力履歴とトレースの役割
 
 - **入力履歴**：自分の入力を時系列で確認します。下の帯は右側が新しい入力です。
+
 - **GC Command Trace**：ゲームがGCコマンドとして受け取った方向、最後のボタン、結果を確認します。ガード前から入れ始めたコマンドも追跡します。見出しのない暗い枠で、PB Statsの右に並ぶ位置に表示されます。
 
-![GCが成立したときのGC Command Trace](images/gc_trace.png)
+  ![GCが成立したときのGC Command Trace](images/gc_trace.png)
 
-この例では、ガードから3 Tick後に→、その4 Tick後に↓、6 Tick後に↘、さらに1 Tick後にボタンが受け付けられています。ボタンの点は上段がパンチ、下段がキックで、ここではパンチ3つです。`Success 13t` はGC受付開始から数えた値です（[9.3](#gc-timing)参照）。
+  この例では、ガードから3 Tick後に→、その4 Tick後に↓、6 Tick後に↘、さらに1 Tick後にボタンが受け付けられています。ボタンの点は上段がパンチ、下段がキックで、ここではパンチ3つです。`Success 13t` はGC受付開始から数えた値です（[9.3](#gc-timing)参照）。
 
 同じ操作でも、単純なレバー入力の履歴と、ゲームがコマンドとして受け取った並びが完全に一致するとは限りません。
 
@@ -1099,17 +1102,19 @@ GCコマンドの入力受付猶予には乱数が関わるため、同じつも
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンのその場起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](images/meaty_safe_jump.png)
 
-画像は、モリガンに強デモンクレイドルを当てた後、前ジャンプからの小Pを、モリガンのその場起き上がりに重ねた例です。`Wake-up  Reversal +0t  Active 2t` は、モリガンのリバーサルTickちょうどに、ジャンプ小Pの持続の2 Tick目で接触したことを示します。このようなジャンプ攻撃はすぐ着地するので、モリガンがリバーサルでシャドウブレイドを出しても、デミトリは地上でガードできます（詐欺飛び）。その場起き上がりに重ねる詐欺飛びなので、モリガンの `Wakeup = None` が必要です。**1枚目の画像と数値が示すのは重なりまでです。着地ガードは、手順の後の2枚目で示します。自分で確かめるときは、次の手順で両方を試します。**
+画像は、モリガンに強デモンクレイドルを当てた後、前ジャンプからの小Pを、モリガンのその場起き上がりに重ねた例です。`Wake-up  Reversal +0t  Active 2t` は、モリガンのリバーサルTickちょうどに、ジャンプ小Pの持続の2 Tick目で接触したことを示します。このようなジャンプ攻撃はすぐ着地するので、モリガンがリバーサルでシャドウブレイドを出しても、デミトリは地上でガードできます（詐欺飛び）。その場起き上がりに重ねる詐欺飛びなので、モリガンの `Wakeup = None` が必要です。**1枚目の画像と数値が示すのは重なりまでです。着地ガードは、手順3の2枚目で示します。自分で確かめるときは、次の手順で両方を試します。**
 
 1. **重なりを確認する。** モリガンの `Wakeup = None`（その場起き上がり）、`Guard Action Type = None` にします。強デモンクレイドルを当て、前ジャンプを入れっぱなしにして跳び、下降中に小Pを押します。小Pを押すタイミングを調整し、画像の `Reversal +0t / Active 2t` を目安に重なりを確認します。これはボタンを押す時刻ではなく、接触した結果です。
+
 2. **弱シャドウブレイドを設定する。** `Guard Action Type = Reversal - Action Steps` にし、`Reversal Action Steps`を開きます。ステップを1つだけにして、`Wait = Auto (Fastest)`、`Special : Shadow Blade + LP`、そのステップの`Random Delay = 0`を設定し、`Save`します。`Random Guard Action % = 100%`、`Random Start Wait = 0`、`Loop Steps = no`にします。`Wakeup = None` はそのままにします。
+
+   単発の反撃を`Reversal - Specified`で設定する方法は[4章](#dummy-normal-response)を参照してください。ここでは、手順3の画像で確認したAction Stepsの設定を使います。
+
 3. **着地ガードを確認する。** 同じ重ね方を試し、ジャンプ小Pを押した後、着地に向けてガード方向へ切り替えます。相手のリバーサルが出て、自分が着地してガードできるか確認してください。
 
-単発の反撃を`Reversal - Specified`で設定する方法は[4章](#dummy-normal-response)を参照してください。ここでは、下の画像で確認したAction Stepsの設定を使います。
+   ![モリガンのリバーサルのシャドウブレイドを、着地したデミトリがガードした画面。右にREVERSAL、入力の帯にG](images/safe_jump_guard.png)
 
-![モリガンのリバーサルのシャドウブレイドを、着地したデミトリがガードした画面。右にREVERSAL、入力の帯にG](images/safe_jump_guard.png)
-
-開発側の実機で、モリガンにリバーサルを出させた画面です（Action Stepsの1ステップ目を `Auto (Fastest)` の `Special : Shadow Blade + LP`、つまり弱シャドウブレイド）。右に `REVERSAL` が出て、デミトリは着地してガードしています（入力の帯の `G`）。相手の攻撃が先に届いたので、Meaty Timingは `Reversal +4t  P2 Hit First` です。
+   開発側の実機で、モリガンにリバーサルを出させた画面です（Action Stepsの1ステップ目を `Auto (Fastest)` の `Special : Shadow Blade + LP`、つまり弱シャドウブレイド）。右に `REVERSAL` が出て、デミトリは着地してガードしています（入力の帯の `G`）。相手の攻撃が先に届いたので、Meaty Timingは `Reversal +4t  P2 Hit First` です。
 
 小Pを押す正確なTickは、画像からは特定できません。比較するときは、開始位置・ダウンの取り方・相手の技の強度を固定します。
 
@@ -1176,16 +1181,18 @@ AGを `Guard` 側で設定することで、`Guard Action Type` を反撃用に�
 **どの入力まで受け付けられ、どこで止まったかを確認できます。** ダークネスイリュージョンのような順押しのコマンドは、ボタンと方向を決まった順に入れます。Command Trainerは、ゲームのコマンド認識がどの入力を受け付けたか、前の入力から何Tickで次を受け付けたか、どこで受付が切れたかを表示します。
 
 1. 練習したい技のキャラをP1に選びます。
+
 2. `Trainer > Command Trainer`で、左右を押して技を選びます。使用キャラの対応技だけが選択肢に並びます。終了するときは`Off`を選びます。
+
 3. コマンドを入力し、画面右上で結果を確認します。
 
-![Darkness Illusionが出た表示。2回目の弱Pは17tでオレンジ、続いて13t・6t・8t、Success 44t](images/command_trainer_success.png)
+   ![Darkness Illusionが出た表示。2回目の弱Pは17tでオレンジ、続いて13t・6t・8t、Success 44t](images/command_trainer_success.png)
 
-技は出ていますが、2回目の弱Pまで17Tickかかっており、通るかどうかは乱数しだいでした（オレンジ）。**次はこの間隔を13Tick以内に収めましょう。**
+   技は出ていますが、2回目の弱Pまで17Tickかかっており、通るかどうかは乱数しだいでした（オレンジ）。**次はこの間隔を13Tick以内に収めましょう。**
 
-![Darkness Illusionの受付が切れた表示。2行目にオレンジのF、3行目に赤いxとHP、Expired 17t](images/command_trainer_expired.png)
+   ![Darkness Illusionの受付が切れた表示。2行目にオレンジのF、3行目に赤いxとHP、Expired 17t](images/command_trainer_expired.png)
 
-上の画像は受付が切れた例です。2回目の弱Pを待つ間に前を押し（2行目の `F`）、そのまま押し続けました。押し始めしか数えないため、3ステップ目の前が受け付けられず、17tで切れています（3行目の赤い `x`）。**次は2回目の弱Pを押した後に、前を入れ直しましょう。**
+   上の画像は受付が切れた例です。2回目の弱Pを待つ間に前を押し（2行目の `F`）、そのまま押し続けました。押し始めしか数えないため、3ステップ目の前が受け付けられず、17tで切れています（3行目の赤い `x`）。**次は2回目の弱Pを押した後に、前を入れ直しましょう。**
 
 | 表示 | 意味 |
 |---|---|
