@@ -880,6 +880,122 @@ globals.options.fm_movement_data = false
 ram[A1 + 0x105] = 1
 
 -- ---------------------------------------------------------------------------
+print("[4o] 着地モーションをダッシュで消しても、ダッシュ攻撃は技として描く (2026-10-13)")
+-- User's screenshot 2026-10-13 and its log (reversal_logs_archive/
+-- mixed-v11.7.25+v11.7.25.1, invuln_log, Lilith, ticks 6959 and 7313): a
+-- jumping attack lands, then dash, then a dash attack. When the landing motion
+-- ran out first ($105 0, then the dash with $105 0) the dash attack was drawn.
+-- When the dash cancelled the landing motion, $105 stayed 1 through the dash
+-- ($06 0x14) and into the dash attack, $1B8 did not move, and the meter kept
+-- the landing motion on: the dash attack's startup and recovery were drawn as
+-- doing nothing and only its box showed. The dash attack starts where the cel
+-- pointer leaves the dash's script (+0x18 is a step of the same script).
+-- `carry`: the dash cancels the landing motion (case 2) instead of following
+-- it (case 1). The dash attack is the same: 4 startup, 3 box, 6 recovery ticks.
+local function jump_then_dash_attack(carry)
+	fm = fresh(true)
+	globals.options.fm_movement_data = true
+	local frames = {}
+	for i = 1, 50 do frames[i] = 10100 + i end
+	local AIR, LAND, DASH, DATK, JBOX = 0x540000, 0x550000, 0x560000, 0x570000, 0x548000
+	ram[JBOX + 0x0A] = 1
+	for k = 4, 6 do ram[DATK + k * 0x18 + 0x0A] = 1 end
+	local land_end = carry and 11 or 12        -- last landing tick
+	local dash_from = carry and 12 or 14       -- case 1: tick 13 is free
+	feed(frames, function(i)
+		local air = i <= 8
+		ram[A1 + 0x38] = air and 0xFF or 0
+		ram[A1 + 0x1B8] = 0
+		ram[A1 + 0x20] = 300 - i
+		if i <= 8 then                          -- jumping attack in the air
+			ram[A1 + 0x06] = 0x06 ; ram[A1 + 0x105] = 1
+			ram[A1 + 0x1C] = (i == 4 or i == 5) and JBOX or AIR + i * 0x18
+		elseif i <= land_end then               -- the landing motion
+			ram[A1 + 0x06] = 0x06 ; ram[A1 + 0x105] = 1
+			ram[A1 + 0x1C] = LAND + (i - 9) * 0x18
+		elseif i < dash_from then               -- case 1: free for a tick
+			ram[A1 + 0x06] = 0 ; ram[A1 + 0x105] = 0 ; ram[A1 + 0x1C] = 0x580000
+		elseif i <= 20 then                     -- the dash
+			ram[A1 + 0x06] = 0x14 ; ram[A1 + 0x105] = carry and 1 or 0
+			ram[A1 + 0x1C] = DASH + (i - dash_from) * 0x18
+		elseif i <= 33 then                     -- the dash attack
+			ram[A1 + 0x06] = 0x14 ; ram[A1 + 0x105] = 1
+			ram[A1 + 0x1C] = DATK + (i - 21) * 0x18
+		else
+			ram[A1 + 0x06] = 0 ; ram[A1 + 0x105] = 0 ; ram[A1 + 0x1C] = 0x580000
+		end
+	end)
+	ram[A1 + 0x20] = 0 ; ram[A1 + 0x38] = 0 ; ram[A1 + 0x06] = 0 ; ram[A1 + 0x1B8] = 0
+	draw_once(fm)
+	local move_tiles = 0
+	for _, img in pairs(tiles) do
+		if img == "images/framemeter/FM_move.png" then move_tiles = move_tiles + 1 end
+	end
+	globals.options.fm_movement_data = false
+	ram[A1 + 0x1C] = 0 ; ram[A1 + 0x105] = 1
+	return p1_numbers(), startup_tiles .. "/" .. active_tiles .. "/" .. recovery_tiles, move_tiles
+end
+local n1, t1, m1 = jump_then_dash_attack(false)
+eq("(対照) 着地モーションの後のダッシュ攻撃: 数値", n1, "Startup 5 / Total 14 / Recovery 7")
+-- The whole meter: the jumping attack 3/2/4 ([4m]) and the dash attack 4/3/7.
+eq("(対照) ジャンプ攻撃と合わせたマス (緑/赤/青)", t1, "7/5/11")
+local n2, t2, m2 = jump_then_dash_attack(true)
+eq("着地モーションをダッシュで消したダッシュ攻撃: 数値は対照と同じ", n2, n1)
+eq("マスも対照と同じ", t2, t1)
+eq("ダッシュはダッシュのマス (12 から 20 の 9 マス)", m2, 9)
+
+-- ---------------------------------------------------------------------------
+print("[4p] 着地モーションから出した必殺技も、技として描く (2026-10-13)")
+-- The user's capture the same day (reversal_logs_archive/v11.7.25.1_2,
+-- invuln_log, Lilith, tick 1944): a jumping attack hits and lands ($06 0x02,
+-- then 0x04) and a special starts on 1948 ($06 0x0E). $105 stays 1 from the
+-- jumping attack to the end of the special, and a special does not move $1B8
+-- (nothing outside the normal-attack starts adds to it - every addq to $1B8
+-- in the ROM, mame_code). The landing motion stayed on through the special:
+-- the special was drawn as doing nothing, and the jumping attack's numbers
+-- and Advantage were what the meter showed. `after`: the special starts after
+-- the landing motion ran out ($105 0 for a tick) - the control.
+local function jump_then_special(after)
+	fm = fresh(true)
+	local frames = {}
+	for i = 1, 50 do frames[i] = 10300 + i end
+	local AIR, LAND, SPEC, JBOX = 0x590000, 0x5A0000, 0x5B0000, 0x598000
+	ram[JBOX + 0x0A] = 1
+	for k = 5, 7 do ram[SPEC + k * 0x18 + 0x0A] = 1 end
+	local sp_from = after and 14 or 13       -- control: tick 13 is free
+	feed(frames, function(i)
+		ram[A1 + 0x38] = (i <= 8) and 0xFF or 0
+		ram[A1 + 0x1B8] = 0
+		ram[A1 + 0x20] = 300 - i
+		if i <= 8 then                          -- jumping attack in the air
+			ram[A1 + 0x06] = 0x06 ; ram[A1 + 0x105] = 1
+			ram[A1 + 0x1C] = (i == 4 or i == 5) and JBOX or AIR + i * 0x18
+		elseif i <= 12 then                     -- landing: $06 0x02, then 0x04
+			ram[A1 + 0x06] = (i <= 11) and 0x02 or 0x04 ; ram[A1 + 0x105] = 1
+			ram[A1 + 0x1C] = LAND + (i - 9) * 0x18
+		elseif i < sp_from then                 -- control: free for a tick
+			ram[A1 + 0x06] = 0 ; ram[A1 + 0x105] = 0 ; ram[A1 + 0x1C] = 0x5C0000
+		elseif i < sp_from + 16 then            -- the special: 5 / 3 / 8
+			ram[A1 + 0x06] = 0x0E ; ram[A1 + 0x105] = 1
+			ram[A1 + 0x1C] = SPEC + (i - sp_from) * 0x18
+		else
+			ram[A1 + 0x06] = 0 ; ram[A1 + 0x105] = 0 ; ram[A1 + 0x1C] = 0x5C0000
+		end
+	end)
+	ram[A1 + 0x20] = 0 ; ram[A1 + 0x38] = 0 ; ram[A1 + 0x06] = 0 ; ram[A1 + 0x1B8] = 0
+	draw_once(fm)
+	ram[A1 + 0x1C] = 0 ; ram[A1 + 0x105] = 1
+	return p1_numbers(), startup_tiles .. "/" .. active_tiles .. "/" .. recovery_tiles
+end
+local s1, u1 = jump_then_special(true)
+eq("(対照) 着地モーションの後の必殺技: 数値", s1, "Startup 6 / Total 17 / Recovery 9")
+-- The whole meter: the jumping attack 3/2/4 and the special 5/3/9.
+eq("(対照) ジャンプ攻撃と合わせたマス (緑/赤/青)", u1, "8/5/13")
+local s2, u2 = jump_then_special(false)
+eq("着地モーションから出した必殺技: 数値は対照と同じ", s2, s1)
+eq("マスも対照と同じ", u2, u1)
+
+-- ---------------------------------------------------------------------------
 print("[5] 試合中かどうかは match_running で見る")
 running = true
 fm = fresh(false)                 -- match_begun false, as during a transformation

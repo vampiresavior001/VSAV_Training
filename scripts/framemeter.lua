@@ -246,9 +246,12 @@ local profile = {
 for _, game in ipairs(profile) do
 	game.update = game.update or {func = emu.registerafter, cycle = 1}
 end
+-- VSAV_Training: $105 left up by a jump normal's landing motion that a dash
+-- cancelled. Not an attack while it lasts (read_landing).
+local carried = { false, false }
 local get_attack_state = {
 	[false] = function(addr) --non-super mode
-		return game.attacking(addr)
+		return game.attacking(addr) and not carried[(addr == game.address[1]) and 1 or 2]
 	end,
 
 	[true] = function(addr) --super mode
@@ -527,17 +530,60 @@ end
 -- keep their landing recovery, which is real. The landing motion lasts while
 -- $105 stays 1 and no new attack is started ($1B8, the game's count of attack
 -- starts): a cancel into a grounded normal is a new move and draws as one.
+-- VSAV_Training: A DASH OUT OF THE LANDING MOTION CARRIES ITS $105 (user,
+-- 2026-10-13). A dash cancels the landing motion too, and then $105 stays 1
+-- through the dash ($06 0x14) and on into a dash attack, which did not move
+-- $1B8 (Lilith, reversal_logs_archive/mixed-v11.7.25+v11.7.25.1 invuln_log,
+-- tick 7313; when the landing motion ran out first, $105 was 0 through the
+-- dash, tick 6959). The landing motion stayed on, so the dash and the dash
+-- attack's startup and recovery were drawn as doing nothing and only its box
+-- showed. Now the landing motion ends where the dash starts, and the $105 it
+-- leaves is not an attack (carried) until a move starts inside the dash: the
+-- cel pointer leaving the dash's script - the stepper moves it by +0x18 and
+-- anything else is a new script (actionRoute.lua) - or $1B8 moving, or $105
+-- dropping. The dash attack then draws as it does after a landing motion that
+-- ran out.
+-- A SPECIAL OUT OF THE LANDING MOTION IS A NEW MOVE (user, 2026-10-13). $105
+-- stays 1 from the jumping attack into the special, and a special does not
+-- move $1B8 - every addq to $1B8 in the ROM is in the normal-attack starts and
+-- the chain tail (mame_code) - so the landing motion ran on through the special
+-- and its advantage was the jumping attack's (Lilith, reversal_logs_archive/
+-- v11.7.25.1_2 invuln_log, tick 1944: landing $06 0x02, then 0x04, the special
+-- 0x0E on 1948). The landing motion ends where $06 becomes a special.
+local SPECIAL_STATE = { [0x0E] = true, [0x10] = true, [0x12] = true }
+local DASH_STATE = 0x14
+local CEL_STEP = 0x18
 local air_normal_before = { false, false }
 local landing_motion = { false, false }
 local landing_seq = { nil, nil }
+local carried_seq = { nil, nil }
+local carried_cel = { nil, nil }
 local function read_landing()
 	for p = 1, 2 do
 		local addr = game.address[p]
 		local airborne = memory.readbyte(addr + 0x38) ~= 0
 		local attacking = game.attacking(addr)
 		local seq = memory.readword(addr + 0x1B8)
+		local st = memory.readbyte(addr + 0x06)
+		local cel = memory.readdword(addr + 0x1C) or 0
+		if carried[p] then
+			if not attacking or seq ~= carried_seq[p] or st ~= DASH_STATE
+			   or (cel ~= carried_cel[p] and cel ~= carried_cel[p] + CEL_STEP) then
+				carried[p] = false
+			else
+				carried_cel[p] = cel
+			end
+		end
+		if landing_motion[p] and st == DASH_STATE and attacking and seq == landing_seq[p] then
+			landing_motion[p] = false
+			carried[p] = true
+			carried_seq[p] = seq
+			carried_cel[p] = cel
+		end
+		if landing_motion[p] and SPECIAL_STATE[st] then
+			landing_motion[p] = false
+		end
 		if airborne then
-			local st = memory.readbyte(addr + 0x06)
 			air_normal_before[p] = attacking and (st == 0x06 or st == 0x0A)
 			landing_motion[p] = false
 		else
@@ -573,7 +619,7 @@ local landing_before = { false, false }
 local move_end_now = { false, false }
 local function read_move_end()
 	for p = 1, 2 do
-		local attacking = game.attacking(game.address[p])
+		local attacking = game.attacking(game.address[p]) and not carried[p]
 		local touchdown = landing_motion[p] and not landing_before[p]
 		-- The end of a landing motion is not the end of the move: that was the
 		-- touchdown.
@@ -1160,6 +1206,9 @@ local function reset_after_load()
 	air_normal_before = { false, false }
 	landing_motion = { false, false }
 	landing_seq = { nil, nil }
+	carried = { false, false }
+	carried_seq = { nil, nil }
+	carried_cel = { nil, nil }
 	attacking_before = { false, false }
 	landing_before = { false, false }
 	move_end_now = { false, false }
@@ -1172,9 +1221,11 @@ end
 local function update(tick)
 	-- VSAV_Training: every tick, logged or not (see read_motion).
 	read_free_ticks()
+	-- VSAV_Training: read_landing first - whether $105 is an attack (carried)
+	-- is decided there, and read_motion asks it through get_attack_state.
+	read_landing()
 	local moved = read_motion()
 	read_reversal_ticks()
-	read_landing()
 	read_move_end()
 	read_pb_success()
 	read_throw_checks()
