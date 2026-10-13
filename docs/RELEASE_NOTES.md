@@ -6,6 +6,37 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.25.2
+
+Frame Meter now draws a dash attack or special made right out of a jump
+attack's landing as a move of its own. The manual's screenshots now sit inside
+the steps they show, and the wording is reviewed.
+
+### Fix: dash attacks and specials right after a jump attack's landing
+
+- When a dash or a special cancelled a jump attack's landing motion, the move
+  that followed was drawn as doing nothing except its red active tiles, and
+  the numbers and Advantage were the jump attack's
+- The landing motion now ends where the dash or special starts. The dash is
+  drawn as a dash, and the dash attack or special as a new move, measured on
+  its own
+- Checked on the developer's side with Lilith's jump attacks into a dash attack
+  and into a projectile special. The special's Advantage matched the game's
+  value (+2) all 15 times
+
+### Manual
+
+- Screenshots that show a step now sit inside that step (on GitHub they looked
+  like the last step's)
+- The safe-jump example in Section 10.B now says it is timed for Morrigan's
+  in-place wake-up and needs `Wakeup = None`
+- In 11.2 Tick Data, the frame data tables' details and limits are folded. The
+  link to the tables and the note that their values are not guaranteed to
+  match stay in the text
+- Wording reviewed in both languages
+
+---
+
 ## v11.7.25.1
 
 In Action Steps, Lei-Lei's crouching MK canceled into Tenraiha now combos. Fixed
