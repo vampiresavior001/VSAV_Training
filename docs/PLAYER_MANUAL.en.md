@@ -2,7 +2,7 @@
 
 English | [日本語](PLAYER_MANUAL.ja.md)
 
-Practice offense, defense and execution in Vampire Savior with repeatable dummy actions and detailed timing displays. Menu labels are reproduced as they appear in the tool so you can find the corresponding settings.
+This guide explains how to use VSAV_Training, a Vampire Savior training mode for Fightcade 2 / FBNeo. Practice offense, defense and execution with repeatable dummy actions and detailed timing displays. Menu labels are reproduced as they appear in the tool so you can find the corresponding settings.
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 

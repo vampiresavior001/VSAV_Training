@@ -1,6 +1,8 @@
 # VSAV_Training - The Warlord's Secret
 
-See what the Warlord sees, and practice what the Warlord practices, in VSAV training mode for Fightcade 2.
+**Fightcade 2用のヴァンパイア セイヴァー トレーニングモード。**
+
+ウォーロードの視点で見て、ウォーロードの練習を。
 
 [English](README.md) | 日本語
 

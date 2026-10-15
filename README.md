@@ -1,6 +1,8 @@
 # VSAV_Training - The Warlord's Secret
 
-See what the Warlord sees, and practice what the Warlord practices, in VSAV training mode for Fightcade 2.
+**A Vampire Savior training mode for Fightcade 2.**
+
+See what the Warlord sees, and practice what the Warlord practices.
 
 English | [日本語](README.ja.md)
 
