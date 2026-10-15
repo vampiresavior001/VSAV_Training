@@ -6,6 +6,39 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.27
+
+New Grab Mashing makes the dummy mash while it grabs or is grabbed.
+
+### New: Grab Mashing
+
+- `Dummy > Grab Mashing` (`Off` / `Normal` / `Fast` / `Fastest`, default
+  `Off`). While the dummy grabs or is grabbed, it mashes directions and
+  buttons. Only grabs where the game reads mashing are covered (the routine
+  was confirmed through ROM analysis); ordinary throws and hitstun are not
+- `Normal` and `Fast` use preset rhythms; `Fastest` makes a new direction
+  press and a new button press every Tick. The buttons are LP and LK only:
+  medium and heavy ones can tech the grab. The game counts a press the same
+  whatever its strength, so nothing is lost
+- When the dummy is grabbed, the reversal plans it had before (Action Steps,
+  Specified and so on) are canceled. When it grabs, its own action keeps
+  running and only its input during the grab is replaced. The throw-tech input
+  from `Random Throw Tech %` is also replaced during the grab
+- It does nothing while you control P2, while a recording plays or is being
+  made, or during the Recording Wizard
+- Checked on the developer's side with Demitri's grab. With the dummy
+  grabbed, a grab that lasts 121 Ticks with nothing pressed was escaped in 23
+  to 34 Ticks with `Fastest`, and in 66 to 74 with `Normal` and `Fast` (the
+  amounts are random), with no throw tech. With the dummy grabbing, input went
+  in on 120 of the grab's 121 Ticks (the first reads input made before the
+  grab began). Other characters' grabs have not been checked yet
+
+### Manual
+
+- Grab Mashing added to 4.1
+
+---
+
 ## v11.7.26
 
 New Chain Trainer shows, Tick by Tick, whether your chains and links

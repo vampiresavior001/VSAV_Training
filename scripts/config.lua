@@ -75,6 +75,9 @@ local default_training_settings = {
   -- Index into menu.lua p2_throw_tech_chance. 5 = 100%, which is what the
   -- old boolean true did.
   p2_throw_tech = 5,
+  -- Grab Mashing (grabMashing.lua): 1 Off, 2 Normal, 3 Fast, 4 Fastest. A
+  -- settings file without it reads Off.
+  grab_mashing = 1,
   p2_block_chance = 1,
   looped_playback = false,
   pb_type_rec = 1,   -- 1 is None; 0 was out of range for the list

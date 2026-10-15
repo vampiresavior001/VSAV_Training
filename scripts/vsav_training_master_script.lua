@@ -102,6 +102,9 @@ local commandTrainerModule = require "./scripts/commandTrainer"
 local chainLogModule     = require "./scripts/chainLog"
 -- Chain Trainer (Trainer tab): draws from chainLog's rows.
 local chainTrainerModule = require "./scripts/chainTrainer"
+-- Grab Mashing (Dummy tab): the dummy mashes inside a grab that reads it. Exec
+-- hooks, at start-up.
+local grabMashingModule  = require "./scripts/grabMashing"
 -- Auto-Flip Inputs on Side Switch (Dummy / Recording tabs). guardCancel,
 -- controller and actionSequenceRunner require it too; required here so it is
 -- loaded at start-up whatever loads first.
@@ -468,6 +471,7 @@ emu.registerstart(function()
 	commandTrainerModule.registerStart()
 	chainLogModule.registerStart()
 	chainTrainerModule.registerStart()
+	grabMashingModule.registerStart()
 
 end)
 
@@ -858,6 +862,7 @@ emu.registerafter(function() --recording is done after the frame, not before, to
 	commandTrainerModule.registerAfter()
 	chainLogModule.registerAfter()
 	chainTrainerModule.registerAfter()
+	grabMashingModule.registerAfter()
 	if globals.game_state.match_begun == false then
 		if globals == nil or globals.options == nil then
 			return
@@ -902,6 +907,7 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 		frameMeterModule.registerLoad()
 		commandTrainerModule.reset()
 		chainTrainerModule.reset()
+		grabMashingModule.reset("load")
 		macroLuaModule.registerLoad(slot)
 		globals.dmg_calc.red_life = 0
 		globals.dmg_calc.white_life = 0

@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.26／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.27／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [守りを練習する：AG・GC](#sasquatch-ag-tutorial) · [攻めを調べる：起き攻め](#wakeup-pressure-drill) · [対象環境・確認範囲](#verification-scope)
 
@@ -566,10 +566,29 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 | `Pose` | 通常時に保持する方向。`None`、しゃがみ、前後移動、ジャンプ方向など |
 | `Wakeup` | ダウン後の移動起き上がり。`None`、`Towards`、`Away`、ランダムなど |
 | `Random Throw Tech %` | 投げ抜けの確率。`0% / 25% / 50% / 75% / 100%` |
+| `Grab Mashing` | つかみ中のレバガチャ。`Off / Normal / Fast / Fastest` |
 | `Guard` | ガード方法 |
 | `Random Guard %` | 対応するガード方法で、ガードする確率。`0% / 25% / 50% / 75% / 100%` |
 
 初期設定の `Random Throw Tech %` は `100%` です。投げ自体を調べたいときは `0%` にします。
+
+<a id="grab-mashing"></a>
+**`Grab Mashing`（つかみ中のレバガチャ）は、ダミーがつかんでいる間、またはつかまれている間に、レバーとボタンを自動で入力します。** 初期設定は `Off` です。対象は、ゲームがレバガチャを受け付けるつかみだけです（受け付ける処理はROMの解析で確かめました）。通常の投げや、やられ中は対象外です。
+
+| 値 | 入力 |
+|---|---|
+| `Normal` | 方向を4 Tickごと、ボタン（弱P・弱K）を6 Tickごとに切り替える一定のリズム |
+| `Fast` | 方向を3 Tickごと、ボタン（弱P・弱K）を4 Tickごとに切り替える一定のリズム |
+| `Fastest` | 毎Tick、新しい方向とボタン（弱P・弱K）を1つずつ押す |
+
+- `Fastest` は、ゲームが数える押しの回数が最も多くなる設定です。つかみの残り時間は乱数で減るので、いつも最短で抜けられるわけではありません。複数のボタンを同時に押しても、回数は増えません。
+- ボタンは弱P・弱Kだけです。中・強のボタンを方向と一緒に押すと、つかみを投げ抜けすることがあるためです（開発中に中・強を混ぜていたときは、`Normal`・`Fastest` で投げ抜けしました）。ゲームは押したボタンの強さを区別せずに数えるので、弱だけでも減り方は変わりません。
+- つかまれたときは、それまでの反撃の予定（Action Steps・Specifiedなど）を取り消します。離された後に、古い予定が出ないようにするためです。
+- つかんだときは、ダミー自身の行動はそのまま続け、つかんでいる間の入力だけを置き換えます。
+- `Random Throw Tech %` による投げ抜けの入力も、つかみの間はレバガチャに置き換わります。
+- 自分がP2を操作している間、記録の再生中・記録中、Recording Wizardの間は入力しません。
+- つかみの最初の1 Tickは数えられません。その Tickにゲームが読む入力は、つかみが始まる前に作られたものだからです。
+- 残り時間は `Analysis > Show Mash Timer` で、つかんでいる側の頭上に出せます。
 
 | `Guard` の値 | 動作・使い分け |
 |---|---|
@@ -1751,7 +1770,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新：2026-10-11。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.26。項目名は2026-10-15に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.27。項目名は2026-10-15に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。
