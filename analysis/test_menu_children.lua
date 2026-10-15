@@ -175,7 +175,7 @@ local TREE = {
 		{ "Guard Action Type", { "Random Guard Action %", "Random Start Wait",
 			"Input Motion", "Button", "Button Lever",
 			 "Guard Cancel Button", "Push Block Type",
-			"Push Block Type (PB Recording)", "Button Wait", "GC Input Delay (Ticks)",
+			"Push Block Type (PB Recording)", "Button Wait", "Loop", "GC Input Delay (Ticks)",
 			"P2 Reversal List", "Reversal Strength", "Reversal Action Patterns",
 			"Reversal Action Steps", "Loop Steps" } },
 		{ "Button Wait", { "Random Delay" } },

@@ -100,6 +100,10 @@ actionSequenceRunnerModule = {
 	arm_oneshot = function(_, _, o) got = o ; return true end,
 }
 assert(loadstring(slice("function GA.rsw_draw()", "\nend\n")))()
+-- The Specified half of rsw_defer's options lives here since the Specified Loop
+-- (2026-10-14), shared with every lap; rsw_defer calls it.
+BUTTON_LEVER_DIR = BUTTON_LEVER_DIR or {}
+assert(loadstring(slice("function GA.specified_extras(", "\nend\n")))()
 assert(loadstring(slice("function GA.rsw_defer()", "\nend\n")))()
 local function defer(ga, li)
 	globals.dummy.guard_action = ga

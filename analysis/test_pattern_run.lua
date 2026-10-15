@@ -167,10 +167,13 @@ print("[10] 周回ごとに引き直す - 引くのは loop_refill の中、sche
 -- 区間で挟んでから探す。同じ文字列はこのファイルの他の場所にもある。
 local rsrc = io.open("actionSequenceRunner.lua"):read("*a")
 local lr_s = rsrc:find("local function loop_refill()", 1, true)
-local lr_e = rsrc:find("-- Left for service_body to name on the first tick", lr_s, true)
-eq("loop_refill が見つかる", lr_s ~= nil, true)
+-- Action Steps / Patterns の部分だけ。Specified のループ (2026-10-14) の枝が先にあり、
+-- そこで return する。周回を積む後半は queue_lap に出した。
+local as_s = lr_s and rsrc:find("if loop_sched == nil or #loop_sched == 0 then return end", lr_s, true)
+local lr_e = as_s and rsrc:find("queue_lap(M.loop_wait())", as_s, true)
+eq("loop_refill が見つかる", lr_s ~= nil and as_s ~= nil, true)
 eq("終わりの目印も見つかる", lr_e ~= nil, true)
-local body = rsrc:sub(lr_s, lr_e)
+local body = rsrc:sub(as_s or 1, lr_e or 1)
 local at_pick = body:find("M.pick_pattern(loop_which)", 1, true)
 local at_sched = body:find("M.schedule(loop_which)", 1, true)
 local at_on = body:find("M.loop_on()", 1, true)

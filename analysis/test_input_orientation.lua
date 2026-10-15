@@ -182,7 +182,7 @@ local function in_fn(src, head, needle)
 end
 eq("runner: arm で回を始める", in_fn(runner, "function M.arm(which)", "inputOrientation.steps_begin()"), true)
 eq("runner: arm_deferred で回を始める", in_fn(runner, "function M.arm_deferred(which, o)", "inputOrientation.steps_begin()"), true)
-eq("runner: arm_oneshot で回を始める", in_fn(runner, "function M.arm_oneshot(owner, list, o)", "inputOrientation.steps_begin()"), true)
+eq("runner: arm_oneshot で回を始める", in_fn(runner, "function M.arm_oneshot(owner, list, o, build)", "inputOrientation.steps_begin()"), true)
 eq("runner: ループの周回の最初の段を積むとき回を始める",
 	runner:find("if step.is_loop then inputOrientation.steps_begin() end\n\tqueue_input_sequence(defender, step.sequence)", 1, true) ~= nil, true)
 eq("runner: 積んだ段にその回を付ける", runner:find("q.orient_run = inputOrientation.steps_run()", 1, true) ~= nil, true)

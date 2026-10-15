@@ -1193,6 +1193,16 @@ button_random_delay_item.is_disabled = function()
   return _ga ~= 6 and _ga ~= 8
 end
 
+-- LOOP FOR THE TWO SPECIFIED TYPES (handoff 2026-10-14, 14). A dash and an
+-- attack set up here can be repeated for a PB / GC drill without building the
+-- same thing again in Action Steps. One switch for both types; when the next
+-- one starts is not a choice here - always as Auto (Landing) does, which on the
+-- ground means once the dummy can act again (actionSequenceRunner,
+-- loop_refill). The Action Steps rows keep their own keys.
+local specified_loop_item = checkbox_menu_item("Loop", training_settings, "specified_loop", false,
+      "Runs the same reversal or counter again after it ends, until the guard\naction changes or a new one arms. The first still needs its usual chance.\nAn airborne action comes back on the landing, as Auto (Landing) does; one\non the ground comes back when the dummy can act again.\nButton Wait, Random Delay and Random Start Wait apply to every repeat.")
+specified_loop_item.is_disabled = button_random_delay_item.is_disabled
+
 -- GC専用の任意フレーム入力ディレイ。共用の guard_action_delay_menu_item
 -- (gc_delay) は「シーケンス先頭に Neutral を挿入する」方式で、GC 分岐は
 -- 常に最速で queue されるため入力開始自体は遅らせられない - 詳細は
@@ -1744,12 +1754,12 @@ local _ct_names = { "Off" }
 local _ct_help = { "What the game's own command recognizer took, step by step, for one command\n"
   .. "P1 can do: the ticks between the inputs it accepted and how the attempt ended.\n"
   .. "Left / right: Off and P1's character's commands. Picking one turns it on.\n"
-  .. "GC Command Trace is hidden only while this trainer is displayed." }
+  .. "GC Command Trainer is hidden only while this trainer is displayed." }
 for _, _c in ipairs(_ct) do
   _ct_names[#_ct_names + 1] = _c[1]
   _ct_help[#_ct_help + 1] = _c[1] .. ", " .. _c[2] .. ": " .. _c[3] .. ".\n" .. _ct_rules
 end
-local _ct_item = list_menu_item("Command Trainer", training_settings, "command_trainer", _ct_names, 1, _ct_help)
+local _ct_item = list_menu_item("Seq. Command Trainer", training_settings, "command_trainer", _ct_names, 1, _ct_help)
 -- Left and right stop at Off and P1's own commands only (user, 2026-10-11):
 -- commandTrainer.step. Looked up when pressed, not required here - the master
 -- script has it loaded by then, and the menu tests load this file without it,
@@ -1898,6 +1908,7 @@ return {
             indent(1, pb_rev_button_menu_item),
             indent(1, guard_action_delay_menu_item),
             indent(2, button_random_delay_item),
+            indent(1, specified_loop_item),
             indent(1, gc_input_delay_menu_item),
             indent(1, p2_reversal_list_menu_item),
             indent(1, p2_reversal_strength_menu_item),
@@ -2001,7 +2012,7 @@ return {
         checkbox_menu_item("Show Step Wait Ticks", training_settings, "display_step_wait_ticks", false,"Shows what each Action Step actually waited, in game Ticks.\nThe Wait row names a mode - Auto (After), Auto (Chain) - without saying how\nlong it came to. This measures it: Step.2 Wait:13 is step two connecting 13 Ticks\nafter step one. Act is the Ticks that step spends entering its own inputs.\nLoop Wait is the gap a loop restart waited, which is not step one own wait.\nMeasured only - what the row is set to is on the row."),
         checkbox_menu_item("Show PB Counter", training_settings, "display_pb_counter",1, "Push block presses the game counted ($170), plus any after it grants - a lucky\nthree would read three however hard you mash. Green once granted; the count\ncarries a blocked string. Right: the TICK timeline of the last window (Guard\nopens it, | closes it, digit = buttons that tick; 2+ red is simultaneous).\nMultiPush counts those. LateMash: buttons pressed AFTER the 14 ticks - they\nLEAK A NORMAL when guard stun ends. Cap 14t. The dummy shows as P2."),
         checkbox_menu_item("Show PB Stats", training_settings, "display_pb_stats", false,"Push block, over every touch on the ground you pressed a button in: Total.\nPass: it pushed. Fail: it did not, or you were hit. Unpressed touches: ignored.\nAvg: the PB Count line's own values, over the touches you pressed in and guarded.\nMulti / Late: its MultiPush and LateMash. A blocked string is one touch.\nA guard cancel that came out is left out. Counts stop at 99999.\nOff and on starts at 0."),
-        checkbox_menu_item("Show GC Command Trace", training_settings, "display_gc_command_trace", false, "Every direction the GAME TOOK on the way to a guard cancel, with the tick it\ntook it, the button that finished it, and how it ended.\nDrawn once a guard happens - the motion is followed before that, so a command\nstarted early still shows. Numbers count from the input above, or from the\nguard or expiry once one of those cut the count. GC Expired is the 14 tick\nwindow running out. Cmd Expired is the motion not staying together."),
+        checkbox_menu_item("Show GC Command Trainer", training_settings, "display_gc_command_trace", false, "Every direction the GAME TOOK on the way to a guard cancel, with the tick it\ntook it, the button that finished it, and how it ended.\nDrawn once a guard happens - the motion is followed before that, so a command\nstarted early still shows. Numbers count from the input above, or from the\nguard or expiry once one of those cut the count. GC Expired is the 14 tick\nwindow running out. Cmd Expired is the motion not staying together."),
         -- SHOW GC STATS (gcStats.lua, user 2026-10-01). The help has to say what
         -- the side is, that both averages are over OKs only and what each one
         -- measures, and that neither is a score. Its words are PB Stats' (user,
@@ -2009,6 +2020,13 @@ return {
         -- character select clears it (user, 2026-10-01: キャラ選択に戻ればクリア
         -- だから要らない).
         checkbox_menu_item("Show GC Stats", training_settings, "display_gc_stats", false, "Guard cancels, one per blocked string in which the game took a direction of your\nGC motion (begun before the block counts too). Pass: a GC came out. Fail: none.\n1P / 2P: the side your character was on - on the left, facing right, is 1P.\nAverages of ticks to the GC, over Passes only. Smaller is a faster GC.\nGC t: from the window opening. Input t: from the final motion's first direction.\nOff and on starts at 0. Counts stop at 99999."),
+        -- CHAIN TRAINER (chainTrainer.lua, 2026-10-14; layout approved from a
+        -- mockup). Off / P1 / P2: the side measured. Above Show Air Guard Gaps,
+        -- not under Command Trainer: a row there pulls the second column up
+        -- beside Command Trainer's long value (test_command_trainer,
+        -- test_menu_layout), and Command Trainer stays right under Air Guard
+        -- Gaps as asked. Drawn where Air Guard Gaps is (user, 2026-10-15).
+        list_menu_item("Chain Trainer", training_settings, "chain_trainer", { "Off", "P1", "P2" }, 1, "What the game's chain check did with your presses after each hit of a normal.\nOne mark per tick from 1t, the first tick a new press counts: - hit stop (the\npress is held and judged when it ends), = judged on the tick, . outside it.\nP/K: your presses. |: the cancel came out. CHAIN 6t: taken from the 6t press.\nLATE / EARLY: outside it. MULTI: two buttons held. NO CHAIN: not from the move.\nLINK 2t/4t: linked from your 2nd free tick, up to 4t would. GAP/EARLY: did not."),
         checkbox_menu_item("Show Air Guard Gaps", training_settings, "display_air_guard_gap", false,"After each hit of an air chain you BLOCKED. Gap: the ticks you could act before\nthe next hit (|) or your landing (L). 1t is your first tick. A press before it:\nIn Blockstun 14t at 9,13t and P/K after | (row above): thrown away. * your hit.\nPress>Hit: LP 1t>5t (5t) = LP pressed on tick 1, hit on tick 5. (nt) is startup\nas Tick Data counts it. LATE 4t: 4t past the last winning press. NO GAP: (nt)>Gap\nDash > 12t J.LK(5t): theirs, Auto (10) in Action Steps. PreJump > Guard: yours."),
         -- COMMAND TRAINER (commandTrainer.lua, user 2026-10-11). One row: picking
         -- a command turns it on (analysis/COMMAND_TRAINER_DESIGN.ja.md, section

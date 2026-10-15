@@ -97,6 +97,11 @@ local invulnLogModule    = require "./scripts/invulnLog"
 local commandLogModule   = require "./scripts/commandLog"
 -- Command Trainer (Trainer tab): draws from commandLog's rows.
 local commandTrainerModule = require "./scripts/commandTrainer"
+-- Diagnostic: what the chain and rapid cancel check did, while Knockdown Logger
+-- is on (the Chain Trainer's probe, 2026-10-14). Exec hooks, at start-up.
+local chainLogModule     = require "./scripts/chainLog"
+-- Chain Trainer (Trainer tab): draws from chainLog's rows.
+local chainTrainerModule = require "./scripts/chainTrainer"
 -- Auto-Flip Inputs on Side Switch (Dummy / Recording tabs). guardCancel,
 -- controller and actionSequenceRunner require it too; required here so it is
 -- loaded at start-up whatever loads first.
@@ -461,6 +466,8 @@ emu.registerstart(function()
 	invulnLogModule.registerStart()
 	commandLogModule.registerStart()
 	commandTrainerModule.registerStart()
+	chainLogModule.registerStart()
+	chainTrainerModule.registerStart()
 
 end)
 
@@ -849,6 +856,8 @@ emu.registerafter(function() --recording is done after the frame, not before, to
 	invulnLogModule.registerAfter()
 	commandLogModule.registerAfter()
 	commandTrainerModule.registerAfter()
+	chainLogModule.registerAfter()
+	chainTrainerModule.registerAfter()
 	if globals.game_state.match_begun == false then
 		if globals == nil or globals.options == nil then
 			return
@@ -892,6 +901,7 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 		cps2HitboxModule.registerLoad()
 		frameMeterModule.registerLoad()
 		commandTrainerModule.reset()
+		chainTrainerModule.reset()
 		macroLuaModule.registerLoad(slot)
 		globals.dmg_calc.red_life = 0
 		globals.dmg_calc.white_life = 0
@@ -1013,7 +1023,9 @@ while true do
 		-- the input column and the menu after it off the screen. Shown, not
 		-- swallowed, so a fault cannot pass for "nothing to draw".
 		local _ct_ok, _ct_err = pcall(commandTrainerModule.draw)
-		if not _ct_ok then gui.text(210, 38, "Command Trainer: " .. tostring(_ct_err):sub(1, 60), "#FF0000") end
+		if not _ct_ok then gui.text(210, 38, "Seq. Command Trainer: " .. tostring(_ct_err):sub(1, 60), "#FF0000") end
+		local _cht_ok, _cht_err = pcall(chainTrainerModule.draw)
+		if not _cht_ok then gui.text(210, 46, "Chain Trainer: " .. tostring(_cht_err):sub(1, 60), "#FF0000") end
 		vsavScriptModule.guiRegister(display_hud, display_movelist)
 		cps2HitboxModule.guiRegister(globals.options.display_hitbox_default, use_hb_config)
 		vsavScriptModule.runCheats()

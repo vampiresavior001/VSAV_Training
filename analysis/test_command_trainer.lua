@@ -63,7 +63,7 @@ do
 	local tb = menu:find('name = "Trainer"', 1, true)
 	local te = menu:find('reset_tab_item("Trainer")', tb or 1, true)
 	local order = {}
-	local tab = menu:sub(tb or 1, te or 1):gsub("_ct_item,", 'x_menu_item("Command Trainer",')
+	local tab = menu:sub(tb or 1, te or 1):gsub("_ct_item,", 'x_menu_item("Seq. Command Trainer",')
 	for label in tab:gmatch('_menu_item%("([^"]+)"') do order[#order + 1] = label end
 	order[#order + 1] = "Reset This Tab"
 	local TD_CHILD = { ["Tick Data Side"] = true, ["Show Meaty Timing"] = true, ["Show Action Timeline"] = true }
@@ -80,7 +80,7 @@ do
 			if not hidden then shown[#shown + 1] = l end
 		end
 		local k = nil
-		for i, l in ipairs(shown) do if l == "Command Trainer" then k = i end end
+		for i, l in ipairs(shown) do if l == "Seq. Command Trainer" then k = i end end
 		local clear = k ~= nil and (k > 11 or shown[k + 11] == nil)
 		eq(st[1] .. ": 同じ高さの右の列に行が無い (" .. tostring(k) .. " 行目 / 全 " .. #shown .. ")", clear, true)
 	end
@@ -88,7 +88,7 @@ end
 -- The values and help come from _ct at the top of get_menu(): name,
 -- character and inputs per command, the shared rules under each.
 eq("行は _ct から作った値と説明を使う",
-	menu:find('list_menu_item("Command Trainer", training_settings, "command_trainer", _ct_names, 1, _ct_help)', 1, true) ~= nil, true)
+	menu:find('list_menu_item("Seq. Command Trainer", training_settings, "command_trainer", _ct_names, 1, _ct_help)', 1, true) ~= nil, true)
 local cta = menu:find("local _ct = {", 1, true)
 local ctb = menu:find("\n}\n", cta or 1, true)
 local ct = {}

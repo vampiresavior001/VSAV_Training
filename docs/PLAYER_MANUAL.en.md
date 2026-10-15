@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.25.2 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.26 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -70,6 +70,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
   - [11.4 Frame Meter](#frame-meter)
   - [11.5 Action Timeline](#action-timeline)
   - [11.6 Air Guard Gaps](#air-guard-gaps)
+  - [11.7 Chain Trainer](#chain-trainer)
 
 **Appendix**
 
@@ -88,7 +89,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | Goal | Feature | Where to start |
 |---|---|---|
 | Improve PB execution | `Show PB Counter`, `Show PB Stats` | [Section 8](#08-pb) |
-| Find out why a GC failed | GC Command Trace, input history | [Section 9](#09-gc) |
+| Find out why a GC failed | GC Command Trainer, input history | [Section 9](#09-gc) |
 | Track your GC success rate on the 1P and 2P sides | `Show GC Stats` | [Section 9.4](#gc-stats) |
 | Defend against offense with varied timing | `Random Start Wait`, `Random Delay` | [4.4](#dummy-button-timing) |
 | Examine interrupts and landing after air guarding | Air Guard Gaps | [11.6](#air-guard-gaps) |
@@ -98,6 +99,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | Goal | Feature | Where to start |
 |---|---|---|
 | Test combos and pressure strings | Dummy stance, blocking and health recovery | `Dummy`, `Gauge` |
+| Check whether chains and links connected, and their windows | Chain Trainer | [11.7](#chain-trainer) |
 | Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
 | Measure how long a setup takes | Action Timeline | [11.5](#action-timeline) |
 | Study option selects on a side switch | `Auto-Flip Inputs on Side Switch` | [Section 10.F](#side-switch-os) |
@@ -106,7 +108,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 
 | Goal | Feature | Where to start |
 |---|---|---|
-| Perform sequence supers such as Darkness Illusion consistently | Command Trainer | [Section 10.G](#command-trainer) |
+| Perform sequence supers such as Darkness Illusion consistently | Seq. Command Trainer | [Section 10.G](#command-trainer) |
 
 **Examine moves**
 
@@ -141,13 +143,13 @@ Show only the displays for the drill you are practicing; they are easier to read
 | 2 | Pressed-button list | The buttons you pressed in the window; `TECH HIT` marks the press that activated PB | [Section 8](#08-pb) |
 | 3 | PB Stats | Your PB success rate and averages | [8.3](#pb-stats) |
 
-**Practicing GC** (`Show GC Command Trace` and `Show GC Stats` on the `Trainer` tab, `Show Scrolling Input` on the `Display` tab)
+**Practicing GC** (`Show GC Command Trainer` and `Show GC Stats` on the `Trainer` tab, `Show Scrolling Input` on the `Display` tab)
 
 ![The screen while practicing GC. The numbers match the table below](images/screen_map_gc.png)
 
 | No. | Display | What it shows | More |
 |---|---|---|---|
-| 4 | GC Command Trace | The GC directions and buttons the game accepted, their intervals and the result | [Section 9](#09-gc) |
+| 4 | GC Command Trainer | The GC directions and buttons the game accepted, their intervals and the result | [Section 9](#09-gc) |
 | 5 | GC Stats | Your GC success rate and input time, split into the 1P and 2P sides. Top left while PB Stats and the other top-left displays are off, bottom right otherwise | [9.4](#gc-stats) |
 | 6 | Input bar | Your inputs, with the guard and GC marks (`G`, `GC`, `SUCCESS`) | [9.3](#gc-timing) |
 | 7 | P2 inputs (`Show P2 Inputs`) | The dummy's inputs | [Section 12](#12-options) |
@@ -408,9 +410,9 @@ Keep the dummy settings unchanged and practice your character's GC against the s
 |---|---|
 | `Display > Show Scrolling Input` | `yes` |
 | Its child option `Show GC Trainer` | `yes` |
-| `Trainer > Show GC Command Trace` | `yes` |
+| `Trainer > Show GC Command Trainer` | `yes` |
 
-You can leave PB Counter / PB Stats enabled. GC Command Trace sits to the right of PB Stats.
+You can leave PB Counter / PB Stats enabled. GC Command Trainer sits to the right of PB Stats.
 
 1. Make Sasquatch block P1's attack to trigger the short-dash LP response.
 2. Block the LP and enter **the GC command for your P1 character**.
@@ -659,6 +661,19 @@ With `Guard Action Type` set to `Push Block` or `PB Recording`, the same setting
 | Delay one particular attack within a sequence | That Action Step's `Random Delay` ([6.2](#steps-fields)) |
 
 Change one setting at a time at first, and check that the intended attack still comes out.
+
+<a id="dummy-specified-loop"></a>
+### 4.5 Repeat the Specified action (Loop)
+
+`Reversal - Specified` and `Counter Attack - Specified` have a `Loop` row (below `Random Delay`). Set it to `yes` and the dummy performs the same action again each time it ends. Use it to repeat offense such as a dash and attack for PB and GC practice without rebuilding it in Action Steps.
+
+- The first one still starts on the usual trigger (after blocking, being hit or waking up). Turning the row on or closing the menu does not start it.
+- After that, an airborne action comes back on the landing (the same as Action Steps' `Auto (Landing)`), and one that stays on the ground comes back once the dummy can act again.
+- `Button Wait`, `Random Delay` and `Random Start Wait` apply to every repeat, drawn again each time.
+- Set `Loop = no` to stop. Opening the menu also stops the loop; it starts again on the next trigger.
+- It is separate from Action Steps' `Loop Steps` and `Loop Wait`.
+
+If the move does not come out and the dummy stays free, the next repeat waits until the dummy has done something and can act again, instead of entering the same input over and over. For an airborne action whose landing cannot be predicted, such as a float, the input starts after the landing, so it can come later than the fastest timing.
 
 <a id="05-recording"></a>
 ## 5. Record opponent actions
@@ -927,7 +942,7 @@ The game checks for activation on each press: presses 1–2 never activate PB, t
 <a id="pb-stats"></a>
 ### 8.3 Statistics and practice conditions
 
-`Show PB Stats` keeps the values of the PB Counter line and averages them. It appears in a dark box. Turn on `Show GC Command Trace` as well and the trace sits to its right, so you can practice PB and GC together.
+`Show PB Stats` keeps the values of the PB Counter line and averages them. It appears in a dark box. Turn on `Show GC Command Trainer` as well and the trace sits to its right, so you can practice PB and GC together.
 
 ```
 Count Total 20
@@ -948,7 +963,7 @@ The `4 / 5 / 6` choices under `Game > P1 Min PB Presses` **modify game behavior 
 <a id="09-gc"></a>
 ## 9. Practice guard cancels
 
-The time allowed to complete GC command inputs involves randomness, so attempts that feel the same can produce different results. GC Command Trace shows the directions and button presses the game accepted, the intervals between them and where a window expired. Use it to identify what to adjust rather than judging by success or failure alone.
+The time allowed to complete GC command inputs involves randomness, so attempts that feel the same can produce different results. GC Command Trainer shows the directions and button presses the game accepted, the intervals between them and where a window expired. Use it to identify what to adjust rather than judging by success or failure alone.
 
 **First check `Success` to see whether the GC activated. Then review the accepted directions and button presses, along with the input intervals, to decide what to adjust next.**
 
@@ -957,7 +972,7 @@ The time allowed to complete GC command inputs involves randomness, so attempts 
 1. Prepare a repeatable attack using the [Sasquatch setup](#sasquatch-pb-tutorial) or a recording.
 2. Set `Display > Show Scrolling Input = yes`.
 3. Enable its child option, `Show GC Trainer`.
-4. Set `Trainer > Show GC Command Trace = yes`.
+4. Set `Trainer > Show GC Command Trainer = yes`.
 5. To track your success rate as well, set `Trainer > Show GC Stats = yes` ([9.4](#gc-stats)).
 6. Block and enter your character's GC command.
 
@@ -978,9 +993,9 @@ On the 1P side (left side of the screen, facing right), if the transition from �
 
 - **Input history** shows your inputs over time. Newer inputs appear on the right of the bottom bar.
 
-- **GC Command Trace** shows the directions the game accepted toward a GC, the finishing button and the result. It also follows motions begun before the block. It appears without a title in a dark box, placed to the right of PB Stats so the two can be shown together.
+- **GC Command Trainer** shows the directions the game accepted toward a GC, the finishing button and the result. It also follows motions begun before the block. It appears without a title in a dark box, placed to the right of PB Stats so the two can be shown together.
 
-  ![GC Command Trace of a guard cancel that succeeded](images/gc_trace.png)
+  ![GC Command Trainer of a guard cancel that succeeded](images/gc_trace.png)
 
   In this example the game accepted → 3 Ticks after the attack was blocked, ↓ 4 Ticks later, ↘ 6 Ticks later and the button 1 Tick after that. The dots represent buttons: punches on the top row and kicks below. In this example, all three punches were pressed. `Success 13t` is counted from the opening of the GC window (see [9.3](#gc-timing)).
 
@@ -1034,11 +1049,11 @@ Compare `Success` on both sides against the same attack to find your weaker side
 <details>
 <summary>Where the display appears</summary>
 
-It appears without a title in a dark box. When `PB Stats`, `Tick Data`, `Air Guard Gaps` and `Recording GUI` are all OFF, it sits at the top left, left of the GC Command Trace; when any of them is ON, it sits at the bottom right, just above the input bar. The settings decide the position, so the box does not move during practice.
+It appears without a title in a dark box. When `PB Stats`, `Tick Data`, `Air Guard Gaps` and `Recording GUI` are all OFF, it sits at the top left, left of the GC Command Trainer; when any of them is ON, it sits at the bottom right, just above the input bar. The settings decide the position, so the box does not move during practice.
 
 </details>
 
-![GC Stats at the top left, shown while PB Stats and the other top-left displays are off, beside the GC Command Trace](images/gc_stats.png)
+![GC Stats at the top left, shown while PB Stats and the other top-left displays are off, beside the GC Command Trainer](images/gc_stats.png)
 
 In this example PB Stats and the other top-left displays are off, so GC Stats appears at the top left. Demitri is on the right side of the screen, the 2P side. The `2P` row shows that 42 of the 51 attempts on the 2P side succeeded (82.35%). Below the table, the step averages for the 2P side are 3.81 Ticks from ← to ↓, 3.38 from ↓ to ↙ and 0.38 from ↙ to the buttons; together they make the 7.57 shown as `Input t`. The trace on the right is the latest attempt: the GC window closed on the Tick the game accepted ↙ (`GC Expired 0t`), so no GC came out.
 
@@ -1054,7 +1069,7 @@ The notation is the same as PB Stats: `Total`, `Pass`, `Fail` and `Success`, two
 | `GC t` | Ticks from the opening of the GC window to the GC. The same number as `SUCCESS Nt` in the input bar and `Success` in the trace |
 | `Input t` | Ticks from the first direction the game accepted, in the command that produced the GC, to the GC |
 
-The two rows under the table average each step of the command over `Pass` attempts. They use the GC Command Trace's arrows: → ↓ ↘ on the 1P side and ← ↓ ↙ on the 2P side. Beside the second and third directions and the buttons is the average number of Ticks since the previous input. These values are averages of the input intervals shown in the trace. The first direction has no number because `Input t` starts there. The three together correspond to `Input t`, but because each is rounded to two decimals for display, their sum may differ slightly. Use them to see where the time goes.
+The two rows under the table average each step of the command over `Pass` attempts. They use the GC Command Trainer's arrows: → ↓ ↘ on the 1P side and ← ↓ ↙ on the 2P side. Beside the second and third directions and the buttons is the average number of Ticks since the previous input. These values are averages of the input intervals shown in the trace. The first direction has no number because `Input t` starts there. The three together correspond to `Input t`, but because each is rounded to two decimals for display, their sum may differ slightly. Use them to see where the time goes.
 
 - **One attempt is one blocked string.** It becomes an attempt once the game accepts a direction of your GC command during the string. A command you began before blocking counts if the game was still accepting it when you blocked. Blocking alone, or being hit, does not count.
 - `Cmd Expired` and `GC Expired` do not finalize the result while the blocked string continues. If you enter the command again and GC a later attack, that string is one `Pass`.
@@ -1178,13 +1193,13 @@ The result depends on how the game reads the input, so `no` does not guarantee a
 </details>
 
 <a id="command-trainer"></a>
-### G. Perform sequence supers consistently (Command Trainer)
+### G. Perform sequence supers consistently (Seq. Command Trainer)
 
-**See which inputs the game accepted and where the sequence stopped.** Sequence commands such as Darkness Illusion are buttons and directions entered in a fixed order. Command Trainer shows which inputs the game's command recognizer accepted, the time in Ticks between accepted inputs, and where the command expired.
+**See which inputs the game accepted and where the sequence stopped.** Sequence commands such as Darkness Illusion are buttons and directions entered in a fixed order. Seq. Command Trainer shows which inputs the game's command recognizer accepted, the time in Ticks between accepted inputs, and where the command expired.
 
 1. Choose the character whose move you want to practice as P1.
 
-2. Under `Trainer > Command Trainer`, press Left or Right to select a move. Only moves for your character are listed. Select `Off` to turn the trainer off.
+2. Under `Trainer > Seq. Command Trainer`, press Left or Right to select a move. Only moves for your character are listed. Select `Off` to turn the trainer off.
 
 3. Enter the command and check the result in the upper-right corner.
 
@@ -1239,7 +1254,7 @@ The result stays until the first input of the next attempt is accepted. P1 only.
 
 **When you change characters:** If the trainer is on, it switches to a move for the new character: the last move you selected for that character during the current FBNeo session, or the first listed move. Nothing is displayed for unsupported characters; the panel returns when you choose a supported character. If you select `Off`, the trainer stays off when you change characters.
 
-GC Command Trace is hidden only while Command Trainer is displayed for a supported character.
+GC Command Trainer is hidden only while Seq. Command Trainer is displayed for a supported character.
 
 # Part 4: Analyze
 
@@ -1531,7 +1546,67 @@ Change the timing of your air guard against the same attack to compare gaps and 
 
 An Action Steps setting of `Auto (10)` can appear here as `Dash > 12t`. The script and the game count from different starting points. Do not compare those values as if they started from the same Tick.
 
-### 11.7 Other trainers
+<a id="chain-trainer"></a>
+### 11.7 Chains and links: Chain Trainer
+
+**After a normal attack hits, this feature shows, Tick by Tick, whether the next move chained and whether a link was in time.** It reads the game's own cancel check (the check was confirmed through ROM analysis).
+
+**Look at the result's color first: green connected; red did not, or the press was too late or too early. Then compare where you pressed with the window drawn on the line.**
+
+Set `Trainer > Chain Trainer` to the attacking side, `P1` or `P2`, and land a combo on the dummy.
+
+![Chain Trainer for an Anakaris combo with two links and chains](images/chain_trainer.png)
+
+In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into LP, chained into LK, linked into LP again, and chained into LK and HK.
+
+- `LINK 3t/3t` on the first line: the LP was pressed on the 3rd Tick after D.LK ended and you could act, and it linked; a press up to Tick 3 would have linked. That was the last possible Tick. `=` marks the window.
+- `CHAIN 4t` on the second line: the LK pressed on the 4th Tick after the LP hit was taken as a chain. `-` is hit stop; a press there is held and judged on the Tick hit stop ends. `|` is the Tick the next move came out.
+- `CHAIN 9t` on the last line: the HK pressed on Tick 9.
+
+| Example or symbol | Meaning |
+|---|---|
+| A chain line, e.g. `LP > LK` | The move that hit and the next button pressed. Tick 1 is the Tick after the hit |
+| A link line, e.g. `D.LK > LP` | The move that ended and the next move. Tick 1 is the first Tick you could act after the first move ended |
+| `-` | Hit stop. A press is held and judged on the Tick it ends |
+| `=` | On a chain line, a press on this Tick is judged on this Tick. On a link line, a press here would have linked |
+| `.` | Outside the window |
+| `P`, `K` | Your presses, colored by strength (light blue for light, yellow for medium, red for heavy) |
+| `\|` | The cancel came out: the next move started on this Tick |
+
+| Result | Meaning |
+|---|---|
+| `CHAIN 4t` | The press on Tick 4 was taken as a chain |
+| `RAPID` | A rapid cancel came out |
+| `LATE 2t` | Two Ticks after the chain window's last Tick |
+| `EARLY 3t` (chain line) | Pressed before the move hit, 3 Ticks before Tick 1 |
+| `MULTI` | Two buttons were held |
+| `NO CHAIN` | The move does not chain into that button |
+| `?` | Inside the window, refused for another reason |
+| `HIT` | You were hit |
+| `LINK 3t/5t` | The link connected: pressed on Tick 3, and a press up to Tick 5 would have linked |
+| `GAP 7t/5t` | It hit after the opponent could act, so no combo. A press up to Tick 5 would have linked |
+| `GUARD 3t` | The opponent was blocking: a block string, not a combo |
+| `EARLY 3t/1t` (link line) | Pressed 3 Ticks before the first move ended, so the next move never came out. A press on Tick 1 would have linked |
+| `SP 8t/10t` | Cancelled into a special with the press on Tick 8; a press up to Tick 10 would have combo'd. Red means it did not combo. `ES`, `EX` and `DF` (Dark Force) read the same way |
+
+- One line per hit or per link. Up to six lines are kept; the oldest goes first.
+- A hit that lands 10 Ticks or more after the opponent could act starts a new combo from the top line.
+- A chain into the same button (HK into HK, say) makes no line. Rapid cancels (`RAPID`) and link lines are shown for the same button.
+- A pursuit (an attack on a knocked-down opponent) makes no line.
+- A press after the chain window, while the first move is still running, is sorted like this: if that button could still have linked, it is a link line's `EARLY`; if not, the chain's `LATE`. Whether it could have linked comes from that move's startup, learned when you pressed it and it hit (standing and crouching are learned apart). Until that move has hit since start-up, the press reads as `LATE`. The same applies after you change the opponent's character, until the move hits again.
+- It is drawn at Air Guard Gaps' height, moved a little right so that it does not cover the hit count on the P1 side. With Air Guard Gaps also on, it goes below it. While Chain Trainer is on, GC Command Trainer and Seq. Command Trainer, which share that space, are not drawn.
+
+<details>
+<summary>What has been checked</summary>
+
+- A link's `/Mt` is the last press that lands before the opponent's reversal Tick (the Tick from which they can guard or act). The number of Ticks to the reversal Tick comes from 77 hits of Anakaris's normals on Morrigan. Other matchups have not been checked yet. When the reversal Tick is not known (for example, the opponent was not in ground hitstun), or the display disagrees with the game's actual result, `/Mt` is not shown.
+- Links in the air are not judged.
+- A link into a special is judged when the character's body hits. When a projectile hits first, whether that hit linked is not checked.
+- How late a special can cancel a normal (the special's cancel window) has not been measured. A special's `/Mt` is the deadline for the combo.
+
+</details>
+
+### 11.8 Other trainers
 
 | Option | What it measures |
 |---|---|
@@ -1642,6 +1717,7 @@ When resetting settings for diagnosis, move the JSON aside instead of deleting i
 | Recording cannot be found | Character-specific slots, selected character, Recording Slot and random candidates |
 | Coin will not switch control to P2 | Stop recording playback first |
 | An option is missing | Parent settings, Guard Action Type and character selection can hide it |
+| GC Command Trainer or Seq. Command Trainer does not appear | Whether `Trainer > Chain Trainer` is Off; neither is drawn while it is on ([11.7](#chain-trainer)) |
 | Numbers differ from a guide | Ticks versus displayed frames, speed, single move versus chain, measured side, super flash and projectile measurement limits |
 | File operation appears frozen | A Windows dialog is waiting for you. If the emulator covers it, it comes back in front on its own; click it. It cannot appear over the older full-screen mode: check `Video > Blitter options > Windowed Fullscreen` |
 | Behavior did not change after updating | Fully close FBNeo and restart using the updated copy's batch file |
@@ -1677,7 +1753,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-11. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.25.2. On 2026-10-11 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.26. On 2026-10-15 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

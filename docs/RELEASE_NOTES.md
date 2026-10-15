@@ -6,6 +6,76 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.26
+
+New Chain Trainer shows, Tick by Tick, whether your chains and links
+connected. Reversal and Counter Attack's Specified gain Loop, and GC Command
+Trace and Command Trainer are renamed.
+
+### New: Chain Trainer
+
+- `Trainer > Chain Trainer` (`Off` / `P1` / `P2`). After a normal attack hits,
+  it shows whether the next move chained and whether a link was in time, one
+  line per hit at one character per Tick, as Air Guard Gaps does
+- For a chain it draws the presses held during hit stop and the window, with
+  results such as `CHAIN 4t`, `LATE 2t` and `NO CHAIN`. It reads the game's
+  own cancel check (the check was confirmed through ROM analysis)
+- A link counts from the first Tick you could act after the first move ended.
+  `LINK 3t/5t`: pressed on Tick 3 and linked; a press up to Tick 5 would have
+  linked. `GAP` when it was too late, and `EARLY 3t/1t` when you pressed while
+  the first move was still running and nothing came out. Links out of dash
+  attacks are covered too
+- Cancels into specials, ES, EX and Dark Force are named, with whether they
+  combo'd and the deadline, as in `SP 8t/10t`
+- Checked on the developer's side by replaying recorded play: on 414 of the
+  415 lines where a window was worked out, the prediction matched the game's
+  result (linked or not). The one that did not (a link into a projectile
+  special) shows no window. The Ticks to the opponent's reversal Tick come
+  from 77 hits of Anakaris's normals on Morrigan; other matchups have not been
+  checked yet
+- While it is on, GC Command Trainer and Seq. Command Trainer, which share its
+  space, are not drawn
+
+### New: Loop for Specified
+
+- `Reversal - Specified` and `Counter Attack - Specified` gain `Loop` (below
+  `Random Delay`). With `yes`, the dummy does the set action again each time it
+  finishes, so dash-and-attack pressure can be repeated for PB and GC practice
+  without building it in Action Steps
+- The first time still starts on the usual trigger. After that, an action that
+  leaves the ground goes again on landing, and one that ends on the ground
+  goes again once the dummy can act
+
+### Fix: Specified dashes did not come out
+
+- When a Specified action starts with a dash and `Pose` includes forward (down
+  forward, say), the dash almost never came out on a response after being
+  hit. Forward stayed held, so the first forward was not a fresh press. A
+  neutral now goes in before the dash in that case, on Loop's later rounds
+  (after landing) too
+- Sasquatch's `Forward Dash Cancel` with `Button Wait` on `Auto` now waits 8
+  Ticks instead of 7. At 7 the button came before the cancel could take it, and
+  no short dash came out. Loop's later rounds use the same Tick as the first
+
+### Change: names on screen
+
+- `Show GC Command Trace` is now `Show GC Command Trainer`, and `Command
+  Trainer` is now `Seq. Command Trainer`. Both show the inputs the game's
+  command reader took, so the names now pair. Saved settings carry over
+
+### Manual
+
+- Chain Trainer added as 11.7 (the old 11.7 Other trainers is now 11.8)
+- Specified's Loop added as 4.5
+- The new names are used throughout, and the Meaty Timing menu screenshot is
+  retaken
+- The introductions now say this is a Vampire Savior training mode for
+  Fightcade 2 (the README too)
+- Troubleshooting covers GC Command Trainer and Seq. Command Trainer not
+  appearing
+
+---
+
 ## v11.7.25.2
 
 Frame Meter now draws a dash attack or special made right out of a jump

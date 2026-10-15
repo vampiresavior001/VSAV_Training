@@ -237,6 +237,10 @@ function M.draw()
 	-- by M.follow_p1, so what is left here is one with none, and a box saying
 	-- so is clutter. The selection stays for when that character comes back.
 	if not M.is_visible() then return end
+	-- Not while Chain Trainer is on: its lines reach this box. The command is
+	-- still followed, and the panel comes back when that is turned off.
+	local _cht = package.loaded["./scripts/chainTrainer"]
+	if type(_cht) == "table" and _cht.is_visible ~= nil and _cht.is_visible() then return end
 	if warn_img == nil then load_warn_images() end
 	-- hud.lua's blocks_top(): under the PB Count line, lower with the Guard
 	-- Action Frequency Check on. x: see the note at the top.

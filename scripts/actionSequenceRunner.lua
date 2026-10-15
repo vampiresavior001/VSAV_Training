@@ -1268,6 +1268,16 @@ local loop_sched = nil
 -- Which trigger the loop belongs to, so a restart can ask for the list again
 -- rather than replay the one compiled at the arm.
 local loop_which = nil
+-- REVERSAL / COUNTER ATTACK - SPECIFIED CAN LOOP TOO (handoff 2026-10-14, 14).
+--
+-- Not an Action Steps list, so there is no `which` to ask M.schedule. The guard
+-- action hands over a function that builds one lap from the settings as they
+-- are now (GA.specified_lap in guardCancel), and loop_refill asks it for every
+-- lap: an edit takes effect from the next one, and a setting that no longer
+-- builds anything ends the loop instead of replaying the old input. Set only
+-- while the Specified Loop row is on (M.specified_loop_on); nil otherwise, so
+-- with the row off every path below runs exactly as it did.
+local loop_build = nil
 -- WHO THE QUEUE BELONGS TO WHEN IT IS NOT AN ACTION SEQUENCE.
 --
 -- A Random Start Wait on Reversal / Counter Attack - Specified cannot be placed
@@ -1486,6 +1496,7 @@ function M.cancel()
 	arm_rev = nil
 	loop_sched = nil
 	loop_which = nil
+	loop_build = nil
 	-- oneshot_owner is NOT dropped here. A cancel can land while a Specified
 	-- start is half delivered (a refused chance, the match ending), and the
 	-- walker only runs while the guard action is owned - drop it now and the
@@ -1535,6 +1546,7 @@ function M.arm(which)
 	arm_rev = sched[1].rev
 	loop_sched = sched
 	loop_which = which
+	loop_build = nil
 	oneshot_owner = nil
 	contact_used = false
 	rapid_used = false
@@ -1658,7 +1670,9 @@ local function start_steps(src, o)
 		for _, k in ipairs(dirs) do e[#e + 1] = k end
 	end
 	for _, k in ipairs(btns) do e[#e + 1] = k end
-	local bwait = delay + ((o.rev ~= nil) and 2 or 0)
+	-- rev_ticks: how far after the reverse's own two ticks the button sits. Two
+	-- is the arm's own arrangement; a loop lap asks for one (GA.specified_lap).
+	local bwait = delay + ((o.rev ~= nil) and (o.rev_ticks or 2) or 0)
 	if o.auto_dash ~= nil and DASH_ACTION_ID[o.auto_dash] ~= nil then
 		local n = M.auto_ticks_for({ action = DASH_ACTION_ID[o.auto_dash] },
 		                           { action = "atk" })
@@ -1714,14 +1728,17 @@ function M.arm_deferred(which, o)
 	for i = 2, #sched do pending[#pending + 1] = sched[i] end
 	loop_sched = sched
 	loop_which = which
+	loop_build = nil
 	oneshot_owner = nil
 	log_entry({ index = 1, op = sched[1].op_ticks })
 	return true
 end
 
--- Reversal / Counter Attack - Specified: one input list, no loop. `owner` is
--- the guard action it belongs to - see oneshot_owner.
-function M.arm_oneshot(owner, list, o)
+-- Reversal / Counter Attack - Specified: one input list. `owner` is the guard
+-- action it belongs to - see oneshot_owner. `build`, with the Specified Loop
+-- row on, is what makes every lap after this one (loop_build); with it off the
+-- start runs once, as it always has.
+function M.arm_oneshot(owner, list, o, build)
 	if type(list) ~= "table" or #list == 0 then return false end
 	local first = start_steps({ sequence = list, index = 1,
 	                            op_ticks = list_ticks(list) }, o or {})
@@ -1731,8 +1748,57 @@ function M.arm_oneshot(owner, list, o)
 	pending = first
 	loop_sched = nil
 	loop_which = nil
+	loop_build = (type(build) == "function" and M.specified_loop_on()) and build or nil
 	oneshot_owner = owner
 	return true
+end
+
+-- The Specified Loop row (training_settings.specified_loop). Read live, like
+-- M.loop_on: switching it off stops the loop at the next lap.
+function M.specified_loop_on()
+	return training_settings ~= nil and training_settings.specified_loop == true
+end
+
+-- A SPECIFIED FIRST RUN THE ARM PLACED ITSELF (no Random Start Wait).
+--
+-- That input never passes through here - guardCancel queues it into the
+-- delivery slot as it always has, and every measurement of the reversal's
+-- timing was made on that. All this does is take the guard action over for the
+-- laps after it: owned, the walker runs, and loop_refill builds lap two at
+-- once, which then waits behind the first run in the slot (service_body does
+-- nothing while the slot is taken) and at its own gate after that. A new first
+-- run replaces whatever an earlier lap still had queued: the opportunity is the
+-- new one's (handoff 14.2).
+function M.arm_specified_loop(owner, build)
+	if type(build) ~= "function" or not M.specified_loop_on() then return false end
+	if pending ~= nil then M.steps_dropped = M.steps_dropped + #pending end
+	start_reset()
+	pending = nil
+	loop_sched = nil
+	loop_which = nil
+	loop_build = build
+	oneshot_owner = owner
+	return true
+end
+
+-- ONE LAP OF A SPECIFIED LOOP, FROM THE INPUT LIST THE ARM WOULD QUEUE.
+--
+-- The same conversion a Random Start Wait start goes through (start_steps, with
+-- the options rsw_defer builds), so a Button Wait, a dash cancel's reverse and
+-- the Button Lever row come out on every lap as on the first. What start_steps
+-- adds for a FIRST run is taken back off: start_free would be answered before
+-- the lap's own gate (service_body tests it first), and start_wait carries the
+-- arm's free-1 press offset, which the lap has no use for - loop_refill gives
+-- step one the landing gate, and its run-up comes from the list itself (lead).
+function M.specified_lap(list, o)
+	if type(list) ~= "table" or #list == 0 then return nil end
+	local out = start_steps({ sequence = list, index = 1,
+	                          op_ticks = list_ticks(list) }, o or {})
+	if out == nil then return nil end
+	for _, r in ipairs(out) do
+		r.start_free, r.start_part, r.start_wait = nil, nil, nil
+	end
+	return out
 end
 
 -- STEP ONE'S RANDOM DELAY, FOR THE ARM (v11.7.21.1).
@@ -2485,14 +2551,66 @@ end
 -- master script's select-screen cleanup asks this so its diagnostic can tell
 -- "the loop is alive here" from "nothing was ever armed".
 function M.loop_alive()
-	return loop_sched ~= nil or pending ~= nil
+	return loop_sched ~= nil or pending ~= nil or loop_build ~= nil
 end
 
 -- Puts the whole list back, with step one carrying the loop's wait instead of
 -- the arm's. The copy is one level deep and only step one needs it - the other
 -- entries are handed on untouched, and loop_sched must survive intact because
 -- M.schedule caches it.
+local function queue_lap(_w)
+	local _first = {}
+	for k, v in pairs(loop_sched[1]) do _first[k] = v end
+	-- LANDING IS A TIMING, NOT A NUMBER.
+	--
+	-- service_body branches on step.timing before it looks at auto or wait, so
+	-- handing the restart the landing gate is all it takes: the prediction, the
+	-- run-up and the deadline all come with it. Safe to set here because
+	-- M.compile only ever puts a timing on steps 2 and later - step one's is
+	-- always nil, so nothing is being overwritten.
+	if _w == LOOP_LANDING then
+		_first.timing = TIMING_LANDING
+		_first.auto = false
+		_first.wait = 0
+	else
+		_first.auto = (_w == LOOP_AUTO)
+		_first.wait = (_w == LOOP_AUTO) and 0 or _w
+	end
+	-- Marked so the readout can say Loop rather than repeating step one's own
+	-- mode, which is not what this pass waited for.
+	_first.is_loop = true
+	-- Random Start Wait, drawn afresh for every lap; service_body adds it after
+	-- the gate above opens. The Loop item on the readout includes it.
+	_first.start_extra = rsw_roll()
+	pending = { _first }
+	for i = 2, #loop_sched do pending[#pending + 1] = loop_sched[i] end
+	-- Left for service_body to name on the first tick with the slot free, the
+	-- same tick every other step's wait is counted from.
+	anchor = nil
+end
+
 local function loop_refill()
+	-- A SPECIFIED LOOP: A FRESH LAP FROM THE GUARD ACTION, ON THE LANDING.
+	--
+	-- Auto (Landing) and nothing else (handoff 14.2): an airborne action - a
+	-- jump, a hop, a dash that leaves the ground - starts its next lap so it
+	-- arrives on the touchdown, and one that stays on the ground starts once
+	-- the dummy has been busy and is free again, which is the landing gate's own
+	-- deadline (timing_missed) and the same thing Auto (After) waits for. No
+	-- Loop Wait row: the Action Steps one is that list's, and is not read here.
+	if loop_build ~= nil then
+		if not M.specified_loop_on() then return end
+		if not match_live() then return end
+		local _fresh = loop_build()
+		if _fresh == nil or #_fresh == 0 then
+			loop_build = nil
+			loop_sched = nil
+			return
+		end
+		loop_sched = _fresh
+		queue_lap(LOOP_LANDING)
+		return
+	end
 	if loop_sched == nil or #loop_sched == 0 then return end
 	if not M.loop_on() then return end
 	if not match_live() then return end
@@ -2531,35 +2649,7 @@ local function loop_refill()
 		end
 		loop_sched = _fresh
 	end
-	local _w = M.loop_wait()
-	local _first = {}
-	for k, v in pairs(loop_sched[1]) do _first[k] = v end
-	-- LANDING IS A TIMING, NOT A NUMBER.
-	--
-	-- service_body branches on step.timing before it looks at auto or wait, so
-	-- handing the restart the landing gate is all it takes: the prediction, the
-	-- run-up and the deadline all come with it. Safe to set here because
-	-- M.compile only ever puts a timing on steps 2 and later - step one's is
-	-- always nil, so nothing is being overwritten.
-	if _w == LOOP_LANDING then
-		_first.timing = TIMING_LANDING
-		_first.auto = false
-		_first.wait = 0
-	else
-		_first.auto = (_w == LOOP_AUTO)
-		_first.wait = (_w == LOOP_AUTO) and 0 or _w
-	end
-	-- Marked so the readout can say Loop rather than repeating step one's own
-	-- mode, which is not what this pass waited for.
-	_first.is_loop = true
-	-- Random Start Wait, drawn afresh for every lap; service_body adds it after
-	-- the gate above opens. The Loop item on the readout includes it.
-	_first.start_extra = rsw_roll()
-	pending = { _first }
-	for i = 2, #loop_sched do pending[#pending + 1] = loop_sched[i] end
-	-- Left for service_body to name on the first tick with the slot free, the
-	-- same tick every other step's wait is counted from.
-	anchor = nil
+	queue_lap(M.loop_wait())
 end
 
 
@@ -2638,6 +2728,7 @@ function M.service(defender)
 		defender.pending_input_sequence = nil
 		loop_sched = nil
 		loop_which = nil
+		loop_build = nil
 		anchor = nil
 		held_after = nil
 		return
@@ -2661,9 +2752,23 @@ function M.service(defender)
 		defender.pending_input_sequence = nil
 		loop_sched = nil
 		loop_which = nil
+		loop_build = nil
 		anchor = nil
 		held_after = nil
 		return
+	end
+	-- THE SPECIFIED LOOP ROW SWITCHED OFF DROPS THE LAP STILL WAITING (handoff
+	-- 14.2). loop_refill builds the next lap the tick the last one fires, so
+	-- one is nearly always queued; left there it would go out once more after
+	-- the row said stop. Only a lap whose first step has not gone yet: one that
+	-- has started finishes, so a dash is not left without its button.
+	if loop_build ~= nil and not M.specified_loop_on() then
+		loop_build = nil
+		loop_sched = nil
+		if pending ~= nil and pending[1] ~= nil and pending[1].is_loop then
+			M.steps_dropped = M.steps_dropped + #pending
+			pending = nil
+		end
 	end
 	if pending == nil then
 		loop_refill()

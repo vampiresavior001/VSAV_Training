@@ -181,7 +181,7 @@ do
 	local menu = io.open("menu.lua"):read("*a")
 	local cfg = dofile("config.lua").default_training_settings
 	want("メニューに行がある",
-		menu:find('"Show GC Command Trace", training_settings, "display_gc_command_trace"',
+		menu:find('"Show GC Command Trainer", training_settings, "display_gc_command_trace"',
 			1, true) ~= nil, true)
 	want("出荷値は OFF", cfg.display_gc_command_trace, false)
 	want("描く側が同じキーを読む",

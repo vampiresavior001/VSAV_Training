@@ -412,9 +412,12 @@ eq("アームで rsw_defer の前に引く", a_draw ~= nil and a_defer ~= nil an
 local q = "GA.btn_rd = GA.btn_rd_roll()\n\t\t\t\t_defender.counter.sequence = ga_sequence(_stick, _button, delay_type, 0)"
 eq("反応経路でも積む直前に引く", gsrc:find(q, 1, true) ~= nil, true)
 eq("引くのはこの 2 か所だけ", count(gsrc, "GA.btn_rd = GA.btn_rd_roll()"), 2)
+-- Since the Specified Loop (2026-10-14) the Specified options are built in
+-- GA.specified_extras, shared with every lap. rsw_defer hands it the arm's own
+-- draw (GA.btn_rd); a lap hands it its own fresh one.
 eq("Auto のときは runner に乱数を別に渡す",
-	gsrc:find("_o.auto_dash = GA.stick()\n\t\t\t-- The Random Delay", 1, true) ~= nil
-	and gsrc:find("_o.delay_extra = GA.btn_rd or 0", 1, true) ~= nil, true)
+	gsrc:find("_o.auto_dash = GA.stick()\n\t\t_o.delay_extra = _rd or 0", 1, true) ~= nil
+	and gsrc:find("GA.specified_extras(_o, GA.btn_rd or 0)", 1, true) ~= nil, true)
 -- The eight-frame cleanup in service_held_reversal must wait while the hook
 -- still owes a deferred press: it released the held last entry first and the
 -- dummy swung twice (kd_c0A_s02..s08, every press later than ~12 Ticks after

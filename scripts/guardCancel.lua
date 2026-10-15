@@ -1376,6 +1376,16 @@ function GA.af_queue(_defender, _list, _hold_last)
 	local _q = _defender.pending_input_sequence
 	if _q ~= nil and _q ~= _before and _list ~= nil and _list == GA.af_list then
 		_q.orient_run = GA.af_run
+		-- A SPECIFIED FIRST RUN HAS JUST GONE INTO THE SLOT: WITH THE LOOP ROW
+		-- ON, THE RUNNER TAKES THE LAPS AFTER IT (handoff 2026-10-14, 14). The
+		-- run itself is untouched - it is in the slot and the arm places it -
+		-- and arm_specified_loop answers false with the row off, so nothing
+		-- else changes then. Both queueing paths come here: the arm and the
+		-- reactive one.
+		local _ga = globals and globals.dummy and globals.dummy.guard_action
+		if _ga == 'reversal' or _ga == 'counter' then
+			actionSequenceRunnerModule.arm_specified_loop(_ga, GA.specified_lap)
+		end
 	end
 end
 
@@ -2863,10 +2873,15 @@ local DASH_AUTO_TICKS = {
 	[0x07] = { name = "Felicia",   f =  8, b =  8, fc =  6, bc =  6 },
 	[0x08] = { name = "Bishamon",  f =  6, b =  3, fc =  4, bc =  1 },
 	[0x09] = { name = "Aulbath",   f =  6, b =  1, fc =  4, bc =  1 },
-	[0x0A] = { name = "Sasquatch", f =  2, b =  1, fc =  7, bc =  7 },
+	[0x0A] = { name = "Sasquatch", f =  2, b =  1, fc =  8, bc =  7 },
 	-- Sasquatch fc measured on THIS build by the user: 7. The old build's
 	-- "button on the cancel frame" implied 0, which was wrong here. bc was
 	-- measured too, also 7.
+	-- fc IS 8 (user, 2026-10-14): 8 is the fastest Button Wait that still makes
+	-- the SHORT dash LP. At 7 the LP goes in before the cancel has taken and the
+	-- dash runs long - Auto never made the short dash (reversal_logs_archive/
+	-- v11.7.25.2: Forward Dash Cancel + LP, LP 9 Ticks into the dash with 7,
+	-- dash 47 Ticks; 10 Ticks in with 8, dash 31). bc has not been re-measured.
 	[0x0C] = { name = "Q-Bee",     f =  6, b =  6, fc =  5, bc =  5 },
 	[0x0D] = { name = "Lei-Lei",   f =  1, b =  5, fc =  1, bc =  1 },
 	[0x0E] = { name = "Lilith",    f =  5, b =  5, fc =  3, bc =  3 },
@@ -3097,6 +3112,60 @@ local BACK_TAP_BIAS = 3
 local function is_plain_dash()
 	local _s = globals and globals.dummy and GA.stick()
 	return NEEDS_TAP_EDGE[_s] == true
+end
+
+-- THE POSE CAN HOLD THE FIRST TAP DOWN TOO (user, 2026-10-14).
+--
+-- The block path releases the direction the dummy guards with (BLK.neutral).
+-- Pose holds one as well, on every tick nothing else writes the input, and two
+-- starts come straight out of it: the hit-stun arm (the frame path puts the
+-- first forward in on the tick after the Pose) and a Specified Loop lap (the
+-- walker does, in the air). With Pose Down Forward the forward was already
+-- down, so the first tap was no press edge and no dash came out - a walk, and
+-- the button as a normal. Sasquatch, Forward Dash Cancel + LP, input timing
+-- the same in each pair:
+--
+--     lap on the landing      Pose DF 0 of 3 dashed, neutral 100 of 104
+--                             (v11.7.25.2_4 / v11.7.25.2)
+--     after a hit             Pose DF 1 of 46, and that one had a forward edge
+--                             from an earlier re-arm 15 Ticks before
+--                             (v11.7.25.2_3 / _4); neutral, Counter Attack,
+--                             35 of 35 (v11.7.21.2, v11.7.25.2)
+--     after a block           Pose DF 11 of 11 - BLK.neutral releases it
+--
+-- So when the Pose holds a direction the dash's first tap uses, one neutral
+-- entry goes in front of it: the release the block path gives, and the
+-- leading neutral M.compile gives a later step. Only for the four dashes
+-- (NEEDS_TAP_EDGE) and only for Specified - the list is changed in place,
+-- because GA.af_queue tags the record by its identity, and an Action Steps
+-- list is the runner's compiled schedule, which must not change. Any other
+-- case is handed back untouched.
+GA.POSE_DIRS = {
+	[2] = { down = true, back = true },
+	[3] = { down = true },
+	[4] = { down = true, forward = true },
+	[5] = { back = true },
+	[6] = { forward = true },
+	[7] = { up = true, back = true },
+	[8] = { up = true },
+	[9] = { up = true, forward = true },
+}
+function GA.pose_release(_list)
+	if type(_list) ~= "table" or #_list < 2 then return _list end
+	local _ga = globals and globals.dummy and globals.dummy.guard_action
+	if _ga ~= 'reversal' and _ga ~= 'counter' then return _list end
+	if not is_plain_dash() then return _list end
+	-- dummyNeutral.lua holds the Pose only while P1 is being controlled.
+	if globals.controlling_p1 ~= true then return _list end
+	local _held = GA.POSE_DIRS[globals.options and globals.options.dummy_neutral]
+	if _held == nil then return _list end
+	for _, _k in ipairs(_list[1]) do
+		if _held[_k] then
+			table.insert(_list, 1, {})
+			return _list
+		end
+	end
+	return _list
 end
 
 -- The measured dash-attack offset for an explicit motion, for the sequence
@@ -7838,6 +7907,79 @@ function GA.btn_rd_roll()
 	return _m.roll_button()
 end
 
+-- What a Specified press needs on top of the timing the arm asks about: the dash
+-- cancel's reverse, the measured dash number for Button Wait = Auto, and the
+-- Button Lever row (button_lever_bits, as names: the walker turns names into
+-- bits on the tick it writes them, when the facing is known). `_rd` is the
+-- button's Random Delay draw the delay already holds, which the Auto swap
+-- would drop, so it goes along on its own. Shared by rsw_defer and every lap
+-- of a Specified loop, so the two cannot drift apart.
+function GA.specified_extras(_o, _rd)
+	_o.rev = DASH_CANCEL_REVERSE[GA.stick()]
+	-- Guard Action Delay = Auto. kd_delay_ticks has already turned it into
+	-- the arm's dash number; the runner swaps in its own measured one.
+	local _gd = globals.options and globals.options.gc_delay
+	if type(_gd) == "number" and _gd < 0 then
+		_o.auto_dash = GA.stick()
+		_o.delay_extra = _rd or 0
+	end
+	local _li = globals.options and globals.options.counter_attack_lever
+	if _li == 2 then
+		_o.lever = {}
+	elseif type(_li) == "number" and _li > 2 then
+		_o.lever = BUTTON_LEVER_DIR[_li]
+	end
+	return _o
+end
+
+-- ONE LAP OF A REVERSAL / COUNTER ATTACK - SPECIFIED LOOP (handoff 2026-10-14,
+-- 14), built from the settings as they are now, or nil when they build nothing
+-- (the loop then ends rather than replaying old input). The runner asks for it
+-- once per lap (actionSequenceRunner, loop_build).
+--
+-- The input list the arm queues, and the options rsw_defer gives a delayed
+-- start, so Button Wait, the dash cancel's reverse and Button Lever come out as
+-- on the first run. Two differences, both for the lap's sake:
+--   * the Random Delay is a fresh draw, fixed for this lap. GA.btn_rd is not
+--     touched: kd_delay_ticks reads it for a press the arm may still be
+--     placing, and every call for that press has to see the same number;
+--   * no Random Start Wait here - the runner draws one for each lap.
+function GA.specified_lap()
+	local _ga = globals and globals.dummy and globals.dummy.guard_action
+	if _ga ~= 'reversal' and _ga ~= 'counter' then return nil end
+	local _mk = make_input_sequence(GA.stick(), GA.button(), "", 0)
+	if _mk == nil or #_mk == 0 then return nil end
+	-- A lap starts in the air with the Pose down (GA.pose_release). The leading
+	-- neutral is one more Tick of run-up, which the landing gate already counts
+	-- (lead), so the dash's last tap still lands where it did.
+	GA.pose_release(_mk)
+	local _rd = GA.btn_rd_roll()
+	local _o = {
+		wait = 0,
+		adj = kd_press_base() - 1,
+		delay = kd_delay_ticks() - (GA.btn_rd or 0) + _rd,
+		hold_dir = kd_holds_direction(),
+	}
+	GA.specified_extras(_o, _rd)
+	-- A DASH CANCEL'S LAP PRESSES ON THE FIRST RUN'S TICK (user, 2026-10-14).
+	--
+	-- Measured over the v11.7.25.2 session, Sasquatch, Forward Dash Cancel + LP,
+	-- counted from the tick the dash starts: the first run (the arm) presses N+2
+	-- Ticks in for a Button Wait of N, and a lap pressed N+3 - its motion holds
+	-- the second forward two ticks (v158) and the button is counted from the end
+	-- of it, so every lap was a tick behind (8: first 10, laps 11; 7: 9 and 10).
+	-- On Auto the lap also took the step path's measured number (start_steps,
+	-- auto_dash) instead of the arm's, and the two disagree. So the lap keeps the
+	-- arm's own delay - kd_delay_ticks already holds the Auto number for it - and
+	-- puts the button one tick after the reverse instead of two.
+	if _o.rev ~= nil then
+		_o.auto_dash = nil
+		_o.delay_extra = nil
+		_o.rev_ticks = 1
+	end
+	return actionSequenceRunnerModule.specified_lap(_mk, _o)
+end
+
 -- RANDOM START WAIT FOR THE GUARD ACTIONS THE ARM PLACES (user, 2026-10-02).
 --
 -- Reversal / Counter Attack - Specified, Action Steps and Action Patterns. The
@@ -7876,31 +8018,10 @@ function GA.rsw_defer()
 		hold_dir = kd_holds_direction(),
 	}
 	-- dash_cancel_reverse_bits() answers nil in sequence mode, where the runner
-	-- parks a cancel step's reverse itself. Same here.
+	-- parks a cancel step's reverse itself. Same here - and the Button Lever
+	-- row is Specified's too (GA.specified_extras).
 	if _ga ~= 'sequence' then
-		_o.rev = DASH_CANCEL_REVERSE[GA.stick()]
-		-- Guard Action Delay = Auto. kd_delay_ticks has already turned it into
-		-- the arm's dash number; the runner swaps in its own measured one.
-		local _gd = globals.options and globals.options.gc_delay
-		if type(_gd) == "number" and _gd < 0 then
-			_o.auto_dash = GA.stick()
-			-- The Random Delay is inside `delay` too, and that swap drops it
-			-- with the arm's number - so it goes along on its own.
-			_o.delay_extra = GA.btn_rd or 0
-		end
-	end
-	-- button_lever_bits(), as names: the walker turns names into bits on the
-	-- tick it writes them, when the facing is known.
-	-- Specified only, as button_lever_bits: a sequence's steps have their own
-	-- Direction, and the hidden row must not overrule it.
-	local _li = globals.options and globals.options.counter_attack_lever
-	if _ga == 'sequence' then
-		_li = nil
-	end
-	if _li == 2 then
-		_o.lever = {}
-	elseif type(_li) == "number" and _li > 2 then
-		_o.lever = BUTTON_LEVER_DIR[_li]
+		GA.specified_extras(_o, GA.btn_rd or 0)
 	end
 	local _done = false
 	if _ga == 'sequence' then
@@ -7911,7 +8032,9 @@ function GA.rsw_defer()
 		-- nothing to compile queues nothing (ga_sequence, v11.7.21.3).
 		local _mk = make_input_sequence(GA.stick(), GA.button(), "", 0)
 		if _mk ~= nil and #_mk > 0 then
-			_done = actionSequenceRunnerModule.arm_oneshot(_ga, _mk, _o)
+			-- GA.specified_lap makes the laps after it, when the Specified Loop
+			-- row is on (the runner asks; with it off it is not kept).
+			_done = actionSequenceRunnerModule.arm_oneshot(_ga, _mk, _o, GA.specified_lap)
 		end
 	end
 	debugKnockdownModule.mark_write("rsw_defer", _w, _done and 1 or 0)
@@ -8311,6 +8434,13 @@ local function guardCancelCheck(run_dummy_input, macroLua_funcs)
 				globals.dummy.counter_attack_stick,
 				globals.dummy.counter_attack_button,
 				"", 0)
+			-- AFTER A HIT, THE POSE CAN BE HOLDING THE DASH'S FIRST TAP (user,
+			-- 2026-10-14; GA.pose_release). Not after a block - BLK.neutral
+			-- releases there, and the block schedule taps sequence[1] - and not
+			-- on a wake-up, which has not been measured with a Pose held.
+			if hs_arm_edge and not BLK.edge and not arm_edge then
+				GA.pose_release(_mk)
+			end
 			debugKnockdownModule.mark_write("arm_edge",
 				(_mk ~= nil) and #_mk or 0,
 				memory.readbyte(0xFF89A7))

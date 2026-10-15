@@ -761,6 +761,10 @@ local function draw_gc_command_trace()
 	if globals.options.display_gc_command_trace ~= true then return end
 	-- Hide only when Command Trainer has a panel to draw for this character.
 	if commandTrainerModule.is_visible() then return end
+	-- Nor while Chain Trainer is on: its lines reach this box. Looked up rather
+	-- than required - the master script loads it at start-up.
+	local _cht = package.loaded["./scripts/chainTrainer"]
+	if type(_cht) == "table" and _cht.is_visible ~= nil and _cht.is_visible() then return end
 	local _t = globals.gc_trace
 	if _t == nil or _t.guard == nil or #_t.rows == 0 then return end
 	-- Moved in from 250: the block sat under the P2 input column and the
