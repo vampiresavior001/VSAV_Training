@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.27 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.27.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -575,7 +575,9 @@ Building an action does not start it; it starts when a trigger comes. To repeat 
 `Random Throw Tech %` defaults to `100%`. Set it to `0%` when examining throws without automatic techs.
 
 <a id="grab-mashing"></a>
-**`Grab Mashing` makes the dummy mash directions and buttons while it grabs or is grabbed.** It defaults to `Off`. It works only in grabs where the game reads mashing (the routine was confirmed through ROM analysis); ordinary throws and hitstun are not covered.
+**`Grab Mashing` recreates an opponent who mashes during a grab.** Use it to check a grab's damage or how long an escape takes. It works with the dummy grabbing or being grabbed.
+
+Select it at `Dummy > Grab Mashing` (default `Off`). It works only in grabs where the game reads mashing (the routine was confirmed through ROM analysis); ordinary throws and hitstun are not covered.
 
 | Value | Input |
 |---|---|
@@ -583,14 +585,20 @@ Building an action does not start it; it starts when a trigger comes. To repeat 
 | `Fast` | A preset rhythm: the direction changes every 3 Ticks, the button (LP or LK) every 4 |
 | `Fastest` | A new direction press and a new button press (LP or LK) every Tick |
 
-- `Fastest` gives the most presses the game counts. The grab's remaining time goes down by random amounts, so it is not always the fastest escape. Pressing several buttons at once does not count more.
-- The buttons are LP and LK only. A medium or heavy button pressed with a direction can tech the grab (during development, with those mixed in, `Normal` and `Fastest` teched). The game counts a press the same whatever its strength, so light buttons alone lose nothing.
-- When the dummy is grabbed, the reversal plans it had before (Action Steps, Specified and so on) are canceled, so an old plan does not come out after it is let go.
+- `Analysis > Show Mash Timer` shows the remaining time above the grabbing character.
+- It does nothing while you control P2, while a recording plays or is being made, or during the Recording Wizard.
+- When the dummy is grabbed, previously queued counteractions (Action Steps, Specified and so on) are canceled, so an old one does not come out after it is let go.
 - When the dummy grabs, its own action keeps running; only its input during the grab is replaced.
 - The throw-tech input from `Random Throw Tech %` is also replaced by the mashing during the grab.
-- It does nothing while you control P2, while a recording plays or is being made, or during the Recording Wizard.
-- The grab's first Tick is not counted: the input the game reads on it was made before the grab began.
-- `Analysis > Show Mash Timer` shows the remaining time above the grabbing character.
+- Mashing starts once the grab is detected, so it misses the grab's first check.
+
+<details>
+<summary>How the inputs are chosen</summary>
+
+- `Fastest` gives the most presses the game counts. The grab's remaining time goes down by random amounts, so it is not always the fastest escape. Pressing several buttons at once does not count more.
+- The buttons are LP and LK only. A medium or heavy button pressed with a direction can tech the grab. The game counts a press the same whatever its strength, so light buttons alone lose nothing.
+
+</details>
 
 | `Guard` value | Behavior and use |
 |---|---|
@@ -687,7 +695,7 @@ Change one setting at a time at first, and check that the intended attack still 
 `Reversal - Specified` and `Counter Attack - Specified` have a `Loop` row (below `Random Delay`). Set it to `yes` and the dummy performs the same action again each time it ends. Use it to repeat offense such as a dash and attack for PB and GC practice without rebuilding it in Action Steps.
 
 - The first one still starts on the usual trigger (after blocking, being hit or waking up). Turning the row on or closing the menu does not start it.
-- After that, an airborne action comes back on the landing (the same as Action Steps' `Auto (Landing)`), and one that stays on the ground comes back once the dummy can act again.
+- After that, airborne actions repeat on landing (the same as Action Steps' `Auto (Landing)`), and ground actions repeat once the dummy can act again.
 - `Button Wait`, `Random Delay` and `Random Start Wait` apply to every repeat, drawn again each time.
 - Set `Loop = no` to stop. Opening the menu also stops the loop; it starts again on the next trigger.
 - It is separate from Action Steps' `Loop Steps` and `Loop Wait`.
@@ -1598,7 +1606,7 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 | `RAPID` | A rapid cancel came out |
 | `LATE 2t` | Two Ticks after the chain window's last Tick |
 | `EARLY 3t` (chain line) | Pressed before the move hit, 3 Ticks before Tick 1 |
-| `MULTI` | Two buttons were held |
+| `MULTI` | Two or more different buttons were waiting to be judged, so nothing chained. They need not be pressed together: pressing them on different Ticks of hit stop does it too |
 | `NO CHAIN` | The move does not chain into that button |
 | `?` | Inside the window, refused for another reason |
 | `HIT` | You were hit |
@@ -1606,7 +1614,7 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 | `GAP 7t/5t` | It hit after the opponent could act, so no combo. A press up to Tick 5 would have linked |
 | `GUARD 3t` | The opponent was blocking: a block string, not a combo |
 | `EARLY 3t/1t` (link line) | Pressed 3 Ticks before the first move ended, so the next move never came out. A press on Tick 1 would have linked |
-| `SP 8t/10t` | Cancelled into a special with the press on Tick 8; a press up to Tick 10 would have combo'd. Red means it did not combo. `ES`, `EX` and `DF` (Dark Force) read the same way |
+| `SP 8t/10t` | Canceled into a special with the press on Tick 8; a press up to Tick 10 would have combo'd. Red means it did not combo. `ES`, `EX` and `DF` (Dark Force) read the same way |
 
 - One line per hit or per link. Up to six lines are kept; the oldest goes first.
 - A hit that lands 10 Ticks or more after the opponent could act starts a new combo from the top line.
@@ -1618,7 +1626,7 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 <details>
 <summary>What has been checked</summary>
 
-- A link's `/Mt` is the last press that lands before the opponent's reversal Tick (the Tick from which they can guard or act). The number of Ticks to the reversal Tick comes from 77 hits of Anakaris's normals on Morrigan. Other matchups have not been checked yet. When the reversal Tick is not known (for example, the opponent was not in ground hitstun), or the display disagrees with the game's actual result, `/Mt` is not shown.
+- A link's `/Mt` is the last press that lands before the opponent's reversal Tick (the Tick from which they can guard or act). A hit on that Tick or later is not counted as a combo. The number of Ticks to the reversal Tick comes from 77 hits of Anakaris's normals on Morrigan. Other matchups have not been checked yet. When the reversal Tick is not known (for example, the opponent was not in ground hitstun), or the display disagrees with the game's actual result, `/Mt` is not shown.
 - Links in the air are not judged.
 - A link into a special is judged when the character's body hits. When a projectile hits first, whether that hit linked is not checked.
 - How late a special can cancel a normal (the special's cancel window) has not been measured. A special's `/Mt` is the deadline for the combo.
@@ -1772,7 +1780,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-11. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.27. On 2026-10-15 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.27.1. On 2026-10-15 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

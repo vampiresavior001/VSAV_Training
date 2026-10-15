@@ -6,6 +6,34 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.27.1
+
+Chain Trainer no longer shows a hit on the opponent's reversal Tick itself as
+a `LINK`. The README and manual names and explanations are reviewed.
+
+### Fix: a hit on the reversal Tick could read as LINK
+
+- A hit landing once the opponent has reached the reversal Tick is not a
+  combo. A hit on that very Tick, though, still sees the opponent in hitstun,
+  so it could show as a `LINK`. As with special cancels, it is now a `GAP`
+  when the opponent reached the reversal Tick and was not hit again
+- Not seen in the developer's recordings: all 424 hits after a reversal Tick
+  were already `GAP`, and replaying 20 recorded sessions shows the same lines
+  as before
+
+### Manual
+
+- The README uses the current names, `GC Command Trainer` and
+  `Seq. Command Trainer`, and now points to Chain Trainer
+- Chain Trainer's `MULTI` also happens with two or more different buttons
+  pressed on separate Ticks of hit stop, not only together. A link's `/Mt` is
+  the last press that lands before the opponent's reversal Tick
+- Grab Mashing is explained in the order purpose, settings, when it stops; how
+  the inputs are chosen is folded
+- English wording reviewed
+
+---
+
 ## v11.7.27
 
 New Grab Mashing makes the dummy mash while it grabs or is grabbed.

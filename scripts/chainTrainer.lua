@@ -33,7 +33,8 @@
 -- fixed 13 - a move that ends early ends its window.
 -- Results, capitals first as AirGap's: CHAIN Nt (the press on Nt was taken),
 -- RAPID, LATE Nt (after the window's last tick), EARLY Nt (only a press before
--- the hit, in the move before it: Nt before 1t), MULTI (two buttons held,
+-- the hit, in the move before it: Nt before 1t), MULTI (two or more buttons
+-- in $12E | $126 - held ones from different Ticks of hit stop count too -
 -- 028F78), NO CHAIN (the button is not one the move chains into, 028E98), ?
 -- (in the window, refused for another reason), HIT (got hit). A link with no
 -- press is not kept once it ends.
@@ -458,6 +459,16 @@ local function link_on_contact(r)
 		if r.opp05 == 0x02 and (r.opp140 == 0x02 or r.opp140 == 0x12) then kind = "GUARD"
 		elseif r.opp05 == 0x02 then kind = "LINK"
 		else kind = "GAP" end
+		-- THEIR REVERSAL TICK SEEN, AND NOT HIT SINCE: NOT A COMBO, whatever
+		-- $05 says - as special_on_hit (review, 2026-10-15). The mark
+		-- 0x02020400 has $05 2, so a hit on that very Tick would read as a stun.
+		-- Not seen in the archives: 424 hits after a sig with no hit between
+		-- (v11.7.25.2_13 to v11.7.26_5), all with $05 0, GAP already. A hit in
+		-- between (a projectile's react after the sig) is a new stun: left alone.
+		if kind == "LINK" and L.sig ~= nil and r.tick >= L.sig
+		   and (L.react == nil or L.react.tick < L.sig) then
+			kind = "GAP"
+		end
 		-- What the game did and what the window says have to agree, or the
 		-- window is not shown.
 		local agree = last_ok ~= nil

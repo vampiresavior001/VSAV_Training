@@ -8,7 +8,7 @@
 --       C+1, as AirGap's 1t is the first tick)
 --   [3] a press on a judged tick: CHAIN 12t
 --   [4] after the window: LATE Nt, counted from the window's last tick
---   [5] two buttons held: MULTI.  [6] not a chain from that move: NO CHAIN
+--   [5] two buttons pending: MULTI.  [6] not a chain from that move: NO CHAIN
 --   [7] a press before the hit, in the move before it: EARLY. The move's own
 --       press is not one
 --   [8] rapid, after a hit and out of a whiff.  [9] no press: no row
@@ -39,6 +39,8 @@
 --   [24] a press past the chain window, still in the move, that could have
 --        linked: a link line, EARLY Nt/Mt
 --   [25] and when it could not, or it is not known: the chain's LATE
+--   [26] a hit on or after their reversal Tick (seen, not hit since) is not a
+--        combo, though $05 reads 2 there: GAP
 --
 -- The rows fed in are the ones chainLog.lua makes (test_chain_log.lua); the
 -- window is the one measured (VSAV_MEMORY_NOTES, section 14): $169 13..1 over
@@ -901,6 +903,41 @@ do
 	eq("相手の復帰が分からない: LATE 4t", r and (r.link and "link" or r.result), "LATE 4t")
 	r = late_press(0x04, true, { [T.startup_key(1, 5, 2, 0, false)] = 5 })
 	eq("レバー下で、しゃがみの方を見ていない: LATE 4t", r and (r.link and "link" or r.result), "LATE 4t")
+end
+
+print("[26] 相手のリバーサル Tick 以降の当たりは、$05 が 2 でもコンボにしない")
+do
+	local IDLE_ = 0x02000000
+	local function react(t, s59) T.on_row({ kind = "react", p = 2, tick = t, s59 = s59, s140 = 0, char = 5, state = 0x02020200 }) end
+	local function sig(t) T.on_row({ kind = "sig", p = 2, tick = t, char = 5, state = 0x02020400 }) end
+	-- LP hits at 9500, react 9513 (R = 9526), the LP over at 9520; the next
+	-- LP pressed on 9524 hits on 9526 - the reversal Tick itself.
+	local function case(opp05, extra_react)
+		fresh()
+		hit(9500)
+		react(9513, 0)
+		tick(9520, 0, 0, 0, IDLE_)
+		tick(9524, 0, 0, 0x0100, IDLE_)
+		tick(9525, 0, 0, 0, NORMAL)
+		sig(9526)
+		if extra_react then react(9527, 0) end
+		contact(extra_react and 9530 or 9526, 0, 0, 1, opp05, 0)
+		return last()
+	end
+	local r = case(2)
+	eq("リバーサル Tick ちょうどの当たり ($05 2): GAP 5t/4t", r and r.result, "GAP 5t/4t")
+	eq("  赤", r and T.lines()[2][#T.lines()[2]][2], "#FF0000")
+	r = case(2, true)
+	eq("  その後に当たり直していれば (飛び道具など) LINK のまま", r and r.result:sub(1, 4), "LINK")
+	-- Before it: unchanged.
+	fresh()
+	hit(9600)
+	react(9613, 0)
+	tick(9620, 0, 0, 0, IDLE_)
+	tick(9622, 0, 0, 0x0100, IDLE_)
+	tick(9623, 0, 0, 0, NORMAL)
+	contact(9625, 0, 0, 1, 2, 0)
+	eq("リバーサル Tick より前は LINK 3t/3t のまま (9626 - 3 - 9620)", last() and last().result, "LINK 3t/3t")
 end
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))

@@ -8,7 +8,7 @@ English | [日本語](README.ja.md)
 
 **Make expert-level execution your training partner.** This training mode for Fightcade 2 / FBNeo lets you define dummy actions with precise internal-frame (Tick) timing to practice your defense and test your offense. Reproduce your opponent's actions precisely, then review your inputs and attack timing to find what to improve on your next attempt.
 
-This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.27**.
+This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.27.1**.
 
 **[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [Practice defense](#first-pb-drill) · [Test wake-up pressure](docs/PLAYER_MANUAL.en.md#wakeup-pressure-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 
@@ -33,7 +33,7 @@ Randomness affects PB activation and GC input windows, so success or failure alo
 | Goal | How to use the tool |
 |---|---|
 | **Improve your PB execution** | Use [PB Counter](docs/PLAYER_MANUAL.en.md#08-pb) to check when you pressed within the input window and how many presses counted. PB Stats shows your success rate, average press count and average input timing |
-| **Find out why a GC failed** | Use [GC Command Trace](docs/PLAYER_MANUAL.en.md#09-gc) to see which directions and buttons the game accepted and where the input broke off. Compare the left and right sides with [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) |
+| **Find out why a GC failed** | Use [GC Command Trainer](docs/PLAYER_MANUAL.en.md#09-gc) to see which directions and buttons the game accepted and where the input broke off. Compare the left and right sides with [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) |
 | **Practice defense with varied attacks** | Randomize attacks or their timing to practice PB and GC without relying on a fixed rhythm. See [which setting to use](docs/PLAYER_MANUAL.en.md#dummy-button-timing) |
 | **Explore situations after air guarding** | Use [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps) to check gaps in air chains, interrupt timing and landing advantage |
 
@@ -43,6 +43,7 @@ Randomness affects PB activation and GC input windows, so success or failure alo
 |---|---|
 | **Test wake-up pressure and attack strings** | Set the dummy to use the same response each time, then use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to compare contact timing with the actual outcome |
 | **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
+| **Check whether a combo connected** | Use [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) to see whether each chain, link and special cancel connected, and how many Ticks early or late a press was |
 | **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's in-place wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
@@ -53,7 +54,7 @@ After Demitri's heavy Demon Cradle, a forward-jump LP connects at `Reversal +0t`
 
 | Goal | How to use the tool |
 |---|---|
-| **Practice sequence commands** | Use [Command Trainer](docs/PLAYER_MANUAL.en.md#command-trainer) to see where an input sequence failed and which gaps between inputs are too long to succeed consistently |
+| **Practice sequence commands** | Use [Seq. Command Trainer](docs/PLAYER_MANUAL.en.md#command-trainer) to see where an input sequence failed and which gaps between inputs are too long to succeed consistently |
 
 ### Examine moves
 
@@ -156,7 +157,7 @@ The **[English player manual](docs/PLAYER_MANUAL.en.md)** covers controls, setti
 
 - **Set up your training opponent:** [Dummy defense, recovery and counter actions](docs/PLAYER_MANUAL.en.md#04-dummy), [Recording and looping](docs/PLAYER_MANUAL.en.md#05-recording), [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps), [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns)
 - **Practice:** [PB practice](docs/PLAYER_MANUAL.en.md#08-pb), [GC practice](docs/PLAYER_MANUAL.en.md#09-gc), [Practice recipes](docs/PLAYER_MANUAL.en.md#11-drills)
-- **Analyze:** [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data), [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing), [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter), [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps), [Troubleshooting](docs/PLAYER_MANUAL.en.md#14-troubleshooting)
+- **Analyze:** [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data), [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing), [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter), [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps), [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer), [Troubleshooting](docs/PLAYER_MANUAL.en.md#14-troubleshooting)
 
 ### Scope
 

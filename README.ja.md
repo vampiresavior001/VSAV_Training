@@ -8,7 +8,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 **達人の精密な動きを、練習相手に。** 内部フレーム（Tick）単位でダミーの動きを指定し、守りの練習と攻めの検証ができる、Fightcade 2／FBNeo用のトレーニングモードです。相手の動きを正確に再現し、自分の入力と攻撃のタイミングを見ながら、改善点を見つけられます。
 
-[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.27** です。
+[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.27.1** です。
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [守りを練習する](#first-ag-drill) · [起き攻めを調べる](docs/PLAYER_MANUAL.ja.md#wakeup-pressure-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
 
@@ -33,7 +33,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 | 目的 | 使い方 |
 |---|---|
 | **AGの入力を改善する** | [PB Counter](docs/PLAYER_MANUAL.ja.md#08-pb)で、受付時間内のいつ、何回入力したかを確認する。PB Statsで成功率や入力回数・タイミングの平均も確認できる |
-| **GCの失敗原因を見つける** | [GC Command Trace](docs/PLAYER_MANUAL.ja.md#09-gc)で、どの方向・ボタンが受け付けられ、どこで切れたかを見る。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右の成功率を比べる |
+| **GCの失敗原因を見つける** | [GC Command Trainer](docs/PLAYER_MANUAL.ja.md#09-gc)で、どの方向・ボタンが受け付けられ、どこで切れたかを見る。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右の成功率を比べる |
 | **実戦に近い守りを練習する** | 複数の攻めや入力タイミングをランダムにし、固定のリズムに頼らずAG・GCする。[設定の使い分け](docs/PLAYER_MANUAL.ja.md#dummy-button-timing) |
 | **空中ガード後の攻防を調べる** | [Air Guard Gaps](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)で、空中チェーンの隙間、割り込みタイミング、着地後の有利不利を確認する |
 
@@ -43,6 +43,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 |---|---|
 | **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
 | **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
+| **コンボがつながったかを確かめる** | [Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)で、チェーン・目押し・必殺技キャンセルがつながったかと、押すのが何Tick早すぎ・遅すぎたかを確認する |
 | **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンのその場起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
@@ -53,7 +54,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 
 | 目的 | 使い方 |
 |---|---|
-| **順押しコマンドを安定させる** | [Command Trainer](docs/PLAYER_MANUAL.ja.md#command-trainer)で、入力の失敗箇所と、乱数に左右される入力間隔を確認する |
+| **順押しコマンドを安定させる** | [Seq. Command Trainer](docs/PLAYER_MANUAL.ja.md#command-trainer)で、入力の失敗箇所と、乱数に左右される入力間隔を確認する |
 
 ### 技の性能を見る
 
@@ -155,7 +156,7 @@ Tickはゲームの内部フレームです。ターボ3では表示3フレー�
 
 - **練習相手を設定する：** [ダミーのガード・受け身・反撃](docs/PLAYER_MANUAL.ja.md#04-dummy)、[記録とループ再生](docs/PLAYER_MANUAL.ja.md#05-recording)、[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)、[Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)
 - **練習する：** [AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)、[GC練習](docs/PLAYER_MANUAL.ja.md#09-gc)、[目的別の練習レシピ](docs/PLAYER_MANUAL.ja.md#11-drills)
-- **調べる：** [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)、[Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)、[空中ガードの分析](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)、[困ったとき](docs/PLAYER_MANUAL.ja.md#14-troubleshooting)
+- **調べる：** [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)、[Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)、[空中ガードの分析](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)、[Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)、[困ったとき](docs/PLAYER_MANUAL.ja.md#14-troubleshooting)
 
 ### 対応範囲
 
