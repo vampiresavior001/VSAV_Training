@@ -43,7 +43,9 @@ def main():
     # is commandLog.lua's (Darkness Illusion's recognizer, 2026-10-11), and
     # chain_log.jsonl chainLog.lua's (the chain cancel check, 2026-10-14), and
     # grab_log.jsonl grabMashing.lua's (Grab Mashing, 2026-10-15), and
-    # shadow_log.jsonl shadowGuide.lua's check (the Shadow Guide, 2026-10-16).
+    # shadow_log.jsonl shadowGuide.lua's check (the Shadow Guide, 2026-10-16),
+    # and freeze_log.jsonl gameFreeze.lua's (what changed under the menu's
+    # freeze, 2026-10-17).
     extra = [p for p in (os.path.join(log_dir, "ag_prox.json"),
                          os.path.join(log_dir, "idle_sound.json"),
                          os.path.join(log_dir, "invuln_log.json"),
@@ -51,7 +53,8 @@ def main():
                          os.path.join(log_dir, "command_log.jsonl"),
                          os.path.join(log_dir, "chain_log.jsonl"),
                          os.path.join(log_dir, "grab_log.jsonl"),
-                         os.path.join(log_dir, "shadow_log.jsonl"))
+                         os.path.join(log_dir, "shadow_log.jsonl"),
+                         os.path.join(log_dir, "freeze_log.jsonl"))
              if os.path.exists(p)]
     if not paths and not extra:
         print("nothing to archive in", log_dir)

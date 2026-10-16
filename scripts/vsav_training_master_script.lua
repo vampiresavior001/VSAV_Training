@@ -551,6 +551,30 @@ emu.registerbefore(function()
 	-- (gameFreeze.lua). Left to a later line, a character select reached with
 	-- the menu open would keep the last answer and stand for good.
 	gameFreezeModule.registerBefore()
+	-- What the Lua side asks before it counts a frame (v11.7.28.1; review of
+	-- 7643e09): macro.lua's playback, loop wait and recording, and the life
+	-- refill, all ran on emulator frames while the game stood.
+	globals.game_frozen = gameFreezeModule.frozen()
+	-- WHILE THE GAME STANDS, THE MENU DOES NOT HOLD THE PLAYERS (v11.7.28.1;
+	-- user, 2026-10-17: "ダッシュ中Kダッシュ中Kダッシュ、としたがダッシュが出ず
+	-- 立中Kがでることがあった").
+	--
+	-- Opening the menu sets both players' $3B4 and $200 (controller.lua), and
+	-- with $3B4 set the game skips the player's own path at 0223AC - the
+	-- command checks and the dash recognizer (0223EC) with it. The tick still
+	-- running when the menu opened (the second of a turbo frame's two) ran
+	-- that way: the dummy's forward press in it never reached the recognizer,
+	-- and the dash after the menu came out as a walk and a standing MK
+	-- (invuln_log: one such tick in 9 of 29 opens). Standing still needs no
+	-- hold, so it is put on only for frames the game runs under the menu - a
+	-- position move, outside a match, a build the freeze does not hold on.
+	if globals.show_menu == true and globals.controllerModule ~= nil then
+		if globals.game_frozen then
+			globals.controllerModule.enable_both_players()
+		else
+			globals.controllerModule.disable_both_players()
+		end
+	end
 
 	-- THE CHARACTER SELECT STOPS THE LOOP (user, 2026-09-21).
 	--
@@ -939,6 +963,9 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 		-- would take for one and forget the round's start spacing (user,
 		-- 2026-10-16, with Restore State).
 		if positionModule ~= nil and positionModule.after_load ~= nil then positionModule.after_load() end
+		-- Nor the game the menu's freeze was holding (gameFreeze.lua).
+		gameFreezeModule.after_load()
+		globals.game_frozen = false
 		globals.show_menu = false
 		globals.debounceStarted = nil
 		globals.controllerModule.enable_both_players()

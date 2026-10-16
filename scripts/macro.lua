@@ -501,10 +501,32 @@ local menu_was_open = false
 local loop_menu_hold_until = 0
 local LOOP_MENU_CLOSE_HOLD = 30
 
+-- THE GAME STANDS UNDER THE MENU (gameFreeze.lua; v11.7.28.1, review of
+-- 7643e09: "メニュー中もレコーディング・再生が進む"). The playback's place is
+-- emu.framecount() - framediff and a take adds a frame each registerAfter, so
+-- both ran on through a menu the game was not running under: a playback lost
+-- its inputs and came out further on, a take got the menu's empty frames, and
+-- a loop's wait was spent. Frozen, none of the three counts the frame.
+local function game_frozen()
+	return globals ~= nil and globals.game_frozen == true
+end
+
+-- NO HOLD AFTER A MENU THE GAME STOOD UNDER (v11.7.28.1; user, 2026-10-17:
+-- "前N前のような操作で、Nが長くなりすぎてダッシュが出なくなる").
+-- The hold above is from when the game ran under the menu. It also stops a
+-- pass in progress and hands the dummy nothing for its 30 frames - with the
+-- game running again - so a dash's neutral opened over came out 30 frames
+-- long and past the game's window. If the game stood the whole time the
+-- menu was open, a pass and a wait carry on from where they stood instead.
+local menu_game_ran = false
 local function update_loop_menu_hold()
 	local menu_is_open = globals ~= nil and globals.show_menu == true
+	if menu_is_open and not game_frozen() then menu_game_ran = true end
 	if menu_was_open and not menu_is_open then
-		loop_menu_hold_until = emu.framecount() + LOOP_MENU_CLOSE_HOLD
+		if menu_game_ran then
+			loop_menu_hold_until = emu.framecount() + LOOP_MENU_CLOSE_HOLD
+		end
+		menu_game_ran = false
 	end
 	menu_was_open = menu_is_open
 end
@@ -1308,7 +1330,7 @@ macroLuaModule = {
 	end,
 
     ["registerAfter"] = function() --recording is done after the frame, not before, to catch input from playing macros
-		if recording then
+		if recording and not game_frozen() then
 			recframe = recframe+1
 			for p = 1,nplayers do
 				for n,key in ipairs(keymap or {}) do
@@ -1388,7 +1410,7 @@ macroLuaModule = {
 			-- nothing here, so a pending restart is dropped rather than left
 			-- hanging over into the next match.
 			loop_pending = false
-		elseif loop_pending and not loop_menu_hold_active()
+		elseif loop_pending and not loop_menu_hold_active() and not game_frozen()
 		       and (loop_phase == "before" or p2_can_act()) then
 			-- AFTER is counted once the previous pass has recovered. When it
 			-- ends, restore the recorded spacing (or savestate), then count
@@ -1450,7 +1472,7 @@ macroLuaModule = {
 		end
 
 		--framediff check is necessary for emus where registerbefore runs multiple times per frame
-		if playing and loop_menu_hold_active() then
+		if playing and (loop_menu_hold_active() or game_frozen()) then
 			-- HOLD IT WHERE IT IS, DO NOT BANK THE FRAMES.
 			--
 			-- Skipping the advance alone leaves emu.framecount() running while

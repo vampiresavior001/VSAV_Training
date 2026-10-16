@@ -443,7 +443,7 @@ eq("ウィザードの確認再生は待たない", tmp:find("rsw_roll", 1, true
 eq("stop_macro_playback が待ちも捨てる",
 	body_of(msrc, "function stop_macro_playback()"):find("start_wait = nil", 1, true) ~= nil, true)
 local cd = msrc:find("start_wait_tick(start_wait,", 1, true)
-local pb = msrc:find("if playing and loop_menu_hold_active() then", 1, true)
+local pb = msrc:find("if playing and (loop_menu_hold_active() or game_frozen()) then", 1, true)
 eq("カウントダウンは再生ブロックの前 (同じコールバックで 1 フレーム目)",
 	cd ~= nil and pb ~= nil and cd < pb, true)
 

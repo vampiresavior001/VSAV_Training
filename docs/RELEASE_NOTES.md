@@ -6,6 +6,72 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.28.1
+
+Recording, playback, the loop wait and the life refill no longer run on while
+the menu holds the game, and playback no longer stumbles once the menu closes.
+The check that the game really stands is stronger.
+
+### Change: a stronger check that the game stands
+
+- Until now, the only check while the menu held the game was that the match's
+  Tick did not move. Both characters' state, position and animation must not
+  move either. If anything does, the game is no longer stopped for the rest of
+  the session and the emulator's message area says so, as before
+- The frame the menu closes on, and a position move started from the menu,
+  are not checked: those writes are the tool's own. Neither is a state load
+- With `Analysis > Knockdown Logger` on, it also writes where the memory
+  changed while the game stood (`scripts/reversal_logs/freeze_log.jsonl`).
+  It is for investigation
+
+### Fix: recording, playback and the loop wait ran on under the menu, and playback stumbled after it
+
+- In v11.7.28 the game stood while the menu was open, but recording and
+  recording playback still ran on the emulator's frames. Opening the menu
+  during a playback skipped the inputs in between, so it carried on further
+  along when the menu closed; opening it during a take put the menu's frames
+  into the take. The `Loop Interval (Frames)` wait also ran down under the menu
+- With `Looped Playback` on, the playback was held for 30 frames after the
+  menu closed and the dummy's inputs let go. The game runs again by then, so
+  opening the menu in the middle of a forward, neutral, forward dash made the
+  neutral long enough to miss the game's window, and no dash came out
+- While the game stands, a take counts no frames, a playback stays where it
+  is and the loop wait does not run down. When the game stood under the menu,
+  the 30-frame hold is gone and they carry on as soon as it closes (when the
+  game ran under the menu, outside a match for example, the hold stays)
+- Recording, playback and the loop wait were found in a code review; the dash
+  after closing the menu in play
+
+### Fix: opening the menu could drop one Tick of both players' input
+
+- Opening the menu set a flag in the game (`$3B4`) on both players, so that
+  working the menu would not move them. With it set, the game skips that
+  player's own input handling, the command and dash checks with it (checked
+  in the ROM)
+- Opened in the middle of the game's processing, the one Tick left of it ran
+  with the flag set: 9 of 29 menu opens in the developer's play. When the
+  first forward of a dash fell on that Tick, the dash after the menu did not
+  come out and turned into a walk and a standing move (dash MK, dash became a
+  walk and a standing MK)
+- While the game stands, the flag is no longer set. When the game runs under
+  the menu (a position move, outside a match and the like), it is set as before
+
+### Fix: life refilled under the menu
+
+- The `Refill Timer (seconds)` refill counted emulator frames too, so it
+  could fire under the menu while the game stood. `Recording > Save State`
+  from the menu could then save the refilled scene
+- Under the menu it does not fire, and the rest of the wait is kept: once the
+  menu closes, it waits out what was left and then refills
+- Found in a code review
+
+### Manual
+
+- Section 2.1 says recording, playback, the loop wait and the life refill
+  wait under the menu too, and how you are told if the game does not stand
+
+---
+
 ## v11.7.28
 
 `P1 Coin` now records the dummy's action and plays it back at once (Quick

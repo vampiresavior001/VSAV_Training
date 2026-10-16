@@ -31,8 +31,19 @@
 -- callbacks keep running: the game's RAM does not change under them.
 --
 -- THE CHECK: frozen, the Tick must not move after the first frame (that one
--- may finish the pass that was running). If it does, the hooks do not hold on
--- this build: it is switched off for the session, with a message.
+-- may finish the pass that was running), and neither may either character -
+-- its state ($04-$07), X ($10), Y ($14), cel ($1C) and what is left of the
+-- cel ($20), none of which the Lua side writes while it stands. If any moves,
+-- the hooks do not hold on this build: it is switched off for the session,
+-- with a message. The Tick alone was not proof enough (review of 7643e09).
+--
+-- WHAT DID CHANGE (Knockdown Logger only, reversal_logs/freeze_log.jsonl):
+-- the whole work RAM (0xFF0000, 64 KB) read once the first frame has passed
+-- and again on the frame the menu closes, before the game runs it, and the
+-- addresses that differ written as ranges. The vblank interrupt is not
+-- stopped - its frame counter (0xFF8080) and input reads go on - and the
+-- tool's own writes show here too; the log says which they are, rather than
+-- the code assuming it.
 
 local M = {}
 
@@ -44,6 +55,65 @@ local frozen = false
 local broken = nil           -- why it was switched off, if it was
 local frozen_frames, tick_at = 0, nil
 local checked = nil          -- EMPTY read back as zeros (once)
+local chars_at = nil         -- the two characters once the first frame has passed
+local ram_at = nil           -- the work RAM then (logging only)
+local tick_first = nil       -- the Tick the freeze held at
+
+-- The two characters' fields the game moves and the tool does not write.
+local FIELDS = { { 0x04, 4 }, { 0x10, 2 }, { 0x14, 2 }, { 0x1C, 4 }, { 0x20, 1 } }
+local function chars()
+	local out = {}
+	for _, base in ipairs({ 0xFF8400, 0xFF8800 }) do
+		for _, f in ipairs(FIELDS) do
+			local v = 0
+			for i = 0, f[2] - 1 do v = v * 256 + memory.readbyte(base + f[1] + i) end
+			out[#out + 1] = v
+		end
+	end
+	return table.concat(out, ",")
+end
+
+local LOG = "reversal_logs/freeze_log.jsonl"
+local started_log = false
+local function logging()
+	return globals ~= nil and globals.options ~= nil and globals.options.knockdown_logger_enable == true
+end
+local function read_ram()
+	local t = {}
+	for i = 0, 0xFFFF do t[i + 1] = string.char(memory.readbyte(0xFF0000 + i) % 256) end
+	return table.concat(t)
+end
+-- The addresses that differ, as "FFxxxx" or "FFxxxx-FFyyyy", runs closer than
+-- 4 bytes joined; at most 200.
+local function ranges(a, b)
+	local out, i, n = {}, 1, #a
+	while i <= n and #out < 200 do
+		if a:byte(i) ~= b:byte(i) then
+			local j, last = i, i
+			while j <= n and j - last <= 4 do
+				if a:byte(j) ~= b:byte(j) then last = j end
+				j = j + 1
+			end
+			local lo, hi = 0xFF0000 + i - 1, 0xFF0000 + last - 1
+			out[#out + 1] = lo == hi and string.format("%06X", lo) or string.format("%06X-%06X", lo, hi)
+			i = last + 1
+		else
+			i = i + 1
+		end
+	end
+	return out
+end
+local function write_row(text)
+	local f = io.open(LOG, started_log and "a" or "w")
+	if f == nil then return end
+	if not started_log then
+		f:write('{"log": "freeze_log", "version": 1, "what": "the work RAM (0xFF0000-0xFFFFFF) read once a menu freeze had held one frame and again on the frame it ended, before the game ran it (scripts/gameFreeze.lua)", '
+			.. '"fields": "frames: frames frozen; tick: the Tick it held at; changed: the addresses that differ (runs within 4 bytes joined, at most 200)"}\n')
+		started_log = true
+	end
+	f:write(text)
+	f:close()
+end
 
 local function say(text)
 	if emu ~= nil and emu.message ~= nil then emu.message(text) end
@@ -83,30 +153,65 @@ function M.wanted()
 	return empty_ok()
 end
 
--- Before each frame: whether this frame stands.
+-- Before each frame: whether this frame stands. On the frame it stops
+-- standing, before the game runs it, what changed under it goes to the log.
 function M.registerBefore()
 	local want = M.wanted()
-	if want and not frozen then frozen_frames, tick_at = 0, memory.readbyte(0xFF8081) end
+	if want and not frozen then
+		frozen_frames, tick_at, chars_at, ram_at, tick_first = 0, memory.readbyte(0xFF8081), nil, nil, nil
+	end
+	if frozen and not want and ram_at ~= nil then
+		local now = read_ram()
+		write_row(string.format('{"frames": %d, "tick": %d, "changed": [%s]}\n', frozen_frames, tick_first or -1,
+			table.concat((function()
+				local q = {}
+				for _, r in ipairs(ranges(ram_at, now)) do q[#q + 1] = '"' .. r .. '"' end
+				return q
+			end)(), ", ")))
+		ram_at = nil
+	end
 	frozen = want
 end
 
--- After it: the Tick check.
+local function give_up(why)
+	frozen = false
+	broken = why
+	ram_at = nil
+	say("Menu: the game could not be stopped (" .. broken .. ") - it runs under the menu this session")
+end
+
+-- After it: the checks. Not on a frame that ended the freeze from the Lua
+-- side - the menu closed, or a position move started from it - since that
+-- frame's own writes are the tool's, not the game's.
 function M.registerAfter()
 	if not frozen then return end
+	if not M.wanted() then return end
 	frozen_frames = frozen_frames + 1
 	local tick = memory.readbyte(0xFF8081)
-	if frozen_frames == 1 then tick_at = tick return end
-	if tick ~= tick_at then
-		frozen = false
-		broken = "the Tick moved"
-		say("Menu: the game could not be stopped (" .. broken .. ") - it runs under the menu this session")
+	if frozen_frames == 1 then
+		tick_at, tick_first, chars_at = tick, tick, chars()
+		if logging() then ram_at = read_ram() end
+		return
 	end
+	if tick ~= tick_at then give_up("the Tick moved") return end
+	if chars() ~= chars_at then give_up("a character moved") end
+end
+
+-- A state was loaded (master's savestate.registerload; Restore State closes
+-- the menu and loads). The game is another one now: nothing to check against,
+-- and no row - what changed is the state, not the freeze.
+function M.after_load()
+	frozen, frozen_frames, tick_at, chars_at, ram_at, tick_first = false, 0, nil, nil, nil, nil
 end
 
 function M.frozen() return frozen end
 function M.broken() return broken end
 
 -- For analysis/test_game_freeze.lua.
-function M._reset() frozen, broken, frozen_frames, tick_at, checked = false, nil, 0, nil, nil end
+function M._reset()
+	frozen, broken, frozen_frames, tick_at, checked = false, nil, 0, nil, nil
+	chars_at, ram_at, tick_first = nil, nil, nil
+end
+M._ranges = ranges
 
 return M

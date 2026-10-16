@@ -7,6 +7,17 @@ local last_white = 0
 local last_meter = 0
 local healthAndMeter = {
     ["registerBefore"] = function()
+        -- THE GAME STANDS UNDER THE MENU (gameFreeze.lua; v11.7.28.1, review of
+        -- 7643e09: "メニュー中に体力が回復し、保存する場面が変わる"). The refill
+        -- fires on emulator frames, so it went off under a menu the game was
+        -- not running under, and Save State saved whatever the wait had come
+        -- to. Frozen, the refill does not fire, and the hit frames move on
+        -- with the clock so the wait keeps what was left of it.
+        local frozen = globals.game_frozen == true
+        if frozen then
+            if p1_last_hit_frame ~= nil then p1_last_hit_frame = p1_last_hit_frame + 1 end
+            if p2_last_hit_frame ~= nil then p2_last_hit_frame = p2_last_hit_frame + 1 end
+        end
         -- Meter
         function hurt(addr) 
             return memory.readbyte(addr + 0x005) == 0x02 
@@ -60,15 +71,15 @@ local healthAndMeter = {
             p1_last_hurt = false
         end
 
-        if p2_last_hit_frame ~= nil 
-            and (p2_last_hit_frame + p2_seconds_before_refill) == emu.framecount() 
+        if not frozen and p2_last_hit_frame ~= nil
+            and (p2_last_hit_frame + p2_seconds_before_refill) == emu.framecount()
         then
             memory.writeword(0xFF8800 + 0x50, globals.options.p2_max_life)
             memory.writeword(0xFF8800 + 0x52, globals.options.p2_max_life)
         end
 
-        if p1_last_hit_frame ~= nil 
-            and (p1_last_hit_frame + p1_seconds_before_refill) == emu.framecount() 
+        if not frozen and p1_last_hit_frame ~= nil
+            and (p1_last_hit_frame + p1_seconds_before_refill) == emu.framecount()
         then
             memory.writeword(0xFF8400 + 0x50, globals.options.p1_max_life)
             memory.writeword(0xFF8400 + 0x52, globals.options.p1_max_life)
