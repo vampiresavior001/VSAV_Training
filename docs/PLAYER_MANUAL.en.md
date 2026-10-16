@@ -262,10 +262,11 @@ An indented row is a setting of the nearest less-indented row above it, its pare
 
 `Reset This Tab` on `Display`, `Trainer` and `Analysis` resets all settings on that tab. A confirmation dialog opens with `Cancel` selected. This also resets any child settings hidden because their parent setting is OFF.
 
-**While the menu is open during a match, the game stands still.** Characters, projectiles, the round timer and stun do not advance; closing the menu carries on from there. The music keeps playing.
+**While the menu is open during a match, the game stands still.** Characters, projectiles, the round timer and stun do not advance; closing the menu resumes game processing. The music keeps playing.
 
 - Only the game's own processing is stopped, not FBNeo, so the menu still works from an arcade stick or controller.
 - Recording playback and recording (Quick Recording in [5.1](#quick-recording) and the like) pause too, and so do the `Loop Interval (Frames)` wait and the `Refill Timer (seconds)` life refill. All of them carry on when the menu closes.
+- Pausing the game does not guarantee that a dummy input sequence will resume midway. Opening the menu can discard pending Action Steps, Action Patterns or Specified actions. After closing it, check that the intended response or loop is running.
 - While a position reset (`Dummy > Position` and the like) is moving the characters, the game runs until they are in place, then stands again.
 - `Recording > Save State` from the menu saves the scene as it stands ([5.5](#save-state)).
 - If the game does not stand (the Tick or a character moves while it should), it is no longer stopped for the rest of the session, and the emulator's message area says so.
@@ -715,7 +716,7 @@ Change one setting at a time at first, and check that the intended attack still 
 - The first one still starts on the usual trigger (after blocking, being hit or waking up). Turning the row on or closing the menu does not start it.
 - After that, airborne actions repeat on landing (the same as Action Steps' `Auto (Landing)`), and ground actions repeat once the dummy can act again.
 - `Button Wait`, `Random Delay` and `Random Start Wait` apply to every repeat, drawn again each time.
-- Set `Loop = no` to stop. Opening the menu also stops the loop; it starts again on the next trigger.
+- Set `Loop = no` to stop repeating the action. Do not rely on opening and closing the menu to resume a sequence midway. After closing it, check that the intended response is running (see [2.1](#03-controls)).
 - It is separate from Action Steps' `Loop Steps` and `Loop Wait`.
 
 If the move does not come out and the dummy stays free, the next repeat waits until the dummy has done something and can act again, instead of entering the same input over and over. For an airborne action whose landing cannot be predicted, such as a float, the input starts after the landing, so it can come later than the fastest timing.
@@ -1685,7 +1686,7 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 - It is drawn at Air Guard Gaps' height, moved a little right so that it does not cover the hit count on the P1 side. With Air Guard Gaps also on, it goes below it. While Chain Trainer is on, GC Command Trainer and Seq. Command Trainer, which share that space, are not drawn.
 
 <details>
-<summary>What has been checked</summary>
+<summary>Supported cases and limitations</summary>
 
 - A link's `/Mt` is the last press that lands before the opponent's reversal Tick (the Tick from which they can guard or act). A hit on that Tick or later is not counted as a combo. The number of Ticks to the reversal Tick comes from 77 hits of Anakaris's normals on Morrigan. Other matchups have not been checked yet. When the reversal Tick is not known (for example, the opponent was not in ground hitstun), or the display disagrees with the game's actual result, `/Mt` is not shown.
 - Links in the air are not judged.

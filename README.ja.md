@@ -24,7 +24,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 2. **対処を練習し、攻めを検証する。** 同じ攻めを繰り返させてAG・GC・空中ガード後の割り込みを練習したり、相手の反撃を固定して、自分の起き攻めや連係が通用するかを検証したりします。
 3. **結果を見て改善する。** 受付時間内のどのタイミングで入力したか、攻撃が何Tick目に当たったかを画面で確かめ、次の練習で入力やタイミングを調整します。PB Stats（英語UIのPBはAGのこと）とGC Statsで、成功率と入力時間の変化も追えます。
 
-AGの成立判定やGCの入力受付には乱数が関わるため、結果だけでは改善点が分かりにくいことがあります。本ツールでは、実際に受け付けられた入力とそのタイミングから、改善点を探せます。
+**成功した入力にも、改善点があります。** AGの成立判定やGCの入力受付には乱数が関わるため、一度成功しただけでは入力が安定しているとは限りません。受け付けられた入力とタイミングを確認し、次に何を変えるか判断できます。
 
 ## 何を調べ、練習できるか
 
@@ -44,7 +44,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 | **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
 | **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
 | **同じ場面から繰り返し試す** | メニューでゲームを止め、[状態を保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)して同じ状況から練習する。記録の再生中など、保存できない場面もある |
-| **コンボがつながったかを確かめる** | [Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)で、チェーン・目押し・必殺技キャンセルがつながったかと、押すのが何Tick早すぎ・遅すぎたかを確認する |
+| **チェーンや目押しの入力タイミングを確認する** | [Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)で、成立結果と、ボタンを押した位置を受付・猶予の表示と比べる |
 | **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンのその場起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
@@ -70,7 +70,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 
 | 目的 | 使い方 |
 |---|---|
-| **自分で操作できる動きを使う** | 試合中の`P1 Coin`で記録を始め、もう一度押すとすぐ再生する（[Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)）。残したい動きは `Copy to Slot` でスロットへコピーできる。開始・終了を自動で検出し、確認して保存するなら[Recording Wizard](docs/PLAYER_MANUAL.ja.md#recording-wizard)。記録・再生は表示フレーム単位 |
+| **自分で操作できる動きを使う** | [Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)でCoinを押して記録し、もう一度押してすぐ再生。残したい動きはスロットへコピーできる。開始・終了を自動で検出する[Recording Wizard](docs/PLAYER_MANUAL.ja.md#recording-wizard)も使える |
 | **精密な動きを再現する** | [Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)で、動作とタイミングをTick単位で指定する |
 | **複数の動きをランダムに出す** | [Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)で、作った動きを名前付きで保存し、使う候補からランダムに実行する |
 

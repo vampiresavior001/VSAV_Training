@@ -24,7 +24,7 @@ Left: check whether you still fit six presses when delaying PB. Right: see which
 2. **Practice your defense and test your offense.** Have the dummy repeat the same offense to practice PB, GC or interrupts after air guarding, or test your own wake-up pressure and strings against a fixed response.
 3. **Use the results to improve.** Check when your inputs registered within the input window and on which Tick your attack connected, then adjust your inputs or timing on the next attempt. PB Stats and GC Stats track your success rate and input time.
 
-Randomness affects PB activation and GC input windows, so success or failure alone may not show what to improve. The tool shows which inputs the game accepted and when, helping you decide what to adjust.
+**See what to improve—even when you succeed.** Randomness affects PB activation and GC input windows, so one successful attempt does not mean your inputs are consistent. Check which inputs the game accepted and when to decide what to adjust next.
 
 ## What you can test and practice
 
@@ -44,7 +44,7 @@ Randomness affects PB activation and GC input windows, so success or failure alo
 | **Test wake-up pressure and attack strings** | Set the dummy to use the same response each time, then use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to compare contact timing with the actual outcome |
 | **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
 | **Retry the same situation** | Pause the game with the menu, then [save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) to practice from the same situation. Saving is unavailable during recording playback and certain other operations |
-| **Check whether a combo connected** | Use [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) to see whether each chain, link and special cancel connected, and how many Ticks early or late a press was |
+| **Check chain and link timing** | Use [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) to review the result and compare your button timing with the displayed input window |
 | **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's in-place wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
@@ -70,7 +70,7 @@ The dummy performs the action you build here when something triggers it, such as
 
 | Goal | How to use the tool |
 |---|---|
-| **Use actions you can perform yourself** | During a match, `P1 Coin` starts a recording and a second press plays it at once ([Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording)). Use `Copy to Slot` to keep the recording in a slot. For automatic start and stop detection followed by review and saving, use [Recording Wizard](docs/PLAYER_MANUAL.en.md#recording-wizard). Recording and playback use displayed frames |
+| **Use actions you can perform yourself** | Press Coin to record, then press it again to play back immediately with [Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording). Copy recordings you want to keep to a slot, or use [Recording Wizard](docs/PLAYER_MANUAL.en.md#recording-wizard) for automatic start and stop detection |
 | **Reproduce precise sequences** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
 | **Run several sequences at random** | [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns) saves sequences by name and picks one at random from those you select |
 
