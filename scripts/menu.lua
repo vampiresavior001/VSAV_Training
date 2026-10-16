@@ -1005,8 +1005,8 @@ input_event_type = {
   "Guard Cancel",
   "Push Block"
 }
+-- The Playback Slot's list (v11.7.28: "Last Recording" went - nothing writes it).
 recording_slot = {
-  "Last Recording",
   "Slot 1",
   "Slot 2",
   "Slot 3",
@@ -1634,6 +1634,87 @@ end
 -- HIDDEN ROWS ARE RESET TOO. A row behind a parent switch still holds a
 -- value and shows it again the moment the parent comes back on, so leaving
 -- it alone would make the reset depend on what happened to be on screen.
+-- COPY THE QUICK TAKE INTO A SLOT, PICKED IN A WINDOW (user, 2026-10-16: "別
+-- ウィンドウを出して決定する形がいい、いまは１しか選べない"). The row's own number
+-- reset every frame - menu = get_menu() remakes every row each drawn frame
+-- (see reset_tab_item below) - so only Slot 1 could ever be picked. The
+-- window holds its own rows: Slot 1 to 5 with the date of the take in each,
+-- and Cancel. Up / Down choose, Right or LP copies into the slot (its take is
+-- replaced) and closes, Left or Cancel closes. It lands on Cancel and Right is
+-- held off for fifteen frames, as the reset's: the press that opens it
+-- auto-repeats.
+function copy_quick_item()
+  local _o = { name = "Copy to Slot" }
+  local opened_at = nil
+  local function right_locked()
+    return opened_at ~= nil and emu.framecount() - opened_at < 15
+  end
+  local function slot_row(_i)
+    local _r = {}
+    local _wiz = globals.recordingWizard
+    local _stamp = (_wiz ~= nil and _wiz.slot_stamp ~= nil) and _wiz.slot_stamp(_i) or nil
+    _r.name = "Slot " .. _i .. "  " .. ((_stamp == nil or _stamp == "Empty") and "(empty)"
+      or _stamp:gsub("(%d+:%d+):%d+", "%1"))
+    function _r:draw(_x, _y, _selected)
+      local c = _selected and text_selected_color or text_default_color
+      gui.text(_x, _y, (_selected and "< " or "") .. self.name, c, text_default_border_color)
+    end
+    function _r:validate()
+      current_popup = nil
+      local _m = globals.macroLua
+      if _m == nil or _m.copy_quick_to_slot == nil then return end
+      local _ok, _what = _m.copy_quick_to_slot(_i)
+      emu.message(_ok and ("Copied the quick take to " .. _what) or ("Not copied: " .. tostring(_what)))
+    end
+    function _r:right() if right_locked() then return end self:validate() end
+    function _r:left() current_popup = nil end
+    function _r:legend() return "Right or LP: copy here (replaces it)  Left: back" end
+    function _r:description() return "" end
+    return _r
+  end
+  local function rows()
+    local _list = {}
+    for _i = 1, 5 do _list[_i] = slot_row(_i) end
+    local _no = { name = "Cancel" }
+    function _no:draw(_x, _y, _selected)
+      local c = _selected and text_selected_color or text_default_color
+      gui.text(_x, _y, (_selected and "< " or "") .. self.name, c, text_default_border_color)
+    end
+    function _no:validate() current_popup = nil end
+    function _no:left() current_popup = nil end
+    function _no:legend() return "Left or LP: leave the slots alone" end
+    function _no:description() return "" end
+    _list[#_list + 1] = _no
+    return _list
+  end
+  local function open()
+    if right_locked() then return end
+    local _m = globals.macroLua
+    if _m == nil or _m.quick_file_exists == nil or not _m.quick_file_exists() then
+      emu.message("No quick recording for this dummy yet")
+      return
+    end
+    opened_at = emu.framecount()
+    current_popup = make_popup(82, 60, 302, 168, rows(), "Copy the quick take to")
+    current_popup.selected_index = 6
+  end
+  function _o:draw(_x, _y, _selected)
+    local _c = text_default_color
+    local _label = self.name
+    if _selected then
+      _c = text_selected_color
+      _label = "< " .. _label .. " >"
+    end
+    gui.text(_x, _y, _label, _c, text_default_border_color)
+  end
+  function _o:validate() open() end
+  function _o:right() open() end
+  function _o:description()
+    return "Copies this dummy's quick take into a numbered slot. A window lists Slot 1\nto 5 with the date of each take: Up / Down choose, Right or LP copies (that\nslot's take is replaced), Left goes back. The only way a quick take reaches\na numbered slot."
+  end
+  return _o
+end
+
 local function reset_tab_item(_tab_name)
   local _o = {}
   _o.name = "Reset This Tab"
@@ -1727,6 +1808,40 @@ local function reset_tab_item(_tab_name)
   return _o
 end
 
+-- SAVE STATE ASKS FIRST (user, 2026-10-16: "右を選んでYesで保存とかにしたい").
+-- Yes / No, landing on Yes. The rows are rebuilt every drawn frame, so the
+-- popup holds its own two rows; the Right that opened it does not answer it
+-- (15 frames, as Reset This Tab).
+local save_state_opened_at = nil
+local function save_state_locked()
+  return save_state_opened_at ~= nil and emu.framecount() - save_state_opened_at < 15
+end
+local function save_state_ask()
+  if save_state_locked() then return end
+  save_state_opened_at = emu.framecount()
+  local _yes, _no = { name = "Yes" }, { name = "No" }
+  local function draw_row(self, _x, _y, _selected)
+    local c = _selected and text_selected_color or text_default_color
+    gui.text(_x, _y, (_selected and "< " or "") .. self.name, c, text_default_border_color)
+  end
+  _yes.draw, _no.draw = draw_row, draw_row
+  function _yes:validate()
+    if save_state_locked() then return end
+    current_popup = nil
+    if globals.trainingState ~= nil then globals.trainingState.save() end
+  end
+  function _yes:right() self:validate() end
+  function _yes:left() current_popup = nil end
+  function _yes:legend() return "Right or LP: Save   Left: Back" end
+  function _yes:description() return "" end
+  function _no:validate() current_popup = nil end
+  function _no:left() current_popup = nil end
+  function _no:legend() return "Left or LP: Do not save" end
+  function _no:description() return "" end
+  current_popup = make_popup(112, 84, 272, 144, { _yes, _no }, "Save the state here?")
+  current_popup.selected_index = 1
+end
+
 local function get_menu() 
 -- COMMAND TRAINER'S VALUES AND HELP (commandTrainer.lua, user 2026-10-11): one
 -- line per command - its name, character and inputs - with the same rules
@@ -1776,6 +1891,79 @@ return {
     {
         name = "Recording",
         entries = {
+          -- QUICK RECORDING (quickRecording.lua, v11.7.28). On by default. Auto Trim,
+          -- Play and Copy are its rows: indented under it, hidden while it is off
+          -- (user, 2026-10-16: "クイックレコーディング関係のメニュー...子供ではない？").
+          checkbox_menu_item("Quick Recording", training_settings, "quick_recording", true, "Coin: you take P2 and a take begins (its own slot, not the numbered ones).\nCoin again: it ends, P1 is yours and the take plays (Looped Playback and the\nstart wait apply). Coin while anything plays stops it and starts a take.\nOff: Coin only swaps sides. Not in the Recording Wizard."),
+          child_of("quick_recording", checkbox_menu_item("Auto Trim", training_settings, "quick_auto_trim", true, "Cuts the frames before the first input and after the last of a quick take.\nThe take starts where that first input was made from (Reset Distance Each\nLoop uses it). Pauses and held inputs in the middle are kept.")),
+          child_of("quick_recording", { name = "Play Quick Recording",
+            draw = function(_self, _x, _y, _selected)
+              local _c = text_default_color
+              local _label = _self.name
+              local _m = globals.macroLua
+              if _m ~= nil and _m.quick_playing ~= nil and _m.quick_playing() then _label = _label .. "  (playing)" end
+              if _selected then
+                _c = text_selected_color
+                _label = "< " .. _label .. " >"
+              end
+              gui.text(_x, _y, _label, _c, text_default_border_color)
+            end,
+            validate = function(_self)
+              -- One per press: Right auto-repeats (see Play Recording).
+              if _self.last_fired ~= nil and emu.framecount() - _self.last_fired < 15 then return end
+              _self.last_fired = emu.framecount()
+              local _m = globals.macroLua
+              if _m == nil or _m.play_quick == nil then return end
+              if _m.quick_playing() then _m.stop_all_playback()
+              elseif not _m.play_quick() then emu.message("No quick recording for this dummy yet") end
+            end,
+            right = function(_self) _self:validate() end,
+            description = function()
+              return "Plays this dummy's quick take, the way it plays after Coin. Press again\nto stop it. Volume Down stops it too."
+            end }),
+          child_of("quick_recording", copy_quick_item()),
+          -- SAVE A STATE BY HAND (trainingState.lua, v11.7.28): what Volume Up twice
+          -- does. It asks first, Yes / No, landing on Yes (user, 2026-10-16: "右を
+          -- 選んでYesで保存とかにしたい"): the game stands under the menu now
+          -- (gameFreeze.lua), so this saves the scene as it stands. Restore State
+          -- under it closes the menu, then loads ("ステートロードはメニューを閉じて
+          -- ロード").
+          { name = "Save State",
+            draw = function(_self, _x, _y, _selected)
+              local _c = text_default_color
+              local _label = _self.name
+              if _selected then
+                _c = text_selected_color
+                _label = "< " .. _label .. " >"
+              end
+              gui.text(_x, _y, _label, _c, text_default_border_color)
+            end,
+            validate = function(_self) save_state_ask() end,
+            right = function(_self) save_state_ask() end,
+            legend = function() return "Right or LP: Asks, then saves" end,
+            description = function()
+              return "Saves the game as it stands (Volume Up twice). Asks first: Yes saves. One\nstate, for this match and these characters. Not while a playback, Action\nSteps or a recording runs."
+            end },
+          { name = "Restore State",
+            draw = function(_self, _x, _y, _selected)
+              local _c = text_default_color
+              local _label = _self.name
+              if _selected then
+                _c = text_selected_color
+                _label = "< " .. _label .. " >"
+              end
+              gui.text(_x, _y, _label, _c, text_default_border_color)
+            end,
+            validate = function(_self)
+              -- Loaded at the frame's end, with the menu closed first
+              -- (trainingState.request_restore).
+              if globals.trainingState ~= nil then globals.trainingState.request_restore() end
+            end,
+            right = function(_self) _self:validate() end,
+            legend = function() return "Right or LP: Closes the menu, then restores" end,
+            description = function()
+              return "Closes the menu and goes back to the state saved with Save State (Volume Up\nonce). What runs is stopped first. Not a state from another character select\nor game speed."
+            end },
           { name = "Play Recording",
             draw = function(_self, _x, _y, _selected)
               local _c = text_default_color
@@ -1811,13 +1999,12 @@ return {
               return "Play back the current recording slot, the same as the playback hotkey\n(Volume Down). LP or Right starts it; press again while running to stop it.\nWhich slot is used follows the slot settings below and Use Random Slot above."
             end },
           checkbox_menu_item("Use Character Specific Slots", training_settings, "use_character_specific_slots", true, "Recording slots are kept per dummy character, so picking a different dummy\ngives you a different set of five.\nOff uses one set of five for everybody.\nThis row had its property name and its default swapped and wrote nowhere, so\nit read 'no' while the feature was on - it ships on."),
-          list_menu_item("Recording Slot", training_settings, "recording_slot", recording_slot,1,"Choose a playback/recording slot\nWill be overriden by random playback"),
+          list_menu_item("Playback Slot", training_settings, "recording_slot", recording_slot,1,"The slot Volume Down and Play Recording play, and Reversal / Counter Attack -\nRecording uses. Use Random Recording Slot picks among the enabled ones instead.\nRecording is Coin (Quick Recording, then Copy to Slot) or the Recording Wizard,\nwhich pick their own slot."),
           checkbox_menu_item("Looped Playback", training_settings, "looped_playback", 0, "The playback slot will be played back when the current recording ends\nThis works with random playback slots enabled below\nas well as with guard actions"),
           interval_popup_menu_item(training_settings),
           recording_random_start_wait_item,
-          checkbox_menu_item("Reset Distance Each Loop", training_settings, "restore_recorded_position", 0, "Puts both characters back to the distance the recording was made from, at the\nstart of every loop. Without it the two drift apart over the passes and the\nsetup you were practising stops happening.\nOnly works on recordings made from v11.4.1 on - the distance is stored in the\nrecording itself.\nNot used with Use Savestate Upon Recording, which restores everything anyway."),
+          checkbox_menu_item("Reset Distance Each Loop", training_settings, "restore_recorded_position", 0, "Puts both characters back to the distance the recording was made from, at the\nstart of every loop. Without it the two drift apart over the passes and the\nsetup you were practising stops happening.\nOnly works on recordings made from v11.4.1 on - the distance is stored in the\nrecording itself. A quick take stores where its first input was made from."),
           recording_auto_flip_item,
-          checkbox_menu_item("Use Savestate Upon Recording", training_settings, "use_recording_savestate", 0, "BETA! EXPERIMENTAL! (But works!)\nCreates a savestate when you hit record, and loads it before playback.\nUse this for timing sensitive training. VERY USEFUL!!!!"),
           checkbox_menu_item("Use Random Recording Slot", training_settings, "random_playback", 0, "This can be used in two ways:\n 1) Random playback file on reversal\n 2) Using looped playback mode a random playback file will be \n    played back when the current recording ends"),
           indent(1, enable_slot_1_menu_item),
           indent(1, enable_slot_2_menu_item),
@@ -1867,7 +2054,7 @@ return {
             lei_lei_stun_menu_item,
             list_menu_item("Random Throw Tech %", training_settings, "p2_throw_tech", p2_throw_tech_chance, 5, "How often the dummy escapes a throw.\nRolled once per throw, not per frame - a roll every frame would come out as\n100% whatever this said, which is what Random Guard Action % used to do.\n0% leaves the throw alone."),
             -- GRAB MASHING (grabMashing.lua, user 2026-10-15). Off by default.
-            list_menu_item("Grab Mashing", training_settings, "grab_mashing", { "Off", "Normal", "Fast", "Fastest" }, 1, "Makes the dummy mash directions and buttons while it grabs or is grabbed,\nin the grabs that take mashing. Normal and Fast use preset rhythms.\nFastest makes a new direction press and a new button press every Tick:\nthe most the game counts, not the fastest escape (it subtracts at random).\nNot while you control P2, a recording plays or records, or in the wizard.\nButtons are LP and LK only: medium and heavy ones can tech the throw."),
+            list_menu_item("Grab Mashing", training_settings, "grab_mashing", { "Off", "Normal", "Fast", "Fastest" }, 1, "Makes the dummy mash while it grabs or is grabbed, or is in a hit it can\nmash out of: PPP + up and KKK + down by turns, never forward or back, so\nit does not tech the throw. Normal every 7 Ticks, Fast every 4, Fastest\nevery Tick: the most the game counts, not the fastest escape (random).\nNot while you control P2, a recording plays or records, or in the wizard."),
             with_warning(list_menu_item("Guard", training_settings, "guard", guard,1, "Push Block (All ...) guards like All Guard and pushes, at that strength,\nwithout needing Guard Action Type - so that stays free for what you test next.\nAuto Guard writes the game's own guard flag and blocks even unblockable setups.\nStand Block holds Back while an attack is in range, by the game's own proximity\ncheck - projectiles too. All Guard also picks the height each hit needs: down\nfor lows, standing for overheads and jump attacks, the Pose for everything else."), block_rate_warning),
             -- integer_menu_item("# Guard Frames", training_settings, "p2_refill_timer", 0, 20, false, 0, nil, "This timer controls when the life meter will be refilled.\nOccurs this many seconds after being hit"),
 
@@ -2047,7 +2234,12 @@ return {
         checkbox_menu_item("Show Dash Attack Cancel Trainer", training_settings, "display_dash_attack_cancel_trainer", false,"Shows the DISPLAYED frames between starting a dash\nand the start of an attack - not game Ticks.\nThis is printed under Dash ATK in the gui."),
         checkbox_menu_item("Show Attack Dash Gap Trainer", training_settings, "display_attack_dash_gap_trainer", false,"Shows the DISPLAYED frames between an attack recovering\nand the start of a dash - not game Ticks.\nThis is printed under Gap BTW ATK Dash in the gui."),
         checkbox_menu_item("Show Short Hop Counter (Sas)", training_settings, "display_short_hop_counter", false,"Shows how many short hops you.\nhave done in a row on Sasquatch"),
-        checkbox_menu_item("Show Bishamon UBK Trainer", training_settings, "display_bishamon_ubk_trainer", false,"Overlays onto P2 whether you are in a crouch or standing\n unblockable distance for Karame Dama or Bricks"),
+        -- Its line on the ground (shadowGuide.lua, v11.7.28) comes with it: no
+        -- switch of its own. A Shadow Guide row under it made the tab one row
+        -- longer and put Reset This Tab beside Seq. Command Trainer's long value,
+        -- and the row is kept here, after the other trainers (user, 2026-10-16:
+        -- "以前の位置にしてください", the row dropped rather than the overlap).
+        checkbox_menu_item("Show Bishamon UBK Trainer", training_settings, "display_bishamon_ubk_trainer", false,"While you play Bishamon: over P2, Both, Standing (blue) or Crouching\n(yellow) when the push box distance is unblockable for Karame Dama or\nBricks against that opponent, else No UBK. On the ground, a line in the\nsame colours shows where the tip of your shadow has to be."),
         reset_tab_item("Trainer"),
       }
     },

@@ -207,6 +207,23 @@ local function watch_round_start()
 
 end
 
+-- A STATE LOADED IS NOT A ROUND STARTING (user, 2026-10-16: "ステートセーブにより
+-- スタート位置を忘れるバグあり。そのせいでスタート位置に戻すショートカットが効かない").
+--
+-- A load puts both characters where the state had them, in one frame - which
+-- is what both_jumped above takes for a new round. So restoring a state
+-- (trainingState.lua, v11.7.28) replaced the round's start spacing with
+-- wherever the state was saved, and the centre arrangements went there.
+-- Called from the master's savestate load handler, every load: the next frame
+-- compares against where the load put them, and nothing is caught. A load
+-- into a round being set up (X 0) still arms the usual catch.
+local function after_load()
+  local a, b = getx(P1), getx(P2)
+  prev[P1], prev[P2] = a, b
+  still = 0
+  if a ~= 0 and b ~= 0 then armed = false end
+end
+
 -- EXCHANGE FIRST, THEN SLIDE.
 --
 -- Every arrangement is two places on the stage and a question of who stands in
@@ -699,6 +716,10 @@ positionModule = {
     figure_left = figure_left - 1
     return FIGURE[figure_shown]
   end,
+  -- A state was loaded (master's savestate.registerload).
+  ["after_load"] = after_load,
+  -- For analysis/test_position_hotkey.lua.
+  ["_start"] = function() return start_l, start_r, have_start end,
   ["registerBefore"] = function()
     -- Ahead of everything else: a restore in progress owns both characters and
     -- the camera until it lands, and it has to run whatever else is going on.

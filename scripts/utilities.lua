@@ -341,6 +341,18 @@ function load_training_data()
 		end
 		training_settings.settings_version = 5
 	end
+	-- THE RECORDING SLOT BECAME THE PLAYBACK SLOT, AND LOST "LAST RECORDING"
+	-- (v11.7.28; user, 2026-10-16: "推奨の整理で"). It was an index into menu.lua's
+	-- recording_slot with Last Recording first (1) and Slot 1..5 after (2..6).
+	-- Nothing writes last_recording.mis any more - Volume Up no longer records -
+	-- so the list is Slot 1..5 alone and the index moves down by one.
+	--   1 (Last Recording) -> 1 (Slot 1)      2..6 -> 1..5
+	if _file_version < 6 then
+		local _r = tonumber(training_settings.recording_slot) or 1
+		if _r >= 2 and _r <= 6 then _r = _r - 1 else _r = 1 end
+		training_settings.recording_slot = _r
+		training_settings.settings_version = 6
+	end
 	-- restore_recordings()
 end
 function disable_taunts()

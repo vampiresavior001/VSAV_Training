@@ -8,7 +8,7 @@ English | [日本語](README.ja.md)
 
 **Make expert-level execution your training partner.** This training mode for Fightcade 2 / FBNeo lets you define dummy actions with precise internal-frame (Tick) timing to practice your defense and test your offense. Reproduce your opponent's actions precisely, then review your inputs and attack timing to find what to improve on your next attempt.
 
-This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.27.1**.
+This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.28**.
 
 **[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [Practice defense](#first-pb-drill) · [Test wake-up pressure](docs/PLAYER_MANUAL.en.md#wakeup-pressure-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 
@@ -69,7 +69,7 @@ The dummy performs the action you build here when something triggers it, such as
 
 | Goal | How to use the tool |
 |---|---|
-| **Use actions you can perform yourself** | [Recording Wizard](docs/PLAYER_MANUAL.en.md#05-recording) captures your inputs from start to finish, then lets you review and save the recording. Recording and playback use displayed frames |
+| **Use actions you can perform yourself** | During a match, `P1 Coin` starts a take and a second press plays it at once ([Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording)). To keep it in a slot, [Recording Wizard](docs/PLAYER_MANUAL.en.md#recording-wizard) captures your inputs from start to finish, then lets you review and save the recording. Recording and playback use displayed frames |
 | **Reproduce precise sequences** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
 | **Run several sequences at random** | [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns) saves sequences by name and picks one at random from those you select |
 
@@ -105,13 +105,13 @@ Use a short path without Japanese characters; spaces are fine. Before updating a
 | `Lua Hotkey 2` | Restore positions by holding a direction and pressing the hotkey | In `Dummy > Position`, use Left/Right to choose a layout. LP restores it again; HP also closes the menu |
 | `Lua Hotkey 3` | Toggle looping for recorded inputs | In `Recording > Looped Playback`, use Left/Right to switch between `yes` and `no` |
 | `Lua Hotkey 4` | Return to character select | Select `Game > Return to Character Select` and press Right or LP |
-| `Volume Up` | Start/stop standard recording | Open `Recording > Recording Wizard` with Right or LP, choose a slot and use automatic recording (see below) |
+| `Volume Up` | Save the state (press twice) / restore it (press once) | Save with `Recording > Save State` (Right or LP, then `Yes`). Restore with `Recording > Restore State` (the menu closes first) |
 | `Volume Down` | Start/stop playback | Select `Recording > Play Recording` and press Right or LP. Activate it again to stop |
-| `P1 Coin` | Switch which character you control during a match; choose a stage at character select | No alternative — **required** |
+| `P1 Coin` | During a match, start/finish a take (Quick Recording); with `Quick Recording = no`, switch which character you control. Choose a stage at character select | No alternative — **required** |
 
 Open the menu with `Lua Hotkey 1`. With a tab name selected, use Left/Right to switch tabs, then Up/Down to select an item. LP means light punch. `>` means “tab > item.”
 
-**To record through the menu:** choose a slot in the wizard, release all inputs, then start moving to begin recording. Finish your action and release the controls. Recording ends automatically after about two seconds of no input while the dummy is free to act. On the confirmation screen, select the save option and press LP. Use `Volume Up` if you want to start and stop recording manually.
+**To record through the menu:** choose a slot in the wizard, release all inputs, then start moving to begin recording. Finish your action and release the controls. Recording ends automatically after about two seconds of no input while the dummy is free to act. On the confirmation screen, select the save option and press LP. Use `P1 Coin` if you want to decide when recording starts and stops ([Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording)).
 
 Recording's `Looped Playback` and Action Steps' `Loop Steps` are separate settings. See the [recording instructions](docs/PLAYER_MANUAL.en.md#05-recording) for details.
 

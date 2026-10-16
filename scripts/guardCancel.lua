@@ -5381,6 +5381,44 @@ memory.registerexec(0x02211A, function()
 			seq_held_btn = nil
 			seq_held_btn_until = nil
 			local _i = _s0.current_frame or 1
+			-- A DASH AIMED AT THE END OF THE DUMMY'S OWN MOVE (seq_free_aim, set
+			-- by the runner's Auto (After) for a ground dash; user, 2026-10-16:
+			-- "最速ダッシュは欲しいです"). Its run-up went in while the move ended;
+			-- its last tap waits here, on the neutral in front of it, for the
+			-- dummy to be free - read on this tick, so free and the press are the
+			-- same tick (see above). Then the game's recogniser decides, as on a
+			-- landing below: on its last step and alive, press; gone, enter the
+			-- motion again from the top - a plain After dash, as before.
+			--
+			-- IT WAITS FOR FREE, HOWEVER LONG. A first version gave up after 60
+			-- passes and pressed: on a Big Branch that went on for 95 ticks
+			-- past the aim, the last tap, the cancel's back and the next step's
+			-- MK all went into the move, and nothing came out after it
+			-- (archive v11.7.28_12). Waiting costs nothing - free, the
+			-- recogniser is long gone and the motion is entered again. Only a
+			-- hit ($05) drops the aim, and a cap far past any move (600
+			-- passes) keeps a dummy that never comes free from holding it.
+			if _s0.seq_free_aim and _i == #_s0.sequence and (_s0.tick_held or 0) == 0 then
+				local _R = actionSequenceRunnerModule
+				local _rec = _R.dash_recognizer and _R.dash_recognizer(_s0.sequence)
+				_s0.aim_wait = (_s0.aim_wait or 0) + 1
+				if _rec == nil or _s0.aim_wait > 600 or memory.readbyte(0xFF8805) ~= 0 then
+					_s0.seq_free_aim = nil
+				elseif not _R.dummy_free_now() then
+					return
+				else
+					local _st = memory.readbyte(_rec)
+					local _tm = memory.readbyte(_rec + 4)
+					if _st == 0 then
+						_s0.seq_free_aim = nil
+						_s0.current_frame = 1
+						_s0.tick_held = 0
+						_i = 1
+					elseif not (_st == 4 and _tm >= 2) then
+						return
+					end
+				end
+			end
 			-- THE LAST PRESS WAITS FOR THE REAL TOUCHDOWN - BUT NOT FOREVER.
 			--
 			-- A landing step is committed lead ticks early so its final entry
@@ -8065,9 +8103,22 @@ local function guardCancelCheck(run_dummy_input, macroLua_funcs)
 	-- the same clean-up for pending_input_sequence.
 	-- owns(): Action Steps / Patterns, or a Specified guard action whose
 	-- Random Start Wait is still queued there (rsw_defer).
+	-- NOT match_begun (v11.7.28; user, 2026-10-16: "ブランチの後の最速ダッシュがでない").
+	-- It needs both players' $1 at 1, and a hit can clear one of them in the
+	-- middle of a match: the hit type 0x24 init's airborne branch clears the
+	-- one hit's $1 at 0240EC (Big Branch), as a transformation does. The
+	-- dummy's own Reversal steps - dash, Big Branch, dash, MK on Sasquatch -
+	-- lost the last two the moment the Branch connected, and only when it did
+	-- (invuln_log, archive v11.7.28_10: free on the ground from tick 6303, no
+	-- input after it; the whiffed Branch at 6675 went on to its dash).
+	-- globals.match_running is the master's test (either player active and
+	-- 0xFF8009 in-match): it holds through those and still ends at the select
+	-- screen - the same question the runner's own match_live asks before every
+	-- pass. Missing (the offline tests), it reads as live.
+	local _live = globals.match_running == nil or globals.match_running() == true
 	if not actionSequenceRunnerModule.owns(globals.dummy.guard_action)
 	   or globals.game_state == nil
-	   or not globals.game_state.match_begun then
+	   or not _live then
 		actionSequenceRunnerModule.cancel()
 	end
 	-- A Character Specific poke waiting out its Random Start Wait belongs to

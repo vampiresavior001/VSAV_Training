@@ -116,22 +116,29 @@ local function draw_rec()
 	end
 	local recording = globals.macroLua.recording
 	local playing = globals.macroLua.playing
-	local slot = globals.options.recording_slot - 1
+	-- The Playback Slot, 1..5 (v11.7.28; it was 2..6 behind Last Recording).
+	local slot = globals.options.recording_slot
+	-- The quick take (quickRecording.lua) is not a numbered slot: its own name
+	-- while it records or plays, not the menu's slot it has nothing to do with.
+	local name = "Slot " .. slot
+	local _qr = globals.quickRecording
+	local _qp = globals.macroLua.quick_playing
+	if (_qr ~= nil and _qr.recording()) or (_qp ~= nil and _qp()) then name = "Quick" end
 
 	mid_width =  23
 	mid_height = 38
 	if recording and playing then
 		gui.rect(mid_width - 2, mid_height - 1, mid_width + 125, mid_height + 7, "#ff0000")
-		gui.text( mid_width, mid_height, "Slot "..slot..": Recording While Playing")
+		gui.text( mid_width, mid_height, name..": Recording While Playing")
 	elseif recording == true and playing ~= true then
 		gui.rect(mid_width - 2, mid_height - 1, mid_width + 68, mid_height + 7, "#ff0000")
-		gui.text( mid_width, mid_height, "Slot "..slot..": Recording")
+		gui.text( mid_width, mid_height, name..": Recording")
 	elseif recording ~= true and playing == true then 
 		gui.rect(mid_width - 2, mid_height - 1, mid_width + 65, mid_height + 7, "#00ff00")
-		gui.text( mid_width, mid_height, "Slot "..slot..": Playing")
+		gui.text( mid_width, mid_height, name..": Playing")
 	elseif recording ~= true and playing ~= true then
 		gui.rect(mid_width - 2, mid_height - 1, mid_width + 65, mid_height + 7, "#000000")
-		gui.text( mid_width, mid_height, "Slot "..slot..": Paused")
+		gui.text( mid_width, mid_height, name..": Paused")
 	end 
 end
 
@@ -1175,7 +1182,16 @@ local function draw_bishamon_ubk_trainer()
 		local bish_ubk_distance_object = globals.get_bishamon_ubk_ranges_by_char(0xFF8800)
 		local distance = globals.dummy.distance_between_players
 		local pushes = globals.pushboxes
-		if not bish_ubk_distance_object or not distance then
+		-- THE SAMPLE THE BOXES ARE DRAWN FROM (v11.7.28, shadowGuide.lua): the
+		-- distance and the Shadow Guide's line are this frame's, the same pair
+		-- of push boxes, told apart by base. globals.pushboxes is a frame
+		-- older and stays the fallback.
+		local sg = globals.shadowGuide
+		local drawn = globals.hitboxes ~= nil and globals.hitboxes.drawnPlayers ~= nil and globals.hitboxes.drawnPlayers() or nil
+		if sg ~= nil and drawn ~= nil then
+			distance = sg.distance(drawn[0xFF8400], drawn[0xFF8800]) or distance
+		end
+		if not bish_ubk_distance_object or not distance or not pushes or not pushes.p2 then
 			return
 		end
 		-- {
@@ -1193,38 +1209,20 @@ local function draw_bishamon_ubk_trainer()
 		midpt_x = pushes.p2.left + ((pushes.p2.right - pushes.p2.left) / 2) - 18
 		midpt_y = pushes.p2.top + ((pushes.p2.bottom - pushes.p2.top) / 2) - 10
 
-		if
-			bish_ubk_distance_object.overlapRange and
-			bish_ubk_distance_object.overlapRange.startDist and  
-			bish_ubk_distance_object.overlapRange.endDist and  
-			distance >= bish_ubk_distance_object.overlapRange.startDist and
-			distance <= bish_ubk_distance_object.overlapRange.endDist   
-		then
-			gui.text(midpt_x, midpt_y,  "Both", "green")
-			return
+		-- Both, then Standing, then Crouching, else No UBK (shadowGuide.classify,
+		-- the line's own order). The colours are the line's: Standing blue and
+		-- Crouching yellow since v11.7.28, where all three were green, so the
+		-- word and the line under your shadow say the same (design
+		-- UBK_SHADOW_GUIDE_DESIGN, section 5).
+		local class = sg ~= nil and sg.classify(distance, bish_ubk_distance_object) or nil
+		if class ~= nil then
+			gui.text(midpt_x, midpt_y, sg.WORD[class], sg.COLOR[class])
 		end
-
-		if 
-			bish_ubk_distance_object.standingDist and
-			bish_ubk_distance_object.standingDist.startDist and  
-			bish_ubk_distance_object.standingDist.endDist and  
-			distance >= bish_ubk_distance_object.standingDist.startDist and
-			distance <= bish_ubk_distance_object.standingDist.endDist  
-		then
-			gui.text(midpt_x, midpt_y, "Standing", "green")
-			return
+		if sg ~= nil then
+			local plan, why = nil, "no sample"
+			if drawn ~= nil then plan, why = sg.plan(drawn[0xFF8400], drawn[0xFF8800], bish_ubk_distance_object) end
+			sg.draw(plan, why, midpt_x, midpt_y + 10)
 		end
-		if
-			bish_ubk_distance_object.crouchingDist and  
-			bish_ubk_distance_object.crouchingDist.startDist and  
-			bish_ubk_distance_object.crouchingDist.endDist and  
-			distance >= bish_ubk_distance_object.crouchingDist.startDist and
-			distance <= bish_ubk_distance_object.crouchingDist.endDist   
-		then
-				gui.text(midpt_x, midpt_y,  "Crouching", "green")
-			return
-		end
-		gui.text(midpt_x, midpt_y,  "No UBK", "red")
 	end
 end
 

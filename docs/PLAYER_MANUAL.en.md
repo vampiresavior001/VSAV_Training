@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.27.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.28 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -20,7 +20,7 @@ This fork controls dummy inputs on internal frames (Ticks; see [11.1](#ticks-and
 
 Action Steps builds on this control to define actions in internal frames. It supports individual responses, strings and complex combos, including definitions that can complete infinite combos for Bulleta (B.B. Hood) or Bishamon. Repeat these sequences to test your responses against more demanding offense.
 
-Recording and playback operate in displayed frames; use Action Steps for drills that need Tick-level timing ([Section 5](#05-recording)). Recording Wizard, added in this fork, makes it easy to capture an input sequence from start to finish.
+Recording and playback operate in displayed frames; use Action Steps for drills that need Tick-level timing ([Section 5](#05-recording)). This fork adds Quick Recording, which records with `P1 Coin` and plays the take back on the spot, and Recording Wizard, which makes it easy to capture an input sequence from start to finish.
 
 For PB, you can check whether you delayed your input while still fitting six presses inside the window. For GC, you can see which inputs the game accepted and where you were late. For air guarding, you can see whether an interruptible gap existed, whether your press was well timed and who could act first after landing. This fork combines accurate dummy actions with detailed feedback on your response.
 
@@ -30,7 +30,7 @@ For PB, you can check whether you delayed your input while still fitting six pre
 |---|---|---|
 | Counter actions and reversals | Specified inputs and character-specific move activation, with limitations on earliest timing at turbo speed and delays from entering motions | Input control in internal frames, with improved wake-up, post-block and landing timing; the start and the button press can also be varied at random each time |
 | Move data | Frame Data uses displayed frames, giving unstable measurements at turbo speeds | Tick Data measures internal frames, with startup, active time, recovery and advantage conventions aligned with the frame data tables ([11.2](#tick-data)) |
-| Building dummy behavior | Recording playback and individual counter actions | Recording Wizard simplifies recording; Action Steps defines Tick-based sequences, and Action Patterns saves, selects and shares them |
+| Building dummy behavior | Recording playback and individual counter actions | Record with Coin and play it back at once (Quick Recording); Recording Wizard simplifies recording; Action Steps defines Tick-based sequences, and Action Patterns saves, selects and shares them |
 | PB practice | Input counter and success/failure statistics | Tick-by-Tick window history, simultaneous presses, late inputs and counts that include presses after activation; PB Stats shows averages and the success rate |
 | GC practice | GC window in the input viewer | Tracks accepted commands, input intervals, expiry and contact during guard-pose persistence |
 | Air-guard analysis | Frame Trap and Jump In readouts, among others | Dedicated Air Guard Gaps for gaps in air chains, actual interrupts, guard timing and landing advantage |
@@ -122,7 +122,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | Goal | Feature | Where to start |
 |---|---|---|
 | Make the dummy challenge on wake-up or after blocking | Individual counter actions, Action Steps | `Dummy > Guard Action Type` |
-| Repeat offense seen in matches | Recording and looping | `Recording > Recording Wizard` |
+| Repeat offense seen in matches | Recording and looping | `P1 Coin` ([5.1](#quick-recording)), `Recording > Recording Wizard` |
 | Specify a dash into an attack precisely | Action Steps | [Section 6](#06-steps) |
 | Randomize several offensive sequences | Recording slots, Action Patterns | [Section 5](#05-recording), [Section 7](#07-patterns) |
 
@@ -214,13 +214,13 @@ For a fresh installation, use a short path without Japanese characters to avoid 
 | `Lua Hotkey 2` | Restore positions by holding a direction and pressing the hotkey | In `Dummy > Position`, use Left/Right to choose a layout. LP restores it again; HP also closes the menu |
 | `Lua Hotkey 3` | Toggle looping for recorded inputs | In `Recording > Looped Playback`, use Left/Right to switch between `yes` and `no` |
 | `Lua Hotkey 4` | Return to character select | Select `Game > Return to Character Select` and press Right or LP |
-| `Volume Up` | Start/stop standard recording | Open `Recording > Recording Wizard` with Right or LP, choose a slot and use automatic recording (see below) |
+| `Volume Up` | Save the state (press twice) / restore it (press once) | Save with `Recording > Save State` (Right or LP, then `Yes`). Restore with `Recording > Restore State` (the menu closes first) |
 | `Volume Down` | Start/stop playback | Select `Recording > Play Recording` and press Right or LP. Activate it again to stop |
-| `P1 Coin` | Switch which character you control during a match; choose a stage at character select | No alternative — **required** |
+| `P1 Coin` | During a match, start/finish a take (Quick Recording); with `Quick Recording = no`, switch which character you control. Choose a stage at character select | No alternative — **required** |
 
 Open the menu with `Lua Hotkey 1`. With a tab name selected, use Left/Right to switch tabs, then Up/Down to select an item. LP means light punch. `>` means “tab > item.”
 
-**To record through the menu:** choose a slot in the wizard, release all inputs, then start moving to begin recording. Finish your action and release the controls. Recording ends automatically after about two seconds of no input while the dummy is free to act. On the confirmation screen, select the save option and press LP. Use `Volume Up` if you want to start and stop recording manually.
+**To record through the menu:** choose a slot in the wizard, release all inputs, then start moving to begin recording. Finish your action and release the controls. Recording ends automatically after about two seconds of no input while the dummy is free to act. On the confirmation screen, select the save option and press LP. Use `P1 Coin` if you want to decide when recording starts and stops ([5.1](#quick-recording)).
 
 Recording's `Looped Playback` and Action Steps' `Loop Steps` are separate settings. See the [recording instructions](#05-recording) for details.
 
@@ -261,12 +261,18 @@ An indented row is a setting of the nearest less-indented row above it, its pare
 
 `Reset This Tab` on `Display`, `Trainer` and `Analysis` resets all settings on that tab. A confirmation dialog opens with `Cancel` selected. This also resets any child settings hidden because their parent setting is OFF.
 
+**While the menu is open during a match, the game stands still.** Characters, projectiles, the round timer and stun do not advance; closing the menu carries on from there. The music keeps playing.
+
+- Only the game's own processing is stopped, not FBNeo, so the menu still works from an arcade stick or controller.
+- While a position reset (`Dummy > Position` and the like) is moving the characters, the game runs until they are in place, then stands again.
+- `Recording > Save State` from the menu saves the scene as it stands ([5.5](#save-state)).
+
 ### 2.2 Controlled side and character select
 
-- During a match, `P1 Coin` switches which character you control.
-- You cannot switch which character you control during recording playback. Stop playback first.
+- During a match, `P1 Coin` hands you the dummy (P2) and starts recording. Press it again to finish: you are back on P1 and the take plays ([5.1](#quick-recording)).
+- With `Quick Recording = no`, `P1 Coin` only switches which character you control. In that case you cannot switch during recording playback; stop playback first.
 - Use `Lua Hotkey 4` or `Game > Return to Character Select` to choose characters again.
-- Returning to character select stops playback and clears the match's recording savestate, input history and previous PB/GC readouts.
+- Returning to character select stops playback and clears the saved state ([5.5](#save-state)), input history and previous PB/GC readouts.
 
 ### 2.3 Quickly restore positions
 
@@ -568,35 +574,44 @@ Building an action does not start it; it starts when a trigger comes. To repeat 
 | `Pose` | Direction held normally: `None`, crouching, forward/back or jumping directions |
 | `Wakeup` | Movement on recovery from knockdown: `None`, `Towards`, `Away` or random choices |
 | `Random Throw Tech %` | Throw-tech probability: `0% / 25% / 50% / 75% / 100%` |
-| `Grab Mashing` | Mashing while grabbing or grabbed: `Off / Normal / Fast / Fastest` |
+| `Grab Mashing` | Mashing while grabbing or grabbed, and in hits that mashing shortens: `Off / Normal / Fast / Fastest` |
 | `Guard` | Blocking method |
 | `Random Guard %` | Probability of blocking with the applicable guard methods: `0% / 25% / 50% / 75% / 100%` |
 
 `Random Throw Tech %` defaults to `100%`. Set it to `0%` when examining throws without automatic techs.
 
 <a id="grab-mashing"></a>
-**`Grab Mashing` recreates an opponent who mashes during a grab.** Use it to check a grab's damage or how long an escape takes. It works with the dummy grabbing or being grabbed.
+**`Grab Mashing` recreates an opponent who mashes.** Use it to check a grab's damage, how long an escape takes, or how long a hit that mashing shortens lasts. It works with the dummy grabbing, being grabbed, or taking such a hit.
 
-Select it at `Dummy > Grab Mashing` (default `Off`). It works only in grabs where the game reads mashing (the routine was confirmed through ROM analysis); ordinary throws and hitstun are not covered.
+Select it at `Dummy > Grab Mashing` (default `Off`). It works only where the game reads mashing. ROM analysis confirmed three routines that do:
+
+- Grabs: the escape of the one grabbed, and the extra input of the one grabbing
+- A routine that takes time off a hit: special hit reactions, such as from projectiles
+- A routine that plays a hit reaction's motion further: special hit reactions as well
+
+Ordinary throws and ordinary hitstun are not covered. In special hit reactions it has been confirmed to work against Demitri's Chaos Flare, Bishamon's Karame Dama, Sasquatch's Big Branch, Aulbath's Water Jail and Q-Bee's `QJ` (developer's recordings). Aulbath's poison gas is not shortened by mashing: in the developer's recordings, neither routine that reads mashing ran during its hit reaction, and the dummy does not mash there. Other moves are not checked yet.
 
 | Value | Input |
 |---|---|
-| `Normal` | A preset rhythm: the direction changes every 4 Ticks, the button (LP or LK) every 6 |
-| `Fast` | A preset rhythm: the direction changes every 3 Ticks, the button (LP or LK) every 4 |
-| `Fastest` | A new direction press and a new button press (LP or LK) every Tick |
+| `Normal` | Switches between PPP + up and KKK + down every 7 Ticks |
+| `Fast` | Switches between PPP + up and KKK + down every 4 Ticks |
+| `Fastest` | Switches between PPP + up and KKK + down every Tick |
 
 - `Analysis > Show Mash Timer` shows the remaining time above the grabbing character.
 - It does nothing while you control P2, while a recording plays or is being made, or during the Recording Wizard.
 - When the dummy is grabbed, previously queued counteractions (Action Steps, Specified and so on) are canceled, so an old one does not come out after it is let go.
 - When the dummy grabs, its own action keeps running; only its input during the grab is replaced.
+- In a special hit reaction, queued counteractions are kept. While a counteraction's input for getting out is being sent, or Action Steps are still to come, mashing pauses and the counteraction goes first.
 - The throw-tech input from `Random Throw Tech %` is also replaced by the mashing during the grab.
-- Mashing starts once the grab is detected, so it misses the grab's first check.
+- Mashing starts once the grab or hit is detected, so it misses the first check.
 
 <details>
 <summary>How the inputs are chosen</summary>
 
-- `Fastest` gives the most presses the game counts. The grab's remaining time goes down by random amounts, so it is not always the fastest escape. Pressing several buttons at once does not count more.
-- The buttons are LP and LK only. A medium or heavy button pressed with a direction can tech the grab. The game counts a press the same whatever its strength, so light buttons alone lose nothing.
+- `Fastest` gives the most presses the game counts. The grab's remaining time goes down by random amounts, so it is not always the fastest escape.
+- The directions are up and down only. Forward or back pressed with a medium or heavy button can tech the grab.
+- Each time the game checks, it counts one new direction press and one new button press. Three buttons at once count the same as one.
+- The amount taken each time is random, from tables in the ROM. For grabs it averages 1.66 for a direction and for a button. For the time left in a special hit reaction it averages 4.25 for a direction and 7.09 for a button, so buttons take more.
 
 </details>
 
@@ -710,7 +725,8 @@ Choose how to prepare and manage the dummy's actions based on your goal.
 | Goal | What to use |
 |---|---|
 | Start practicing with a ready-made sequence | [Import an included Action Pattern](#sasquatch-pb-tutorial) |
-| Reproduce actions you can perform yourself | Record your inputs with Recording Wizard |
+| Have the dummy do something you just did, right away | Record with `P1 Coin` ([5.1](#quick-recording)) |
+| Keep actions you can perform yourself in slots and switch between them | Record with Recording Wizard ([5.2](#recording-wizard)) |
 | Build a sequence by specifying actions and timing | [Action Steps](#06-steps) |
 | Save and manage multiple sequences, then run them at random | [Action Patterns](#07-patterns) |
 
@@ -720,9 +736,35 @@ A recording stores gameplay inputs for replay, not video.
 
 Recording and playback operate in displayed frames, so they do not reproduce input timing with Tick-level precision. Use Action Steps for drills that require precise internal-frame timing, especially at turbo speeds.
 
-### 5.1 Record with Recording Wizard
+<a id="quick-recording"></a>
+### 5.1 Record with Coin (Quick Recording)
 
-Recording Wizard, added in this fork, captures an input sequence from start to finish automatically. It saves you starting and ending the recording yourself; the recording itself is in displayed frames, as with standard recording.
+**Press `P1 Coin` to record what you want the dummy to do, and practice against it right away.** It is on by default (`Recording > Quick Recording = yes`).
+
+1. During a match, press `P1 Coin`. Any dummy playback or planned counter stops, control moves to P2 (the dummy) and recording begins.
+2. Perform the action you want the dummy to do.
+3. Press `P1 Coin` again. Recording ends, you are back on P1 and the take plays from where things stand.
+
+- `Looped Playback`, `Random Start Wait` and `Reset Distance Each Loop` apply as they do to normal playback.
+- Pressing `P1 Coin` during playback stops it and starts a new take. `Volume Down` during playback stops it (while nothing plays, `Volume Down` plays the `Playback Slot` slot).
+- The take is kept in a place of its own for each dummy character. It does not overwrite `Slot 1`–`Slot 5`.
+- With `Auto Trim = yes` (default), the time before the first input and after the last input is cut. `Reset Distance Each Loop` returns to the spacing at the moment of the first input. Waits and holds in the middle are kept.
+- The `P1 Coin` presses that start and finish a take are not recorded. A take with no input is not saved, and the previous one stays.
+- If, during a take, you set `Quick Recording = no`, change the dummy character, start Recording Wizard, the match ends or an emulator savestate is loaded, the take is discarded and you are back on P1.
+- While recording, the dummy's automatic actions such as guarding and counters are off.
+
+| Under `Quick Recording` | What it does |
+|---|---|
+| `Auto Trim` | Cuts the idle time before and after (default `yes`) |
+| `Play Quick Recording` | Plays the take. Activate again to stop |
+| `Copy to Slot` | Copies the take to `Slot 1`–`Slot 5`. In the window that opens, choose a slot with Up/Down and confirm with Right or LP (that slot's recording is replaced); Left goes back |
+
+With `Quick Recording = no`, `P1 Coin` only switches which character you control. Recording and playback are in displayed frames.
+
+<a id="recording-wizard"></a>
+### 5.2 Record with Recording Wizard
+
+Recording Wizard, added in this fork, captures an input sequence from start to finish automatically. It saves you starting and ending the recording yourself; the recording itself is in displayed frames, as with Quick Recording.
 
 1. Choose the desired dummy character as P2 and arrange the starting position.
 2. Open `Recording > Recording Wizard` with Right or LP.
@@ -735,10 +777,10 @@ Recording Wizard, added in this fork, captures an input sequence from start to f
 
 Saving returns to the slot list so you can record another action. `Lua Hotkey 1` cancels the wizard and discards the current unsaved take. On the confirmation screen, LP activates the selected option; if you moved the cursor, check the label before pressing it.
 
-### 5.2 Playback and looping
+### 5.3 Playback and looping
 
 1. Set `Use Random Recording Slot = no`.
-2. Select the saved slot under `Recording Slot`.
+2. Select the slot to play under `Playback Slot`.
 3. Activate `Play Recording` with Right or LP, or use `Volume Down`.
 4. To loop the recording, set `Looped Playback = yes`.
 5. Stop by activating `Play Recording` or pressing `Volume Down` again.
@@ -749,7 +791,7 @@ Use `Before / After` in `Loop Interval (Frames)` to adjust pauses. `After` waits
 
 `Reset Distance Each Loop = yes` restores recorded spacing each pass. It works with recordings made from v11.4.1 onward that contain distance information. Playback directions are also mirrored when sides switch, but this alone does not guarantee identical spacing or game state. With `Auto-Flip Inputs on Side Switch = no`, a switch during a playback is not mirrored ([10.F](#side-switch-os)).
 
-### 5.3 Randomize recordings
+### 5.4 Randomize recordings
 
 1. Save different actions in multiple slots.
 2. Set `Use Random Recording Slot = yes`.
@@ -758,11 +800,26 @@ Use `Before / After` in `Loop Interval (Frames)` to adjust pauses. `After` waits
 
 Enable at least one slot and make sure it contains a recording. With `Use Character Specific Slots = yes`, the slots are separate for each dummy character. This is why different recordings appear after changing characters.
 
-### 5.4 Standard recording and savestates
+<a id="save-state"></a>
+### 5.5 Save and restore a state (Volume Up)
 
-To record without the wizard, select the destination in `Recording Slot`. Use `P1 Coin` to control P2, press `Volume Up` to begin recording and press it again to finish. Switch control back to P1 before playback.
+**Press `Volume Up` twice in a row to save the current state. Press it once to return to the saved state a moment later (about 0.25 seconds).** Use it to practice from the same situation again and again.
 
-`Use Savestate Upon Recording` is an experimental feature that saves the state at the start of standard recording and restores it for playback. Use it when you need the whole situation restored, not just spacing. Savestate restoration takes precedence over `Reset Distance Each Loop`. Returning to character select discards that match's recording savestate.
+The menu has it too. During a match the game stands still while the menu is open, so the scene you stopped on can be saved.
+
+| Item | Controls |
+|---|---|
+| `Recording > Save State` | Right or LP opens a confirmation. Right or LP on `Yes` (selected first) saves; `No` or Left leaves it |
+| `Recording > Restore State` | Right or LP closes the menu, then returns to the saved state |
+
+- There is one saved state. Choosing characters again makes the previous one unusable (even if you pick the same pair). A state saved with other characters or at another game speed is not restored either.
+- Nothing is saved during recording playback, while Action Steps or Specified actions are still to come, or while Grab Mashing has the dummy grabbed. Saving partway through a playback is not supported yet.
+- Restoring first stops whatever is running, such as playback or Action Steps.
+- Neither saving nor restoring happens while recording, during Recording Wizard, with the Action Steps editor open, during a position move or outside a match.
+- Pressing `Volume Up` once with the menu open also closes the menu, then restores. With nothing saved, the menu stays open.
+- When nothing is saved or restored, the emulator's message line shows why.
+
+`Use Savestate Upon Recording` (save at the start of recording and restore on every playback), available up to v11.7.27, has been removed. `Volume Up` no longer starts recording. Record with `P1 Coin` ([5.1](#quick-recording)) or Recording Wizard ([5.2](#recording-wizard)).
 
 <a id="06-steps"></a>
 ## 6. Build actions with Action Steps
@@ -811,7 +868,7 @@ The extra wait is counted from the moment the Wait condition is met, whether it 
 | Display | Meaning |
 |---|---|
 | `Auto (Fastest)` | Earliest setting for step one |
-| `Auto (After)` | Starts command input once the dummy can act; no advance input, so the dash starts later than it could with advance input |
+| `Auto (After)` | Starts command input once the dummy can act. A ground dash after the dummy's own move on the ground is the exception: its input starts as the move ends and the dash comes out on the first free Tick (from the second time: how the move ends is learnt once, for this session). Other dashes (after being hit, in the air and so on) get no advance input, so they start later than they could |
 | `Auto (N)` | Uses the measured timing for this combination; N is that value |
 | `Auto (Landing)` | Can enter the motion before landing so the action comes out on the landing Tick |
 | `Auto (Rapid Fire)` | Rapid-fire cancels an applicable light attack; no hit required |
@@ -1645,7 +1702,23 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 | `Show Dash Attack Cancel Trainer` | Displayed frames from dash start to attack start |
 | `Show Attack Dash Gap Trainer` | Displayed frames from attack recovery to dash start |
 | `Show Short Hop Counter (Sas)` | Consecutive Sasquatch short hops |
-| `Show Bishamon UBK Trainer` | Standing/crouching unblockable-range aid on P2 for the supported Bishamon moves |
+| `Show Bishamon UBK Trainer` | Standing/crouching unblockable-range aid on P2 for the supported Bishamon moves, with a line on the ground for learning it from the shadows ([below](#bishamon-ubk)) |
+
+<a id="bishamon-ubk"></a>
+#### Learn Bishamon's unblockable spacing from the shadows
+
+**`Show Bishamon UBK Trainer`** (while you play Bishamon) shows above P2 whether the spacing is unblockable for Karame Dama or Bricks: `Both` against standing and crouching, `Standing` (blue) against a standing opponent, `Crouching` (yellow) against a crouching one, `No UBK` (red) for neither. The spacing is the distance between the facing edges of the two push boxes; the ranges are a table per opponent.
+
+With it comes a line on the ground, at your own shadow's height, where the shadow's edge facing the opponent has to be. It is there while you are still far away, so it shows how close to come. The colours match the words: blue standing, yellow crouching, green both. While the tip of your shadow is on the line, the line's ends turn white. Walking does not move the line; your shadow moves onto it. The line is placed from your shadow and push box while you stand, and stays there while you walk or attack. It moves when the opponent moves.
+
+1. Put the tip of your shadow on the line and look at the gap between the two shadows.
+2. Set `Show Bishamon UBK Trainer` to `no` (the words and the line go) and make the same gap from the shadows alone.
+3. Set it back to `yes` and check against the words and the line.
+
+- No other shadow is drawn; only the tip of yours crosses the line, once it is in range. What you learn is the two shadows, which stay when the aid is off.
+- It shows whether the spacing is in the table's range. Whether the unblockable actually worked is not checked.
+- Morrigan and Lilith have no range in the table, so there is no line. Q-Bee's standing and crouching ranges are for different moves, so they are not merged into green: blue (upper) and yellow (lower) are drawn as two lines.
+- No line is drawn while either character is in the air, has no shadow or has no push box. The words and the white ends follow the push box distance of each frame, so during a move they can disagree with the line.
 
 # Appendix
 
@@ -1703,6 +1776,7 @@ With Anakaris as the dummy, `Pit of Blame` offers `None / Normal / ES / Random`.
 | Settings, Action Steps and Action Patterns | `training_data/training_settings.json` |
 | Character-specific recordings | `scripts/macro/<character name>/slot_1.mis` through `slot_5.mis` |
 | Shared recordings | `scripts/macro/slot_1.mis` through `slot_5.mis` |
+| Takes recorded with Coin ([5.1](#quick-recording)) | `scripts/macro/<character name>/quick_recording.mis` (one per character) |
 | Last recording and other recording data | Under `scripts/macro`; back up the entire folder |
 | Patterns to share | Files created with Action Patterns Export |
 
@@ -1741,8 +1815,9 @@ When resetting settings for diagnosis, move the JSON aside instead of deleting i
 | Auto does not produce the expected move | `Not Measured`, direction/button, charge and air-action restrictions. Steps cannot force the game to accept an input it rejects |
 | Recording will not start | Release all inputs once in the wizard; check `Ready`, `Held` and P2 mappings |
 | Recording will not finish | It needs about two seconds with no input after the dummy's action has finished |
-| Recording cannot be found | Character-specific slots, selected character, Recording Slot and random candidates |
-| Coin will not switch control to P2 | Stop recording playback first |
+| Recording cannot be found | Character-specific slots, selected character, Playback Slot and random candidates. Play a Coin take with `Play Quick Recording`; put it in a slot with `Copy to Slot` |
+| You want Coin only to switch control to P2 | `Recording > Quick Recording = no`. With `no`, stop recording playback first |
+| `Volume Up` does not start recording | From v11.7.28, `Volume Up` saves and restores the state. Record with `P1 Coin` or Recording Wizard ([Section 5](#05-recording)) |
 | An option is missing | Parent settings, Guard Action Type and character selection can hide it |
 | GC Command Trainer or Seq. Command Trainer does not appear | Whether `Trainer > Chain Trainer` is Off; neither is drawn while it is on ([11.7](#chain-trainer)) |
 | Numbers differ from a guide | Ticks versus displayed frames, speed, single move versus chain, measured side, super flash and projectile measurement limits |
@@ -1780,7 +1855,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-11. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.27.1. On 2026-10-15 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.28. On 2026-10-16 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

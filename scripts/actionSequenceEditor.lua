@@ -787,7 +787,9 @@ end
 -- under the list where the cursor is.
 local WAIT_CHOICES = {
 	{ label = "After",       timing = nil,
-	  note = "After: waits until the dummy can act, then starts the inputs. None go in early." },
+	  -- v11.7.28: a ground dash behind the dummy's own move is the exception
+	  -- (actionSequenceRunner, "A GROUND DASH AFTER THE DUMMY'S OWN MOVE").
+	  note = "After: starts once the dummy can act. A dash after its own move: as it ends." },
 	{ label = "Landing",     timing = TIMING_LANDING,
 	  note = "Landing: a motion goes in during the fall so its last input lands on touchdown." },
 	{ label = "Rapid",       timing = TIMING_RAPID,

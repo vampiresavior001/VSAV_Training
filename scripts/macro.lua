@@ -489,7 +489,11 @@ end
 local loop_pending = false
 local loop_gap = 0
 local loop_phase = "after"
-local loop_reload = false  -- load the savestate when the restart comes round
+local loop_reload = false  -- always false since v11.7.28: no state is loaded at a loop
+-- QUICK RECORDING (quickRecording.lua): a playback of the quick take keeps to
+-- that file through its loops, where playcontrol would pick the menu's slot.
+-- Dropped when the playback is stopped.
+local slot_override = nil
 -- Do not let a pending loop restart immediately when the training menu closes.
 -- registerBefore may run more than once per displayed frame, so the deadline is
 -- expressed in emu.framecount() rather than decremented per callback.
@@ -934,6 +938,7 @@ function stop_macro_playback()
 	loop_pending = false
 	loop_reload = false
 	start_wait = nil
+	slot_override = nil
 end
 function start_macro_playback()
 		playing = true
@@ -946,18 +951,22 @@ local function playcontrol(silent)
 	if start_wait ~= nil then
 		start_wait = nil
 		inputstream = nil
+		slot_override = nil
 		if not silent then print("Canceled playback before it started.") print() end
 		return
 	end
 	local slot
-	if globals.options.random_playback then 
+	if slot_override ~= nil and not playing then
+		slot = slot_override
+	elseif globals.options.random_playback then
 		slot = get_playback_file(true)
 		-- Defensive: this is the only arithmetic on the returned table, and a
 		-- crash here takes the whole script down mid-match.
 		if type(slot) ~= "table" or type(slot.num) ~= "number" then
 			slot = get_playback_file()
 		else
-			globals.options.recording_slot = slot.num + 1
+			-- The Playback Slot's index is the slot's number (v11.7.28).
+			globals.options.recording_slot = slot.num
 			slot = slot.slot
 		end
 	else
@@ -965,6 +974,7 @@ local function playcontrol(silent)
 	end
 	if not playing then
 		if not parse(slot) or warning("Macro is zero frames long.", macrosize == 0) or dumpinputstream(dumpmode) then
+			slot_override = nil
 			return
 		end
 		local _w = rsw_roll()
@@ -980,9 +990,10 @@ local function playcontrol(silent)
 		playing = true
 		playback_serial = playback_serial + 1
 		framediff = emu.framecount()
-	else 
+	else
 		playing = false
 		inputstream = nil
+		slot_override = nil
 		if wait.duration then
 			print("Stopped at wait duration = " .. wait.duration) print()
 			wait = {}
@@ -1063,6 +1074,157 @@ function cancel_temporary_recording()
 	return true
 end
 
+-- QUICK RECORDING (quickRecording.lua, v11.7.28; handoff RECORDING_STATE_DESIGN,
+-- sections 2 to 4). A take of its own, begun and ended with Coin, written to
+-- the dummy character's quick_recording.mis - never a numbered slot - and
+-- played back from there.
+--   * Start, Coin, Diagnostic and Reset are not part of a take: the Coin that
+--     begins and ends it would otherwise be in it, and played back.
+--   * Auto Trim cuts the frames before the first input and after the last
+--     (a direction or a button, either player). The facing and positions
+--     written into the header are the ones on the frame the first input came
+--     on, before it, so Reset Distance Each Loop puts the pair back where the
+--     take really began, not where Coin was pressed. Inputs in the middle,
+--     and holds, are kept.
+--   * Nothing played: the file is left as it was.
+local QUICK_NAME = "quick_recording.mis"
+local NON_PLAY = "[SC@~]"            -- Start, Coin, Diagnostic, Reset
+local quick_rec = nil                -- the take in progress: { trim, first, pos, facing, prev_pos, prev_facing }
+
+function quick_file()
+	local dir = (globals ~= nil and globals.dummy ~= nil and globals.dummy.p2_char) or ""
+	return dir .. "/" .. QUICK_NAME
+end
+
+function begin_quick_recording(trim)
+	if recording then return false end
+	recording = true
+	recframe = 0
+	recinputstream = {}
+	rec_facing_at_start = memory.readbyte(P2_FACING_ADDR)
+	rec_pos_at_start = sample_positions()
+	quick_rec = { trim = trim == true, prev_pos = rec_pos_at_start, prev_facing = rec_facing_at_start }
+	return true
+end
+
+-- One recorded frame of the quick take (registerAfter, right after it is
+-- stored): what is not play goes, and the first input's place is kept.
+local function quick_frame()
+	local q = quick_rec
+	if q == nil then return end
+	local fr = recinputstream[recframe]
+	local any = false
+	if fr ~= nil then
+		for p = 1, nplayers do
+			if fr[p] ~= nil then
+				fr[p] = fr[p]:gsub(NON_PLAY, "")
+				if fr[p] == "" then fr[p] = nil else any = true end
+			end
+		end
+		if not any then recinputstream[recframe] = nil end
+	end
+	if any and q.first == nil then
+		q.first, q.pos, q.facing = recframe, q.prev_pos, q.prev_facing
+	end
+	q.prev_pos = sample_positions()
+	q.prev_facing = memory.readbyte(P2_FACING_ADDR)
+end
+
+-- Ends the take. true and the frames written; false and "empty" when nothing
+-- was played (the old file stays).
+function finish_quick_recording()
+	if not recording or quick_rec == nil then return false, "not recording" end
+	local q = quick_rec
+	quick_rec = nil
+	recording = false
+	local last = 0
+	for f = 1, recframe do
+		local fr = recinputstream[f]
+		if fr ~= nil then
+			for p = 1, nplayers do if fr[p] ~= nil and fr[p] ~= "" then last = f end end
+		end
+	end
+	if last == 0 then
+		recframe = 0
+		recinputstream = {}
+		return false, "empty"
+	end
+	if q.trim then
+		local first = q.first or 1
+		local t = {}
+		for f = first, last do t[f - first + 1] = recinputstream[f] end
+		recinputstream = t
+		recframe = last - first + 1
+		if q.pos ~= nil then rec_pos_at_start = q.pos end
+		if q.facing ~= nil then rec_facing_at_start = q.facing end
+	end
+	local n = recframe
+	finalize(recinputstream, quick_file())
+	return true, n
+end
+
+-- Ends the take and writes nothing (the setting turned off, the character
+-- changed, the match ended).
+function cancel_quick_recording()
+	if quick_rec == nil then return false end
+	quick_rec = nil
+	recording = false
+	recframe = 0
+	recinputstream = {}
+	return true
+end
+
+function quick_recording_active() return quick_rec ~= nil end
+
+function quick_file_exists()
+	local f = io.open(path:gsub("\\", "/") .. quick_file(), "r")
+	if f == nil then return false end
+	f:close()
+	return true
+end
+
+-- Plays the quick take, through the same start as Volume Down: Looped
+-- Playback, the Random Start Wait, Reset Distance Each Loop apply as they do
+-- to a slot. Whatever plays is stopped first.
+function play_quick()
+	if recording then return false end
+	if playing or start_wait ~= nil or loop_pending then stop_macro_playback() end
+	inputstream = nil
+	if not quick_file_exists() then return false end
+	slot_override = quick_file()
+	playcontrol()
+	return playing or start_wait ~= nil
+end
+
+-- The quick take is what plays (or waits to start, or waits between loops).
+function quick_playing()
+	return slot_override ~= nil and (playing or start_wait ~= nil or loop_pending)
+end
+
+-- Everything that plays stops, the pass between loops included.
+function stop_all_playback()
+	stop_macro_playback()
+	inputstream = nil
+end
+
+-- Copies the quick take into a numbered slot for this dummy (1 to 5, picked on
+-- the menu row; none: the menu's Playback Slot) - the only way it reaches one.
+function copy_quick_to_slot(n)
+	local src = io.open(path:gsub("\\", "/") .. quick_file(), "r")
+	if src == nil then return false, "no quick recording" end
+	local text = src:read("*a")
+	src:close()
+	local dir = ""
+	if globals.options.use_character_specific_slots then dir = globals.dummy.p2_char end
+	local slot = (type(n) == "number" and n >= 1 and n <= 5) and ("slot_" .. n .. ".mis") or globals.dummy.recording_slot
+	local name = dir .. "/" .. slot
+	local dst = io.open(path:gsub("\\", "/") .. name, "w")
+	if dst == nil then return false, "cannot write " .. name end
+	dst:write(text)
+	dst:close()
+	return true, name
+end
+
 -- Play the temp recording once, for the wizard's confirmation pass. The
 -- user's own loop setting must not apply here: a looped preview would never
 -- end and the wizard would wait on it for good. The setting is put back by
@@ -1094,7 +1256,7 @@ end
 
 function get_recording_status()
 	return { recording = recording, playing = playing, frames = recframe, temp_name = WIZARD_TEMP_NAME,
-	         starting = (start_wait ~= nil) }
+	         starting = (start_wait ~= nil), loop_pending = loop_pending }
 end
 
 -- emu.registerexit(function() --Attempt to save if the script exits while recording
@@ -1156,6 +1318,7 @@ macroLuaModule = {
 					end
 				end
 			end
+			if quick_rec ~= nil then quick_frame() end
 		end
 
 		if playing or recording then
@@ -1247,26 +1410,18 @@ macroLuaModule = {
 					playcontrol(true)
 				end
 			else
-				-- NEVER load a state while a recording is running. registerLoad
-				-- feeds the loaded script data through bulletproof(), and a
-				-- state that predates the take has no recinputstream for it -
-				-- so bulletproof returns false and recording is switched off
-				-- mid-take. That is the wizard recording "stopping by itself"
-				-- with Use Savestate Upon Recording on: a loop happening to
-				-- come round during the take killed it.
-				-- Same match only - see the note in controller.lua.
-				local _cm = globals.controllerModule
-				local _state_ok = _cm ~= nil and _cm.recording_state_valid ~= nil
-				                  and _cm.recording_state_valid()
-				if loop_reload and not recording and _state_ok then
-					savestate.load("current_recording")
-				elseif globals.options.restore_recorded_position == true then
+				-- A loop loads no state (v11.7.28): Use Savestate Upon Recording is
+				-- gone, and a state is saved and restored by hand
+				-- (trainingState.lua). Loading one here could also end a take: a
+				-- state from before it has no recinputstream, and registerLoad's
+				-- bulletproof() then switched recording off mid-take - the wizard
+				-- recording "stopping by itself" with the setting on.
+				if globals.options.restore_recorded_position == true then
 					-- Put the two back at the distance the take was recorded
 					-- from, so a loop keeps meeting the dummy at the same
 					-- spacing instead of drifting apart over the passes. Files
 					-- written before the header carried it report nothing and
-					-- are left alone. Skipped when a savestate is in play - the
-					-- load already covers it.
+					-- are left alone.
 					restore_playback_pos()
 				end
 				loop_phase = "before"
@@ -1365,9 +1520,7 @@ macroLuaModule = {
 					loop_pending = true
 					loop_phase = "after"
 					loop_gap = globals.options.loop_interval_after_frames or 0
-					-- The load happens at the end of the wait, right before
-					-- playback, the way the setting describes.
-					loop_reload = (globals.options.use_recording_savestate == true)
+					loop_reload = false
 				end
 			end
 		end
@@ -1423,6 +1576,16 @@ macroLuaModule = {
 						return {}
 					end
 				end,
+				["begin_quick_recording"] = begin_quick_recording,
+				["finish_quick_recording"] = finish_quick_recording,
+				["cancel_quick_recording"] = cancel_quick_recording,
+				["quick_recording_active"] = quick_recording_active,
+				["quick_file"] = quick_file,
+				["quick_file_exists"] = quick_file_exists,
+				["play_quick"] = play_quick,
+				["quick_playing"] = quick_playing,
+				["stop_all_playback"] = stop_all_playback,
+				["copy_quick_to_slot"] = copy_quick_to_slot,
 				["begin_temporary_recording"] = begin_temporary_recording,
 				["stop_temporary_recording"] = stop_temporary_recording,
 				["cancel_temporary_recording"] = cancel_temporary_recording,

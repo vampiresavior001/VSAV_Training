@@ -3068,7 +3068,11 @@ iconfile     = "capcom-8.png"  --file containing the icons to be shown
 
 buffersize   = 12     --how many lines to show
 margin_p1x   = 0.1   --space from the top of the screen, in tiles, for player 1
-margin_p2x   = 3	 --for player 2
+-- 4, not 3: P2's column starts this many icons in from the right edge, and a
+-- line is its direction then its buttons. At 3 the fourth icon sat at x 384,
+-- off the screen, so Grab Mashing's PPP + up showed as up, LP, MP (user,
+-- 2026-10-16: "全体的にボタンが違うPPPとKKKのはず").
+margin_p2x   = 4	 --for player 2
 margin_y     = 4.5    --space from the left side of the screen, in tiles
 timeout      = 240    --how many idle frames until old lines are cleared on the next input
 screenwidth = 356

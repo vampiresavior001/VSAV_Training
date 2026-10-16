@@ -16,6 +16,8 @@ local default_training_settings = {
   counter_attack_random_upback = 1,
   enable_slot_3 = false,
   display_movelist = false,
+  -- The Playback Slot: 1..5 is Slot 1..5 (v11.7.28, settings_version 6; before,
+  -- 1 was Last Recording and the slots 2..6 - utilities.lua migrates).
   recording_slot = 1,
   random_playback = false,
   enable_slot_1 = false,
@@ -59,7 +61,7 @@ local default_training_settings = {
   counter_attack_button = 1,
   -- Bumped when a stored value changes meaning; utilities.lua migrates on
   -- load. 1 = pre-11.4 numbering of counter_attack_stick.
-  settings_version = 5,
+  settings_version = 6,
   counter_attack_stick = 1,
   delay_after = false,
   p1_reversal_list = 1,
@@ -80,6 +82,10 @@ local default_training_settings = {
   grab_mashing = 1,
   p2_block_chance = 1,
   looped_playback = false,
+  -- Quick Recording (quickRecording.lua): Coin begins and ends a take of its
+  -- own. Both on by default (handoff, 2026-10-15).
+  quick_recording = true,
+  quick_auto_trim = true,
   pb_type_rec = 1,   -- 1 is None; 0 was out of range for the list
   anak_projectile = 1,
   lei_lei_stun_item = 0,
@@ -120,6 +126,8 @@ local default_training_settings = {
   display_frame_trap_trainer = false,
   show_projectile_count_limiter = false,
   display_bishamon_ubk_trainer = false,
+  -- Use Savestate Upon Recording: gone in v11.7.28 (trainingState.lua). Kept so
+  -- an old settings file reads cleanly; nothing reads it.
   use_recording_savestate = false,
   -- Per-trigger action sequences, keyed "guard"/"counter"/"reversal". Written
   -- by the action sequence editor, which stores motions and buttons as the

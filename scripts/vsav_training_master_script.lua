@@ -105,6 +105,19 @@ local chainTrainerModule = require "./scripts/chainTrainer"
 -- Grab Mashing (Dummy tab): the dummy mashes inside a grab that reads it. Exec
 -- hooks, at start-up.
 local grabMashingModule  = require "./scripts/grabMashing"
+-- Quick Recording (Recording tab): Coin begins and ends a take of its own.
+-- controller.lua reaches it through globals.quickRecording.
+local quickRecordingModule = require "./scripts/quickRecording"
+-- Save / restore a state by hand (Volume Up; Recording tab). controller.lua
+-- reaches it through globals.trainingState.
+local trainingStateModule = require "./scripts/trainingState"
+-- Shadow Guide (Trainer > Show Bishamon UBK Trainer): cps2-hitboxes.lua samples
+-- the shadows through globals.shadowGuide, hud.lua draws the line. An exec hook
+-- for its check, at start-up.
+local shadowGuideModule  = require "./scripts/shadowGuide"
+-- The game stands still while the menu is open (gameFreeze.lua): exec hooks
+-- on the game's task manager, at start-up.
+local gameFreezeModule   = require "./scripts/gameFreeze"
 -- Auto-Flip Inputs on Side Switch (Dummy / Recording tabs). guardCancel,
 -- controller and actionSequenceRunner require it too; required here so it is
 -- loaded at start-up whatever loads first.
@@ -472,6 +485,8 @@ emu.registerstart(function()
 	chainLogModule.registerStart()
 	chainTrainerModule.registerStart()
 	grabMashingModule.registerStart()
+	shadowGuideModule.registerStart()
+	gameFreezeModule.registerStart()
 
 end)
 
@@ -532,6 +547,10 @@ emu.registerbefore(function()
     --     print(serialize(prev_frames))
 	-- end
 	gameStateModule.registerBefore()
+	-- First, ahead of every early return below: whether this frame stands
+	-- (gameFreeze.lua). Left to a later line, a character select reached with
+	-- the menu open would keep the last answer and stand for good.
+	gameFreezeModule.registerBefore()
 
 	-- THE CHARACTER SELECT STOPS THE LOOP (user, 2026-09-21).
 	--
@@ -561,6 +580,8 @@ emu.registerbefore(function()
 		-- and Tick Data clear themselves off the match already.
 		if not globals._select_cleared then
 			globals._select_cleared = true
+			-- A state saved before is the last session's (trainingState.lua).
+			trainingStateModule.new_session()
 			inpHistoryModule.clear()
 			vsavScriptModule.clear()
 			timersModule.clear()
@@ -686,6 +707,10 @@ emu.registerbefore(function()
 	globals.macroLua  = macroLuaModule.registerBefore()
 	globals.macroLua.setloop()
 	globals.recordingWizard = recordingWizardModule
+	globals.quickRecording = quickRecordingModule
+	globals.trainingState = trainingStateModule
+	globals.shadowGuide = shadowGuideModule
+	globals.hitboxes = cps2HitboxModule
 
 	if globals.options.display_pb_stats == false then
 		globals.total_pb_attempt_counter = {}
@@ -759,6 +784,9 @@ emu.registerbefore(function()
 				globals.recordingWizard.preview_flip ~= nil
 				and globals.recordingWizard.preview_flip())
 		end
+	elseif quickRecordingModule.recording() then
+		-- A quick take: your pad is P2's only input, as in the wizard. Nothing
+		-- of the dummy's own (Pose, Guard, Guard Action, autoguard, throw tech).
 	elseif globals.macroLua.playing == true then
 		-- Normal slot playback. Nothing records which side the take was made
 		-- from, so the standing convention is used: recordings are made with
@@ -855,6 +883,8 @@ end)
 
 
 emu.registerafter(function() --recording is done after the frame, not before, to catch input from playing macros
+	-- The menu's freeze: the Tick must not have moved (gameFreeze.lua).
+	gameFreezeModule.registerAfter()
 	-- Mute Idle Sounds' log: gathered in its exec hook, written here.
 	idleSoundModule.registerAfter()
 	invulnLogModule.registerAfter()
@@ -863,7 +893,19 @@ emu.registerafter(function() --recording is done after the frame, not before, to
 	chainLogModule.registerAfter()
 	chainTrainerModule.registerAfter()
 	grabMashingModule.registerAfter()
-	if globals.game_state.match_begun == false then
+	quickRecordingModule.registerAfter()
+	trainingStateModule.registerAfter()
+	shadowGuideModule.registerAfter()
+	-- THE SAME TEST AS THE OTHER TWO HOOKS (v11.7.28; user, 2026-10-16: "レコーディ
+	-- ングでブランチの後のコンボが入らない。レコードしたはずが再生時には再生しない").
+	-- match_begun alone, this left everything below out for every frame one
+	-- player's $1 was cleared - a hit reaction such as Big Branch's does it,
+	-- as a transformation does - and macroLua's registerAfter is where a take
+	-- records its frame: those frames were never written, the take came out
+	-- shorter than the play, and what followed the Branch played back early.
+	-- The frame hook (match_actually_running, above) and the gui hook already
+	-- go on through it; the hitbox sample and frame data below now do too.
+	if globals.game_state.match_begun == false and not match_actually_running() then
 		if globals == nil or globals.options == nil then
 			return
 		end
@@ -893,6 +935,10 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 	savestate.registerload(function(slot)
 		-- A loaded state is not the run that was going on (inputOrientation.lua).
 		inputOrientationModule.reset()
+		-- Nor a round starting: both characters jump at once, which position.lua
+		-- would take for one and forget the round's start spacing (user,
+		-- 2026-10-16, with Restore State).
+		if positionModule ~= nil and positionModule.after_load ~= nil then positionModule.after_load() end
 		globals.show_menu = false
 		globals.debounceStarted = nil
 		globals.controllerModule.enable_both_players()
@@ -908,6 +954,7 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 		commandTrainerModule.reset()
 		chainTrainerModule.reset()
 		grabMashingModule.reset("load")
+		quickRecordingModule.reset("load")
 		macroLuaModule.registerLoad(slot)
 		globals.dmg_calc.red_life = 0
 		globals.dmg_calc.white_life = 0

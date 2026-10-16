@@ -1973,6 +1973,96 @@ local function dummy_free(step)
 	end
 	return air_ready()
 end
+-- For guardCancel's walker (seq_free_aim below).
+function M.dummy_free_now() return dummy_free(nil) end
+
+-- TICKS UNTIL THE DUMMY'S ANIMATION ENDS, from the game's own cel list - the
+-- same walk as guardCancel's anim_ticks_left: $20 is what is left of this cel
+-- (027F70 takes one a tick), then each following cel's duration (+0, 24 bytes
+-- a cel) up to the one with bit 6 of its flag byte (+1), the last. nil when a
+-- cel jumps (bit 7) or no last cel is found.
+--
+-- In the LAST animation of the dummy's own move this is the time to free.
+-- Measured on Sasquatch's Big Branch (invuln_log, archive v11.7.28_10):
+-- whiffed, phase 04, the prediction equalled the ticks to free on all 16 ticks
+-- read; connected, phases 06 and 08 under one animation, it read one short on
+-- all 48. But a move can be several animations, and the end of the first is
+-- not the end of the move: the Branch's phase 02 ends into 04 or 06, and a
+-- run-up started there went in 95 ticks early (archive v11.7.28_12). So it is
+-- only used on an animation already seen to end in free - see FINAL below.
+-- Free itself is never taken from it - see seq_free_aim.
+function M.anim_ticks_left()
+	local p = memory.readdword(P2_BASE + 0x1C)
+	if p == nil or p < 0x1000 or p >= 0x400000 then return nil end
+	local left = memory.readbyte(P2_BASE + 0x20)
+	for _ = 1, 24 do
+		local flag = memory.readbyte(p + 1)
+		if flag >= 0x80 then return nil end
+		if flag % 0x80 >= 0x40 then return left end
+		p = p + 0x18
+		left = left + memory.readbyte(p)
+	end
+	return nil
+end
+
+-- WHICH ANIMATIONS END THE MOVE, AS SEEN THIS SESSION.
+--
+-- Keyed by the address of an animation's last cel (the one with bit 6): an
+-- animation that went on into another one while the dummy was still busy is
+-- false, one the dummy came out of free is true - false stays false, so one
+-- that only sometimes ends the move is never aimed at. Nothing is known about
+-- a move the first time it is seen, and its dash is the After dash it always
+-- was; from the second time on, it is aimed. The addresses are the ROM's, so
+-- characters do not collide.
+M.final_anim = {}
+local seen_last = nil
+local function last_cel_of_anim()
+	local p = memory.readdword(P2_BASE + 0x1C)
+	if p == nil or p < 0x1000 or p >= 0x400000 then return nil end
+	for _ = 1, 24 do
+		local flag = memory.readbyte(p + 1)
+		if flag >= 0x80 then return nil end
+		if flag % 0x80 >= 0x40 then return p end
+		p = p + 0x18
+	end
+	return nil
+end
+M.last_cel_of_anim = last_cel_of_anim
+-- Busy in a move of its own on the ground, hit stop or not.
+local function in_own_move()
+	if memory.readbyte(P2_BASE + 0x05) ~= 0 then return false end
+	if memory.readbyte(P2_BASE + 0x38) ~= 0 then return false end
+	local a = memory.readbyte(P2_BASE + 0x06)
+	return a ~= 0 and a ~= 0x04
+end
+-- Every pass of the tick hook, before anything is decided.
+function M.observe()
+	local cur = in_own_move() and last_cel_of_anim() or nil
+	if seen_last ~= nil then
+		if memory.readbyte(P2_BASE + 0x05) == 0 and memory.readbyte(P2_BASE + 0x38) == 0
+		   and memory.readbyte(P2_BASE + 0x06) == 0 then
+			if M.final_anim[seen_last] == nil then M.final_anim[seen_last] = true end
+			seen_last = nil
+			return
+		end
+		if cur ~= nil and cur ~= seen_last then
+			M.final_anim[seen_last] = false
+		end
+	end
+	seen_last = cur
+end
+
+-- In a move of its own, on the ground, nothing frozen: not hit or thrown ($05),
+-- not in the air ($38), no hit stop ($5C - the animation does not advance
+-- through it, so the count would be wrong), not free ($06 0) and not walking
+-- ($06 0x04, an animation that loops).
+local function own_move_on_ground()
+	if memory.readbyte(P2_BASE + 0x05) ~= 0 then return false end
+	if memory.readbyte(P2_BASE + 0x38) ~= 0 then return false end
+	if memory.readbyte(P2_BASE + 0x5C) ~= 0 then return false end
+	local a = memory.readbyte(P2_BASE + 0x06)
+	return a ~= 0 and a ~= 0x04
+end
 
 
 -- TOUCHDOWN, FROM THE CLOCK THE REVERSAL ARM ALREADY USES.
@@ -2142,6 +2232,9 @@ end
 
 local function service_body(defender)
 	local now = memory.readbyte(P2_TICKS)
+	-- This pass fires a ground dash's run-up before the dummy is free (Auto
+	-- (After), see there): the walker holds its last press for free.
+	local aim_free = false
 
 	-- A WAIT NAMES THE TICK THE STEP COMES OUT ON.
 	--
@@ -2301,7 +2394,25 @@ local function service_body(defender)
 		-- its input only when grounded and free; Landing has its own earlier
 		-- branch so its predicted airborne run-up remains unchanged.
 		if step.ground_dash and memory.readbyte(P2_BASE + 0x38) ~= 0 then return end
-		if not dummy_free(step) then
+		-- A GROUND DASH AFTER THE DUMMY'S OWN MOVE COMES OUT ON ITS FIRST FREE
+		-- TICK (user, 2026-10-16: "最速ダッシュは欲しいです" - Sasquatch's dash after
+		-- Big Branch). Started once free, a dash spends its whole run-up after
+		-- it, and came out five ticks late (invuln_log, archive v11.7.28_10:
+		-- free at 6676, the dash at 6681). The game counts a dash's first tap
+		-- in any state: its recogniser (0x029F12, $1F0) runs in the per-tick
+		-- routine 0x02239E with no $05/$06 test. So the run-up goes in while
+		-- the move ends - when what is left of its animation is no more than
+		-- the run-up (lead) - and the walker in guardCancel holds the neutral
+		-- in front of the last tap until the dummy is free, then presses it on
+		-- that tick if the recogniser is still on its last step. A wrong
+		-- prediction costs nothing: the recogniser gone, the motion is entered
+		-- again from the top, which is the After dash there was before.
+		if step.ground_dash and not dummy_free(step) and own_move_on_ground()
+		   and M.final_anim[last_cel_of_anim() or 0] == true then
+			local _left = M.anim_ticks_left()
+			if _left ~= nil and _left <= (step.lead or 0) then aim_free = true end
+		end
+		if not aim_free and not dummy_free(step) then
 			gate_busy_seen = true
 			return
 		end
@@ -2442,6 +2553,8 @@ local function service_body(defender)
 		--
 		-- `step` here is the compiled record, so the answer comes from compile.
 		q.seq_through_freeze = step.through_freeze
+		-- Fired before free: the last tap waits for it (guardCancel's walker).
+		q.seq_free_aim = aim_free or nil
 	end
 end
 
@@ -2683,6 +2796,7 @@ end
 -- every tick instead, so the restart waits for the menu to close on its own
 -- without anyone counting frames at it.
 function M.service(defender)
+	M.observe()
 	if defender == nil then return end
 	-- Every tick, before anything can return early. The gates below ask it, and
 	-- so does the direction the last step is still holding - that has to come

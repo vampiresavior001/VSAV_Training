@@ -452,6 +452,15 @@ local update_object = function(obj)
 	obj.flip_x = rb(obj.base + game.offset.flip_x) > 0 and -1 or 1
 	obj.pos_x  = get_x(rws(obj.base + game.offset.pos_x))
 	obj.pos_y  = get_y(rws(obj.base + game.offset.pos_y))
+	-- A player's shadow, read with its boxes so it is drawn from the same
+	-- sample (shadowGuide.lua): its ground height is $3A. config_globals, the
+	-- master's table - "globals" in this file is a local of its own, and
+	-- reading shadowGuide from it found nothing: no line was ever drawn
+	-- (v11.7.28, "Shadow Guide: no shadow: nil" on the user's screen).
+	local _sg = config_globals ~= nil and config_globals.shadowGuide or nil
+	if not obj.projectile and _sg ~= nil then
+		obj.shadow = _sg.sample(obj.base, obj.pos_x, get_y(rws(obj.base + 0x3A)))
+	end
 	get_ptr[game.box_type](obj)
 	for _, box_entry in ipairs(game.box_list) do
 		table.insert(obj, define_box[box_entry.method or game.box_type](obj, box_entry))
@@ -835,6 +844,24 @@ cps2HitboxModule = {
 	end,
 	["getPushboxes"] = function()
 		return globals.pushboxes
+	end,
+	-- The players of the sample drawn this frame (frame_buffer[1]), by base -
+	-- not by draw order as pushboxes is: { push_l, push_r, shadow } each.
+	["drawnPlayers"] = function()
+		local f = frame_buffer and frame_buffer[1]
+		if f == nil or not f.match_active then return nil end
+		local out = {}
+		for _, obj in ipairs(f) do
+			if not obj.projectile and obj.base ~= nil then
+				for _, box in ipairs(obj) do
+					if box.type == "push" then
+						out[obj.base] = { push_l = box.left, push_r = box.right, shadow = obj.shadow }
+						break
+					end
+				end
+			end
+		end
+		return out
 	end,
 	["registerBefore"] = function()
 	end

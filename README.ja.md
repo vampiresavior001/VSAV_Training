@@ -8,7 +8,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 **達人の精密な動きを、練習相手に。** 内部フレーム（Tick）単位でダミーの動きを指定し、守りの練習と攻めの検証ができる、Fightcade 2／FBNeo用のトレーニングモードです。相手の動きを正確に再現し、自分の入力と攻撃のタイミングを見ながら、改善点を見つけられます。
 
-[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.27.1** です。
+[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.28** です。
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [守りを練習する](#first-ag-drill) · [起き攻めを調べる](docs/PLAYER_MANUAL.ja.md#wakeup-pressure-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
 
@@ -69,7 +69,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 
 | 目的 | 使い方 |
 |---|---|
-| **自分で操作できる動きを使う** | [Recording Wizard](docs/PLAYER_MANUAL.ja.md#05-recording)で、操作の開始から終了までを自動で記録し、確認して保存する。記録・再生は表示フレーム単位 |
+| **自分で操作できる動きを使う** | 試合中の`P1 Coin`で記録を始め、もう一度押すとすぐ再生する（[Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)）。スロットに残すなら[Recording Wizard](docs/PLAYER_MANUAL.ja.md#recording-wizard)で、操作の開始から終了までを自動で記録し、確認して保存する。記録・再生は表示フレーム単位 |
 | **精密な動きを再現する** | [Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)で、動作とタイミングをTick単位で指定する |
 | **複数の動きをランダムに出す** | [Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)で、作った動きを名前付きで保存し、使う候補からランダムに実行する |
 
@@ -105,13 +105,13 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 | `Lua Hotkey 2` | レバーとの組み合わせで位置を戻す | `Dummy > Position`で左右を押して配置を選ぶ。LPで同じ配置に戻す。HPなら戻してメニューも閉じる |
 | `Lua Hotkey 3` | 記録のループ再生を切り替える | `Recording > Looped Playback`を左右で`yes`／`no`に切り替える |
 | `Lua Hotkey 4` | キャラクター選択へ戻る | `Game > Return to Character Select`で右またはLP |
-| `Volume Up` | 入力記録の開始・終了（手動） | `Recording > Recording Wizard`で右またはLP。スロットを選び、自動記録で代用する（下記参照） |
+| `Volume Up` | 状態の保存（2回押し）・復元（1回押し） | 保存は`Recording > Save State`で右またはLP（確認で`Yes`）。復元は`Recording > Restore State`（メニューを閉じてから戻す） |
 | `Volume Down` | 記録の再生・停止 | `Recording > Play Recording`で右またはLP。もう一度実行すると停止 |
-| `P1 Coin` | 試合中は操作側を切り替え。キャラ選択中はステージ選択 | 代用不可・**必須** |
+| `P1 Coin` | 試合中はレコーディング（Quick Recording）の開始・終了。`Quick Recording = no`なら操作側の切り替え。キャラ選択中はステージ選択 | 代用不可・**必須** |
 
 メニューは`Lua Hotkey 1`で開き、上端のタブ名で左右を押してタブを切り替え、上下で項目を選びます。LPは弱Pです。`>`は「タブ > 項目」の順を表します。
 
-**記録をメニューで代用する場合：** ウィザードでスロットを選び、いったん入力を離してから操作すると記録が始まります。操作を終えて入力を離し、ダミーが動ける状態で約2秒待つと自動終了します。確認画面で保存を選び、LPで決定してください。手動で開始・終了を指定したい場合は`Volume Up`を使います。
+**記録をメニューで代用する場合：** ウィザードでスロットを選び、いったん入力を離してから操作すると記録が始まります。操作を終えて入力を離し、ダミーが動ける状態で約2秒待つと自動終了します。確認画面で保存を選び、LPで決定してください。自分で開始・終了を決めたい場合は`P1 Coin`を使います（[Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)）。
 
 記録の`Looped Playback`と、Action Stepsの`Loop Steps`は別の設定です。[記録の詳しい手順](docs/PLAYER_MANUAL.ja.md#05-recording)も参照してください。
 

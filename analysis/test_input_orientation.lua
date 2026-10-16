@@ -205,7 +205,8 @@ local d3 = d1 and menu:find("pit_of_blame_item,", d1, true)
 eq("メニュー: Dummy タブの Guard Action の行の後", d2 ~= nil and d3 ~= nil and d2 < d3, true)
 local r1p = menu:find('checkbox_menu_item("Reset Distance Each Loop"', 1, true)
 local r2p = r1p and menu:find("recording_auto_flip_item,", r1p, true)
-local r3p = r1p and menu:find('checkbox_menu_item("Use Savestate Upon Recording"', r1p, true)
+-- The row after it: Use Savestate Upon Recording until v11.7.28, which took it out.
+local r3p = r1p and menu:find('checkbox_menu_item("Use Random Recording Slot"', r1p, true)
 eq("メニュー: Recording タブの Reset Distance Each Loop の下", r2p ~= nil and r3p ~= nil and r2p < r3p, true)
 local help = menu:match('local AUTO_FLIP_HELP =\n(.-)\nlocal dummy_auto_flip_item')
 local longest = 0

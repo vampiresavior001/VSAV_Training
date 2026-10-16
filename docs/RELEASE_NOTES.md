@@ -6,6 +6,197 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.28
+
+`P1 Coin` now records the dummy's action and plays it back at once (Quick
+Recording), and `Volume Up` saves and restores the state. The game stands
+still while the menu is open.
+
+### New: Quick Recording (record with Coin)
+
+- During a match, press `P1 Coin` to take control of the dummy (P2) and start
+  recording. Press it again to finish: you are back on P1 and the take plays
+  from where things stand. `Looped Playback`, `Random Start Wait` and
+  `Reset Distance Each Loop` apply as they do to normal playback
+- The take is kept in a place of its own for each dummy character
+  (`quick_recording.mis`) and does not overwrite `Slot 1`–`Slot 5`. To keep
+  it in a slot, use `Copy to Slot` under `Recording > Quick Recording` and
+  choose the slot in the window that opens. `Play Quick Recording` also plays
+  it
+- With `Auto Trim` (default `yes`), the time before the first input and after
+  the last is cut. `Reset Distance Each Loop` returns to the spacing at the
+  moment of the first input
+- The `P1 Coin` presses that start and finish a take are not recorded. A take
+  with no input is not saved, and the previous one stays
+- While recording, the dummy's automatic actions such as guarding and counters
+  are off. If the dummy character changes or the match ends during a take, the
+  take is discarded and you are back on P1
+- The HUD shows `Quick` while recording and while the take plays
+
+### New: save and restore a state (Volume Up)
+
+- Press `Volume Up` twice in a row to save the current state. Press it once to
+  return to the saved state a moment later (about 0.25 seconds).
+  `Recording > Save State` on the menu also saves (it asks: `Yes` saves), and
+  `Recording > Restore State` restores
+- There is one saved state. Choosing characters again makes it unusable. A
+  state saved with other characters or at another game speed is not restored
+- Nothing is saved during recording playback, while Action Steps or Specified
+  actions are still to come, or while Grab Mashing has the dummy grabbed.
+  Restoring first stops whatever is running, such as playback
+- A restore from the menu (`Restore State`, or `Volume Up` once) closes the
+  menu first, then loads
+- Neither happens while recording, during Recording Wizard and so on. When
+  nothing is saved or restored, the emulator's message line shows why
+
+### New: the game stands still while the menu is open
+
+- While the menu is open during a match, the game now stands still:
+  characters, projectiles, the round timer and stun do not advance, and
+  closing the menu carries on from there. Until now only both players' inputs
+  were taken away and the game ran on
+- FBNeo itself is not paused; only the game's task manager (in the ROM) stops
+  handing out work, so the menu still works from an arcade stick or
+  controller. The music keeps playing
+- During a position reset the game runs until the characters are in place.
+  `Save State` from the menu saves the scene as it stands
+- If it does not hold (the match's Tick moves), it is switched off for the
+  session and the emulator's message line says so
+
+### New: Grab Mashing also works in hits that mashing shortens
+
+- Besides the grab, the ROM has two routines that read mashing: one takes
+  time off a hit reaction, the other plays its motion further. Both are used
+  by special hit reactions, such as from projectiles. When the dummy takes
+  one, it now mashes as `Grab Mashing` is set
+- In a special hit reaction, queued counteractions are kept. While a
+  counteraction's input for getting out is being sent, or Action Steps are
+  still to come, mashing pauses and the counteraction goes first
+- Confirmed in the developer's recordings (`Fastest`). The time left goes
+  down by at least 1 a Tick, so with no mashing a reaction lasts "time left +
+  1" Ticks
+  - Demitri's Chaos Flare: 17 to 37 left, out in 1 to 4 Ticks (4 times)
+  - Bishamon's Karame Dama: 119 left, out in 5 to 13 Ticks (2 times)
+  - Sasquatch's Big Branch: 39 or 79 left, out in 2 to 9 Ticks (21 times, and
+    3 more cut short by the next attack)
+  - Aulbath's Water Jail: 417 left, out in 27 Ticks (once)
+  - Q-Bee's `QJ`: the motion routine, with a new press every Tick for 61
+    Ticks (twice). How long it lasts without mashing was not measured
+- Aulbath's poison gas (hit type 32) is not shortened by mashing. In the
+  developer's recordings neither routine that reads mashing ran during its
+  hit reaction, and the dummy did not mash
+- Other moves are not checked yet
+
+### New: a line to learn Bishamon's unblockable spacing from the shadows
+
+- With `Trainer > Show Bishamon UBK Trainer` on, besides the words above P2,
+  a line on the ground, at your own shadow's height, marks where the shadow's
+  edge facing the opponent has to be - there while you are still far away, so
+  it shows how close to come: blue standing, yellow crouching, green both.
+  While the tip of your shadow is on the line, its ends turn white. The line
+  is placed while you stand and stays there while you walk or attack. Use it
+  to learn the gap between the two shadows, then make the same gap with the
+  aid off
+- Where the shadow is and how wide it looks come from the ROM's shadow
+  routine and the decoded graphics (54 shapes). It is worked out from the same
+  frame as the push boxes, so it points at the same spacing as the words above
+  P2 and the box display
+- The words above P2 take the line's colours: `Standing` blue, `Crouching`
+  yellow (green up to v11.7.27)
+
+### Change: an Auto (After) ground dash behind the dummy's own move is the fastest
+
+- A ground dash on `Auto (After)` placed after the dummy's own move on the
+  ground (a special, a normal and so on) now starts its input as the move
+  ends and comes out on the first Tick the dummy can act. It used to start its
+  input only once the dummy was free, and came out a few Ticks late (5 after
+  Sasquatch's Big Branch)
+- It is the fastest from the second time a move is used: how many animations
+  the move is made of is learnt from how it ended (for this session). The
+  first time is as before
+- What is left of the move is counted from the game's animation data (the
+  cels' lengths). The last input is pressed on the Tick the dummy is free,
+  once the game's dash recognition is confirmed to be still running; if it is
+  not, the input is entered again, as late as before
+
+### Change: P1 Coin records by default
+
+- `Quick Recording` is `yes` by default. To have `P1 Coin` only switch which
+  character you control, as before, set `Recording > Quick Recording = no`
+
+### Change: no more recording with Volume Up, Use Savestate Upon Recording removed
+
+- `Volume Up` no longer starts recording. Record with `P1 Coin` or Recording
+  Wizard
+- `Use Savestate Upon Recording` (save a state when recording starts and load
+  it on every playback) is removed. To repeat from the same situation, use
+  `Volume Up` to save and restore
+
+### Change: Grab Mashing alternates PPP + up and KKK + down
+
+- `Grab Mashing` now presses PPP + up and KKK + down by turns. With no
+  forward or back, the medium and heavy buttons do not tech the grab. It
+  switches every 7 Ticks with `Normal`, every 4 with `Fast` and every Tick
+  with `Fastest`
+- Each time the game checks the grab, it counts one new direction press and
+  one new button press (confirmed in the ROM). Three buttons at once count the
+  same as one. The `Normal` and `Fast` intervals were worked out from how the
+  ROM counts, to keep about the pace of v11.7.27 (not measured on the
+  emulator)
+
+### Change: Recording Slot is now Playback Slot
+
+- The setting that picks the slot to play is now `Playback Slot`, and
+  `Last Recording` is no longer in its list: with `Volume Up` no longer
+  recording, nothing writes `last_recording.mis`
+- A settings file that had `Last Recording` selected moves to `Slot 1`; any
+  other choice keeps the same slot
+- An existing `last_recording.mis` stays but cannot be played. To keep using
+  it, close FBNeo and rename it to a free name from `slot_1.mis` to
+  `slot_5.mis`
+
+### Fix: a hit could drop the rest of the Action Steps, or frames of a recording
+
+- Depending on the state of the one it hit, the dummy's remaining Action
+  Steps were thrown away as if the match had stopped (after Sasquatch's Big
+  Branch connected, the dash and MK after it did not come out). As during a
+  transformation, the match now counts as running while either character is
+  active
+- Recording skipped those frames for the same reason: the take came out
+  shorter than the play, and on playback what came after the hit played
+  early (the combo after Big Branch did not connect). Takes made up to
+  v11.7.27.1 that include such a hit should be recorded again
+
+### Fix: loading a state could change the centre spacing
+
+- The centre arrangements of `Lua Hotkey 2` (`Dummy > Position`) return to the
+  spacing at the start of the round. Loading a state moves both characters a
+  long way at once, which was taken for a round starting, so the spacing became
+  wherever the state was loaded. A load no longer resets it
+- Found while building the restore. Going by the code, earlier versions could
+  do the same when loading an emulator state or with
+  `Use Savestate Upon Recording`
+
+### Fix: P2's input display cut off a third button
+
+- P2's input column left room for three icons from the right edge, so a line
+  with a direction and three buttons drew the third button (HP or HK) off the
+  screen. It now leaves room for four
+
+### Manual
+
+- Section 5 gains "5.1 Record with Coin" and "5.5 Save and restore a state";
+  Recording Wizard and the sections after it move down one number
+- Grab Mashing in 4.1 covers the new inputs and the special hit reactions
+- 11.8 gains the steps for learning Bishamon's unblockable spacing from the
+  shadows
+- 2.1 says the game stands still while the menu is open
+- The hotkey table (1.2), 2.2, the save locations in Section 13,
+  troubleshooting in Section 14 and the README's controls table follow the
+  changes above
+
+---
+
 ## v11.7.27.1
 
 Chain Trainer no longer shows a hit on the opponent's reversal Tick itself as

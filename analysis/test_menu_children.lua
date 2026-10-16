@@ -167,6 +167,7 @@ end
 print("[indent]")
 local TREE = {
 	Recording = {
+		{ "Quick Recording", { "Auto Trim", "Play Quick Recording", "Copy to Slot" } },
 		{ "Use Random Recording Slot", { "Enable Slot 1", "Enable Slot 2", "Enable Slot 3",
 		                                 "Enable Slot 4", "Enable Slot 5" } },
 	},

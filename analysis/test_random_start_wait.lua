@@ -481,8 +481,14 @@ eq("master が起動時に読み込む",
 eq("コンソールに引いた値を出す",
 	msrc:find('" after a Random Start Wait of "', 1, true) ~= nil, true)
 local ctl = slurp("controller.lua")
-eq("再生ホットキーは待ち中も止める",
-	ctl:find("if globals.macroLua.playing or globals.macroLua.starting then", 1, true) ~= nil, true)
+-- Volume Down calls playcontrol() whatever plays (v11.7.28), and playcontrol
+-- calls a waiting start off before anything else.
+eq("再生ホットキーは待ち中も止める (Volume Down は playcontrol へ)",
+	ctl:find("      else\n        globals.macroLua.playcontrol()\n      end", 1, true) ~= nil, true)
+local _pc = msrc:match("local function playcontrol%(silent%)(.-)\nend")
+eq("  playcontrol は待ち中ならまず止める",
+	_pc ~= nil and _pc:find("if start_wait ~= nil then", 1, true) ~= nil
+	and _pc:find("if start_wait ~= nil then", 1, true) < (_pc:find("local slot", 1, true) or 0), true)
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))
 os.exit(fails == 0 and 0 or 1)

@@ -54,6 +54,12 @@ EXCLUDE_FILES = {
     "action_patterns_transfer.json",
     "last_recording.mis",
     "wizard_temp.mis",
+    # Quick Recording's take (macro.lua quick_file): the user's, per dummy.
+    "quick_recording.mis",
+    # Named savestates FBNeo writes beside the scripts (Save State, and the old
+    # Use Savestate Upon Recording).
+    "training_state",
+    "current_recording",
     # The recording wizard's scratch name: "macro/<char>/test" is a work
     # recording, not a slot (handoff section 7, "*/test 作業用の録画").
     "test",

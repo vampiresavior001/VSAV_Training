@@ -119,11 +119,9 @@ function handle_hotkeys()
   local _inputs = joypad.getup()
   local down = player_objects[1].input.down
   -- The wizard owns recording and playback while it is up. Volume Up would
-  -- run reccontrol() straight through it - stopping the take and writing it
-  -- to the normal slot - and with Use Savestate Upon Recording on it also
-  -- saves a state in the middle of the take. Volume Down would start a
-  -- playback over it. Coin (swap sides) is left alone: it is harmless, and
-  -- the wizard restores the control target itself.
+  -- save or restore a state in the middle of its take (trainingState.lua);
+  -- Volume Down would start a playback over it. Coin (swap sides) is left
+  -- alone: it is harmless, and the wizard restores the control target itself.
   local _wizard_busy = globals.recordingWizard ~= nil
                        and globals.recordingWizard.is_active ~= nil
                        and globals.recordingWizard.is_active()
@@ -146,42 +144,45 @@ function handle_hotkeys()
 		-- the pad over there means both are writing the same side and the
 		-- dummy does neither cleanly. Stop the playback first (Volume Down or
 		-- Play Recording), then swap.
-		if  _inputs["P1 Coin"] == nil and last_inputs["P1 Coin"] == false
-		    and globals.macroLua.playing ~= true
-		    and globals.macroLua.starting ~= true then
-			globals.controllerModule.togglecontrolling()
+		--
+		-- QUICK RECORDING (quickRecording.lua) takes Coin first: on, in a match
+		-- and outside the wizard, Coin starts and ends a take - and while
+		-- something plays, stops it and starts one. Off, or not handled there,
+		-- Coin swaps sides as before.
+		local _qr = globals.quickRecording
+		local _qr_busy = _qr ~= nil and _qr.recording ~= nil and _qr.recording()
+		if  _inputs["P1 Coin"] == nil and last_inputs["P1 Coin"] == false then
+			local _handled = _qr ~= nil and _qr.on_coin ~= nil and _qr.on_coin()
+			if not _handled
+			   and globals.macroLua.playing ~= true
+			   and globals.macroLua.starting ~= true then
+				globals.controllerModule.togglecontrolling()
+			end
 		end
-		if  (not _wizard_busy and _inputs["Volume Down"] == nil and last_inputs["Volume Down"] == false ) then 
+		-- During a quick take Volume Down does nothing: it would start a
+		-- playback over it.
+		if  (not _wizard_busy and not _qr_busy and _inputs["Volume Down"] == nil and last_inputs["Volume Down"] == false ) then
 
       -- starting is a playback waiting out its Random Start Wait: a press
-      -- then stops it, the same as while it plays.
-      if globals.macroLua.playing or globals.macroLua.starting then
-        globals.macroLua.playcontrol()
+      -- then stops it, the same as while it plays. The quick take playing, or
+      -- between its loops, stops (quickRecording.volume_down). Nothing is
+      -- loaded first any more: Use Savestate Upon Recording is gone
+      -- (trainingState.lua).
+      if _qr ~= nil and _qr.volume_down ~= nil and _qr.volume_down() then
+        -- stopped
       else
-        -- Not while recording: the load would switch recording off (see the
-        -- note at the loop restart in macro.lua).
-        if globals.options.use_recording_savestate == true
-           and globals.macroLua.recording ~= true
-           and recording_state_valid() then
-          savestate.load("current_recording")
-        end
         globals.macroLua.playcontrol()
       end
     
 		end
-		if  not _wizard_busy and _inputs["Volume Up"] == nil and last_inputs["Volume Up"] == false then 
-      if globals.macroLua.recording then
-        globals.macroLua.reccontrol()
-      else
-        if globals.options.use_recording_savestate == true then
-          globals.save_state = savestate.create("current_recording")
-          savestate.save(globals.save_state)
-          mark_recording_state_saved()
-          globals.show_menu = false
-        end
-        globals.macroLua.reccontrol()
-
-      end
+		-- VOLUME UP SAVES AND RESTORES A STATE (trainingState.lua, v11.7.28):
+		-- once restores, twice saves. It no longer records - Coin does (Quick
+		-- Recording), and the Recording Wizard writes to a numbered slot. The
+		-- wizard keeps the key to itself while it is up.
+		local _ts = globals.trainingState
+		if _ts ~= nil and _ts.volume_up ~= nil and not _wizard_busy then
+			_ts.volume_up(_inputs["Volume Up"] == nil and last_inputs["Volume Up"] == false,
+			              _inputs["Volume Up"] ~= nil)
 		end
   end
   last_inputs = _inputs

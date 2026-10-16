@@ -112,3 +112,12 @@ analysis/landing_predict_probe.log
 # release zip. Kept on disk so a past measurement can be re-read.
 /analysis/archive/
 /scripts/land_trace.log
+
+# Quick Recording's take (scripts/macro/<char>/quick_recording.mis, v11.7.28):
+# the user's own, not shipped (make_release_zip.py) and not tracked.
+quick_recording.mis
+
+# FBNeo writes a named savestate beside the scripts: Save State's (trainingState.lua,
+# v11.7.28) and the old Use Savestate Upon Recording's. The user's, never shipped.
+/scripts/training_state
+/scripts/current_recording

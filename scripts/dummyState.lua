@@ -287,19 +287,19 @@ local function get_counter_attack_stick()
 end
 
 local function get_recording_slot()
+    -- The Playback Slot, 1..5 (v11.7.28: Last Recording, the old 1, went and
+    -- the slots moved down by one - utilities.lua migrates).
     local pb_type = globals.options.recording_slot
-    local slot = 'none'
+    local slot = 'slot_1.mis'
     if pb_type == 0x1 then
-        slot = 'last_recording.mis'
-    elseif pb_type == 0x2 then
         slot = 'slot_1.mis'
-    elseif pb_type == 0x3 then
+    elseif pb_type == 0x2 then
         slot = 'slot_2.mis'
-    elseif pb_type == 0x4 then
+    elseif pb_type == 0x3 then
         slot = 'slot_3.mis'
-    elseif pb_type == 0x5 then
+    elseif pb_type == 0x4 then
         slot = 'slot_4.mis'
-    elseif pb_type == 0x6 then
+    elseif pb_type == 0x5 then
         slot = 'slot_5.mis'
     end
 

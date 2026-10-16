@@ -189,6 +189,37 @@ end
 want("離して押し直せば効く (下+右)", getx(P2) < getx(P1), true)
 want("右端まで行った", getx(P1) >= 940, true)
 
+-- A STATE LOADED IS NOT A ROUND STARTING (user, 2026-10-16: "ステートセーブにより
+-- スタート位置を忘れるバグあり"). A load puts both characters somewhere else in
+-- one frame, which is what a round change looks like; the master's load
+-- handler calls after_load, so the start spacing stays the round's.
+reset()
+setx(P1, 0) setx(P2, 0) idle(2)        -- a round being set up
+setx(P1, 554) setx(P2, 728) idle(12)   -- and the pair at rest: the round's start
+local l0, r0 = pos._start()
+want("ラウンド開始の間合い (554 / 728)", l0 == 554 and r0 == 728, true)
+setx(P1, 300) setx(P2, 900)          -- the load
+pos.after_load()
+idle(20)
+local l1, r1, ok1 = pos._start()
+want("ロードの後もラウンド開始の間合いを覚えている", l1 == l0 and r1 == r0, true)
+want("  中央へ戻すショートカットは使える", ok1, true)
+-- Without it: what the bug was - the jump taken for a round start.
+setx(P1, 420) setx(P2, 820)
+idle(20)
+local l2, r2 = pos._start()
+want("(比較) after_load が無いと、二人の跳びをラウンド開始と取る", l2 == 420 and r2 == 820, true)
+-- A round really starting is still caught: X 0, then the pair at rest.
+setx(P1, 0) setx(P2, 0) idle(2)
+setx(P1, 560) setx(P2, 720) idle(12)
+local l3, r3, ok3 = pos._start()
+want("本当のラウンド開始は覚える", l3 == 560 and r3 == 720 and ok3, true)
+-- The master's load handler calls it.
+local fh = real_open("scripts/vsav_training_master_script.lua")
+local ms = fh:read("*a") fh:close()
+local load = ms:match("savestate%.registerload%(function%(slot%)(.-)\nend%)")
+want("master のロード処理が after_load を呼ぶ", load ~= nil and load:find("positionModule.after_load()", 1, true) ~= nil, true)
+
 io.open = real_open
 
 if fails == 0 then print("全て通った") else print(fails .. " 件 NG") os.exit(1) end
