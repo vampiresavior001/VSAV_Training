@@ -20,7 +20,7 @@ This fork controls dummy inputs on internal frames (Ticks; see [11.1](#ticks-and
 
 Action Steps builds on this control to define actions in internal frames. It supports individual responses, strings and complex combos, including definitions that can complete infinite combos for Bulleta (B.B. Hood) or Bishamon. Repeat these sequences to test your responses against more demanding offense.
 
-Recording and playback operate in displayed frames; use Action Steps for drills that need Tick-level timing ([Section 5](#05-recording)). This fork adds Quick Recording, which records with `P1 Coin` and plays the take back on the spot, and Recording Wizard, which makes it easy to capture an input sequence from start to finish.
+Recording and playback operate in displayed frames; use Action Steps for drills that need Tick-level timing ([Section 5](#05-recording)). This fork adds Quick Recording, which records with `P1 Coin` and plays the recording back on the spot, and Recording Wizard, which makes it easy to capture an input sequence from start to finish.
 
 For PB, you can check whether you delayed your input while still fitting six presses inside the window. For GC, you can see which inputs the game accepted and where you were late. For air guarding, you can see whether an interruptible gap existed, whether your press was well timed and who could act first after landing. This fork combines accurate dummy actions with detailed feedback on your response.
 
@@ -102,6 +102,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | Check whether chains and links connected, and their windows | Chain Trainer | [11.7](#chain-trainer) |
 | Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
 | Measure how long a setup takes | Action Timeline | [11.5](#action-timeline) |
+| Retry the same situation | Save and restore a state | [5.5](#save-state) |
 | Study option selects on a side switch | `Auto-Flip Inputs on Side Switch` | [Section 10.F](#side-switch-os) |
 
 **Practice command inputs**
@@ -216,7 +217,7 @@ For a fresh installation, use a short path without Japanese characters to avoid 
 | `Lua Hotkey 4` | Return to character select | Select `Game > Return to Character Select` and press Right or LP |
 | `Volume Up` | Save the state (press twice) / restore it (press once) | Save with `Recording > Save State` (Right or LP, then `Yes`). Restore with `Recording > Restore State` (the menu closes first) |
 | `Volume Down` | Start/stop playback | Select `Recording > Play Recording` and press Right or LP. Activate it again to stop |
-| `P1 Coin` | During a match, start/finish a take (Quick Recording); with `Quick Recording = no`, switch which character you control. Choose a stage at character select | No alternative — **required** |
+| `P1 Coin` | During a match, start/finish a recording (Quick Recording); with `Quick Recording = no`, switch which character you control. Choose a stage at character select | No alternative — **required** |
 
 Open the menu with `Lua Hotkey 1`. With a tab name selected, use Left/Right to switch tabs, then Up/Down to select an item. LP means light punch. `>` means “tab > item.”
 
@@ -255,7 +256,7 @@ Start the copied training installation. Before proceeding, confirm that `Disable
 
 LP/MP/HP mean light/medium/heavy punch; LK/MK/HK mean light/medium/heavy kick.
 
-Moving beyond either end of a list returns to the tab selection. MP has different meanings in different screens: it toggles a pattern's selection in Action Patterns and records another take at the recording confirmation screen. Follow the on-screen control guide.
+Moving beyond either end of a list returns to the tab selection. MP has different meanings in different screens: it toggles a pattern's selection in Action Patterns and restarts recording from the recording confirmation screen. Follow the on-screen control guide.
 
 An indented row is a setting of the nearest less-indented row above it, its parent. Most such rows appear or disappear with the parent's value (for example, `Frame Meter = yes` displays three additional settings indented beneath it).
 
@@ -271,7 +272,7 @@ An indented row is a setting of the nearest less-indented row above it, its pare
 
 ### 2.2 Controlled side and character select
 
-- During a match, `P1 Coin` hands you the dummy (P2) and starts recording. Press it again to finish: you are back on P1 and the take plays ([5.1](#quick-recording)).
+- During a match, `P1 Coin` hands you the dummy (P2) and starts recording. Press it again to finish: you are back on P1 and the recording plays ([5.1](#quick-recording)).
 - With `Quick Recording = no`, `P1 Coin` only switches which character you control. In that case you cannot switch during recording playback; stop playback first.
 - Use `Lua Hotkey 4` or `Game > Return to Character Select` to choose characters again.
 - Returning to character select stops playback and clears the saved state ([5.5](#save-state)), input history and previous PB/GC readouts.
@@ -728,7 +729,8 @@ Choose how to prepare and manage the dummy's actions based on your goal.
 |---|---|
 | Start practicing with a ready-made sequence | [Import an included Action Pattern](#sasquatch-pb-tutorial) |
 | Have the dummy do something you just did, right away | Record with `P1 Coin` ([5.1](#quick-recording)) |
-| Keep actions you can perform yourself in slots and switch between them | Record with Recording Wizard ([5.2](#recording-wizard)) |
+| Keep a Quick Recording in a slot | Use `Copy to Slot` under Quick Recording ([5.1](#quick-recording)) |
+| Automatically detect when recording starts and stops, then review and save | Use Recording Wizard ([5.2](#recording-wizard)) |
 | Build a sequence by specifying actions and timing | [Action Steps](#06-steps) |
 | Save and manage multiple sequences, then run them at random | [Action Patterns](#07-patterns) |
 
@@ -745,21 +747,21 @@ Recording and playback operate in displayed frames, so they do not reproduce inp
 
 1. During a match, press `P1 Coin`. Any dummy playback or planned counter stops, control moves to P2 (the dummy) and recording begins.
 2. Perform the action you want the dummy to do.
-3. Press `P1 Coin` again. Recording ends, you are back on P1 and the take plays from where things stand.
+3. Press `P1 Coin` again. Recording ends, you are back on P1 and playback begins from the current game state.
 
 - `Looped Playback`, `Random Start Wait` and `Reset Distance Each Loop` apply as they do to normal playback.
-- Pressing `P1 Coin` during playback stops it and starts a new take. `Volume Down` during playback stops it (while nothing plays, `Volume Down` plays the `Playback Slot` slot).
-- The take is kept in a place of its own for each dummy character. It does not overwrite `Slot 1`–`Slot 5`.
+- Pressing `P1 Coin` during playback stops it and starts a new recording. `Volume Down` during playback stops it (while nothing plays, `Volume Down` plays the `Playback Slot` slot).
+- The recording is saved in a dedicated recording slot for each dummy character. It does not overwrite `Slot 1`–`Slot 5`.
 - With `Auto Trim = yes` (default), the time before the first input and after the last input is cut. `Reset Distance Each Loop` returns to the spacing at the moment of the first input. Waits and holds in the middle are kept.
-- The `P1 Coin` presses that start and finish a take are not recorded. A take with no input is not saved, and the previous one stays.
-- If, during a take, you set `Quick Recording = no`, change the dummy character, start Recording Wizard, the match ends or an emulator savestate is loaded, the take is discarded and you are back on P1.
+- The `P1 Coin` presses that start and finish a recording are not recorded. A recording with no input is not saved, and the previous one stays.
+- If, during a recording, you set `Quick Recording = no`, change the dummy character, start Recording Wizard, the match ends or an emulator savestate is loaded, the recording is discarded and you are back on P1.
 - While recording, the dummy's automatic actions such as guarding and counters are off.
 
 | Under `Quick Recording` | What it does |
 |---|---|
 | `Auto Trim` | Cuts the idle time before and after (default `yes`) |
-| `Play Quick Recording` | Plays the take. Activate again to stop |
-| `Copy to Slot` | Copies the take to `Slot 1`–`Slot 5`. In the window that opens, choose a slot with Up/Down and confirm with Right or LP (that slot's recording is replaced); Left goes back |
+| `Play Quick Recording` | Plays the recording. Activate again to stop |
+| `Copy to Slot` | Copies the recording to `Slot 1`–`Slot 5`. In the window that opens, choose a slot with Up/Down and confirm with Right or LP (that slot's recording is replaced); Left goes back |
 
 With `Quick Recording = no`, `P1 Coin` only switches which character you control. Recording and playback are in displayed frames.
 
@@ -777,7 +779,7 @@ Recording Wizard, added in this fork, captures an input sequence from start to f
 7. The characters return to the starting positions and the recording plays once for review.
 8. Select save at the confirmation screen and confirm with LP or Right. MP records again; LK replays for another check.
 
-Saving returns to the slot list so you can record another action. `Lua Hotkey 1` cancels the wizard and discards the current unsaved take. On the confirmation screen, LP activates the selected option; if you moved the cursor, check the label before pressing it.
+Saving returns to the slot list so you can record another action. `Lua Hotkey 1` cancels the wizard and discards the current unsaved recording. On the confirmation screen, LP activates the selected option; if you moved the cursor, check the label before pressing it.
 
 ### 5.3 Playback and looping
 
@@ -807,7 +809,7 @@ Enable at least one slot and make sure it contains a recording. With `Use Charac
 
 **Press `Volume Up` twice in a row to save the current state. Press it once to return to the saved state a moment later (about 0.25 seconds).** Use it to practice from the same situation again and again.
 
-The menu has it too. During a match the game stands still while the menu is open, so the scene you stopped on can be saved.
+You can also save and restore states from the Recording menu. During a match, opening the menu pauses the game so you can save the paused state. Saving is unavailable during recording playback and certain other operations listed below.
 
 | Item | Controls |
 |---|---|
@@ -828,7 +830,7 @@ The menu has it too. During a match the game stands still while the menu is open
 
 **Build precise sequences without having to perform them yourself.** Action Steps lets you specify each action and its timing in Ticks. Reproduce expert-level execution, such as the earliest possible dash followed by the earliest possible attack, or crouching medium kick canceled into Tenraiha, to practice PB, GC and interrupts.
 
-Adjust the timing without recording another take. The sequence starts at a trigger, such as recovery from blocking, being hit or knockdown.
+Adjust the timing without having to record the sequence again. The sequence starts at a trigger, such as recovery from blocking, being hit or knockdown.
 
 ### 6.1 Open, edit and save
 
@@ -1170,7 +1172,7 @@ The two rows under the table average each step of the command over `Pass` attemp
 - `Input t` and the per-step averages come from the successful attempts whose whole input was measured; both use the same attempts. A success whose input started before it could be measured, such as right after the script starts or a state loads, still counts as a `Pass` but is left out of these averages.
 - `GC t` comes from the successful attempts whose GC window opening was measured, so it can cover a different number of attempts than `Input t`.
 - If you enter the command again after it expires and then succeed, timing starts from the command that produced the GC.
-- Nothing is counted while `Show GC Stats = no`. Switching the side you control, including during a Recording Wizard take, does not clear the counts. Loading a state, resetting positions and the end of a round discard the string in progress without counting it as `Fail`. Nothing is saved to the settings file.
+- Nothing is counted while `Show GC Stats = no`. Switching the side you control, including while recording with Recording Wizard, does not clear the counts. Loading a state, resetting positions and the end of a round discard the string in progress without counting it as `Fail`. Nothing is saved to the settings file.
 - Counts stop at 99999. Toggle it OFF then ON to reset the statistics. Returning to character select also clears them. Both work as in PB Stats.
 
 </details>
@@ -1817,7 +1819,7 @@ When resetting settings for diagnosis, move the JSON aside instead of deleting i
 | Auto does not produce the expected move | `Not Measured`, direction/button, charge and air-action restrictions. Steps cannot force the game to accept an input it rejects |
 | Recording will not start | Release all inputs once in the wizard; check `Ready`, `Held` and P2 mappings |
 | Recording will not finish | It needs about two seconds with no input after the dummy's action has finished |
-| Recording cannot be found | Character-specific slots, selected character, Playback Slot and random candidates. Play a Coin take with `Play Quick Recording`; put it in a slot with `Copy to Slot` |
+| Recording cannot be found | Character-specific slots, selected character, Playback Slot and random candidates. Play a Coin recording with `Play Quick Recording`; put it in a slot with `Copy to Slot` |
 | You want Coin only to switch control to P2 | `Recording > Quick Recording = no`. With `no`, stop recording playback first |
 | `Volume Up` does not start recording | From v11.7.28, `Volume Up` saves and restores the state. Record with `P1 Coin` or Recording Wizard ([Section 5](#05-recording)) |
 | An option is missing | Parent settings, Guard Action Type and character selection can hide it |

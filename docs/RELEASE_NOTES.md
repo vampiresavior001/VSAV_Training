@@ -8,11 +8,16 @@ Newest first. Older releases are kept below.
 
 ## v11.7.28.1
 
-Recording, playback, the loop wait and the life refill no longer run on while
-the menu holds the game, and playback no longer stumbles once the menu closes.
-The check that the game really stands is stronger.
+Opening the menu no longer disrupts recording or playback. Loop waits and life refill timers also pause while the game is paused, then resume when the menu closes.
 
-### Change: a stronger check that the game stands
+- Fixed skipped playback inputs and dashes failing after the menu closed.
+- Strengthened pause checks. If the game cannot remain paused, a message appears and menu pausing is disabled for the rest of the session.
+- Updated Section 2.1 of both player manuals to explain what pauses with the game.
+
+<details>
+<summary>Technical details and verification</summary>
+
+### Change: stronger checks that the game remains paused
 
 - Until now, the only check while the menu held the game was that the match's
   Tick did not move. Both characters' state, position and animation must not
@@ -21,23 +26,23 @@ The check that the game really stands is stronger.
 - The frame the menu closes on, and a position move started from the menu,
   are not checked: those writes are the tool's own. Neither is a state load
 - With `Analysis > Knockdown Logger` on, it also writes where the memory
-  changed while the game stood (`scripts/reversal_logs/freeze_log.jsonl`).
+  changed while the game was paused (`scripts/reversal_logs/freeze_log.jsonl`).
   If the game could not be stopped, the reason and what had changed so far
   are written at once. It is for investigation
 
-### Fix: recording, playback and the loop wait ran on under the menu, and playback stumbled after it
+### Fix: recording and playback advanced while paused or resumed incorrectly
 
-- In v11.7.28 the game stood while the menu was open, but recording and
+- In v11.7.28 the game was paused while the menu was open, but recording and
   recording playback still ran on the emulator's frames. Opening the menu
   during a playback skipped the inputs in between, so it carried on further
-  along when the menu closed; opening it during a take put the menu's frames
-  into the take. The `Loop Interval (Frames)` wait also ran down under the menu
+  along when the menu closed; opening it during recording put the menu's frames
+  into the recording. The `Loop Interval (Frames)` wait also ran down under the menu
 - With `Looped Playback` on, the playback was held for 30 frames after the
   menu closed and the dummy's inputs let go. The game runs again by then, so
   opening the menu in the middle of a forward, neutral, forward dash made the
   neutral long enough to miss the game's window, and no dash came out
-- While the game stands, a take counts no frames, a playback stays where it
-  is and the loop wait does not run down. When the game stood under the menu,
+- While the game is paused, recording adds no frames, a playback stays where it
+  is and the loop wait does not run down. When the game was paused by the menu,
   the 30-frame hold is gone and they carry on as soon as it closes (when the
   game ran under the menu, outside a match for example, the hold stays)
 - Recording, playback and the loop wait were found in a code review; the dash
@@ -54,13 +59,13 @@ The check that the game really stands is stronger.
   first forward of a dash fell on that Tick, the dash after the menu did not
   come out and turned into a walk and a standing move (dash MK, dash became a
   walk and a standing MK)
-- While the game stands, the flag is no longer set. When the game runs under
+- While the game is paused, the flag is no longer set. When the game runs under
   the menu (a position move, outside a match and the like), it is set as before
 
-### Fix: life refilled under the menu
+### Fix: life refilled while the game was paused
 
 - The `Refill Timer (seconds)` refill counted emulator frames too, so it
-  could fire under the menu while the game stood. `Recording > Save State`
+  could fire under the menu while the game was paused. `Recording > Save State`
   from the menu could then save the refilled scene
 - Under the menu it does not fire, and the rest of the wait is kept: once the
   menu closes, it waits out what was left and then refills
@@ -69,7 +74,9 @@ The check that the game really stands is stronger.
 ### Manual
 
 - Section 2.1 says recording, playback, the loop wait and the life refill
-  pause under the menu too, and how you are told if the game does not stand
+  pause under the menu too, and how you are told if the game cannot remain paused
+
+</details>
 
 ---
 

@@ -43,12 +43,13 @@ Randomness affects PB activation and GC input windows, so success or failure alo
 |---|---|
 | **Test wake-up pressure and attack strings** | Set the dummy to use the same response each time, then use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to compare contact timing with the actual outcome |
 | **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
+| **Retry the same situation** | Pause the game with the menu, then [save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) to practice from the same situation. Saving is unavailable during recording playback and certain other operations |
 | **Check whether a combo connected** | Use [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) to see whether each chain, link and special cancel connected, and how many Ticks early or late a press was |
 | **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's in-place wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-After Demitri's heavy Demon Cradle, a forward-jump LP connects at `Reversal +0t`, right on the reversal Tick of Morrigan's in-place wake-up (no roll). Demitri lands immediately after the LP connects, allowing him to block even a reversal Shadow Blade on the ground: a safe jump. It is timed for an in-place wake-up, so set the dummy to `Wakeup = None` when you try it. The screenshot shows the moment of contact; see the [wake-up pressure drill](docs/PLAYER_MANUAL.en.md#safe-jump-example) for the landing block and how to check it.
+**Check your attack timing, too.** In this example, Demitri's jumping LP meets Morrigan's wake-up, and he lands in time to block a reversal special. See the [setup and verification steps](docs/PLAYER_MANUAL.en.md#safe-jump-example).
 
 ### Practice command inputs
 
@@ -69,7 +70,7 @@ The dummy performs the action you build here when something triggers it, such as
 
 | Goal | How to use the tool |
 |---|---|
-| **Use actions you can perform yourself** | During a match, `P1 Coin` starts a take and a second press plays it at once ([Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording)). To keep it in a slot, [Recording Wizard](docs/PLAYER_MANUAL.en.md#recording-wizard) captures your inputs from start to finish, then lets you review and save the recording. Recording and playback use displayed frames |
+| **Use actions you can perform yourself** | During a match, `P1 Coin` starts a recording and a second press plays it at once ([Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording)). Use `Copy to Slot` to keep the recording in a slot. For automatic start and stop detection followed by review and saving, use [Recording Wizard](docs/PLAYER_MANUAL.en.md#recording-wizard). Recording and playback use displayed frames |
 | **Reproduce precise sequences** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
 | **Run several sequences at random** | [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns) saves sequences by name and picks one at random from those you select |
 
@@ -107,7 +108,7 @@ Use a short path without Japanese characters; spaces are fine. Before updating a
 | `Lua Hotkey 4` | Return to character select | Select `Game > Return to Character Select` and press Right or LP |
 | `Volume Up` | Save the state (press twice) / restore it (press once) | Save with `Recording > Save State` (Right or LP, then `Yes`). Restore with `Recording > Restore State` (the menu closes first) |
 | `Volume Down` | Start/stop playback | Select `Recording > Play Recording` and press Right or LP. Activate it again to stop |
-| `P1 Coin` | During a match, start/finish a take (Quick Recording); with `Quick Recording = no`, switch which character you control. Choose a stage at character select | No alternative — **required** |
+| `P1 Coin` | During a match, start/finish a recording (Quick Recording); with `Quick Recording = no`, switch which character you control. Choose a stage at character select | No alternative — **required** |
 
 Open the menu with `Lua Hotkey 1`. With a tab name selected, use Left/Right to switch tabs, then Up/Down to select an item. LP means light punch. `>` means “tab > item.”
 

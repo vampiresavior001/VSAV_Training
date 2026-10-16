@@ -43,12 +43,13 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 |---|---|
 | **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
 | **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
+| **同じ場面から繰り返し試す** | メニューでゲームを止め、[状態を保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)して同じ状況から練習する。記録の再生中など、保存できない場面もある |
 | **コンボがつながったかを確かめる** | [Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)で、チェーン・目押し・必殺技キャンセルがつながったかと、押すのが何Tick早すぎ・遅すぎたかを確認する |
 | **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンのその場起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pが、モリガンのその場起き上がりに `Reversal +0t`（リバーサルTickちょうど）で重なった例です。デミトリはすぐ着地するので、リバーサルのシャドウブレイドも地上でガードできる詐欺飛びになります。その場起き上がりに重ねる詐欺飛びなので、試すときはダミーを `Wakeup = None` にしてください。画像は重なった瞬間です。リバーサルを着地してガードした画面と確かめ方は、[起き攻めの練習レシピ](docs/PLAYER_MANUAL.ja.md#safe-jump-example)へ。
+**攻撃を重ねるタイミングも確認できます。** この例では、デミトリのジャンプ小Pをモリガンの起き上がりに重ね、リバーサル必殺技には着地してガードします。[設定と確認手順はこちら](docs/PLAYER_MANUAL.ja.md#safe-jump-example)。
 
 ### コマンド入力を練習する
 
@@ -69,7 +70,7 @@ AGの成立判定やGCの入力受付には乱数が関わるため、結果だ�
 
 | 目的 | 使い方 |
 |---|---|
-| **自分で操作できる動きを使う** | 試合中の`P1 Coin`で記録を始め、もう一度押すとすぐ再生する（[Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)）。スロットに残すなら[Recording Wizard](docs/PLAYER_MANUAL.ja.md#recording-wizard)で、操作の開始から終了までを自動で記録し、確認して保存する。記録・再生は表示フレーム単位 |
+| **自分で操作できる動きを使う** | 試合中の`P1 Coin`で記録を始め、もう一度押すとすぐ再生する（[Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)）。残したい動きは `Copy to Slot` でスロットへコピーできる。開始・終了を自動で検出し、確認して保存するなら[Recording Wizard](docs/PLAYER_MANUAL.ja.md#recording-wizard)。記録・再生は表示フレーム単位 |
 | **精密な動きを再現する** | [Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)で、動作とタイミングをTick単位で指定する |
 | **複数の動きをランダムに出す** | [Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)で、作った動きを名前付きで保存し、使う候補からランダムに実行する |
 

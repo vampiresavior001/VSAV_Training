@@ -102,6 +102,7 @@
 | チェーンと目押しがつながったか、猶予を確かめる | Chain Trainer | [11.7](#chain-trainer) |
 | 起き攻めを重ねるタイミングを調べる | ダミーの反撃、Meaty Timing | [起き攻めの練習レシピ](#wakeup-pressure-drill) |
 | セットプレイの所要時間を測る | Action Timeline | [11.5](#action-timeline) |
+| 同じ場面から繰り返し試す | 状態の保存・復元 | [5.5](#save-state) |
 | 振り向いたときのオプションセレクトを調べる | `Auto-Flip Inputs on Side Switch` | [10章F](#side-switch-os) |
 
 **コマンド入力を練習する**
@@ -726,7 +727,8 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 |---|---|
 | 用意された動きですぐ練習する | 同梱のAction Patternを[取り込む](#sasquatch-ag-tutorial) |
 | 自分で操作した動きを、すぐ相手にさせる | `P1 Coin` でレコーディングする（[5.1](#quick-recording)） |
-| 自分で操作できる動きを、スロットに残して使い分ける | Recording Wizardで記録する（[5.2](#recording-wizard)） |
+| Coinで記録した動きをスロットに残す | Quick Recordingの `Copy to Slot`（[5.1](#quick-recording)） |
+| 記録の開始・終了を自動で検出し、確認して保存する | Recording Wizard（[5.2](#recording-wizard)） |
 | 動作とタイミングを指定して、一連の動きを作る | [Action Steps](#06-steps) |
 | 作った動きを複数保存・管理し、ランダムに実行する | [Action Patterns](#07-patterns) |
 
@@ -805,7 +807,7 @@ Recording Wizardは、操作の開始から終了までを自動で記録する�
 
 **`Volume Up` を2回続けて押すと、その場の状態を保存します。1回押すと、少し後（約0.25秒）に保存した状態へ戻します。** 同じ場面から何度も練習したいときに使います。
 
-メニューからも使えます。試合中はメニューを開いている間ゲームが止まるので、止めた場面を保存できます。
+メニューからも使えます。試合中はメニューを開いている間ゲームが止まるので、止めた場面を保存できます。ただし、記録の再生中など、保存できない場面もあります（下記）。
 
 | 項目 | 操作 |
 |---|---|
