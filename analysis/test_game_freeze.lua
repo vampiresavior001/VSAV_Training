@@ -15,7 +15,8 @@
 --   [6] a frame the Lua side ends (the menu closed, a position move started
 --       from it) is not checked; a state load ends it with no row
 --   [7] freeze_log (Knockdown Logger only): the work RAM read after the
---       first frame and when it ends, the differing addresses as ranges
+--       first frame and when it ends, the differing addresses as ranges; a
+--       failed check writes its row at once, with why
 --   [8] the menu's hold on the players ($3B4 / $200) is off while the game
 --       stands, on while it runs under the menu (v11.7.28.1: with $3B4 set the
 --       game skips the dash recognizer, ROM 0223AC)
@@ -309,7 +310,7 @@ do
 	globals.show_menu = false
 	frame()
 	eq("見出しと 1 行", #rows, 2)
-	eq("  見出し", (rows[1] or ""):match('^{"log": "freeze_log", "version": 1,') ~= nil, true)
+	eq("  見出し", (rows[1] or ""):match('^{"log": "freeze_log", "version": 2,') ~= nil, true)
 	eq("  行", rows[2], '{"frames": 3, "tick": 33, "changed": ["FF8080", "FF9001-FF9003"]}\n')
 	-- Ended by a load: no row.
 	F._reset()
@@ -320,6 +321,19 @@ do
 	globals.show_menu = false
 	frame()
 	eq("ステートを読んで終わった: 行は書かない", #rows, 2)
+	-- A failed check writes its row at once, with why (review of 328c706).
+	F._reset()
+	messages = {}
+	globals.show_menu = true
+	frame()
+	frame(function() ram[0xFF8081] = 34 ; ram[P2 + 0x11] = 5 end)
+	eq("止められなかった: その場で 1 行", #rows, 3)
+	eq("  理由と変わった場所", rows[3], '{"frames": 2, "tick": 33, "gave_up": "the Tick moved", "changed": ["FF8081", "FF8811"]}\n')
+	globals.show_menu = false
+	frame()
+	eq("  閉じても重ねて書かない", #rows, 3)
+	F._reset()
+	ram[P2 + 0x11] = nil
 	io.open = real_open
 	globals.options = nil
 	for k in pairs(ram) do if k >= 0xFF0000 then ram[k] = nil end end

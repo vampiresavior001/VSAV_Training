@@ -43,7 +43,8 @@
 -- addresses that differ written as ranges. The vblank interrupt is not
 -- stopped - its frame counter (0xFF8080) and input reads go on - and the
 -- tool's own writes show here too; the log says which they are, rather than
--- the code assuming it.
+-- the code assuming it. A check that fails writes its row at once, with why
+-- (review of 328c706: that is the row worth having most).
 
 local M = {}
 
@@ -107,12 +108,19 @@ local function write_row(text)
 	local f = io.open(LOG, started_log and "a" or "w")
 	if f == nil then return end
 	if not started_log then
-		f:write('{"log": "freeze_log", "version": 1, "what": "the work RAM (0xFF0000-0xFFFFFF) read once a menu freeze had held one frame and again on the frame it ended, before the game ran it (scripts/gameFreeze.lua)", '
-			.. '"fields": "frames: frames frozen; tick: the Tick it held at; changed: the addresses that differ (runs within 4 bytes joined, at most 200)"}\n')
+		f:write('{"log": "freeze_log", "version": 2, "what": "the work RAM (0xFF0000-0xFFFFFF) read once a menu freeze had held one frame and again on the frame it ended, before the game ran it, or after the frame a check failed on (scripts/gameFreeze.lua)", '
+			.. '"fields": "frames: frames frozen; tick: the Tick it held at; gave_up: why the check failed (only on such a row); changed: the addresses that differ (runs within 4 bytes joined, at most 200)"}\n')
 		started_log = true
 	end
 	f:write(text)
 	f:close()
+end
+-- One row: what differs from the RAM read after the first frame.
+local function write_diff(why)
+	local q = {}
+	for _, r in ipairs(ranges(ram_at, read_ram())) do q[#q + 1] = '"' .. r .. '"' end
+	write_row(string.format('{"frames": %d, "tick": %d, %s"changed": [%s]}\n', frozen_frames, tick_first or -1,
+		why and ('"gave_up": "' .. why .. '", ') or "", table.concat(q, ", ")))
 end
 
 local function say(text)
@@ -161,13 +169,7 @@ function M.registerBefore()
 		frozen_frames, tick_at, chars_at, ram_at, tick_first = 0, memory.readbyte(0xFF8081), nil, nil, nil
 	end
 	if frozen and not want and ram_at ~= nil then
-		local now = read_ram()
-		write_row(string.format('{"frames": %d, "tick": %d, "changed": [%s]}\n', frozen_frames, tick_first or -1,
-			table.concat((function()
-				local q = {}
-				for _, r in ipairs(ranges(ram_at, now)) do q[#q + 1] = '"' .. r .. '"' end
-				return q
-			end)(), ", ")))
+		write_diff(nil)
 		ram_at = nil
 	end
 	frozen = want
@@ -176,6 +178,7 @@ end
 local function give_up(why)
 	frozen = false
 	broken = why
+	if ram_at ~= nil then write_diff(why) end
 	ram_at = nil
 	say("Menu: the game could not be stopped (" .. broken .. ") - it runs under the menu this session")
 end

@@ -22,7 +22,8 @@ The check that the game really stands is stronger.
   are not checked: those writes are the tool's own. Neither is a state load
 - With `Analysis > Knockdown Logger` on, it also writes where the memory
   changed while the game stood (`scripts/reversal_logs/freeze_log.jsonl`).
-  It is for investigation
+  If the game could not be stopped, the reason and what had changed so far
+  are written at once. It is for investigation
 
 ### Fix: recording, playback and the loop wait ran on under the menu, and playback stumbled after it
 
@@ -68,7 +69,7 @@ The check that the game really stands is stronger.
 ### Manual
 
 - Section 2.1 says recording, playback, the loop wait and the life refill
-  wait under the menu too, and how you are told if the game does not stand
+  pause under the menu too, and how you are told if the game does not stand
 
 ---
 

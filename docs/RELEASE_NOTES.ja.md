@@ -19,7 +19,8 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 - メニューを閉じたフレームと、メニューから位置を動かしたときは、ツール自身が書き込むので確かめません。
   ステートを読み込んだときも同じです
 - `Analysis > Knockdown Logger` がONのとき、止めている間に変わったメモリーの場所
-  （`scripts/reversal_logs/freeze_log.jsonl`）も書きます。調査用です
+  （`scripts/reversal_logs/freeze_log.jsonl`）も書きます。止められなかったときは、その理由と、それまでに
+  変わった場所をすぐに書きます。調査用です
 
 ### 修正：メニュー中に記録・再生・ループの待ちが進み、閉じた後の再生が乱れていた
 

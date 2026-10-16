@@ -264,7 +264,7 @@ An indented row is a setting of the nearest less-indented row above it, its pare
 **While the menu is open during a match, the game stands still.** Characters, projectiles, the round timer and stun do not advance; closing the menu carries on from there. The music keeps playing.
 
 - Only the game's own processing is stopped, not FBNeo, so the menu still works from an arcade stick or controller.
-- Recording playback, recording (Quick Recording in [5.1](#quick-recording) and the like), the `Loop Interval (Frames)` wait and the `Refill Timer (seconds)` life refill wait too, and carry on from there when the menu closes.
+- Recording playback and recording (Quick Recording in [5.1](#quick-recording) and the like) pause too, and so do the `Loop Interval (Frames)` wait and the `Refill Timer (seconds)` life refill. All of them carry on when the menu closes.
 - While a position reset (`Dummy > Position` and the like) is moving the characters, the game runs until they are in place, then stands again.
 - `Recording > Save State` from the menu saves the scene as it stands ([5.5](#save-state)).
 - If the game does not stand (the Tick or a character moves while it should), it is no longer stopped for the rest of the session, and the emulator's message area says so.
