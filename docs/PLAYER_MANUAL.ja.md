@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.28.3／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.28.4／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [守りを練習する：AG・GC](#sasquatch-ag-tutorial) · [攻めを調べる：起き攻め](#wakeup-pressure-drill) · [対象環境・確認範囲](#verification-scope)
 
@@ -266,7 +266,8 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 
 - 止めているのはゲームの処理だけで、FBNeoは止めません。そのため、アーケードコントローラーなどでメニューを操作できます。
 - 記録の再生、記録（[5.1](#quick-recording) のQuick Recordingなど）、`Loop Interval (Frames)` の待ち、`Refill Timer (seconds)` による体力の回復も止まり、閉じるとその続きから進みます。
-- Action Steps・Action Patterns・Specifiedの動きは、止まるのではなく終わります。メニューを開くと、出す前の待ち（ダウン中に起き上がりを待っている反撃など）も含めて、実行中の動きはそこで終わり、閉じても続きからは出ません。ループも止まり、次の反撃のきっかけでまた始まります。
+- 起き上がり・やられ・ガードの後に出す反撃は、メニューを開いても消えず、閉じた後にそのまま出ます。ダウン中にメニューで反撃の設定を変えると、その起き上がりから新しい設定で出ます（起き上がりの直前に開いた場合は、前の設定のまま出ることがあります）。
+- Action Steps・Action Patternsの2つ目以降のステップや、`Loop Steps`・Specifiedの `Loop` による繰り返しの途中でメニューを開くと、そこで終わります。閉じても続きからは出ず、次の反撃のきっかけでまた始まります。記録の再生（`Looped Playback` を含む）は終わらず、上のとおり続きから進みます。
 - 位置を戻す操作（`Dummy > Position` など）をしている間は、配置が終わるまでゲームを動かし、その後また止めます。
 - メニュー中に `Recording > Save State` で保存すると、止まっている場面がそのまま保存されます（[5.5](#save-state)）。
 - 止まらなかったとき（止めている間にTickかキャラクターが動いたとき）は、その起動中は止めるのをやめ、エミュレーターのメッセージ欄で知らせます。
@@ -714,7 +715,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 - 最初の1回は、これまでどおり反撃のきっかけ（ガードした後・攻撃を受けた後・起き上がり）で始まります。`yes` にしただけ、メニューを閉じただけでは始まりません。
 - 2回目からは、空中に出る行動なら着地に合わせて（Action Stepsの `Auto (Landing)` と同じ）、地上で終わる行動ならダミーが動けるようになってから、もう一度出します。
 - `Button Wait`・`Random Delay`・`Random Start Wait` は毎回の行動にかかります。乱数は回ごとに引き直します。
-- 繰り返しを止めるときは `Loop = no` にします。メニューを開いてもループは止まり、次の反撃のきっかけでまた始まります（[2.1](#03-controls)）。
+- 繰り返しを止めるときは `Loop = no` にします。繰り返しの途中でメニューを開いても止まり、次の反撃のきっかけでまた始まります（[2.1](#03-controls)）。
 - Action Stepsの `Loop Steps`・`Loop Wait` とは別の設定です。
 
 技が出ずにダミーが動けるままのときは、ダミーが次に何かをして動けるようになるまで待ちます（同じ入力を出し続けません）。着地を予測できない動き（浮遊など）は、着地してから入力を始めるため、最速より遅れることがあります。
@@ -1858,7 +1859,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新：2026-10-11。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.28.3。項目名は2026-10-17に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.28.4。項目名は2026-10-17に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

@@ -23,8 +23,8 @@
 --   [12] the hit-stun arm and the lap call it; the block arm does not
 --   [13] with the game standing behind the menu (no tick), M.menu_open ends the
 --        run on every open; the master calls it each frame the menu is open
---   [14] guardCancel GA.menu_end: a queued Specified reversal and step one's
---        press end too; the latches that spent the opportunity stay
+--   [14] a first run still with the arm (a reaction waiting for the wake-up
+--        or the end of a stun) is left alone by the menu (v11.7.28.4)
 --
 -- Run from scripts/ - the reads below are relative.
 --   cd scripts && lua5.1 ../analysis/test_specified_loop.lua
@@ -432,50 +432,30 @@ do
 	   at ~= nil and frozen_set ~= nil and first_return ~= nil and frozen_set < at and at < first_return, true)
 end
 
-print("[14] 待っている Specified の反撃と 1 歩目の押しも、メニューで終わる (v11.7.28.3)")
+print("[14] 待っている反撃はメニューで終わらせない (v11.7.28.4)")
 do
-	-- GA.menu_end, lifted out of guardCancel.lua and run with its file-level
-	-- state standing in as globals.
+	-- User 2026-10-17: "ダウン中にメニューをおしても次の技はでたほうがいい ...
+	-- 立小Pとかでつぶしたときは出ない". v11.7.28.3 ended the arm's waiting
+	-- reversal too (GA.menu_end), which dropped a hit stun's countdown; it is
+	-- gone, and the runner leaves a first run that is still the arm's.
 	local gsrc14 = io.open("guardCancel.lua"):read("*a")
-	local s = gsrc14:find("\nfunction GA.menu_end()\n", 1, true)
-	local e = s and gsrc14:find("\nend\n", s + 1, true)
-	eq("GA.menu_end がある", s ~= nil and e ~= nil, true)
-	local saved_po = player_objects
-	GA = {}
-	local done = nil
-	function kd_set_motion_done(v) done = v end
-	player_objects = { {}, { pending_input_sequence = { sequence = { { "forward" } }, kd_tick = true } } }
-	fast_press_lg, fast_press_q, hs_flush_q = 12, { { "down" } }, { { entry = { "forward" } } }
-	hs_countdown, hs_arm_lg, pending_retry = 5, 40, { frame = 3 }
-	kd_armed, hs_armed, prebuffer_used = true, true, true
-	assert(loadstring(gsrc14:sub(s + 1, e + 4)))()
-	GA.menu_end()
-	eq("待っている反撃の記録を捨てる", player_objects[2].pending_input_sequence, nil)
-	eq("押しの窓を閉じる", fast_press_lg, nil)
-	eq("  残りの入力も", #fast_press_q, 0)
-	eq("ヒットストップ明けの流し込みも", #hs_flush_q, 0)
-	eq("やられ中の待ちも", tostring(hs_countdown) .. "/" .. tostring(hs_arm_lg), "nil/nil")
-	eq("再送の予定も", pending_retry, nil)
-	eq("起き上がりの予備の経路も止める (kd_motion_done)", done, true)
-	eq("使った機会の印はそのまま (同じダウンで再び出さない)",
-	   tostring(kd_armed) .. "/" .. tostring(hs_armed) .. "/" .. tostring(prebuffer_used), "true/true/true")
-	player_objects = saved_po
-	-- The master: every frame the menu is open, for Specified and the step
-	-- lists only, after globals.game_frozen and before the first return.
-	local ms = io.open("vsav_training_master_script.lua"):read("*a")
-	local HEAD = "\tif globals.show_menu == true and globals.dummy ~= nil\n"
-	          .. "\t   and (globals.dummy.guard_action == 'reversal' or globals.dummy.guard_action == 'counter'\n"
-	          .. "\t        or globals.dummy.guard_action == 'sequence') then\n"
-	          .. "\t\tguardCancelModule.menu_end()\n"
-	local at = ms:find(HEAD, 1, true)
-	eq("master: Specified (reversal / counter) と step list のときだけ呼ぶ", at ~= nil, true)
-	local rb = ms:find("emu.registerbefore(function()", 1, true)
-	local first_return = rb and ms:find("\n%s*return\n", rb)
-	local frozen_set = ms:find("\tglobals.game_frozen = gameFreezeModule.frozen()\n", 1, true)
-	eq("  globals.game_frozen の後、最初の return より前",
-	   at ~= nil and frozen_set ~= nil and first_return ~= nil and frozen_set < at and at < first_return, true)
-	eq("guardCancelModule.menu_end を出している",
-	   gsrc14:find('["menu_end"] = function() GA.menu_end() end,', 1, true) ~= nil, true)
+	eq("guardCancel に GA.menu_end は無い", gsrc14:find("GA.menu_end", 1, true), nil)
+	local ms14 = io.open("vsav_training_master_script.lua"):read("*a")
+	eq("master は menu_end を呼ばない", ms14:find("guardCancelModule.menu_end", 1, true), nil)
+	fresh()                                   -- the first run in the slot, the arm's
+	R.arm_specified_loop("reversal", build_A)
+	local first = defender.pending_input_sequence
+	globals.show_menu = true
+	R.menu_open(defender)
+	eq("待っている初回の記録は残る", defender.pending_input_sequence, first)
+	eq("  ループも残る", R.loop_alive(), true)
+	tick()                                    -- a tick that still runs behind the menu
+	eq("  メニュー中の Tick でも残る", defender.pending_input_sequence, first)
+	globals.show_menu = false
+	tick(now + 1)
+	busy() ; tick()
+	free() ; for _ = 1, 3 do tick() end
+	eq("閉じた後、初回が出て次の周も出る", #queued, 1)
 end
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))

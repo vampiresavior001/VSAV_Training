@@ -63,11 +63,79 @@ want("both sides stays", swap(3), 3)
 want("two defer sites capture the facing",
 	select(2, src:gsub("fast_press_fref = facing_for_input%(%)", "")), 2)
 want("the delivery compares the reference",
-	src:find("facing_for_input() ~= fast_press_fref", 1, true) ~= nil, true)
+	src:find("fast_press_fref ~= nil and GA.fast_press_face_now() ~= fast_press_fref", 1, true) ~= nil, true)
 -- The mark must show what was actually asserted, not what was captured.
 local at = assert(src:find('mark_write("press_now"', 1, true))
 want("press_now marks the re-aimed bits",
 	src:find("_pl * 256", at, true) ~= nil, true)
+
+-- ---------------------------------------------------------------------------
+-- A SPECIFIED DASH, AND ALL OF ITS DEFERRED DELIVERY (v11.7.28.4).
+--
+-- User 2026-10-17: a wake-up forward dash cancel + MP came out as a standing
+-- MP. Measured (kd_c0A, v11.7.28.3): 9 of 9 wake-ups that turned failed, 2 of 2
+-- that did not dashed. The record carried its button in the last entry, so it
+-- was not raw and every direction went in on the side the opponent is on;
+-- $b, which the game swaps $122 with, kept the way the dummy lay until the
+-- free tick. And only the press was re-aimed: the second tap and the
+-- cancel's reverse were not.
+
+-- Every defer site records whether it resolved raw, right after the facing.
+want("both defer sites remember raw-ness",
+	select(2, src:gsub("fast_press_fref = facing_for_input%(%)\n%s*GA%.fast_press_raw = GA%.pending_raw%(%)", "")), 2)
+want("the second tap is re-aimed",
+	src:find("local _ml = GA.fast_press_aim(fast_press_mlev)", 1, true) ~= nil, true)
+want("the cancel's reverse is re-aimed",
+	src:find("local _rv = GA.fast_press_aim(fast_press_rev)", 1, true) ~= nil, true)
+want("the press is re-aimed",
+	src:find("local _pl = GA.fast_press_aim(fast_press_lev)", 1, true) ~= nil, true)
+want("Specified dashes are queued raw",
+	src:find("if (_ga0 == 'reversal' or _ga0 == 'counter') and GA.RAW_DASH_STICK[GA.stick()] then\n\t\t\t_q.raw_dir = true", 1, true) ~= nil, true)
+for _, st in ipairs({ "forward dash", "back dash", "forward dash cancel", "back dash cancel" }) do
+	want("  " .. st .. " is one of them", src:find('["' .. st .. '"] = true', 1, true) ~= nil, true)
+end
+
+-- The re-aim itself, lifted out and run: fref, $b and the facing standing in.
+local s0 = assert(src:find("GA.fast_press_raw = false\n", 1, true))
+local e0 = assert(src:find("function GA.pending_raw()", s0, true))
+local e1 = assert(src:find("\nend\n", e0, true))
+GA = {}
+local b_now, side_now = 1, 0
+memory = { readbyte = function(a) if a == 0xFF880B then return b_now end return 0 end }
+actionSequenceRunnerModule = { orientation = { steps_face = function(live) return live end } }
+GA.af_run_now = function() return nil end
+facing_for_input = function() return side_now end
+swap_facing_bits = swap
+assert(loadstring(src:sub(s0, e1 + 4)))()
+
+-- The measured wake-up (kd_c0A_s03): $b is 1 through free-1 and 0 from the
+-- free tick; the opponent's side is 0 throughout. Tap one on free-3, the
+-- neutral, the second tap held on free-1 and free, the reverse from free+1,
+-- the press with the Button Lever forward on free+7.
+local B = { [-3] = 1, [-2] = 1, [-1] = 1, [0] = 0, [1] = 0, [7] = 0 }
+local function run(raw)
+	local seen = {}
+	local function face(t) if raw then return B[t] end return side_now end
+	local function deliver(t, lev) seen[#seen + 1] = corrected(lev, B[t]) end
+	deliver(-3, raw_for("forward", face(-3)))                 -- tap one, resolved live
+	-- The defer, on free-2: what the motion, reverse and press were captured as.
+	b_now = B[-2]
+	GA.fast_press_raw = raw
+	fast_press_fref = face(-2)
+	local mlev, rev, lev = raw_for("forward", face(-2)), raw_for("back", face(-2)), raw_for("forward", face(-2))
+	for _, t in ipairs({ -1, 0 }) do b_now = B[t] ; deliver(t, GA.fast_press_aim(mlev)) end
+	b_now = B[1] ; deliver(1, GA.fast_press_aim(rev))
+	b_now = B[7] ; deliver(7, GA.fast_press_aim(lev))
+	local names = {}
+	for _, v in ipairs(seen) do names[#names + 1] = (v == 2) and "F" or (v == 1) and "B" or tostring(v) end
+	return table.concat(names, " ")
+end
+want("before: resolved on the side - the taps disagree (as measured)", run(false), "B B F B F")
+want("now: raw - forward, forward twice, back, forward", run(true), "F F F B F")
+-- Without the turn nothing moves either way.
+B = { [-3] = 0, [-2] = 0, [-1] = 0, [0] = 0, [1] = 0, [7] = 0 }
+want("no turn, before", run(false), "F F F B F")
+want("no turn, now", run(true), "F F F B F")
 
 print(fails == 0 and "REP_OK" or (fails .. " REP_NG"))
 os.exit(fails == 0 and 0 or 1)

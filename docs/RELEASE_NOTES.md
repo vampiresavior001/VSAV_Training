@@ -6,6 +6,54 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.28.4
+
+On a wake-up that turns the dummy round, a Specified dash or dash cancel no
+longer comes out as just its button, as a standing normal. Opening the menu no
+longer loses the counter after a hit stun or a block.
+
+### Fix: a Specified dash did not come out on a wake-up that turned the dummy
+
+- When the dummy lay facing away from the opponent and turned round on waking
+  up, a dash or dash cancel set in `Reversal - Specified` or
+  `Counter Attack - Specified` did not come out, and only its button did, as a
+  standing normal (a dash cancel + MP became a standing MP, for example)
+- The game reads a dash's left and right against the dummy's facing, which
+  stays the way it lay until the moment it gets up. The tool decided part of
+  the input against another facing, so the first and second forward were read
+  as opposite directions. v11.7.6 fixed the last press of a plain dash, but
+  not the second forward or the dash cancel's back
+- A dash's left and right are now decided against the same facing as the
+  game's, and the second forward, the dash cancel's back and the last press are
+  re-aimed at the facing of the moment they go in
+- In the developer's recordings (Sasquatch, dash cancel + MP), wake-ups that
+  turned failed 9 of 9 before and dashed 3 of 3 after. Wake-ups that did not
+  turn are unchanged. Also checked in play
+- A dash as the first step of Action Steps may share the same shape, but has
+  no recordings yet, so it is unchanged
+
+### Fix: opening the menu lost the counter after a hit stun (since v11.7.28.3)
+
+- v11.7.28.3 made the menu end a counter still waiting to come out as well, so
+  opening it during a hit stun and the like lost the counter that should have
+  followed (during a knockdown it still came out, unless opened just before the
+  wake-up)
+- A waiting counter is no longer ended: it comes out as usual once the menu
+  closes, at the same moment as without the menu, since the game stands still
+  meanwhile. Change the counter's settings during a knockdown and that wake-up
+  uses the new ones
+- Action Steps or Action Patterns into their second step or later, and repeats
+  by `Loop Steps` or Specified's `Loop`, still end at the menu. Recording
+  playback, `Looped Playback` included, still pauses and carries on
+- Checked in play (the counter after a hit stun the menu was opened in, and a
+  wake-up with settings changed during the knockdown)
+
+### Manual
+
+- Section 2.1 and the Specified `Loop` explanation now describe this
+
+---
+
 ## v11.7.28.3
 
 A dash cancel's walk backwards and a Specified reversal no longer carry on

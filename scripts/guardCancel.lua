@@ -1370,12 +1370,35 @@ end
 -- Queues a guard action's list and, when it is the one ga_sequence handed out,
 -- tags the new record with its run. queue_input_sequence does nothing while
 -- the slot is taken, so a record that was already there is left alone.
+-- A SPECIFIED DASH IS AIMED LIKE A DASH, BUTTON OR NOT (v11.7.28.4; user,
+-- 2026-10-17: "起き上がりのダッシュが出ずに立中Pになってる").
+--
+-- controller.lua calls a record raw (directions read out of $122, swapped on
+-- $b alone at 0x02218E) only when it holds nothing but horizontals - and a
+-- Specified dash carries its button in the last entry ({forward}, {},
+-- {forward, MP}), so it was resolved on the side the opponent is on instead.
+-- On a wake-up that turns the dummy, $b keeps the way it lay until the free
+-- tick: the first tap went in as corrected back, the second as forward, no
+-- dash came out, and the button came out alone as a standing normal. Measured
+-- on Sasquatch's forward dash cancel + MP: 9 of 9 wake-ups that turned failed,
+-- 2 of 2 that did not dashed (v11.7.25.2 with LP: 9 of 9 and 9 of 9). The four
+-- dashes' directions are read the dash's way whatever button rides with them.
+-- On GA, not a local: the file's main chunk is at Lua 5.1's 200 locals.
+GA.RAW_DASH_STICK = {
+	["forward dash"] = true, ["back dash"] = true,
+	["forward dash cancel"] = true, ["back dash cancel"] = true,
+}
+
 function GA.af_queue(_defender, _list, _hold_last)
 	local _before = _defender.pending_input_sequence
 	queue_input_sequence(_defender, _list, _hold_last)
 	local _q = _defender.pending_input_sequence
 	if _q ~= nil and _q ~= _before and _list ~= nil and _list == GA.af_list then
 		_q.orient_run = GA.af_run
+		local _ga0 = globals and globals.dummy and globals.dummy.guard_action
+		if (_ga0 == 'reversal' or _ga0 == 'counter') and GA.RAW_DASH_STICK[GA.stick()] then
+			_q.raw_dir = true
+		end
 		-- A SPECIFIED FIRST RUN HAS JUST GONE INTO THE SLOT: WITH THE LOOP ROW
 		-- ON, THE RUNNER TAKES THE LAPS AFTER IT (handoff 2026-10-14, 14). The
 		-- run itself is untouched - it is in the slot and the arm places it -
@@ -2765,6 +2788,37 @@ local fast_press_off = 0
 -- re-aimed. Both defer sites store the reference; the delivery swaps the two
 -- facing-relative bits when the reference has moved on.
 local fast_press_fref = nil
+-- AND THE WHOLE DEFERRED DELIVERY IS RE-AIMED, NOT ONLY THE PRESS (v11.7.28.4).
+--
+-- fast_press_raw: the record was raw (a dash) when fref was taken, so fref
+-- is $b and the delivery has to ask $b again - by then the record itself may
+-- be gone (service_held_reversal drops it at the frame boundary), so the
+-- answer is kept with the press. The second tap (fast_press_mlev) and a dash
+-- cancel's reverse (fast_press_rev) were captured at the same moment as the
+-- press and straddle the same wake-up turn: the tap's two ticks sit on free-1
+-- and free, the reverse after it. They are re-aimed the press's way.
+-- Kept on GA rather than as locals: the tick hook below is at Lua 5.1's
+-- limit of 60 upvalues (GA is one it already has), and the file's main chunk
+-- at its 200 locals.
+GA.fast_press_raw = false
+function GA.fast_press_face_now()
+	if GA.fast_press_raw then
+		return actionSequenceRunnerModule.orientation.steps_face(
+			memory.readbyte(0xFF880B), GA.af_run_now(), true)
+	end
+	return facing_for_input()
+end
+function GA.fast_press_aim(_lev)
+	if fast_press_fref ~= nil and GA.fast_press_face_now() ~= fast_press_fref then
+		return swap_facing_bits(_lev)
+	end
+	return _lev
+end
+function GA.pending_raw()
+	local _d = player_objects and player_objects[2]
+	local _s = _d and _d.pending_input_sequence
+	return _s ~= nil and _s.raw_dir == true
+end
 -- THE DELAY SEPARATES THE MOTION FROM THE BUTTON (v173).
 --
 -- fast_press_moff is where the motion's LAST entry goes, fast_press_off where
@@ -5005,16 +5059,18 @@ memory.registerexec(0x02211A, function()
 					assert_input_bits(0, 0)
 				end
 			elseif _dlg <= fast_press_moff + 1 then
-				assert_input_bits(fast_press_mlev, 0)
+				local _ml = GA.fast_press_aim(fast_press_mlev)
+				assert_input_bits(_ml, 0)
 				debugKnockdownModule.mark_write("motion_now",
-					fast_press_mlev * 256, _dlg)
+					_ml * 256, _dlg)
 			elseif fast_press_rev ~= nil then
 				-- Past the dash's own two ticks: reverse and stay there. This
 				-- is the cancel, and holding it is what makes the game's one
 				-- frame recognition window unmissable.
-				assert_input_bits(fast_press_rev, 0)
+				local _rv = GA.fast_press_aim(fast_press_rev)
+				assert_input_bits(_rv, 0)
 				debugKnockdownModule.mark_write("cancel_now",
-					fast_press_rev * 256, _dlg)
+					_rv * 256, _dlg)
 			elseif fast_press_hold then
 				assert_input_bits(fast_press_mlev, 0)
 			else
@@ -5057,11 +5113,7 @@ memory.registerexec(0x02211A, function()
 			-- nothing recomputes $b between the inject at 0x02211A and the
 			-- correction at 0x022134 (see the dash_facing diagnostic), so the
 			-- value read here is what the swap will use this tick.
-			local _pl = fast_press_lev
-			if fast_press_fref ~= nil
-			   and facing_for_input() ~= fast_press_fref then
-				_pl = swap_facing_bits(_pl)
-			end
+			local _pl = GA.fast_press_aim(fast_press_lev)
 			assert_input_bits(_pl, fast_press_btn)
 			debugKnockdownModule.mark_write("press_now",
 				_pl * 256 + fast_press_btn, _dlg)
@@ -6071,6 +6123,7 @@ memory.registerexec(0x02211A, function()
 				assert_input_bits(_plev, 0)
 				fast_press_lg  = memory.readbyte(0xFF8081)
 				fast_press_fref = facing_for_input()
+				GA.fast_press_raw = GA.pending_raw()
 				fast_press_lev = _plev
 				fast_press_btn = _pbtn
 				fast_press_off = 1
@@ -6336,6 +6389,7 @@ memory.registerexec(0x02211A, function()
 		end
 		fast_press_lg  = memory.readbyte(0xFF8081)
 		fast_press_fref = facing_for_input()
+		GA.fast_press_raw = GA.pending_raw()
 		-- What rides in WITH the button. Merged with the motion when there is
 		-- no delay; on a split it is the held direction, or nothing.
 		local _ov = button_lever_bits()
@@ -8721,38 +8775,7 @@ local function guardCancelCheck(run_dummy_input, macroLua_funcs)
 	end
 end
 
--- THE MENU ENDS A SPECIFIED REVERSAL, AND STEP ONE OF A STEP LIST, TOO
--- (v11.7.28.3; user, 2026-10-17: "推奨のやり方で").
---
--- Since v11.7.28 the game stands behind the menu, and everything here that
--- delivers a reversal waits on the tick clock - so a queued Specified
--- reversal, or the arm's press of step one, was not lost behind the menu as
--- it used to be: it came out on close. The runner's later steps already end
--- there (actionSequenceRunner M.menu_open); this is the arm's half. The
--- master calls it on every frame the menu is open, for Specified and the
--- step lists only.
---
--- What is cleared is what the arm itself lets go of when a press is spent
--- (the record, the press window, the flush) and the hit-stun wait still
--- counting. The latches that say an opportunity was used (kd_armed,
--- hs_armed, prebuffer_used) stay as they are, so the same knockdown or stun
--- does not arm again; kd_motion_done keeps the wake-up fallback from queueing
--- it a second way. The next hit clears that, as it always does.
-function GA.menu_end()
-	local _d = player_objects and player_objects[2]
-	if _d ~= nil then _d.pending_input_sequence = nil end
-	fast_press_lg = nil
-	fast_press_q = {}
-	hs_flush_q = {}
-	hs_countdown = nil
-	hs_arm_lg = nil
-	pending_retry = nil
-	kd_set_motion_done(true)
-end
-
 guardCancelModule = {
-	-- Called by the master while the menu is open (GA.menu_end above).
-	["menu_end"] = function() GA.menu_end() end,
 	-- A CHARACTER SELECT CLEARS THE GC COMMAND TRACE, as a restart would (user,
 	-- 2026-09-27): the one being collected and the one on screen.
 	["clear_trace"] = function()

@@ -2836,8 +2836,19 @@ end
 -- a turbo frame's two, about one open in three), and otherwise came back on
 -- close, mid-pass. The master calls this on every frame the menu is open,
 -- before the game runs that frame, so the run ends the same way each time.
+--
+-- A REACTION STILL WAITING IS NOT A RUN IN PROGRESS (v11.7.28.4; user,
+-- 2026-10-17: "ダウン中にメニューをおしても次の技はでたほうがいい ... 立小Pとかで
+-- つぶしたときは出ない"). While step one is still the arm's - its record in the
+-- slot, not a segment of ours - the run has not begun: the game stands
+-- behind the menu, so it comes out on close at the tick it would have. Ending
+-- it there is what lost the reversal after a hit stun, and with the game
+-- standing, a knockdown or a stun is where the dummy's next move gets set in
+-- the menu. Only a run whose own steps have begun ends here.
 function M.menu_open(defender)
 	if defender == nil or not loop_blocked() then return end
+	local _s = defender.pending_input_sequence
+	if _s ~= nil and not _s.seq_tick then return end
 	drop_for_menu(defender)
 end
 
@@ -2879,7 +2890,8 @@ function M.service(defender)
 	-- reached only when a tick still runs; M.menu_open is what ends it on
 	-- every open.
 	if loop_blocked() then
-		drop_for_menu(defender)
+		-- The same answer as M.menu_open, which asks first on the frame.
+		M.menu_open(defender)
 		return
 	end
 	-- AND THE SELECT SCREEN DROPS THE LOOP WITH IT (user, 2026-09-21).

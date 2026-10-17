@@ -583,14 +583,6 @@ emu.registerbefore(function()
 	   and actionSequenceRunnerModule.owns(globals.dummy.guard_action) then
 		actionSequenceRunnerModule.menu_open(player_objects and player_objects[2])
 	end
-	-- The arm's half: a queued Specified reversal and step one's press
-	-- (guardCancel.lua GA.menu_end; v11.7.28.3). Those three guard actions
-	-- only - the other reversals are not what the menu is said to end.
-	if globals.show_menu == true and globals.dummy ~= nil
-	   and (globals.dummy.guard_action == 'reversal' or globals.dummy.guard_action == 'counter'
-	        or globals.dummy.guard_action == 'sequence') then
-		guardCancelModule.menu_end()
-	end
 
 	-- THE CHARACTER SELECT STOPS THE LOOP (user, 2026-09-21).
 	--

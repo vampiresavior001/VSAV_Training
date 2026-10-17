@@ -355,11 +355,12 @@ do
 	if fails == 0 then print("  ok 1 歩目の rev は預けられ、一度だけ受け取り、cancel で消える") end
 end
 
-print("[8c] メニューで終わった run は、ダッシュキャンセルの後ろも 1 歩目の hold も残さない (v11.7.28.2)")
+print("[8c] メニューで終わった run は、ダッシュキャンセルの後ろも 1 歩目の hold も残さない。始まっていない run には触らない (v11.7.28.2 / .4)")
 do
 	-- 本人 2026-10-17: ダッシュキャンセルの直後にメニューを開くと、閉じた後に
 	-- 後ろへ歩き続けた。drop_for_menu が rev / arm_rev を残していたため。
-	local defender = { pending_input_sequence = { sequence = { { "back" } } } }
+	-- A segment of the run (seq_tick) in the slot: the run is in progress.
+	local defender = { pending_input_sequence = { sequence = { { "back" } }, seq_tick = true } }
 	local before = fails
 	install({
 		{ action = "dashc.f", wait = -1 },
@@ -382,17 +383,36 @@ do
 	})
 	R.cancel()
 	R.arm("reversal")
+	defender.pending_input_sequence = { sequence = { { "back" } }, seq_tick = true }
 	globals.show_menu = true
 	R.menu_open(defender)
 	globals.show_menu = false
 	if R.take_arm_hold() ~= nil then fail("1 歩目の hold", "残っている", "nil") end
+	-- STEP ONE STILL WITH THE ARM (v11.7.28.4): its record in the slot, not a
+	-- segment. The run has not begun, so the menu leaves all of it - it comes
+	-- out on close (user, 2026-10-17: "ダウン中にメニューをおしても次の技はでたほうがいい").
+	install({
+		{ action = "dashc.f", wait = -1 },
+		{ action = "atk", lever = "none", button = "HP", wait = -1 },
+	})
+	R.cancel()
+	R.arm("reversal")
+	local waiting = { sequence = { { "forward" }, {}, { "forward" } }, kd_tick = true }
+	defender.pending_input_sequence = waiting
+	local n_before = R.pending_count()
+	globals.show_menu = true
+	R.menu_open(defender)
+	globals.show_menu = false
+	if defender.pending_input_sequence ~= waiting then fail("待っている 1 歩目の記録", "消えた", "残る") end
+	if R.pending_count() ~= n_before or n_before == 0 then fail("待っている run の 2 歩目以降", tostring(R.pending_count()), tostring(n_before)) end
+	if R.arm_rev_due(60) ~= "back" then fail("待っている 1 歩目の arm_rev", "消えた", "back") end
 	-- メニューを閉じているときは何も消さない。
 	R.cancel()
 	R.park_rev("back", 100)
 	R.menu_open(defender)
 	if R.rev_lever_now(102) ~= "back" then fail("閉じているとき", tostring(R.rev_lever_now(102)), "back") end
 	R.cancel()
-	if fails == before then print("  ok rev・arm_rev・1 歩目の hold はメニューで消え、閉じているときは触らない") end
+	if fails == before then print("  ok rev・arm_rev・1 歩目の hold はメニューで消え、待っている 1 歩目と閉じているときは触らない") end
 end
 
 print("[9] 凍結中のティックは配送に数えない")
