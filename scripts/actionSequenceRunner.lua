@@ -2789,6 +2789,44 @@ function M.waiting_lever()
 	if _w ~= nil then return _w end
 	return held_after
 end
+-- The menu's end of a run (see M.service): the queue, the segment in the
+-- delivery slot and the loop.
+local function drop_for_menu(defender)
+	if pending ~= nil then
+		M.steps_dropped = M.steps_dropped + #pending
+		pending = nil
+	end
+	-- AND THE SEGMENT ALREADY BEING DELIVERED.
+	--
+	-- Dropping the queue alone left the step in the delivery slot to finish
+	-- walking its entries, so closing the editor was followed by the tail
+	-- of the input that was in flight when it opened - a leftover from a
+	-- run that has been abandoned. Nothing of the old pass comes out.
+	--
+	-- The same pair the savestate clean-up in the master script does, for
+	-- the same reason: the schedule lives on the Lua side and clearing one
+	-- half does not reach the other.
+	defender.pending_input_sequence = nil
+	loop_sched = nil
+	loop_which = nil
+	loop_build = nil
+	anchor = nil
+	held_after = nil
+end
+
+-- EVERY OPEN ENDS THE RUN, NOT SOME (v11.7.28.2; user, 2026-10-17: "推奨通り").
+--
+-- M.service is reached from the walker, on the game's ticks - and since
+-- v11.7.28 the game stands while the menu is open, so there are none. The run
+-- was dropped only when a tick still ran after the menu opened (the second of
+-- a turbo frame's two, about one open in three), and otherwise came back on
+-- close, mid-pass. The master calls this on every frame the menu is open,
+-- before the game runs that frame, so the run ends the same way each time.
+function M.menu_open(defender)
+	if defender == nil or not loop_blocked() then return end
+	drop_for_menu(defender)
+end
+
 -- Called once per tick from the walker in guardCancel. No latch: the air test
 -- reads what the game is about to read, on the same tick.
 --
@@ -2823,28 +2861,11 @@ function M.service(defender)
 	-- do - and after an edit it is worse, because the first thing seen is a lap
 	-- nobody asked for. loop_sched goes with the pass, so the next lap needs a
 	-- fresh arm: hit the dummy once and it picks up again from the edited list
-	-- (user, 2026-09-06).
+	-- (user, 2026-09-06). With the game standing behind the menu this is
+	-- reached only when a tick still runs; M.menu_open is what ends it on
+	-- every open.
 	if loop_blocked() then
-		if pending ~= nil then
-			M.steps_dropped = M.steps_dropped + #pending
-			pending = nil
-		end
-		-- AND THE SEGMENT ALREADY BEING DELIVERED.
-		--
-		-- Dropping the queue alone left the step in the delivery slot to finish
-		-- walking its entries, so closing the editor was followed by the tail
-		-- of the input that was in flight when it opened - a leftover from a
-		-- run that has been abandoned. Nothing of the old pass comes out.
-		--
-		-- The same pair the savestate clean-up in the master script does, for
-		-- the same reason: the schedule lives on the Lua side and clearing one
-		-- half does not reach the other.
-		defender.pending_input_sequence = nil
-		loop_sched = nil
-		loop_which = nil
-		loop_build = nil
-		anchor = nil
-		held_after = nil
+		drop_for_menu(defender)
 		return
 	end
 	-- AND THE SELECT SCREEN DROPS THE LOOP WITH IT (user, 2026-09-21).

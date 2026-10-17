@@ -575,6 +575,14 @@ emu.registerbefore(function()
 			globals.controllerModule.disable_both_players()
 		end
 	end
+	-- And the menu ends an Action Steps / Action Patterns / Specified run on
+	-- every open, before the game runs the frame (actionSequenceRunner.lua
+	-- M.menu_open; v11.7.28.2). Asked under the same condition as the walker's
+	-- call, so another guard action's queued input is not touched.
+	if globals.show_menu == true and globals.dummy ~= nil
+	   and actionSequenceRunnerModule.owns(globals.dummy.guard_action) then
+		actionSequenceRunnerModule.menu_open(player_objects and player_objects[2])
+	end
 
 	-- THE CHARACTER SELECT STOPS THE LOOP (user, 2026-09-21).
 	--

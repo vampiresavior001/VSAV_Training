@@ -8,7 +8,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 **達人の精密な動きを、練習相手に。** 内部フレーム（Tick）単位でダミーの動きを指定し、守りの練習と攻めの検証ができる、Fightcade 2／FBNeo用のトレーニングモードです。相手の動きを正確に再現し、自分の入力と攻撃のタイミングを見ながら、改善点を見つけられます。
 
-[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.28.1** です。
+[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.28.2** です。
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [守りを練習する](#first-ag-drill) · [起き攻めを調べる](docs/PLAYER_MANUAL.ja.md#wakeup-pressure-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
 
@@ -43,7 +43,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 |---|---|
 | **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
 | **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
-| **同じ場面から繰り返し試す** | メニューでゲームを止め、[状態を保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)して同じ状況から練習する。記録の再生中など、保存できない場面もある |
+| **同じ場面から繰り返し試す** | `Volume Up`かメニューで[状態を保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)し、同じ状況から練習する。メニュー中はゲームが止まるので、止めた場面も保存できる。記録の再生中など、保存できない場面もある |
 | **チェーンや目押しの入力タイミングを確認する** | [Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)で、成立結果と、ボタンを押した位置を受付・猶予の表示と比べる |
 | **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
 

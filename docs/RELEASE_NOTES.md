@@ -6,6 +6,31 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.28.2
+
+Opening the menu now ends Action Steps, Action Patterns and Specified actions
+every time. The README and manual explanations match it.
+
+### Fix: Action Steps and the like sometimes ended and sometimes carried on after the menu
+
+- Opening the menu is meant to end an Action Steps, Action Patterns or
+  Specified action, loops included. Since v11.7.28 paused the game under the
+  menu, it ended only when one Tick of the game's processing was still left
+  as the menu opened (9 of 29 opens in the developer's play). Otherwise the
+  action carried on from the middle once the menu closed
+- It now ends on every open. Closing the menu does not resume it; it starts
+  again on the next trigger
+- Found while checking the public documents against the code
+
+### Manual
+
+- Section 2.1 and the Specified `Loop` explanation now describe this
+- The README's "Retry the same situation" mentions `Volume Up` as well as the
+  menu
+- The English Section 2.1 says "paused" throughout
+
+---
+
 ## v11.7.28.1
 
 Opening the menu no longer disrupts recording or playback. Loop waits and life refill timers also pause while the game is paused, then resume when the menu closes.

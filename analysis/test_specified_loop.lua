@@ -21,6 +21,8 @@
 --        neutral in front of it (user, 2026-10-14), nothing else changes
 --   [11] the lap built from it: one more Tick of run-up, the button unchanged
 --   [12] the hit-stun arm and the lap call it; the block arm does not
+--   [13] with the game standing behind the menu (no tick), M.menu_open ends the
+--        run on every open; the master calls it each frame the menu is open
 --
 -- Run from scripts/ - the reads below are relative.
 --   cd scripts && lua5.1 ../analysis/test_specified_loop.lua
@@ -389,6 +391,43 @@ do
 	local n = 0
 	for _ in gsrc:gmatch("GA%.pose_release%(_mk%)") do n = n + 1 end
 	eq("呼ぶのは 2 か所だけ", n, 2)
+end
+
+print("[13] ゲームが止まっていて Tick が来なくても、メニューを開けば毎回終わる (v11.7.28.2)")
+do
+	-- [6] with no tick behind the menu: the game stands there since v11.7.28,
+	-- so the walker never reaches M.service and only the frame call is left.
+	fresh()
+	R.arm_specified_loop("reversal", build_A)
+	tick(1)
+	busy() ; tick()
+	local before = R.pending_count()
+	R.menu_open(defender)
+	eq("メニューを閉じているときは何もしない", R.pending_count(), before)
+	globals.show_menu = true
+	R.menu_open(defender)
+	eq("開いたら積んだ周は落ちる (Tick なし)", R.pending_count(), 0)
+	eq("  送っている途中の入力も", defender.pending_input_sequence, nil)
+	eq("  loop_alive も落ちる", R.loop_alive(), false)
+	globals.show_menu = false
+	free() ; for _ = 1, 3 do tick() end
+	busy() ; for _ = 1, 3 do tick() end
+	free() ; for _ = 1, 3 do tick() end
+	eq("閉じた後も新しい反撃までは出ない", #queued, 0)
+	eq("dummy が nil でも落ちない", pcall(R.menu_open, nil), true)
+	-- The master asks every frame the menu is open, under the walker's own
+	-- condition, before the game runs the frame.
+	local ms = io.open("vsav_training_master_script.lua"):read("*a")
+	local call = "\t\tactionSequenceRunnerModule.menu_open(player_objects and player_objects[2])\n"
+	local at = ms:find(call, 1, true)
+	local head = at and ms:sub(1, at - 1):match("\n(\tif globals%.show_menu == true and globals%.dummy ~= nil\n[^\n]*\n)$")
+	eq("master: メニュー中・runner が持っているときだけ呼ぶ",
+	   head == "\tif globals.show_menu == true and globals.dummy ~= nil\n\t   and actionSequenceRunnerModule.owns(globals.dummy.guard_action) then\n", true)
+	local rb = ms:find("emu.registerbefore(function()", 1, true)
+	local first_return = rb and ms:find("\n%s*return\n", rb)
+	local frozen_set = ms:find("\tglobals.game_frozen = gameFreezeModule.frozen()\n", 1, true)
+	eq("  globals.game_frozen の後、最初の return より前",
+	   at ~= nil and frozen_set ~= nil and first_return ~= nil and frozen_set < at and at < first_return, true)
 end
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))

@@ -8,7 +8,7 @@ English | [日本語](README.ja.md)
 
 **Make expert-level execution your training partner.** This training mode for Fightcade 2 / FBNeo lets you define dummy actions with precise internal-frame (Tick) timing to practice your defense and test your offense. Reproduce your opponent's actions precisely, then review your inputs and attack timing to find what to improve on your next attempt.
 
-This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.28.1**.
+This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.28.2**.
 
 **[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [Practice defense](#first-pb-drill) · [Test wake-up pressure](docs/PLAYER_MANUAL.en.md#wakeup-pressure-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 
@@ -43,7 +43,7 @@ Left: check whether you still fit six presses when delaying PB. Right: see which
 |---|---|
 | **Test wake-up pressure and attack strings** | Set the dummy to use the same response each time, then use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to compare contact timing with the actual outcome |
 | **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
-| **Retry the same situation** | Pause the game with the menu, then [save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) to practice from the same situation. Saving is unavailable during recording playback and certain other operations |
+| **Retry the same situation** | [Save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) with `Volume Up` or the menu to practice from the same situation. The menu pauses the game, so you can save the paused scene too. Saving is unavailable during recording playback and certain other operations |
 | **Check chain and link timing** | Use [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) to review the result and compare your button timing with the displayed input window |
 | **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
 
