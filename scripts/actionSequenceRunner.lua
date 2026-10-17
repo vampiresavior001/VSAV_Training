@@ -2812,6 +2812,20 @@ local function drop_for_menu(defender)
 	loop_build = nil
 	anchor = nil
 	held_after = nil
+	-- AND WHAT THE RUN WAS STILL HOLDING (v11.7.28.2; user, 2026-10-17:
+	-- "ダッシュキャンセルをしてすぐメニューだと後歩きしちゃう").
+	--
+	-- A dash cancel parks its reverse until the next step's button merges it
+	-- (rev), or until its own record ends if it is step one (arm_rev). Neither
+	-- is cleared by anything above: the merge never comes, the record was just
+	-- dropped, and the walker asserts a parked reverse on every free tick - so
+	-- the dummy walked backwards after the menu closed. Step one's Hold waits
+	-- for its record the same way. Cleared as cancel() clears them.
+	rev = nil
+	arm_rev = nil
+	arm_hold = nil
+	arm_hold_btn = nil
+	arm_hold_btn_ticks = nil
 end
 
 -- EVERY OPEN ENDS THE RUN, NOT SOME (v11.7.28.2; user, 2026-10-17: "推奨通り").

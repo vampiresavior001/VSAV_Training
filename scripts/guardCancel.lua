@@ -8721,7 +8721,38 @@ local function guardCancelCheck(run_dummy_input, macroLua_funcs)
 	end
 end
 
+-- THE MENU ENDS A SPECIFIED REVERSAL, AND STEP ONE OF A STEP LIST, TOO
+-- (v11.7.28.3; user, 2026-10-17: "推奨のやり方で").
+--
+-- Since v11.7.28 the game stands behind the menu, and everything here that
+-- delivers a reversal waits on the tick clock - so a queued Specified
+-- reversal, or the arm's press of step one, was not lost behind the menu as
+-- it used to be: it came out on close. The runner's later steps already end
+-- there (actionSequenceRunner M.menu_open); this is the arm's half. The
+-- master calls it on every frame the menu is open, for Specified and the
+-- step lists only.
+--
+-- What is cleared is what the arm itself lets go of when a press is spent
+-- (the record, the press window, the flush) and the hit-stun wait still
+-- counting. The latches that say an opportunity was used (kd_armed,
+-- hs_armed, prebuffer_used) stay as they are, so the same knockdown or stun
+-- does not arm again; kd_motion_done keeps the wake-up fallback from queueing
+-- it a second way. The next hit clears that, as it always does.
+function GA.menu_end()
+	local _d = player_objects and player_objects[2]
+	if _d ~= nil then _d.pending_input_sequence = nil end
+	fast_press_lg = nil
+	fast_press_q = {}
+	hs_flush_q = {}
+	hs_countdown = nil
+	hs_arm_lg = nil
+	pending_retry = nil
+	kd_set_motion_done(true)
+end
+
 guardCancelModule = {
+	-- Called by the master while the menu is open (GA.menu_end above).
+	["menu_end"] = function() GA.menu_end() end,
 	-- A CHARACTER SELECT CLEARS THE GC COMMAND TRACE, as a restart would (user,
 	-- 2026-09-27): the one being collected and the one on screen.
 	["clear_trace"] = function()

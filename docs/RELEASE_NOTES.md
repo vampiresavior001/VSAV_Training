@@ -6,6 +6,46 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.28.3
+
+A dash cancel's walk backwards and a Specified reversal no longer carry on
+after the menu. The HUD's "Bubble" no longer shows up where it does not belong.
+
+### Fix: opening the menu right after a dash cancel kept the dummy walking back
+
+- An Action Steps dash cancel keeps holding back until the next step's button
+  goes in. When v11.7.28.2 made the menu end the action, that hold was not
+  cleared, so it went on after the menu closed. Step one's `Hold` was the same
+- Ending the action at the menu now clears them too. Checked in play
+
+### Fix: a Specified reversal still came out after the menu
+
+- The v11.7.28.2 manual said the menu ends Specified actions as well, but a
+  Specified action without `Loop` or `Random Start Wait` was not covered:
+  opened and closed during a knockdown, the reversal still came out on that
+  wake-up. Step one's press in Action Steps could also come out after the menu,
+  depending on when it was opened
+- Opening the menu now ends them, including one still waiting to come out. The
+  same knockdown or hit does not bring it back; it starts again on the next
+  trigger
+- Not checked in play yet
+
+### Fix: the HUD's "Bubble" could show on an ordinary hit
+
+- "Bubble" under `Display > HUD (Life / Meter)` shows how much is left before
+  P2 gets out of Aulbath's Water Jail (inherited from the original fork). It
+  was decided by a value nobody had identified, so it showed now and then on an
+  ordinary hit
+- It is now decided by the game's own values: in a hit reaction, the move's
+  hit type is the Water Jail's, and some of it is left. The Water Jail's value
+  was checked in the developer's recordings
+
+### Manual
+
+- Section 2.1 says the menu also ends an action still waiting to come out
+
+---
+
 ## v11.7.28.2
 
 Opening the menu now ends Action Steps, Action Patterns and Specified actions

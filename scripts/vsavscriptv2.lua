@@ -84,7 +84,15 @@ local function hud()
 		if memory.readword(0xff894e) == 0x0808 then
 		gui.text(208,198,"CURSED " .. memory.readword(0xff8956))
 		
-		elseif memory.readword(0xff8846) == 0x4000 then
+		-- AULBATH'S WATER JAIL, AND ONLY THAT (v11.7.28.3; user, 2026-10-17:
+		-- "殴った時にまれに足元にBUBBLE"). Asked as $46 == 0x4000, a word nobody
+		-- had identified, which also turned up on ordinary hits. Now what the
+		-- game itself says: in a hit reaction ($05 2) whose hit type ($54) is
+		-- the Water Jail's 0x2D, with some of its count ($15C) left - the
+		-- count grabMashing.lua mashes down (grab_log, v11.7.28_2: 0x2D, $15C
+		-- from 419).
+		elseif memory.readbyte(0xff8805) == 0x02 and memory.readbyte(0xff8854) == 0x2D
+		       and memory.readword(0xff895c) > 0 then
 		gui.text(208,198,"Bubble " .. memory.readword(0xff895c))
 		end
 		

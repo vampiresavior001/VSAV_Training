@@ -355,6 +355,46 @@ do
 	if fails == 0 then print("  ok 1 歩目の rev は預けられ、一度だけ受け取り、cancel で消える") end
 end
 
+print("[8c] メニューで終わった run は、ダッシュキャンセルの後ろも 1 歩目の hold も残さない (v11.7.28.2)")
+do
+	-- 本人 2026-10-17: ダッシュキャンセルの直後にメニューを開くと、閉じた後に
+	-- 後ろへ歩き続けた。drop_for_menu が rev / arm_rev を残していたため。
+	local defender = { pending_input_sequence = { sequence = { { "back" } } } }
+	local before = fails
+	install({
+		{ action = "dashc.f", wait = -1 },
+		{ action = "atk", lever = "none", button = "HP", wait = -1 },
+	})
+	R.cancel()
+	R.arm("reversal")
+	R.park_rev("back", 100)
+	globals.show_menu = true
+	R.menu_open(defender)
+	globals.show_menu = false
+	if R.rev_lever_now(150) ~= nil then fail("2 歩目以降の rev", tostring(R.rev_lever_now(150)), "nil") end
+	if R.arm_rev_due(150) ~= nil then fail("1 歩目の arm_rev", "残っている", "nil") end
+	if R.rev_lever_now(155) ~= nil then fail("arm_rev から park されたもの", "立った", "nil") end
+	if defender.pending_input_sequence ~= nil then fail("送っている途中の入力", "残っている", "nil") end
+	-- 1 歩目の Hold も。
+	install({
+		{ action = "atk", lever = "forward", hold = true, button = "LP", wait = 0 },
+		{ action = "atk", lever = "none", button = "HP", wait = -1 },
+	})
+	R.cancel()
+	R.arm("reversal")
+	globals.show_menu = true
+	R.menu_open(defender)
+	globals.show_menu = false
+	if R.take_arm_hold() ~= nil then fail("1 歩目の hold", "残っている", "nil") end
+	-- メニューを閉じているときは何も消さない。
+	R.cancel()
+	R.park_rev("back", 100)
+	R.menu_open(defender)
+	if R.rev_lever_now(102) ~= "back" then fail("閉じているとき", tostring(R.rev_lever_now(102)), "back") end
+	R.cancel()
+	if fails == before then print("  ok rev・arm_rev・1 歩目の hold はメニューで消え、閉じているときは触らない") end
+end
+
 print("[9] 凍結中のティックは配送に数えない")
 -- ボタンを伴わない入力は 2 ティック必要 (v158)。ところがヒットストップ中の押しは
 -- ゲームが捨てる ($126 は 1 ティックの押しエッジ)。凍結中のティックも数えていた

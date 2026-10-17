@@ -2150,7 +2150,7 @@ return {
         -- integer_menu_item("P1 Char Palette", training_settings, "p1_char_palette", 0, 255, false, 0,0,"Scroll through these on char select to see if you like one\nMany do not look good"),
         -- integer_menu_item("P2 Char Palette", training_settings, "p2_char_palette", 0, 255, false, 0,0,"Scroll through these on char select to see if you like one\nMany do not look good"),
 
-        checkbox_menu_item("HUD (Life / Meter)", training_settings, "display_hud", true, "Red and white life for both players at the top of the screen, the meter, and\nthe character specific readouts - curse, Dark Force timer.\nTech hit has its own row under this one.\nThe trainers and the input bar are not part of this; they have their own rows."),
+        checkbox_menu_item("HUD (Life / Meter)", training_settings, "display_hud", true, "Red and white life for both players at the top of the screen, the meter, and\nthe character specific readouts - curse, Dark Force timer, and the count left\non P2 in Aulbath's Water Jail (Bubble).\nTech hit has its own row under this one.\nThe trainers and the input bar are not part of this; they have their own rows."),
         child_of("display_hud", checkbox_menu_item("Show Tech Hit Mash", training_settings, "display_tech_hit", false, "Timer and Mash under the characters while the tech hit window is open - the\nraw $1AB and $170, straight from the game.\nShow PB Counter on this tab reads the same two bytes and draws them as a\nhistory, so this is the same information twice.\nPart of the HUD row above - it comes off with that as well.")),
         -- Moved up from below Show P2 Inputs (2026-10-04): indented, a child
         -- has to sit under its parent or the indent points at the wrong row.
