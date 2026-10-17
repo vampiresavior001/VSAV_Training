@@ -15,6 +15,8 @@
 --   [5] Looped Playback, the menu closed: a pass the game stood under goes
 --       straight on (no 30-frame hold - a dash's neutral grew past the game's
 --       window, user 2026-10-17). A menu the game ran under keeps the hold
+--   [6] the Knockdown Logger counts no frame of it either: a recording is not
+--       cut into new ones while the menu stands over a hit stun
 local fails = 0
 local function eq(what, got, want)
 	if got == want then print("  ok " .. what .. " = " .. tostring(got))
@@ -232,6 +234,36 @@ do
 	local ran = pass(false)
 	eq("ゲームが動いていた (試合外・位置の移動など): これまでどおり 30 フレーム待つ", ran, "R....")
 	globals.options.looped_playback = false
+end
+
+-- ---------------------------------------------------------------------------
+print("[6] Knockdown Logger: 止まっている間はフレームを数えない (記録を区切らない)")
+do
+	-- The exported registerBefore, lifted out of debugKnockdown.lua and run with
+	-- the three locals it calls standing in.
+	local fh = real_open("debugKnockdown.lua")
+	local dsrc = fh:read("*a")
+	fh:close()
+	local s0 = dsrc:find('["registerBefore"] = function()', 1, true)
+	local e0 = s0 and dsrc:find("\n  end,\n", s0, true)
+	eq("書き出しの registerBefore がある", s0 ~= nil and e0 ~= nil, true)
+	local calls = {}
+	sync_diag_hooks = function() calls[#calls + 1] = "sync" end
+	registerBefore = function() calls[#calls + 1] = "record" end
+	p1_watch = function() calls[#calls + 1] = "p1" end
+	local fn = assert(loadstring("return {" .. dsrc:sub(s0, e0 + 6) .. "}"))()["registerBefore"]
+	globals.game_frozen = true
+	fn()
+	eq("止まっている: 記録も P1 の監視も進めない", table.concat(calls, ","), "sync")
+	calls = {}
+	globals.game_frozen = false
+	fn()
+	eq("動いている: いつもどおり", table.concat(calls, ","), "sync,record,p1")
+	sync_diag_hooks, registerBefore, p1_watch = nil, nil, nil
+	local ms = real_open("vsav_training_master_script.lua"):read("*a")
+	local set = ms:find("\tglobals.game_frozen = gameFreezeModule.frozen()\n", 1, true)
+	local call = ms:find("\tdebugKnockdownModule.registerBefore()\n", 1, true)
+	eq("master: globals.game_frozen を立てた後に呼ぶ", set ~= nil and call ~= nil and set < call, true)
 end
 
 io.open, io.input, io.output = real_open, real_input, real_output

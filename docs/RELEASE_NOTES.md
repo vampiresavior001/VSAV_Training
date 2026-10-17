@@ -6,6 +6,35 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.28.5
+
+A Specified motion no longer goes missing with `Button = None` and
+`Button Lever = Neutral` together.
+
+### Fix: Button = None with Button Lever = Neutral lost the motion
+
+- With `Button = None`, `Button Lever` replaces the motion's final direction.
+  `Neutral` took that direction away, so `Input Motion = Up` did not jump and
+  a dash lost its second forward
+- With `Button = None`, `Neutral` is now ignored and the motion goes in as it
+  is. `Neutral` with a button (a dash-neutral normal) and the other directions
+  with no button (replacing the final direction) are unchanged
+- Checked in play (`Input Motion = Up` jumps)
+
+### Fix: Knockdown Logger cut its recordings into pieces under the menu
+
+- With `Analysis > Knockdown Logger` on and the menu left open during a hit
+  stun, the recording's length kept being counted while the game stood, so one
+  scene turned into recording after recording. Nothing is counted while the
+  game stands now. It is for investigation; the game itself is unchanged
+
+### Manual
+
+- Section 4.4 says how `Button Lever` works with `Button = None`, and so does
+  the menu's help
+
+---
+
 ## v11.7.28.4
 
 On a wake-up that turns the dummy round, a Specified dash or dash cancel no

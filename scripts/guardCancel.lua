@@ -2295,7 +2295,18 @@ local function button_lever_bits()
 	if _ga ~= 'reversal' and _ga ~= 'counter' then return nil end
 	local _i = globals.options.counter_attack_lever
 	if _i == nil or _i <= 1 then return nil end
-	if _i == 2 then return 0 end
+	if _i == 2 then
+		-- NEUTRAL WITH NO BUTTON IS IGNORED (user, 2026-10-18: Input Motion Up,
+		-- Button None, Button Lever Neutral did not jump). With a button,
+		-- Neutral is the dash-neutral normal. Without one there is nothing to
+		-- release the lever for: the row replaces the motion's own last
+		-- direction, Button Wait only moves that entry, and Neutral just took
+		-- the Up or the dash's second tap away. The other directions still
+		-- replace it with no button - that is how a motion is turned into
+		-- another direction, so they stay.
+		if globals.dummy.counter_attack_button == "none" then return nil end
+		return 0
+	end
 	local _t = BUTTON_LEVER_DIR[_i]
 	if _t == nil then return nil end
 	local _facing  = facing_for_input()

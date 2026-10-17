@@ -1074,7 +1074,7 @@ local counter_attack_stick_menu_item = list_menu_item("Input Motion", training_s
 counter_attack_stick_menu_item.is_disabled = check_for_counter_attack_disabled
 
 local counter_attack_button_menu_item = list_menu_item("Button", training_settings, "counter_attack_button", counter_attack_button, 1, "In general the strength of move used\nIf stick is set to none this can be used as a counterpoke")
-local counter_attack_lever_menu_item = list_menu_item("Button Lever", training_settings, "counter_attack_lever", counter_attack_lever, 1, "The lever held at the moment the BUTTON goes in. The motion itself is untouched.\nAs Is keeps whatever the motion ended on - for a dash that is the dash attack.\nNeutral releases it, which is how a dash-neutral normal comes out.\nOn a dash cancel this replaces the reverse direction, so the cancel will not\nhappen.")
+local counter_attack_lever_menu_item = list_menu_item("Button Lever", training_settings, "counter_attack_lever", counter_attack_lever, 1, "The lever held at the moment the BUTTON goes in. The motion itself is untouched.\nAs Is keeps whatever the motion ended on - for a dash that is the dash attack.\nNeutral releases it, which is how a dash-neutral normal comes out.\nOn a dash cancel this replaces the reverse direction, so the cancel will not\nhappen. With Button None it replaces the motion's last direction instead;\nNeutral is ignored then, so the motion goes in as it is (Up still jumps).")
 counter_attack_button_menu_item.is_disabled = check_for_counter_attack_disabled
 counter_attack_lever_menu_item.is_disabled = check_for_counter_attack_disabled
 

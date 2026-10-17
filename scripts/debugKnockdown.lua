@@ -76,7 +76,7 @@
 -- FBNeo/Fightcade not fully restarted after an edit, so the OLD bytecode is
 -- still running - shows up immediately as an old version number in the next
 -- batch of logs, instead of looking like a silent logic bug.
-local SCRIPT_VERSION = "v11.7.28.4"
+local SCRIPT_VERSION = "v11.7.28.5"
 
 local LOG_DIR   = "reversal_logs"
 
@@ -1615,6 +1615,16 @@ return {
   ["record_input"]   = record_input,
   ["registerBefore"] = function()
     sync_diag_hooks()
+    -- NOT WHILE THE GAME STANDS UNDER THE MENU (user, 2026-10-17).
+    --
+    -- A recording is WINDOW frames from the hit, counted on emulator frames.
+    -- With the menu open over a hit stun the game stood and the frames ran
+    -- on: the window filled with copies of one frozen frame, closed, and -
+    -- the dummy still hurt - a new one opened at once, every 261 frames for
+    -- as long as the menu stayed up (10 or more of 58 in v11.7.28.4_2). The
+    -- game does nothing while it stands, so nothing here counts the frame;
+    -- a mark pressed meanwhile waits for the next one.
+    if globals ~= nil and globals.game_frozen == true then return end
     registerBefore()
     p1_watch()
   end,

@@ -6,6 +6,30 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.28.5
+
+Specifiedで `Button = None` と `Button Lever = Neutral` を組み合わせると、モーションが出なかったのを直しました。
+
+### 修正：Button = None と Button Lever = Neutral で、モーションが出なかった
+
+- `Button = None` のとき、`Button Lever` はモーションの最後の方向を置き換えます。`Neutral` を選ぶと最後の方向が
+  消えるため、`Input Motion = Up` でもジャンプせず、ダッシュでは2回目の前が消えていました
+- `Button = None` のときの `Neutral` は無視し、モーションをそのまま入れるようにしました。ボタンありの `Neutral`
+  （ダッシュから方向を離す通常技）と、ボタンなしのほかの方向（最後の方向の置き換え）は、これまでどおりです
+- 実機で確かめました（`Input Motion = Up` でジャンプする）
+
+### 修正：Knockdown Loggerが、メニュー中に記録を細かく区切っていた
+
+- `Analysis > Knockdown Logger` がONのとき、やられ中にメニューを長く開いていると、止まっている間も記録の長さを
+  数えていたため、同じ場面の記録が次々に作られていました。止まっている間は数えないようにしました。調査用の
+  記録で、ゲームの動きは変わりません
+
+### マニュアル
+
+- 4.4の `Button Lever` の説明に、`Button = None` のときの扱いを書きました。メニューのヘルプも同じです
+
+---
+
 ## v11.7.28.4
 
 起き上がりで振り向くとき、Specifiedのダッシュとダッシュキャンセルが出ずに、ボタンだけが立ち技として
