@@ -6,6 +6,28 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.28.6
+
+TECH HIT in the button history beside PB Stats now stays on the press that
+granted the push block, instead of moving down with the presses made after it.
+
+### Fix: TECH HIT moved to the last press
+
+- With a push block granted on, say, the third press, pressing on to six moved
+  `TECH HIT` from row 3 to rows 4, 5 and 6. The row was found by looking for
+  the last press while the success flag was set
+- timers.lua now records the granting Tick's position and the window it belongs
+  to from the existing 0x027632 hook, for P1 and P2 separately. The display
+  marks only the row at that position. Inputs with no row between it and the
+  grant are followed, and a new window cannot inherit the old grant. If the
+  position cannot be confirmed, nothing is shown rather than a guess
+- Presses after the grant are still counted (the delayed-AG drill depends on
+  six presses); PB Count, PB Stats, MultiPush and LateMash are unchanged
+- Checked in play: granted on the third press, pressed to six, `TECH HIT`
+  stayed on row 3
+
+---
+
 ## v11.7.28.5
 
 A Specified motion no longer goes missing with `Button = None` and

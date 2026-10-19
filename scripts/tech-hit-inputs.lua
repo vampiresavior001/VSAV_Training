@@ -11,6 +11,14 @@
 -- with button icons parsed from the raw $126 edge mask that timers.lua also
 -- publishes (p1_pb_raws).
 --
+-- TECH HIT SITS ON THE ROW THE PUSH BLOCK WAS GRANTED ON (user, 2026-10-19).
+-- It used to search the marks for the last press while ok was true, so the
+-- extra presses made after the grant (which PB Count deliberately keeps
+-- counting) moved the label down with them. timers.lua now records the grant's
+-- tick position and the window's marks table; the row is looked up from that
+-- position, so later presses do not move it and an old window's grant cannot
+-- appear on a new window's rows.
+--
 -- This module no longer hooks anything: timers.lua owns the tick clock and
 -- this only reads what it publishes.
 
@@ -80,8 +88,9 @@ end
 -- it was at the screen height - 150 (74).
 local guiRegister = function(_top)
   _top = _top or 38
-  local marks = globals.timers and globals.timers.p1_pb_marks
-  local raws = globals.timers and globals.timers.p1_pb_raws
+  local timers = globals.timers
+  local marks = timers and timers.p1_pb_marks
+  local raws = timers and timers.p1_pb_raws
   if marks == nil or raws == nil then return end
 
   -- The entries first, so the box behind them can be sized before anything
@@ -92,17 +101,12 @@ local guiRegister = function(_top)
     local r = raws[pos]
     if is_press(m, r) then
       local e = { icons = parse_mask(r) }
-      -- TECH HIT: the entry that granted the push block. timers.lua
-      -- publishes ok as a span-level flag; the granting entry is the last
-      -- one before the count froze, which in the marks is the last press
-      -- while ok is true.
-      if globals.timers.p1_pushblock_ok then
-        local _grant_pos = nil
-        for p2 = pos, 14 do
-          if marks[p2] ~= nil and marks[p2] ~= "-" then _grant_pos = p2 end
-        end
-        e.tech = (_grant_pos ~= nil and pos == _grant_pos)
-      end
+      -- ROWS ARE NUMBERS, POSITIONS ARE TICKS. A tick with no press takes no
+      -- row, so the grant's tick position has to be matched here while the
+      -- row number is being assigned. The marks-table identity keeps a grant
+      -- from the previous window out of this window's rows.
+      e.tech = (timers.p1_pb_grant_marks == marks
+                and timers.p1_pb_grant_pos == pos)
       entries[#entries + 1] = e
     end
   end

@@ -114,8 +114,10 @@ end
 -- drawing a green 0 on the red "nothing counted" box (user screenshot,
 -- 2026-09-13).
 local pb = {
-    [0xFF8400] = { count = 0, ok = false, after = 0, simul = 0, marks = {}, raws = {} },
-    [0xFF8800] = { count = 0, ok = false, after = 0, simul = 0, marks = {}, raws = {} },
+    [0xFF8400] = { count = 0, ok = false, after = 0, simul = 0, marks = {}, raws = {},
+                   mark_pos = nil, mark_w = nil, grant_pos = nil, grant_marks = nil },
+    [0xFF8800] = { count = 0, ok = false, after = 0, simul = 0, marks = {}, raws = {},
+                   mark_pos = nil, mark_w = nil, grant_pos = nil, grant_marks = nil },
 }
 
 local function pb_publish()
@@ -129,6 +131,13 @@ local function pb_publish()
     timers.p2_pb_marks          = pb[0xFF8800].marks
     timers.p1_pb_raws           = pb[0xFF8400].raws
     timers.p2_pb_raws           = pb[0xFF8800].raws
+    -- WHICH INPUT ROW THE PUSH BLOCK WAS GRANTED ON. grant_marks is the
+    -- marks table of the window the grant belongs to, so an old grant cannot
+    -- land in the new window's rows after 0x023966 re-arms $1AB.
+    timers.p1_pb_grant_pos      = pb[0xFF8400].grant_pos
+    timers.p2_pb_grant_pos      = pb[0xFF8800].grant_pos
+    timers.p1_pb_grant_marks    = pb[0xFF8400].grant_marks
+    timers.p2_pb_grant_marks    = pb[0xFF8800].grant_marks
 end
 
 -- THE TIMELINE MARK (user, 2026-09-21).
@@ -161,9 +170,26 @@ end
 -- the same way the game keeps $170.
 local function pb_mark_tick(_a6, _t)
     local _w = memory.readbyte(_a6 + 0x1AB)
-    if _w >= 14 then _t.marks = {}; _t.raws = {} end
+    if _w >= 14 then
+        -- A NEW WINDOW. Its rows replace the old ones, so the grant recorded
+        -- in the old window goes with them. ok and count have longer lives
+        -- and are deliberately left alone (a blocked string carries both).
+        _t.marks, _t.raws = {}, {}
+        _t.grant_pos, _t.grant_marks = nil, nil
+    end
     local _pos = 15 - _w
-    if _pos < 1 or _pos > 14 or _t.marks[_pos] ~= nil then return end
+    -- The grant hook at 0x027632 runs later in the same ROM routine as this
+    -- one (0x0275E0), and neither changes $1AB in between. Remembering the
+    -- position this tick's mark was written at lets the grant hook prove it
+    -- is attaching the grant to this tick's row, not to a stale one.
+    _t.mark_pos, _t.mark_w = _pos, _w
+    if _pos < 1 or _pos > 14 then
+        -- Publish even when the value is outside 1..14: a new window may
+        -- just have replaced marks/raws above, and the old grant with them.
+        pb_publish()
+        return
+    end
+    if _t.marks[_pos] ~= nil then return end
     local _mark = "-"
     local _raw = 0
     if memory.readword(_a6 + 0x04) == 0x0202
@@ -285,6 +311,7 @@ memory.registerexec(0x0275E0, function()
     if _n == 0 and not _granted
        and (_t.count ~= 0 or _t.ok or _t.after ~= 0 or _t.simul ~= 0) then
         _t.count, _t.ok, _t.after, _t.simul, _t.marks, _t.raws = 0, false, 0, 0, {}, {}
+        _t.grant_pos, _t.grant_marks = nil, nil
         pb_publish()
     end
 
@@ -316,10 +343,31 @@ memory.registerexec(0x0275E0, function()
 end)
 
 -- 027632: move.b #$1, ($184,A6)   the push block is granted
+--
+-- THE ROW IS TAKEN FROM THIS TICK'S MARK, NOT FROM A LATER "LAST PRESS".
+-- The ROM reaches this instruction after 0x0275E0 in the same routine
+-- (027606 addq -> 02760E test / 02761E roll -> 02762C / 027632), so the mark
+-- pb_mark_tick wrote for this press already exists and $1AB has not moved.
+-- Record the position and the marks table it belongs to; the display can then
+-- keep TECH HIT on that row while later presses append rows 4, 5, 6.
+--
+-- If that row cannot be proven (no matching mark for this exact $1AB), leave
+-- the position unknown. The display shows nothing rather than guessing.
 memory.registerexec(0x027632, function()
     local _a6 = memory.getregister("m68000.a6")
     local _t = pb[_a6]
     if _t == nil then return end
+    local _w = memory.readbyte(_a6 + 0x1AB)
+    local _pos = 15 - _w
+    local _marked = _t.marks[_pos]
+    if _pos >= 1 and _pos <= 14
+       and _t.mark_w == _w and _t.mark_pos == _pos
+       and _marked ~= nil and _marked ~= "-"
+       and (_t.raws[_pos] or 0) > 0 then
+        _t.grant_pos, _t.grant_marks = _pos, _t.marks
+    else
+        _t.grant_pos, _t.grant_marks = nil, nil
+    end
     _t.ok = true
     pb_publish()
 end)
@@ -640,6 +688,7 @@ local timerModule = {
   ["clear"] = function()
     for _, _t in pairs(pb) do
       _t.count, _t.ok, _t.after, _t.simul, _t.marks, _t.raws = 0, false, 0, 0, {}, {}
+      _t.mark_pos, _t.mark_w, _t.grant_pos, _t.grant_marks = nil, nil, nil, nil
     end
     for _, _o in pairs(om) do
       _o.n, _o.late, _o.open_lg, _o.len, _o.was = 0, 0, nil, 0, 0
