@@ -1,5 +1,6 @@
--- GRAB MASHING (Dummy tab, user 2026-10-15; handoff VSAV_Claude_Handoff_Remaining
--- 20261015, START_HERE_GRAB_MASHING / GRAB_MASH_ROM_ANALYSIS).
+-- AUTO MASH (Dummy tab, user 2026-10-15; handoff VSAV_Claude_Handoff_Remaining
+-- 20261015, START_HERE_GRAB_MASHING / GRAB_MASH_ROM_ANALYSIS). The Mash Meter
+-- observation added 2026-10-19 shares these routines' callbacks.
 --
 -- While the dummy grabs or is grabbed by a move that takes mashing, or is in a
 -- hit it can mash out of, it mashes directions and buttons: Off / Normal /
@@ -124,6 +125,176 @@ M.PC = {
 	motion = 0x025F22,    -- the 0x34 reaction's motion, A6 the one hit
 	motion_end = 0x025EE6, -- its motion over
 }
+
+-- THE MASH METER (user, 2026-10-19).
+--
+-- This is observation, not input: it has to keep working with Auto Mash Off,
+-- with P2 in your hands, during playback/recording, and while the menu is
+-- open. The routines below are the same ones the auto input uses, so the
+-- observation is added to those callbacks rather than a second registerexec.
+--
+-- A grab reads the GRABBER's $15C and draws over the HELD side. The two hits
+-- read their own $15C. The 0x34 reaction reads its motion pointer/count; the
+-- section table is the one at 0x028444. The lengths are the first byte of each
+-- 24-byte record, and 0x0285AC is the end record: its 6 is not part of the
+-- 120 updates before the end.
+M.MOTION_BASE = 0x028444
+M.MOTION_END = 0x0285AC
+M.MOTION_STRIDE = 0x18
+M.MOTION_LENGTHS = { 16, 10, 10, 3, 10, 10, 3, 10, 10, 3, 10, 10, 3, 8, 4 }
+M.MOTION_TOTAL = 120
+
+local motion_record, motion_after = {}, {}
+do
+	local after = 0
+	for i = #M.MOTION_LENGTHS, 1, -1 do
+		motion_record[M.MOTION_BASE + (i - 1) * M.MOTION_STRIDE] =
+			{ index = i, len = M.MOTION_LENGTHS[i] }
+		motion_after[i] = after
+		after = after + M.MOTION_LENGTHS[i]
+	end
+end
+
+-- nil means "cannot be known from this pointer/count"; no value is guessed.
+local function motion_remaining(ptr, count)
+	if ptr == M.MOTION_END then return 0 end
+	local rec = motion_record[ptr]
+	if rec == nil then return nil end
+	if type(count) ~= "number" or count < 1 or count > rec.len then return nil end
+	return count + motion_after[rec.index]
+end
+M.motion_remaining = motion_remaining
+
+local meter = {
+	[P1] = { active = false },
+	[P2] = { active = false },
+}
+local meter_serial = 0
+
+local function meter_clear(side)
+	local m = meter[side]
+	if m == nil then return end
+	m.active, m.kind, m.owner, m.target = false, nil, nil, nil
+	m.remaining, m.baseline, m.unknown = nil, nil, false
+	m.s05, m.s54, m.s140, m.ptr, m.count, m.stale = nil, nil, nil, nil, nil, 0
+end
+
+local function meter_start(side, kind, owner, remaining, baseline, s05, s54, s140)
+	local m = meter[side]
+	if m == nil then return end
+	meter_serial = meter_serial + 1
+	m.active, m.kind, m.owner, m.target = true, kind, owner, side
+	m.remaining, m.baseline = remaining, baseline
+	m.unknown = (remaining == nil)
+	m.s05, m.s54, m.s140, m.ptr, m.count, m.stale = s05, s54, s140, nil, nil, 0
+	m.id = meter_serial
+end
+
+local function meter_end(side, kind)
+	local m = meter[side]
+	if m ~= nil and m.kind == kind then meter_clear(side) end
+end
+
+-- The timer is a signed word and may reach -1 before the routine's own end
+-- branch clears it. The meter never shows a negative count.
+local function timer_value(base)
+	local v = memory.readword(base + 0x15C)
+	if v >= 0x8000 then v = v - 0x10000 end
+	if v < 0 then v = 0 end
+	return v
+end
+
+local function meter_timer(side, owner, kind, value, s05, s54)
+	local m = meter[side]
+	if m == nil then return end
+	if kind == "grab" and meter[owner] == nil then return end
+	local v = value or 0
+	if v < 0 then v = 0 end
+	-- A rise is a refreshed timer (another grab or hit); s54 changing is a
+	-- different hit. Anything else is the same interval and keeps its base.
+	local new = (not m.active) or m.kind ~= kind or m.owner ~= owner
+		or (m.s54 ~= nil and s54 ~= nil and s54 ~= m.s54)
+		or (m.remaining ~= nil and v > m.remaining)
+	if new then
+		meter_start(side, kind, owner, v, v, s05, s54)
+	else
+		m.remaining, m.unknown, m.s05, m.s54, m.stale = v, false, s05, s54, 0
+	end
+end
+
+local function meter_motion(side, ptr, count, s05, s140)
+	local m = meter[side]
+	if m == nil then return end
+	local rem = motion_remaining(ptr, count)
+	-- A pointer back to the first record, or moving backwards, is a new
+	-- reaction. An unknown pointer is still observed: the label is drawn with
+	-- no bar, never with a made-up number.
+	local new = (not m.active) or m.kind ~= "recovery_motion"
+		or (m.s140 ~= nil and s140 ~= nil and s140 ~= m.s140)
+		or (m.ptr ~= nil and ptr < m.ptr)
+		or (ptr == M.MOTION_BASE and m.ptr ~= nil and m.ptr ~= M.MOTION_BASE)
+	if new then
+		meter_start(side, "recovery_motion", side, rem, M.MOTION_TOTAL, s05, nil, s140)
+	else
+		m.remaining, m.unknown, m.s05, m.s140, m.stale = rem, (rem == nil), s05, s140, 0
+	end
+	m.ptr, m.count = ptr, count
+end
+
+-- The hooks run BEFORE their routines subtract or advance. The frame end is
+-- after the game has done so, which is when the meter is drawn: take the
+-- current value there, still only for a state the ROM routine has confirmed.
+local function meter_refresh(side, m)
+	if m.kind == "grab" or m.kind == "recovery_timer" then
+		m.remaining, m.unknown = timer_value(m.owner), false
+	elseif m.kind == "recovery_motion" then
+		local ptr = memory.readdword(side + 0x1C)
+		local count = memory.readbyte(side + 0x20)
+		local rem = motion_remaining(ptr, count)
+		m.remaining, m.unknown = rem, (rem == nil)
+		m.ptr, m.count = ptr, count
+	end
+end
+
+-- One missed hook is not an end. The game's own state is checked at the end
+-- of a displayed frame, but only outside the menu/freeze; two consecutive
+-- mismatches are needed so a transitional frame does not erase the meter.
+local function meter_validate()
+	if globals == nil then return end
+	if globals.show_menu == true or globals.game_frozen == true then return end
+	if globals.match_running ~= nil and not globals.match_running() then
+		M.reset_meter()
+		return
+	end
+	for side, m in pairs(meter) do
+		if m.active then
+			local s05 = memory.readbyte(side + 0x05)
+			local ok = true
+			if m.kind == "grab" then
+				ok = (m.s05 == nil or s05 == m.s05)
+			elseif m.kind == "recovery_timer" then
+				ok = (s05 == 0x02)
+			elseif m.kind == "recovery_motion" then
+				ok = (s05 == 0x02)
+					and (m.s140 == nil or memory.readbyte(side + 0x140) == m.s140)
+			end
+			if ok then
+				m.stale = 0
+				meter_refresh(side, m)
+			else
+				m.stale = (m.stale or 0) + 1
+				if m.stale >= 2 then meter_clear(side) end
+			end
+		end
+	end
+end
+
+function M.meter_state(side) return meter[side] end
+function M.reset_meter()
+	for side in pairs(meter) do meter_clear(side) end
+end
+M._meter = meter
+M._meter_validate = meter_validate
 
 -- Lever bits as the game reads them after the facing swap: 0x01 back, 0x02
 -- forward (guardCancel.lua, "CORRECTED bit1 (forward)"), 0x04 down, 0x08 up.
@@ -257,6 +428,7 @@ function M.on_enter()
 	local a6 = memory.getregister("m68000.a6")
 	local held = base_of(memory.readword(a6 + 0x32))
 	local a7 = memory.getregister("m68000.a7")
+	meter_timer(held, a6, "grab", timer_value(a6), memory.readbyte(held + 0x05), nil)
 	call = { what = "grab", lg = memory.readbyte(0xFF8081), grabber = SIDE[a6], held = SIDE[held],
 	         grabber_base = a6, held_base = held, timer_base = a6, ret = memory.readdword(a7) }
 	push({ kind = "call", what = "grab", grabber = SIDE[a6] or 0, held = SIDE[held] or 0, ret = hex(call.ret, 6),
@@ -270,6 +442,15 @@ local function finish(still)
 	local c = call
 	call = nil
 	if c == nil then return end
+	if not still then
+		if c.what == "grab" then
+			meter_end(c.held_base, "grab")
+		elseif c.what == "hit" then
+			meter_end(c.held_base, "recovery_timer")
+		elseif c.what == "motion" then
+			meter_end(c.held_base, "recovery_motion")
+		end
+	end
 	local dummy = (c.held == 2) and c.held_base or ((c.grabber == 2) and c.grabber_base or nil)
 	c.still = still
 	c.st05 = dummy and memory.readbyte(dummy + 0x05) or nil
@@ -298,6 +479,8 @@ end
 function M.on_hit_enter()
 	local a6 = memory.getregister("m68000.a6")
 	local a7 = memory.getregister("m68000.a7")
+	meter_timer(a6, a6, "recovery_timer", timer_value(a6),
+		memory.readbyte(a6 + 0x05), memory.readbyte(a6 + 0x54))
 	call = { what = "hit", lg = memory.readbyte(0xFF8081), held = SIDE[a6], held_base = a6,
 	         timer_base = a6, ret = memory.readdword(a7) }
 	local r = hit_row("hit", a6)
@@ -307,6 +490,8 @@ end
 -- The motion has no return of its own: each call is still in it, its end is out.
 local function motion(still)
 	local a6 = memory.getregister("m68000.a6")
+	meter_motion(a6, memory.readdword(a6 + 0x1C), memory.readbyte(a6 + 0x20),
+		memory.readbyte(a6 + 0x05), memory.readbyte(a6 + 0x140))
 	call = { what = "motion", lg = memory.readbyte(0xFF8081), held = SIDE[a6], held_base = a6, ret = 0 }
 	local r = hit_row("motion", a6)
 	r.still = still
@@ -372,6 +557,7 @@ function M.on_input()
 end
 
 function M.registerStart()
+	if globals ~= nil then globals.mash_meter = M.meter_state end
 	memory.registerexec(M.PC.enter, M.on_enter)
 	memory.registerexec(M.PC.held, M.on_held)
 	memory.registerexec(M.PC.held_cpu, M.on_held)
@@ -401,6 +587,7 @@ local function watch_dummy()
 end
 
 function M.registerAfter()
+	meter_validate()
 	if M.mode() == "Off" and run ~= nil then M.reset("off") end
 	watch_dummy()
 	if #pending_rows == 0 or not logging() then return end

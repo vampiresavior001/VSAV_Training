@@ -36,6 +36,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 | **GCの失敗原因を見つける** | [GC Command Trainer](docs/PLAYER_MANUAL.ja.md#09-gc)で、どの方向・ボタンが受け付けられ、どこで切れたかを見る。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右の成功率を比べる |
 | **実戦に近い守りを練習する** | 複数の攻めや入力タイミングをランダムにし、固定のリズムに頼らずAG・GCする。[設定の使い分け](docs/PLAYER_MANUAL.ja.md#dummy-button-timing) |
 | **空中ガード後の攻防を調べる** | [Air Guard Gaps](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)で、空中チェーンの隙間、割り込みタイミング、着地後の有利不利を確認する |
+| **つかみ・短縮やられからの脱出を練習する** | ダミーを[Auto Mash](docs/PLAYER_MANUAL.ja.md#grab-mashing)にし、つかまれている側・特殊やられを受けている側の頭上で`Display > Show Mash Meter`の残量を確認する。Auto MashがOffでも手動練習に使える |
 
 ### 攻めを調べる
 

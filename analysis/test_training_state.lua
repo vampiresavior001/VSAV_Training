@@ -176,7 +176,7 @@ do
 		{ "Action Steps の残り", function() pending = 1 end, "Action Steps" },
 		{ "送る前の入力", function() player_objects[2].pending_input_sequence = { 1 } end, "queued input" },
 		{ "Character Specific の待ち", function() guard_action_input.csp_due = 3 end, "reversal waiting" },
-		{ "Grab Mashing のつかみ中", function() gm_run = {} end, "Grab Mashing" },
+		{ "Auto Mash のつかみ中", function() gm_run = {} end, "Auto Mash" },
 		{ "Quick Recording の記録中", function() qr_rec = true end, "recording" },
 		{ "Recording Wizard", function() wz_on = true end, "Recording Wizard" },
 		{ "Action Steps のエディタ", function() ed_on = true end, "Action Steps editor" },

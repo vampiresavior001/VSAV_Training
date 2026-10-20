@@ -102,8 +102,8 @@ local commandTrainerModule = require "./scripts/commandTrainer"
 local chainLogModule     = require "./scripts/chainLog"
 -- Chain Trainer (Trainer tab): draws from chainLog's rows.
 local chainTrainerModule = require "./scripts/chainTrainer"
--- Grab Mashing (Dummy tab): the dummy mashes inside a grab that reads it. Exec
--- hooks, at start-up.
+-- Auto Mash (Dummy tab): the dummy mashes inside a grab that reads it. Exec
+-- hooks, at start-up; the same hooks feed the Mash Meter.
 local grabMashingModule  = require "./scripts/grabMashing"
 -- Quick Recording (Recording tab): Coin begins and ends a take of its own.
 -- controller.lua reaches it through globals.quickRecording.
@@ -617,6 +617,7 @@ emu.registerbefore(function()
 			inpHistoryModule.clear()
 			vsavScriptModule.clear()
 			timersModule.clear()
+			grabMashingModule.reset_meter()
 			guardCancelModule.clear_trace()
 			globals.total_pb_attempt_counter = {}
 			globals.successful_pb_counter = {}
@@ -989,6 +990,7 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 		commandTrainerModule.reset()
 		chainTrainerModule.reset()
 		grabMashingModule.reset("load")
+		grabMashingModule.reset_meter()
 		quickRecordingModule.reset("load")
 		macroLuaModule.registerLoad(slot)
 		globals.dmg_calc.red_life = 0

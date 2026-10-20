@@ -19,7 +19,7 @@
 --   * saving is refused while anything runs that it would not carry: a
 --     playback (its start wait, the gap between loops), Action Steps or
 --     Specified steps still to come, a queued dummy input or Character
---     Specific wait, Grab Mashing in a grab
+--     Specific wait, Auto Mash in a grab
 --   * restoring stops all that first - the state was saved with none of it -
 --     and the load handler (master script) clears the rest: unfinished trainer
 --     lines, GC Stats' attempt in progress (not counted), the runner
@@ -87,7 +87,7 @@ function M.running()
 	if p ~= nil and p.pending_input_sequence ~= nil then return "queued input" end
 	if guard_action_input ~= nil and guard_action_input.csp_due ~= nil then return "reversal waiting" end
 	local gm = package.loaded["./scripts/grabMashing"]
-	if type(gm) == "table" and gm._run ~= nil and gm._run() ~= nil then return "Grab Mashing" end
+	if type(gm) == "table" and gm._run ~= nil and gm._run() ~= nil then return "Auto Mash" end
 	return nil
 end
 

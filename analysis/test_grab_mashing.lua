@@ -432,13 +432,13 @@ do
 	globals.options.knockdown_logger_enable = false
 
 	local menu = slurp("menu.lua")
-	eq("Dummy タブに Grab Mashing (Off / Normal / Fast / Fastest、既定 Off)",
-	   menu:find('list_menu_item("Grab Mashing", training_settings, "grab_mashing", { "Off", "Normal", "Fast", "Fastest" }, 1,', 1, true) ~= nil, true)
+	eq("Dummy タブに Auto Mash (Off / Normal / Fast / Fastest、既定 Off)",
+	   menu:find('list_menu_item("Auto Mash", training_settings, "grab_mashing", { "Off", "Normal", "Fast", "Fastest" }, 1,', 1, true) ~= nil, true)
 	local i_tech = menu:find('list_menu_item("Random Throw Tech %"', 1, true)
-	local i_grab = menu:find('list_menu_item("Grab Mashing"', 1, true)
+	local i_grab = menu:find('list_menu_item("Auto Mash"', 1, true)
 	local i_guard = menu:find('list_menu_item("Guard", training_settings', 1, true)
 	eq("  Random Throw Tech % の下、Guard の上", i_tech ~= nil and i_grab ~= nil and i_guard ~= nil and i_tech < i_grab and i_grab < i_guard, true)
-	eq("  旧名 Grab Mash を UI に使わない", menu:find('"Grab Mash"', 1, true), nil)
+	eq("  旧名 Grab Mashing を UI に使わない", menu:find('"Grab Mashing"', 1, true), nil)
 	eq("config の既定は 1 (Off)", slurp("config.lua"):find("\n  grab_mashing = 1,\n", 1, true) ~= nil, true)
 	local ms = slurp("vsav_training_master_script.lua")
 	eq("起動時に require", ms:find('\nlocal grabMashingModule  = require "./scripts/grabMashing"', 1, true) ~= nil, true)

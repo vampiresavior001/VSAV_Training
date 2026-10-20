@@ -579,16 +579,16 @@ Building an action does not start it; it starts when a trigger comes. To repeat 
 | `Pose` | Direction held normally: `None`, crouching, forward/back or jumping directions |
 | `Wakeup` | Movement on recovery from knockdown: `None`, `Towards`, `Away` or random choices |
 | `Random Throw Tech %` | Throw-tech probability: `0% / 25% / 50% / 75% / 100%` |
-| `Grab Mashing` | Mashing while grabbing or grabbed, and in hits that mashing shortens: `Off / Normal / Fast / Fastest` |
+| `Auto Mash` | Mashing while grabbing, grabbed, or in a hit that mashing shortens: `Off / Normal / Fast / Fastest` |
 | `Guard` | Blocking method |
 | `Random Guard %` | Probability of blocking with the applicable guard methods: `0% / 25% / 50% / 75% / 100%` |
 
 `Random Throw Tech %` defaults to `100%`. Set it to `0%` when examining throws without automatic techs.
 
 <a id="grab-mashing"></a>
-**`Grab Mashing` recreates an opponent who mashes.** Use it to check a grab's damage, how long an escape takes, or how long a hit that mashing shortens lasts. It works with the dummy grabbing, being grabbed, or taking such a hit.
+**`Auto Mash` recreates an opponent who mashes.** Use it to check a grab's damage, how long an escape takes, or how long a hit that mashing shortens lasts. It works with the dummy grabbing, being grabbed, or taking such a hit.
 
-Select it at `Dummy > Grab Mashing` (default `Off`). It works only where the game reads mashing. ROM analysis confirmed three routines that do:
+Select it at `Dummy > Auto Mash` (default `Off`). It works only where the game reads mashing. ROM analysis confirmed three routines that do:
 
 - Grabs: the escape of the one grabbed, and the extra input of the one grabbing
 - A routine that takes time off a hit: special hit reactions, such as from projectiles
@@ -602,8 +602,12 @@ Ordinary throws and ordinary hitstun are not covered. In special hit reactions i
 | `Fast` | Switches between PPP + up and KKK + down every 4 Ticks |
 | `Fastest` | Switches between PPP + up and KKK + down every Tick |
 
-- `Analysis > Show Mash Timer` shows the remaining time above the grabbing character.
-- It does nothing while you control P2, while a recording plays or is being made, or during the Recording Wizard.
+- `Display > Show Mash Meter` shows the remaining mash count over the character who is grabbed (`Mash Escape`) or in a hit that mashing shortens (`Mash Recovery`). A fixed-width cyan bar and the count the game is using - not seconds left. It also works with `Auto Mash = Off`. The old `Analysis > Show Mash Timer` setting is kept and now appears here.
+- A grab meter reads the grabber's count and appears over the grabbed character. That is the escape count, not the grabber's own attack progress; a move can end the grab with some count left.
+- The timer type reads the same count the move's end branch clears. The motion type counts the 120 updates before the end record through its section table; an unknown motion position shows `Mash Recovery -` and no bar.
+- The meter follows the grabbed side for a grab and the character taking the hit for a hit. It is the game's escape or motion count, not a promise of how many Ticks remain.
+- If the meter is switched on partway through a grab or hit, the bar starts from the first value it sees; it does not guarantee progress from the move's start.
+- Auto Mash does not input while you control P2, while a recording plays or is being made, during the Recording Wizard, or while the menu is open. `Show Mash Meter` still observes and displays those states.
 - When the dummy is grabbed, previously queued counteractions (Action Steps, Specified and so on) are canceled, so an old one does not come out after it is let go.
 - When the dummy grabs, its own action keeps running; only its input during the grab is replaced.
 - In a special hit reaction, queued counteractions are kept. While a counteraction's input for getting out is being sent, or Action Steps are still to come, mashing pauses and the counteraction goes first.
@@ -819,7 +823,7 @@ You can also save and restore states from the Recording menu. During a match, op
 | `Recording > Restore State` | Right or LP closes the menu, then returns to the saved state |
 
 - There is one saved state. Choosing characters again makes the previous one unusable (even if you pick the same pair). A state saved with other characters or at another game speed is not restored either.
-- Nothing is saved during recording playback, while Action Steps or Specified actions are still to come, or while Grab Mashing has the dummy grabbed. Saving partway through a playback is not supported yet.
+- Nothing is saved during recording playback, while Action Steps or Specified actions are still to come, or while Auto Mash has the dummy grabbed. Saving partway through a playback is not supported yet.
 - Restoring first stops whatever is running, such as playback or Action Steps.
 - Neither saving nor restoring happens while recording, during Recording Wizard, with the Action Steps editor open, during a position move or outside a match.
 - Pressing `Volume Up` once with the menu open also closes the menu, then restores. With nothing saved, the menu stays open.

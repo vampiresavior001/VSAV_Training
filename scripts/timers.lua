@@ -573,12 +573,71 @@ local function draw_curse_timer(player_adr, coords)
     end
 end
 
-local function draw_mash_timer(player_adr, coords)
-    local mash_timer = memory.readword(player_adr + 0x15C) 	-- Mash Timer 
-    if mash_timer ~= 0 then
-        gui.rect(coords.base.x - 20, coords.base.y - 112, coords.base.x - 20 + (mash_timer * 2), coords.base.y - 122, 0x00FFFF99,0x00000099)
-        gui.text(coords.base.x - 17, coords.base.y - 120, mash_timer)
-        gui.text((coords.base.x - 55), coords.base.y - 120, "Mash" )
+local MASH_BAR_W = 40
+local MASH_CH = 4.2
+local MASH_LABEL = {
+    grab = "Mash Escape",
+    recovery_timer = "Mash Recovery",
+    recovery_motion = "Mash Recovery",
+}
+
+-- The meter's state belongs to grabMashing.lua, which owns the routines'
+-- callbacks. The module is loaded by the master script under this exact name;
+-- tests put it in package.loaded too.
+local function mash_meter_state(player_adr)
+    local gm = package.loaded and package.loaded["./scripts/grabMashing"]
+    if type(gm) == "table" and gm.meter_state ~= nil then
+        return gm.meter_state(player_adr)
+    end
+    if globals ~= nil and type(globals.mash_meter) == "function" then
+        return globals.mash_meter(player_adr)
+    end
+    return nil
+end
+
+local function draw_mash_meter(player_adr, coords)
+    local m = mash_meter_state(player_adr)
+    if m == nil or m.active ~= true then return end
+    local label = MASH_LABEL[m.kind]
+    if label == nil then return end
+
+    local known = (m.unknown ~= true) and m.remaining ~= nil
+    local value = known and math.max(0, m.remaining) or nil
+    local shown = known and tostring(math.floor(value)) or "-"
+    local label_w = #label * MASH_CH
+    local number_w = #shown * MASH_CH
+    local total_w
+    if known then
+        total_w = math.max(label_w, MASH_BAR_W + 4 + number_w)
+    else
+        total_w = label_w + 4 + number_w
+    end
+
+    local sw = 384
+    local sh = 224
+    if emu ~= nil and emu.screenwidth ~= nil then sw = emu.screenwidth() end
+    if emu ~= nil and emu.screenheight ~= nil then sh = emu.screenheight() end
+    local left = coords.base.x - total_w / 2
+    left = math.max(2, math.min(left, sw - total_w - 2))
+    local top = coords.base.y - 120
+    top = math.max(2, math.min(top, sh - 22))
+
+    local colour = known and "#00FFFF" or "#AAAAAA"
+    gui.text(left, top, label, colour)
+    if known then
+        local by = top + 9
+        gui.rect(left, by, left + MASH_BAR_W, by + 5, 0x00000099, 0x00FFFF99)
+        local base = m.baseline or 0
+        local frac = 0
+        if base > 0 then frac = value / base end
+        if frac < 0 then frac = 0 elseif frac > 1 then frac = 1 end
+        local fill = math.floor(MASH_BAR_W * frac + 0.5)
+        if fill > 0 then
+            gui.rect(left, by, left + fill, by + 5, 0x00FFFF99, 0x00FFFF99)
+        end
+        gui.text(left + MASH_BAR_W + 4, by - 1, shown, colour)
+    else
+        gui.text(left + label_w + 4, top, shown, colour)
     end
 end
 
@@ -658,8 +717,8 @@ local timerModule = {
       draw_throw_invuln( 0xFF8800, p2_coords)
     end
     if globals.options.show_mash_timer then
-      draw_mash_timer( 0xFF8400, p1_coords)
-      draw_mash_timer( 0xFF8800, p2_coords)
+      draw_mash_meter( 0xFF8400, p1_coords)
+      draw_mash_meter( 0xFF8800, p2_coords)
     end
     if globals.options.show_invuln_timer then
       draw_invuln_timer( 0xFF8400, p1_coords)
