@@ -6,6 +6,22 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.29
+
+A Mash Meter now shows the remaining escape or motion count over the character being grabbed or in a hit that mashing shortens. `Grab Mashing` is renamed `Auto Mash`, and `Show Mash Timer` moves from Analysis to Display as `Show Mash Meter`.
+
+### New: Mash Meter
+
+- `Display > Show Mash Meter` draws `Mash Escape` over the grabbed character or `Mash Recovery` over the character in a special hit reaction
+- A grab reads the grabber's `$15C` and draws over the grabbed side. A timer-type hit reads its own `$15C`. The motion type counts the 120 updates before the end record at `0x0285AC`; the end record's 6 is not added
+- A fixed-width cyan bar and the count the game is using - no Tick or second suffix. 0 stays up until the move's own end. An unknown motion pointer or count shows `Mash Recovery -` without a bar
+- It works with Auto Mash Off, with P2 in your hands, during playback/recording, and while the menu is open. The menu holds the display and does not count it down; character select, a state load and the next attempt reset it
+- Auto Mash and Show Mash Meter keep the old settings keys (`grab_mashing`, `show_mash_timer`). The old Analysis setting now appears on Display
+- Checked in play; the motion section table was also read from the running ROM: 16, 10, 10, 3, 10, 10, 3, 10, 10, 3, 10, 10, 3, 8, 4 (120), end record `0x0285AC` = 06 FF
+- Offline tests: 89/89
+
+---
+
 ## v11.7.28.6
 
 TECH HIT in the button history beside PB Stats now stays on the press that
