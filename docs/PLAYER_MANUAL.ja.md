@@ -217,7 +217,7 @@ Runaheadが有効なまま試合が進むと、画面の上に次の赤い警告
 | `Lua Hotkey 4` | キャラクター選択へ戻る | `Game > Return to Character Select`で右またはLP |
 | `Volume Up` | 状態の保存（2回押し）・復元（1回押し） | 保存は`Recording > Save State`で右またはLP（確認で`Yes`）。復元は`Recording > Restore State`（メニューを閉じてから戻す） |
 | `Volume Down` | 記録の再生・停止 | `Recording > Play Recording`で右またはLP。もう一度実行すると停止 |
-| `P1 Coin` | 試合中はレコーディング（Quick Recording）の開始・終了。`Quick Recording = no`なら操作側の切り替え。キャラ選択中はステージ選択 | 代用不可・**必須** |
+| `P1 Coin` | 試合中は記録（Quick Recording）の開始・終了。`Quick Recording = no`なら操作側の切り替え。キャラ選択中はステージ選択 | 代用不可・**必須** |
 
 メニューは`Lua Hotkey 1`で開き、上端のタブ名で左右を押してタブを切り替え、上下で項目を選びます。LPは弱Pです。`>`は「タブ > 項目」の順を表します。
 
@@ -262,12 +262,19 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 
 `Display`、`Trainer`、`Analysis` の `Reset This Tab` は、そのタブの設定をまとめて初期化します。確認画面が開き、初期選択は `Cancel` です。親設定がOFFで隠れている子項目も初期化されます。
 
+<a id="menu-pause"></a>
 **試合中にメニューを開いている間は、ゲームが止まります。** キャラクター、飛び道具、試合のタイマー、硬直などは進みません。メニューを閉じると、止めていたゲームの処理が再開します。BGMは鳴り続けます。
 
+メニューを開いたときに動いていたものは、閉じた後に次のようになります。
+
+| メニューを開いたとき | 閉じた後 |
+|---|---|
+| 起き上がり・やられ・ガードの後の反撃を待っている（`Random Start Wait` などの待ちを含む） | 消えずに、そのまま出る。待ち時間も選ばれた動きも変わらない |
+| Action Steps・Action Patternsの2つ目以降のステップ、`Loop Steps`・Specifiedの `Loop` による繰り返しの途中 | そこで終わる。続きからは出ず、次の反撃のきっかけでまた始まる |
+| 記録（[5.1](#quick-recording) のQuick Recordingなど）、記録の再生（`Looped Playback` を含む）、`Loop Interval (Frames)` の待ち、`Refill Timer (seconds)` による体力の回復 | 止まっていた続きから進む |
+
 - 止めているのはゲームの処理だけで、FBNeoは止めません。そのため、アーケードコントローラーなどでメニューを操作できます。
-- 記録の再生、記録（[5.1](#quick-recording) のQuick Recordingなど）、`Loop Interval (Frames)` の待ち、`Refill Timer (seconds)` による体力の回復も止まり、閉じるとその続きから進みます。
-- 起き上がり・やられ・ガードの後に出す反撃は、メニューを開いても消えず、閉じた後にそのまま出ます。`Random Start Wait` などで開始を待っている間も同じで、待ち時間も選ばれた動きも変わりません。ダウン中にメニューで反撃の設定を変えると、その起き上がりから新しい設定で出ます（起き上がりの直前に開いた場合は、前の設定のまま出ることがあります）。
-- Action Steps・Action Patternsの2つ目以降のステップや、`Loop Steps`・Specifiedの `Loop` による繰り返しの途中でメニューを開くと、そこで終わります。閉じても続きからは出ず、次の反撃のきっかけでまた始まります。記録の再生（`Looped Playback` を含む）は終わらず、上のとおり続きから進みます。
+- ダウン中にメニューで反撃の設定を変えると、その起き上がりから新しい設定で出ます（起き上がりの直前に開いた場合は、前の設定のまま出ることがあります）。
 - 位置を戻す操作（`Dummy > Position` など）をしている間は、配置が終わるまでゲームを動かし、その後また止めます。
 - メニュー中に `Recording > Save State` で保存すると、止まっている場面がそのまま保存されます（[5.5](#save-state)）。
 - 止まらなかったとき（止めている間にTickかキャラクターが動いたとき）は、その起動中は止めるのをやめ、エミュレーターのメッセージ欄で知らせます。
@@ -460,7 +467,7 @@ PB Counter／PB StatsはONのままで構いません。GC Command TrainerはPB 
 
 ![Loop Steps : yesとLoop Wait : Auto (Landing)。説明文に2つのAutoの違いが出る](images/tut_loop_landing.png)
 
-`Loop Wait` は `Loop Steps` の次の行です。表示される行が多いときは、右の列の一番上（`Position` の右）に出ます。
+`Loop Wait` は `Loop Steps` の次の行です。表示される行が多いときは、`Loop Steps` と一緒に右の列の上に出ます（画像では `Pose` の右）。
 
 メニューを閉じ、もう一度こちらの技をガードさせて最初の反撃を始めます。**LoopをONにしただけでは初回は始まりません。**
 
@@ -730,7 +737,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 | やりたいこと | 選ぶもの |
 |---|---|
 | 用意された動きですぐ練習する | 同梱のAction Patternを[取り込む](#sasquatch-ag-tutorial) |
-| 自分で操作した動きを、すぐ相手にさせる | `P1 Coin` でレコーディングする（[5.1](#quick-recording)） |
+| 自分で操作した動きを、すぐ相手にさせる | `P1 Coin` で記録する（[5.1](#quick-recording)） |
 | Coinで記録した動きをスロットに残す | Quick Recordingの `Copy to Slot`（[5.1](#quick-recording)） |
 | 記録の開始・終了を自動で検出し、確認して保存する | Recording Wizard（[5.2](#recording-wizard)） |
 | 動作とタイミングを指定して、一連の動きを作る | [Action Steps](#06-steps) |
@@ -743,7 +750,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 記録・再生は表示フレーム単位であり、Tick単位の入力タイミングを正確に再現するものではありません。特にターボ時の細かなタイミングを指定する練習には、Action Stepsを使ってください。
 
 <a id="quick-recording"></a>
-### 5.1 Coinでレコーディングする（Quick Recording）
+### 5.1 Coinで記録する（Quick Recording）
 
 **`P1 Coin` を押すだけで、ダミーにさせたい動きを記録して、すぐ練習できます。** 初期設定で使えます（`Recording > Quick Recording = yes`）。
 
@@ -1752,6 +1759,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | `Hide Negative Edge Inputs` | 新しい入力のない列を省略。ボタンを離した専用の印は消さない |
 | `Show P2 Inputs` | 右側のダミー入力表示 |
 | `Frame Meter` | 両プレイヤーの状態を1 Tickごとに並べる帯。ONにすると下に3つの設定項目が表示される（[11.4](#frame-meter)） |
+| `Show Mash Meter` | つかまれている側や、レバガチャで短くなるやられを受けている側の頭上に、レバガチャの残量を表示する（[4.1](#grab-mashing)） |
 
 親項目がOFFのときは、その子項目が隠れます。GC入力帯は `Show Scrolling Input`、一部の補助表示は `HUD (Life / Meter)` も必要です。
 

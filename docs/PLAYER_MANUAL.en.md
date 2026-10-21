@@ -262,12 +262,19 @@ An indented row is a setting of the nearest less-indented row above it, its pare
 
 `Reset This Tab` on `Display`, `Trainer` and `Analysis` resets all settings on that tab. A confirmation dialog opens with `Cancel` selected. This also resets any child settings hidden because their parent setting is OFF.
 
+<a id="menu-pause"></a>
 **While the menu is open during a match, the game is paused.** Characters, projectiles, the round timer and stun do not advance; closing the menu resumes game processing. The music keeps playing.
 
+What was running when the menu opened does this once it closes:
+
+| When the menu opens | After it closes |
+|---|---|
+| The dummy is waiting to make a counter after a wake-up, hit stun or block (a `Random Start Wait` wait and the like included) | Kept: it comes out as usual. Neither the wait nor the chosen action changes |
+| Action Steps or Action Patterns are into their second step or later, or `Loop Steps` or Specified's `Loop` is repeating | Ended: not resumed. They start again on the next trigger |
+| Recording (Quick Recording in [5.1](#quick-recording) and the like), recording playback (`Looped Playback` included), the `Loop Interval (Frames)` wait, the `Refill Timer (seconds)` life refill | Carry on from where they stopped |
+
 - Only the game's own processing is stopped, not FBNeo, so the menu still works from an arcade stick or controller.
-- Recording playback and recording (Quick Recording in [5.1](#quick-recording) and the like) pause too, and so do the `Loop Interval (Frames)` wait and the `Refill Timer (seconds)` life refill. All of them carry on when the menu closes.
-- A counter the dummy is waiting to make after a wake-up, hit stun or block is kept: it comes out as usual once the menu closes. The same goes while its start waits out `Random Start Wait` and the like: neither the wait nor the chosen action changes. Change the counter's settings during a knockdown and that wake-up uses the new ones (opened just before the wake-up, the old ones may still be used).
-- Action Steps or Action Patterns into their second step or later, or repeats by `Loop Steps` or Specified's `Loop`, end when the menu opens. Closing it does not resume them; they start again on the next trigger. Recording playback, `Looped Playback` included, does not end: it carries on as above.
+- Change the counter's settings during a knockdown and that wake-up uses the new ones (opened just before the wake-up, the old ones may still be used).
 - While a position reset (`Dummy > Position` and the like) is moving the characters, the game runs until they are in place, then pauses again.
 - `Recording > Save State` from the menu saves the paused scene ([5.5](#save-state)).
 - If the game cannot stay paused (the Tick or a character moves), menu pausing is turned off for the rest of the session, and the emulator's message area says so.
@@ -462,7 +469,7 @@ After practicing one response at a time, change these `Dummy` settings:
 
 ![Loop Steps : yes and Loop Wait : Auto (Landing), with the description of both Auto choices](images/tut_loop_landing.png)
 
-`Loop Wait` is the row after `Loop Steps`. When the tab shows many rows, it appears at the top of the right-hand column, beside `Position`.
+`Loop Wait` is the row after `Loop Steps`. When the tab shows many rows, both rows move to the top of the right-hand column (`Loop Wait` sits beside `Pose` in the image).
 
 Close the menu and make the dummy block another attack to start the first response. **Enabling Loop alone does not start the first pass.**
 
@@ -1754,6 +1761,7 @@ Enable only the readouts you need under `Display`.
 | `Hide Negative Edge Inputs` | Omits columns with no new input; does not remove dedicated release markers |
 | `Show P2 Inputs` | Dummy inputs on the right |
 | `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Enabling it displays three additional settings beneath it ([11.4](#frame-meter)) |
+| `Show Mash Meter` | The remaining mash count over a grabbed character, or one in a hit that mashing shortens ([4.1](#grab-mashing)) |
 
 Child options are hidden when their parent is OFF. The GC input bar requires `Show Scrolling Input`; some other readouts require `HUD (Life / Meter)`.
 

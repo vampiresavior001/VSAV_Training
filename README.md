@@ -26,6 +26,8 @@ Left: check whether you still fit six presses when delaying PB. Right: see which
 
 **See what to improve—even when you succeed.** Randomness affects PB activation and GC input windows, so one successful attempt does not mean your inputs are consistent. Check which inputs the game accepted and when to decide what to adjust next.
 
+**Opening the menu pauses the game.** Change settings on the paused scene, then close the menu to carry on from where you stopped. A counter the dummy was waiting to make and recording playback carry on too ([menu pausing](docs/PLAYER_MANUAL.en.md#menu-pause)).
+
 ## What you can test and practice
 
 ### Practice defense
@@ -71,6 +73,7 @@ The dummy performs the action you build here when something triggers it, such as
 
 | Goal | How to use the tool |
 |---|---|
+| **Have the dummy do one action** | [Specified](docs/PLAYER_MANUAL.en.md#dummy-guard-action) sets one counter action by command and button. You can also delay or vary when the button is pressed ([4.4](docs/PLAYER_MANUAL.en.md#dummy-button-timing)) or repeat it ([4.5](docs/PLAYER_MANUAL.en.md#dummy-specified-loop)) |
 | **Use actions you can perform yourself** | Press Coin to record, then press it again to play back immediately with [Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording). Copy recordings you want to keep to a slot, or use [Recording Wizard](docs/PLAYER_MANUAL.en.md#recording-wizard) for automatic start and stop detection |
 | **Reproduce precise sequences** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
 | **Run several sequences at random** | [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns) saves sequences by name and picks one at random from those you select |
@@ -157,8 +160,8 @@ Some older readouts, such as the dash trainers, still count displayed frames. Se
 
 The **[English player manual](docs/PLAYER_MANUAL.en.md)** covers controls, settings and how to interpret the readouts.
 
-- **Set up your training opponent:** [Dummy defense, recovery and counter actions](docs/PLAYER_MANUAL.en.md#04-dummy), [Recording and looping](docs/PLAYER_MANUAL.en.md#05-recording), [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps), [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns)
-- **Practice:** [PB practice](docs/PLAYER_MANUAL.en.md#08-pb), [GC practice](docs/PLAYER_MANUAL.en.md#09-gc), [Practice recipes](docs/PLAYER_MANUAL.en.md#11-drills)
+- **Set up your training opponent:** [Dummy defense, recovery and counter actions](docs/PLAYER_MANUAL.en.md#04-dummy), [Recording and looping](docs/PLAYER_MANUAL.en.md#05-recording), [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps), [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns), [Auto Mash and Mash Meter](docs/PLAYER_MANUAL.en.md#grab-mashing)
+- **Practice:** [PB practice](docs/PLAYER_MANUAL.en.md#08-pb), [GC practice](docs/PLAYER_MANUAL.en.md#09-gc), [Practice recipes](docs/PLAYER_MANUAL.en.md#11-drills), [Save and restore states](docs/PLAYER_MANUAL.en.md#save-state)
 - **Analyze:** [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data), [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing), [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter), [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps), [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer), [Troubleshooting](docs/PLAYER_MANUAL.en.md#14-troubleshooting)
 
 ### Scope

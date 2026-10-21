@@ -26,6 +26,8 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 **成功した入力にも、改善点があります。** AGの成立判定やGCの入力受付には乱数が関わるため、一度成功しただけでは入力が安定しているとは限りません。受け付けられた入力とタイミングを確認し、次に何を変えるか判断できます。
 
+**メニューを開くと、ゲームが止まります。** 止めた場面のまま設定を変え、閉じればその続きから練習を再開できます。待っていた反撃や記録の再生も、続きから進みます（[メニュー中の一時停止](docs/PLAYER_MANUAL.ja.md#menu-pause)）。
+
 ## 何を調べ、練習できるか
 
 ### 守りを練習する
@@ -71,6 +73,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 | 目的 | 使い方 |
 |---|---|
+| **1つの行動を出させる** | [Specified](docs/PLAYER_MANUAL.ja.md#dummy-guard-action)で、コマンドとボタンを指定して反撃させる。ボタンを押す時期を遅らせる・ばらつかせる設定（[4.4](docs/PLAYER_MANUAL.ja.md#dummy-button-timing)）や、繰り返し（[4.5](docs/PLAYER_MANUAL.ja.md#dummy-specified-loop)）もできる |
 | **自分で操作できる動きを使う** | [Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)でCoinを押して記録し、もう一度押してすぐ再生。残したい動きはスロットへコピーできる。開始・終了を自動で検出する[Recording Wizard](docs/PLAYER_MANUAL.ja.md#recording-wizard)も使える |
 | **精密な動きを再現する** | [Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)で、動作とタイミングをTick単位で指定する |
 | **複数の動きをランダムに出す** | [Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)で、作った動きを名前付きで保存し、使う候補からランダムに実行する |
@@ -109,7 +112,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 | `Lua Hotkey 4` | キャラクター選択へ戻る | `Game > Return to Character Select`で右またはLP |
 | `Volume Up` | 状態の保存（2回押し）・復元（1回押し） | 保存は`Recording > Save State`で右またはLP（確認で`Yes`）。復元は`Recording > Restore State`（メニューを閉じてから戻す） |
 | `Volume Down` | 記録の再生・停止 | `Recording > Play Recording`で右またはLP。もう一度実行すると停止 |
-| `P1 Coin` | 試合中はレコーディング（Quick Recording）の開始・終了。`Quick Recording = no`なら操作側の切り替え。キャラ選択中はステージ選択 | 代用不可・**必須** |
+| `P1 Coin` | 試合中は記録（Quick Recording）の開始・終了。`Quick Recording = no`なら操作側の切り替え。キャラ選択中はステージ選択 | 代用不可・**必須** |
 
 メニューは`Lua Hotkey 1`で開き、上端のタブ名で左右を押してタブを切り替え、上下で項目を選びます。LPは弱Pです。`>`は「タブ > 項目」の順を表します。
 
@@ -156,8 +159,8 @@ Tickはゲームの内部フレームです。ターボ3では表示3フレー�
 
 **[日本語プレイヤーマニュアル](docs/PLAYER_MANUAL.ja.md)** に、操作・設定・表示の読み方をまとめています。
 
-- **練習相手を設定する：** [ダミーのガード・受け身・反撃](docs/PLAYER_MANUAL.ja.md#04-dummy)、[記録とループ再生](docs/PLAYER_MANUAL.ja.md#05-recording)、[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)、[Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)
-- **練習する：** [AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)、[GC練習](docs/PLAYER_MANUAL.ja.md#09-gc)、[目的別の練習レシピ](docs/PLAYER_MANUAL.ja.md#11-drills)
+- **練習相手を設定する：** [ダミーのガード・受け身・反撃](docs/PLAYER_MANUAL.ja.md#04-dummy)、[記録とループ再生](docs/PLAYER_MANUAL.ja.md#05-recording)、[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)、[Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)、[Auto Mash・Mash Meter](docs/PLAYER_MANUAL.ja.md#grab-mashing)
+- **練習する：** [AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)、[GC練習](docs/PLAYER_MANUAL.ja.md#09-gc)、[目的別の練習レシピ](docs/PLAYER_MANUAL.ja.md#11-drills)、[状態の保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)
 - **調べる：** [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)、[Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)、[空中ガードの分析](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)、[Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)、[困ったとき](docs/PLAYER_MANUAL.ja.md#14-troubleshooting)
 
 ### 対応範囲
