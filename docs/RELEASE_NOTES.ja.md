@@ -18,7 +18,7 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 - 待っている反撃は、メニューを開いても消さないようにしました。待ち時間も選ばれた動きも変わらず、閉じた後、
   開かなかったときと同じTickに出ます。動き始めた後のAction Steps・Action Patternsは、これまでどおりメニューで
   終わります
-- 実機ではまだ確かめていません
+- 実機で確かめました（Random Start Waitの後の反撃）
 
 ### マニュアル
 

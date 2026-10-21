@@ -20,7 +20,7 @@ rewritten more plainly.
 - A waiting counter is now kept. Neither the wait nor the chosen action
   changes, and it comes out on the same Tick as without the menu. Action Steps
   and Action Patterns that have started still end at the menu
-- Not checked in play yet
+- Checked in play (the counter after a Random Start Wait)
 
 ### Manual
 
