@@ -41,8 +41,12 @@ end
 local function in_match()
 	return globals.match_running == nil or globals.match_running() == true
 end
+-- Through macro.lua's hold_message: the take plays right after it is saved,
+-- and the playback's progress would write over this the next frame.
 local function say(text)
-	if emu ~= nil and emu.message ~= nil then emu.message(text) end
+	local mac = globals ~= nil and globals.macroLua or nil
+	if mac ~= nil and mac.hold_message ~= nil then mac.hold_message(text)
+	elseif emu ~= nil and emu.message ~= nil then emu.message(text) end
 	print(text)
 end
 local function to_side(side)
@@ -92,10 +96,20 @@ function M.finish()
 		say("Quick Recording: no input, not saved")
 		return false
 	end
+	-- COIN SAVES TO = PLAYBACK SLOT (user, 2026-10-21, from a player's request:
+	-- the old Coin went straight into a slot). The take is written over the
+	-- Playback Slot as well, without asking - what Copy to Slot does by hand.
+	-- What plays is still the take itself: with Use Random Recording Slot on,
+	-- the slot's own start could pick another one.
+	local into = ""
+	if globals.options.coin_saves_to == 2 and mac.copy_quick_to_slot ~= nil then
+		local okc, name = mac.copy_quick_to_slot(globals.options.recording_slot)
+		into = okc and (", saved to " .. name) or (", NOT saved to the slot (" .. tostring(name) .. ")")
+	end
 	if mac.play_quick() then
-		say("Quick Recording: " .. n .. " frames, playing")
+		say("Quick Recording: " .. n .. " frames" .. into .. ", playing")
 	else
-		say("Quick Recording: " .. n .. " frames saved")
+		say("Quick Recording: " .. n .. " frames saved" .. into)
 	end
 	return true
 end

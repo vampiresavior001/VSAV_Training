@@ -6,6 +6,61 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.30
+
+A setting that plays the recording from its start after a state restore, and
+one that puts each Coin recording straight into a slot. A state can now be
+saved during recording playback and partway through Action Steps.
+
+### New: play the recording from its start after a restore
+
+- With `Recording > Play After Restore = yes`, restoring a state (`Volume Up`
+  once, or `Restore State`) is followed by the recording you played last, from
+  its start. Restore and play take one press
+- What plays is the last of `Volume Down`, `Play Recording`, `Play Quick
+  Recording` and the playback after a Coin recording. The dummy's Recording
+  counters do not count
+- The default is `no`, as before
+- Checked in play
+
+### New: put each Coin recording straight into a slot
+
+- With `Coin Saves To = Playback Slot` (under `Recording > Quick Recording`),
+  finishing a Coin recording also writes it to the slot chosen in `Playback
+  Slot`. No `Copy to Slot` needed
+- That slot's recording is replaced without asking. The default is `Own Slot`
+  (as before: the dedicated slot only)
+- Checked in play
+
+### Change: save a state during playback or Action Steps
+
+- Saving used to be refused during recording playback, partway through Action
+  Steps or Specified actions, and while Auto Mash held a grab
+- A restore stops whatever runs first, so the refusal protected nothing. A
+  save now leaves whatever runs going
+- The game is saved as it stands: a dummy in the middle of a move is saved in
+  that pose
+- Checked in play (during playback and during Action Steps)
+
+### Change: save and restore results in Recording GUI
+
+- Results of a save or restore (or why it did not happen) went to the
+  emulator's message line, which Fightcade's FBNeo does not show
+- With `Display > Recording GUI = yes`, they appear for about two seconds just
+  under the recording status box at the top left. Quick Recording results
+  appear there too. Set it to `no` once you no longer need them
+- The notice that menu pausing was turned off (the game could not be stopped)
+  appears there too, once the menu closes
+- Checked on screen in play
+
+### Manual
+
+- Section 5.1 covers `Coin Saves To`; 5.5 covers `Play After Restore` and
+  saving during playback
+- Sections 2.1, 5.5 and 12.1 say where the results now appear
+
+---
+
 ## v11.7.29.1
 
 A counter waiting out `Random Start Wait` and the like no longer disappears

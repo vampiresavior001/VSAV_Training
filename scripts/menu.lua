@@ -1896,6 +1896,10 @@ return {
           -- (user, 2026-10-16: "クイックレコーディング関係のメニュー...子供ではない？").
           checkbox_menu_item("Quick Recording", training_settings, "quick_recording", true, "Coin: you take P2 and a take begins (its own slot, not the numbered ones).\nCoin again: it ends, P1 is yours and the take plays (Looped Playback and the\nstart wait apply). Coin while anything plays stops it and starts a take.\nOff: Coin only swaps sides. Not in the Recording Wizard."),
           child_of("quick_recording", checkbox_menu_item("Auto Trim", training_settings, "quick_auto_trim", true, "Cuts the frames before the first input and after the last of a quick take.\nThe take starts where that first input was made from (Reset Distance Each\nLoop uses it). Pauses and held inputs in the middle are kept.")),
+          -- COIN SAVES TO (quickRecording.lua; user, 2026-10-21, from a player's
+          -- request): Playback Slot writes the take over that slot as well, with
+          -- no Copy to Slot. Own Slot (the default) is how it was.
+          child_of("quick_recording", list_menu_item("Coin Saves To", training_settings, "coin_saves_to", { "Own Slot", "Playback Slot" }, 1, "Own Slot: a take stays in this dummy's quick slot. Copy to Slot puts it in a\nnumbered one.\nPlayback Slot: Coin to finish also writes the take over the Playback Slot\nbelow - WITHOUT ASKING. What was in that slot is lost.")),
           child_of("quick_recording", { name = "Play Quick Recording",
             draw = function(_self, _x, _y, _selected)
               local _c = text_default_color
@@ -1942,7 +1946,7 @@ return {
             right = function(_self) save_state_ask() end,
             legend = function() return "Right or LP: Asks, then saves" end,
             description = function()
-              return "Saves the game as it stands (Volume Up twice). Asks first: Yes saves. One\nstate, for this match and these characters. Not while a playback, Action\nSteps or a recording runs."
+              return "Saves the game as it stands (Volume Up twice). Asks first: Yes saves. One\nstate, for this match and these characters. A playback or Action Steps keep\nrunning. Not while recording."
             end },
           { name = "Restore State",
             draw = function(_self, _x, _y, _selected)
@@ -1964,6 +1968,9 @@ return {
             description = function()
               return "Closes the menu and goes back to the state saved with Save State (Volume Up\nonce). What runs is stopped first. Not a state from another character select\nor game speed."
             end },
+          -- PLAY AFTER RESTORE (trainingState.lua; user, 2026-10-21, from a
+          -- player's request): restore, then play, in one press.
+          checkbox_menu_item("Play After Restore", training_settings, "play_after_restore", false, "A restore (Volume Up once, or Restore State) starts the recording you played\nlast from its start: the quick take or the Playback Slot. Nothing played\nsince the character select: nothing starts.\nRandom Start Wait and Looped Playback apply. A loop restores no state."),
           { name = "Play Recording",
             draw = function(_self, _x, _y, _selected)
               local _c = text_default_color
@@ -1988,10 +1995,11 @@ return {
                 return
               end
               _self.last_fired = emu.framecount()
-              -- playcontrol() is the same entry the playback hotkey uses, and
-              -- it toggles: pressing this again while a macro runs stops it.
-              if globals.macroLua ~= nil and globals.macroLua.playcontrol ~= nil then
-                globals.macroLua.playcontrol()
+              -- user_play() is playcontrol(), the same entry the playback hotkey
+              -- uses, and it toggles: pressing this again while a macro runs
+              -- stops it. It also keeps the start for Play After Restore.
+              if globals.macroLua ~= nil and globals.macroLua.user_play ~= nil then
+                globals.macroLua.user_play()
               end
             end,
             right = function(_self) _self:validate() end,
@@ -2163,7 +2171,7 @@ return {
         -- second column on the same line (test_menu_layout).
         list_menu_item("Pushbox Distance", training_settings, "show_x_distance", { "Off", "X Only", "X,Y,Triangle"},1,"Gives a numerical / visual representation of the distances between characters"),
         checkbox_menu_item("Show Damage Calc (on P2)", training_settings, "show_damage_calc", false, "This shows a damage calculation.\nDamage calculations are recalculated on hit"),
-        checkbox_menu_item("Recording GUI", training_settings, "display_recording_gui", false, "Shows the current recording staet"),
+        checkbox_menu_item("Recording GUI", training_settings, "display_recording_gui", false, "Top left: what records or plays (Slot n or Quick: Recording / Playing /\nPaused). Under it, for about two seconds, what a state save or restore and\nQuick Recording just did (State saved, State not saved: playback, ...)."),
         checkbox_menu_item("Show Scrolling Input", training_settings, "show_scrolling_input",1, "The input bar along the bottom of the screen: YOUR inputs, newest at the right.\nShow P2 Inputs is the same thing for the dummy, down the right edge.\nThe four rows under this one all draw into this bar and come off with it."),
         child_of("show_scrolling_input", integer_menu_item("Scrolling Input History", training_settings, "inp_history_scroll", 0, 80, false, 0,0,"How far back into the Scrolling Input bar above to look. 0 is the newest input.\nRaising it slides the bar along so inputs that have gone off the left come\nback into view. It does not pause anything - new inputs still arrive.")),
         child_of("show_scrolling_input", checkbox_menu_item("Show Button Releases", training_settings, "show_button_releases", true, "Draws a hollow marker on the frame a button is let go, in its own one-frame\ncolumn. Off leaves presses and holds only, and a release just ends the column\nthe button was held in - the way the input bar read before the marker existed.\nHide Negative Edge Inputs below does not touch these columns.")),

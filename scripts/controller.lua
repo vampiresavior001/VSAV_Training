@@ -167,11 +167,12 @@ function handle_hotkeys()
       -- then stops it, the same as while it plays. The quick take playing, or
       -- between its loops, stops (quickRecording.volume_down). Nothing is
       -- loaded first any more: Use Savestate Upon Recording is gone
-      -- (trainingState.lua).
+      -- (trainingState.lua). user_play is playcontrol, and keeps what it
+      -- started for Play After Restore (macro.lua).
       if _qr ~= nil and _qr.volume_down ~= nil and _qr.volume_down() then
         -- stopped
       else
-        globals.macroLua.playcontrol()
+        globals.macroLua.user_play()
       end
     
 		end

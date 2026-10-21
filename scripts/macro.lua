@@ -1112,6 +1112,31 @@ end
 local QUICK_NAME = "quick_recording.mis"
 local NON_PLAY = "[SC@~]"            -- Start, Coin, Diagnostic, Reset
 local quick_rec = nil                -- the take in progress: { trim, first, pos, facing, prev_pos, prev_facing }
+local last_user_play = nil           -- "quick" / "slot": what the player started last (replay_last)
+
+-- MESSAGES THAT STAY (user, 2026-10-21). While a macro plays or records,
+-- registerAfter writes its progress to the emulator's message line every
+-- frame, so a message said once (a state saved or refused, a quick take
+-- saved) was overwritten the frame after. hold_message says it and keeps the
+-- progress off the line for MESSAGE_HOLD frames - about two seconds on screen,
+-- a display time and nothing in the game. Counted down here, not from
+-- emu.framecount(), which a state load may move.
+--
+-- The emulator's line did not show at all in play (user, 2026-10-21), so the
+-- text is kept for those frames too: Display > Recording GUI draws it under
+-- its box (hud.lua draw_rec) - only there, "慣れたらメッセージは不要なはず".
+local MESSAGE_HOLD = 120
+local message_hold = 0
+local held_text = nil
+function hold_message(text)
+	if emu ~= nil and emu.message ~= nil then emu.message(text) end
+	message_hold = MESSAGE_HOLD
+	held_text = text
+end
+function held_message()
+	if message_hold > 0 then return held_text end
+	return nil
+end
 
 function quick_file()
 	local dir = (globals ~= nil and globals.dummy ~= nil and globals.dummy.p2_char) or ""
@@ -1215,8 +1240,37 @@ function play_quick()
 	if not quick_file_exists() then return false end
 	slot_override = quick_file()
 	playcontrol()
+	if playing or start_wait ~= nil then last_user_play = "quick" end
 	return playing or start_wait ~= nil
 end
+
+-- PLAY AFTER RESTORE (trainingState.lua, Recording tab; user, 2026-10-21, from a
+-- player's request: restoring a state and then pressing play was two steps).
+-- What the player started last - the quick take or the Playback Slot - is kept
+-- here, so a restore can start it again from its first frame. Only the
+-- player's own starts count: Volume Down, Play Recording, Play Quick Recording
+-- and the take Coin plays. A Reversal / Counter Attack - Recording start
+-- (guardCancel.lua) is the dummy's and is not one. A character select forgets
+-- it (trainingState.new_session).
+function user_play()
+	playcontrol()
+	if playing or start_wait ~= nil then
+		last_user_play = (slot_override ~= nil) and "quick" or "slot"
+	end
+end
+
+-- Starts what was played last from its start (whatever plays is stopped
+-- first). true: started, or waiting out its Random Start Wait.
+function replay_last()
+	if recording or last_user_play == nil then return false end
+	if last_user_play == "quick" then return play_quick() end
+	stop_macro_playback()
+	inputstream = nil
+	playcontrol()
+	return playing or start_wait ~= nil
+end
+
+function forget_user_play() last_user_play = nil end
 
 -- The quick take is what plays (or waits to start, or waits between loops).
 function quick_playing()
@@ -1343,7 +1397,8 @@ macroLuaModule = {
 			if quick_rec ~= nil then quick_frame() end
 		end
 
-		if playing or recording then
+		if message_hold > 0 then message_hold = message_hold - 1 end
+		if (playing or recording) and message_hold == 0 then
 			local pmesg = playing and ("macro playing: " .. frame .. "/" .. macrosize) or ""
 			if wait.duration then
 				pmesg = pmesg .. "; incremental wait: " .. wait.duration .. wait.change
@@ -1608,6 +1663,12 @@ macroLuaModule = {
 				["quick_playing"] = quick_playing,
 				["stop_all_playback"] = stop_all_playback,
 				["copy_quick_to_slot"] = copy_quick_to_slot,
+				["user_play"] = user_play,
+				["replay_last"] = replay_last,
+				["forget_user_play"] = forget_user_play,
+				["hold_message"] = hold_message,
+				["held_message"] = held_message,
+				["last_user_play"] = last_user_play,
 				["begin_temporary_recording"] = begin_temporary_recording,
 				["stop_temporary_recording"] = stop_temporary_recording,
 				["cancel_temporary_recording"] = cancel_temporary_recording,
@@ -1621,6 +1682,10 @@ macroLuaModule = {
 		end,
 
 	["registerSave"] = function(slot)
+		-- Named states (trainingState.lua's Volume Up save, which may now be
+		-- taken during a playback) carry no macro data: registerLoad skips
+		-- them below, so nothing is handed over here either.
+		if type(slot) ~= "number" then return end
 		if mame then return emu.framecount() end
 		if playing then print("Saved progress to slot", slot, "while playing frame", frame) end
 		if recording then print("Saved progress to slot", slot, "while recording frame", recframe) end

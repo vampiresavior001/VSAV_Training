@@ -128,6 +128,13 @@ local function say(text)
 	print(text)
 end
 
+-- THE NOTICE AGAIN, UNDER RECORDING GUI (user, 2026-10-21). The emulator's
+-- message line does not show in Fightcade's FBNeo, so the give-up notice is
+-- handed to macro.lua's hold_message as well - once the menu has closed: it is
+-- said with the menu open, and the box it is drawn under (Display > Recording
+-- GUI, hud.lua) is behind the menu until then.
+local notice = nil
+
 function M.on_tasks()
 	if frozen then memory.setregister("m68000.a0", M.EMPTY) end
 end
@@ -164,6 +171,11 @@ end
 -- Before each frame: whether this frame stands. On the frame it stops
 -- standing, before the game runs it, what changed under it goes to the log.
 function M.registerBefore()
+	if notice ~= nil and (globals == nil or globals.show_menu ~= true) then
+		local mac = globals ~= nil and globals.macroLua or nil
+		if mac ~= nil and mac.hold_message ~= nil then mac.hold_message(notice) end
+		notice = nil
+	end
 	local want = M.wanted()
 	if want and not frozen then
 		frozen_frames, tick_at, chars_at, ram_at, tick_first = 0, memory.readbyte(0xFF8081), nil, nil, nil
@@ -181,6 +193,7 @@ local function give_up(why)
 	if ram_at ~= nil then write_diff(why) end
 	ram_at = nil
 	say("Menu: the game could not be stopped (" .. broken .. ") - it runs under the menu this session")
+	notice = "Menu: the game could not be stopped - it runs under the menu this session"
 end
 
 -- After it: the checks. Not on a frame that ended the freeze from the Lua
@@ -213,7 +226,7 @@ function M.broken() return broken end
 -- For analysis/test_game_freeze.lua.
 function M._reset()
 	frozen, broken, frozen_frames, tick_at, checked = false, nil, 0, nil, nil
-	chars_at, ram_at, tick_first = nil, nil, nil
+	chars_at, ram_at, tick_first, notice = nil, nil, nil, nil
 end
 M._ranges = ranges
 

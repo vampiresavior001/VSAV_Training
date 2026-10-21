@@ -17,6 +17,14 @@
 --   [7] Volume Down stops the quick take; copying it into the menu's slot
 --   [8] a stop drops the quick file: the next start is the menu's slot again
 --   [9] the hook-up: menu, config, master script, controller, zip, .gitignore
+--  [10] Coin Saves To = Playback Slot: Coin to finish writes the take over the
+--       menu's slot as well, without asking. Own Slot (the default): not
+--  [11] what the player started last (the slot or the quick take) starts
+--       again from its first frame (Play After Restore); the dummy's own
+--       Reversal - Recording start is not remembered
+--  [12] a message said through hold_message (a state saved, a take saved)
+--       stays on the line while a playback writes its progress; named states
+--       hand no macro data to the save
 local fails = 0
 local function eq(what, got, want)
 	if got == want then print("  ok " .. what .. " = " .. tostring(got))
@@ -306,6 +314,105 @@ do
 end
 
 -- ---------------------------------------------------------------------------
+print("[10] Coin Saves To: Playback Slot なら Coin で終えたときスロットにも書く")
+do
+	local function take_with(mode, slot)
+		fresh()
+		globals.options.coin_saves_to = mode
+		globals.options.recording_slot = slot
+		files[FAKE .. "Felicia/slot_3.mis"] = "OLD"
+		Q.on_coin()
+		frame({}, { ["P2 Left"] = true }, 900, 950)
+		frame({ ["P1 Coin"] = true }, {}, 901, 951)
+		Q.on_coin()
+		return files[FAKE .. "Felicia/slot_3.mis"], messages[#messages]
+	end
+	local s, m = take_with(1, 3)
+	eq("Own Slot (既定): スロットは書かない", s, "OLD")
+	eq("  知らせる", m:find("saved to", 1, true), nil)
+	s, m = take_with(2, 3)
+	eq("Playback Slot: メニューのスロット (3) に確認なしで書く", s, take_text())
+	eq("  知らせる", m:find("saved to Felicia/slot_3.mis, playing", 1, true) ~= nil, true)
+	eq("  再生するのは記録そのもの", api().quick_playing(), true)
+	globals.options.coin_saves_to = nil
+	s = take_with(nil, 3)
+	eq("設定の無いファイル: Own Slot と同じ", s, "OLD")
+	globals.options.coin_saves_to, globals.options.recording_slot = nil, nil
+	api().stop_all_playback()
+end
+
+-- ---------------------------------------------------------------------------
+print("[11] 最後に自分で再生したものを覚えて、最初から再生し直す (Play After Restore)")
+do
+	fresh()
+	api().forget_user_play()
+	eq("何も再生していない: 再生し直さない", api().replay_last(), false)
+	files[FAKE .. "Felicia/slot_1.mis"] = take_text()      -- a take that parses
+	api().user_play()                         -- Volume Down: the slot
+	eq("Volume Down の再生はスロット", api().quick_playing(), false)
+	api().user_play()                         -- stop
+	eq("止めても覚えている", api().replay_last(), true)
+	eq("  スロットを最初から", api().quick_playing() == false and api().get_recording_status().playing == true, true)
+	api().stop_all_playback()
+	api().play_quick()                        -- Play Quick Recording / the take after Coin
+	api().stop_all_playback()
+	eq("Quick の再生の後は Quick", api().replay_last() and api().quick_playing(), true)
+	api().stop_all_playback()
+	-- The dummy's own start (Reversal - Recording, guardCancel.lua) goes
+	-- through playcontrol, not user_play: it is not remembered.
+	api().playcontrol(true) ; api().playcontrol(true)
+	eq("ダミーの反撃の再生は覚えない (Quick のまま)", api().replay_last() and api().quick_playing(), true)
+	api().stop_all_playback()
+	Q.on_coin()
+	eq("記録中は再生し直さない", api().replay_last(), false)
+	Q.cancel("test")
+	api().forget_user_play()
+	eq("忘れたら再生し直さない", api().replay_last(), false)
+end
+
+-- ---------------------------------------------------------------------------
+print("[12] 再生中も、残す知らせは進み具合で上書きしない (約 2 秒)")
+do
+	-- A take writes "macro recording: n" every frame, the way a playback
+	-- writes its own: the line the two share. The take's own start message
+	-- is held as well, so it runs out first.
+	fresh()
+	Q.on_coin()
+	eq("記録を始めた知らせは残る", messages[#messages], "Quick Recording: recording - Coin to finish")
+	for _ = 1, 121 do frame({}, {}, 1, 1) end
+	eq("その後は毎フレーム進み具合を書く", (messages[#messages] or ""):find("macro recording", 1, true) ~= nil, true)
+	api().hold_message("State saved")
+	local kept = 0
+	for _ = 1, 119 do
+		frame({}, {}, 1, 1)
+		if messages[#messages] == "State saved" then kept = kept + 1 end
+	end
+	eq("  hold_message の知らせは 119 フレーム残る", kept, 119)
+	eq("  その間は held_message が文を返す (Recording GUI が描く)", api().held_message(), "State saved")
+	frame({}, {}, 1, 1)
+	frame({}, {}, 1, 1)
+	eq("  その後は進み具合に戻る", (messages[#messages] or ""):find("macro recording", 1, true) ~= nil, true)
+	eq("  held_message も nil", api().held_message(), nil)
+	Q.cancel("test")
+	-- Drawn by Display > Recording GUI only (user, 2026-10-21: "Recoding Gui
+	-- と一緒にして、慣れたらメッセージは不要なはず"): the emulator's own line did
+	-- not show in play.
+	local hud = slurp("hud.lua")
+	local dr = hud:match("local function draw_rec%(%)(.-)\nend\n")
+	eq("Recording GUI の枠の下に held_message を描く", dr ~= nil and dr:find("globals.macroLua.held_message()", 1, true) ~= nil
+	   and dr:find("gui.text(mid_width, mid_height + 10, _held)", 1, true) ~= nil, true)
+	eq("  描くのは Recording GUI が on のときだけ", hud:find("if globals.options.display_recording_gui == true then\n\t\t\tdraw_rec()", 1, true) ~= nil, true)
+	local qr = slurp("quickRecording.lua")
+	local ts = slurp("trainingState.lua")
+	eq("Quick Recording と状態の保存の知らせは hold_message 経由",
+	   qr:find("mac.hold_message(text)", 1, true) ~= nil and ts:find("mac.hold_message(text)", 1, true) ~= nil, true)
+	local ms = slurp("macro.lua")
+	eq("名前付きの状態の保存には再生の位置を渡さない (registerSave)",
+	   ms:find('["registerSave"] = function(slot)', 1, true) ~= nil
+	   and ms:find('if type(slot) ~= "number" then return end\n\t\tif mame then return emu.framecount() end', 1, true) ~= nil, true)
+end
+
+-- ---------------------------------------------------------------------------
 print("[9] 組み込み")
 do
 	io.open, io.input, io.output = real_open, real_input, real_output
@@ -325,7 +432,12 @@ do
 	eq("  スロットの行でそこへコピー", cq ~= nil and cq:find("_m.copy_quick_to_slot(_i)", 1, true) ~= nil, true)
 	eq("  左で戻る", cq ~= nil and cq:find("function _r:left() current_popup = nil end", 1, true) ~= nil, true)
 	eq("  開いた押しの続きでは決めない (15 フレーム)", cq ~= nil and cq:find("emu.framecount() - opened_at < 15", 1, true) ~= nil, true)
+	eq("  その子に Coin Saves To (Own Slot / Playback Slot、既定 Own Slot)",
+	   menu:find('child_of("quick_recording", list_menu_item("Coin Saves To", training_settings, "coin_saves_to", { "Own Slot", "Playback Slot" }, 1,', 1, true) ~= nil, true)
+	eq("Play Recording の行は user_play (Play After Restore が覚える)", menu:find("globals.macroLua.user_play()", 1, true) ~= nil
+	   and menu:find("globals.macroLua.playcontrol()", 1, true) == nil, true)
 	local cfg = slurp("config.lua")
+	eq("config の既定 coin_saves_to = 1", cfg:find("\n  coin_saves_to = 1,\n", 1, true) ~= nil, true)
 	eq("config の既定 quick_recording = true", cfg:find("\n  quick_recording = true,\n", 1, true) ~= nil, true)
 	eq("config の既定 quick_auto_trim = true", cfg:find("\n  quick_auto_trim = true,\n", 1, true) ~= nil, true)
 	local ms = slurp("vsav_training_master_script.lua")

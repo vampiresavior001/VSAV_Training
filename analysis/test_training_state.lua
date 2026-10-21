@@ -10,10 +10,14 @@
 --   [3] restored: what runs stops first (playback, steps, queued inputs)
 --   [4] not restored: another session (a character select), another pair,
 --       another game speed
---   [5] not saved while anything runs a state does not carry; neither while
---       recording, in the wizard or the editor, during a position move or
---       outside a match. A failed save keeps the old one
+--   [5] not saved while recording, in the wizard or the editor, during a
+--       position move or outside a match. A failed save keeps the old one.
+--       What runs (a playback, Action Steps, a queued input, Auto Mash) is
+--       saved over and keeps running
 --   [6] the hook-up, and nothing saving or loading a state on its own
+--   [7] Play After Restore: on, the frame after a restore starts what was
+--       played last from its start (once); off (the default) or nothing
+--       restored: not. A character select forgets what was played
 local fails = 0
 local function eq(what, got, want)
 	if got == want then print("  ok " .. what .. " = " .. tostring(got))
@@ -169,14 +173,23 @@ do
 		frame(true) ; frame(false) ; frame(true) ; frame(false)
 		return saves, last_msg()
 	end
+	-- What runs is not refused (user, 2026-10-21: "止めるのは必須なの？", then
+	-- "アクションステップでも保存したい"): saved, and it keeps running - a
+	-- restore stops it all anyway ([3]).
+	for _, c in ipairs({
+		{ "再生中", function() globals.macroLua.playing = true end },
+		{ "再生の開始待ち", function() globals.macroLua.starting = true end },
+		{ "ループの合間", function() status = { loop_pending = true } end },
+		{ "Action Steps の残り", function() pending = 1 end },
+		{ "送る前の入力", function() player_objects[2].pending_input_sequence = { 1 } end },
+		{ "Character Specific の待ち", function() guard_action_input.csp_due = 3 end },
+		{ "Auto Mash のつかみ中", function() gm_run = {} end },
+	}) do
+		local n, m = save_with(c[2])
+		eq(c[1] .. ": 保存する", n .. "/" .. m, "1/State saved")
+		eq("  止めない", stops .. "/" .. cancels, "0/0")
+	end
 	local cases = {
-		{ "再生中", function() globals.macroLua.playing = true end, "playback" },
-		{ "再生の開始待ち", function() globals.macroLua.starting = true end, "playback" },
-		{ "ループの合間", function() status = { loop_pending = true } end, "playback" },
-		{ "Action Steps の残り", function() pending = 1 end, "Action Steps" },
-		{ "送る前の入力", function() player_objects[2].pending_input_sequence = { 1 } end, "queued input" },
-		{ "Character Specific の待ち", function() guard_action_input.csp_due = 3 end, "reversal waiting" },
-		{ "Auto Mash のつかみ中", function() gm_run = {} end, "Auto Mash" },
 		{ "Quick Recording の記録中", function() qr_rec = true end, "recording" },
 		{ "Recording Wizard", function() wz_on = true end, "Recording Wizard" },
 		{ "Action Steps のエディタ", function() ed_on = true end, "Action Steps editor" },
@@ -275,6 +288,64 @@ do
 	eq("  Yes は同じ窓口 (trainingState.save)", menu:find("globals.trainingState.save()", 1, true) ~= nil, true)
 	eq("  確認の左は戻る (Yes でも)", menu:find("function _yes:left() current_popup = nil end", 1, true) ~= nil
 	   and menu:find("function _no:left() current_popup = nil end", 1, true) ~= nil, true)
+end
+
+-- ---------------------------------------------------------------------------
+print("[7] Play After Restore: 復元の次のフレームで、最後に再生したものを最初から")
+do
+	local replays, forgets, replay_ok = 0, 0, true
+	globals.macroLua.replay_last = function() replays = replays + 1 ; return replay_ok end
+	globals.macroLua.forget_user_play = function() forgets = forgets + 1 end
+	local function restore_with(on)
+		fresh()
+		replays = 0
+		globals.options.play_after_restore = on
+		frame(true) ; frame(false) ; frame(true) ; frame(false)            -- save
+		frame(true) ; frame(false) ; frames(T.WINDOW, false)               -- the window
+		local at_load = loads
+		local before = replays
+		frame(false)                                                       -- the restore's frame
+		local same_frame = replays - before
+		frame(false)                                                       -- the next
+		return at_load, loads, same_frame, replays
+	end
+	local _, l, same, r = restore_with(true)
+	eq("On: 復元した", l, 1)
+	eq("  読み込んだフレームではまだ始めない", same, 0)
+	eq("  次のフレームで 1 回だけ再生し直す", r, 1)
+	eq("  知らせる", last_msg(), "State restored, playing from the start")
+	frames(3, false)
+	eq("  それ以上は再生し直さない", replays, 1)
+	_, l, _, r = restore_with(false)
+	eq("Off (既定): 復元はするが再生しない", l .. "/" .. r, "1/0")
+	eq("  知らせるのは復元だけ", last_msg(), "State restored")
+	_, l, _, r = restore_with(nil)
+	eq("設定の無いファイル: Off と同じ", r, 0)
+	replay_ok = false
+	_, l, _, r = restore_with(true)
+	eq("再生するものが無い: 頼むが、知らせは復元だけ", r .. "/" .. last_msg(), "1/State restored")
+	replay_ok = true
+	-- Not restored: nothing replays.
+	fresh()
+	replays = 0
+	globals.options.play_after_restore = true
+	T._forget()
+	frame(true) ; frame(false) ; frames(T.WINDOW + 3, false)
+	eq("復元しなければ再生しない", replays, 0)
+	-- A character select forgets what was played, and a replay still waiting.
+	forgets = 0
+	T.new_session()
+	eq("キャラ選択で、最後に再生したものを忘れる", forgets, 1)
+	globals.options.play_after_restore = nil
+	globals.macroLua.replay_last, globals.macroLua.forget_user_play = nil, nil
+	local menu = slurp("menu.lua")
+	eq("Recording タブに Play After Restore (既定 no、Restore State の次)",
+	   menu:find('end },\n          -- PLAY AFTER RESTORE', 1, true) ~= nil
+	   and menu:find('checkbox_menu_item("Play After Restore", training_settings, "play_after_restore", false,', 1, true) ~= nil
+	   and menu:find('{ name = "Restore State",', 1, true) < menu:find('"Play After Restore"', 1, true)
+	   and menu:find('"Play After Restore"', 1, true) < menu:find('{ name = "Play Recording",', 1, true), true)
+	eq("config の既定 play_after_restore = false", slurp("config.lua"):find("\n  play_after_restore = false,\n", 1, true) ~= nil, true)
+	eq("controller: Volume Down は user_play (覚える)", slurp("controller.lua"):find("globals.macroLua.user_play()", 1, true) ~= nil, true)
 end
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))

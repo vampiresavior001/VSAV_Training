@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.29.1／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.30／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [守りを練習する：AG・GC](#sasquatch-ag-tutorial) · [攻めを調べる：起き攻め](#wakeup-pressure-drill) · [対象環境・確認範囲](#verification-scope)
 
@@ -277,7 +277,7 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 - ダウン中にメニューで反撃の設定を変えると、その起き上がりから新しい設定で出ます（起き上がりの直前に開いた場合は、前の設定のまま出ることがあります）。
 - 位置を戻す操作（`Dummy > Position` など）をしている間は、配置が終わるまでゲームを動かし、その後また止めます。
 - メニュー中に `Recording > Save State` で保存すると、止まっている場面がそのまま保存されます（[5.5](#save-state)）。
-- 止まらなかったとき（止めている間にTickかキャラクターが動いたとき）は、その起動中は止めるのをやめ、エミュレーターのメッセージ欄で知らせます。
+- 止まらなかったとき（止めている間にTickかキャラクターが動いたとき）は、その起動中は止めるのをやめます。`Display > Recording GUI = yes` なら、メニューを閉じた後、画面左上の枠のすぐ下に約2秒知らせます（[5.5](#save-state)と同じ場所）。
 
 ### 2.2 操作側とキャラクター選択
 
@@ -739,6 +739,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 | 用意された動きですぐ練習する | 同梱のAction Patternを[取り込む](#sasquatch-ag-tutorial) |
 | 自分で操作した動きを、すぐ相手にさせる | `P1 Coin` で記録する（[5.1](#quick-recording)） |
 | Coinで記録した動きをスロットに残す | Quick Recordingの `Copy to Slot`（[5.1](#quick-recording)） |
+| Coinで記録するたびに、そのままスロットにも残す | Quick Recordingの `Coin Saves To = Playback Slot`（[5.1](#quick-recording)） |
 | 記録の開始・終了を自動で検出し、確認して保存する | Recording Wizard（[5.2](#recording-wizard)） |
 | 動作とタイミングを指定して、一連の動きを作る | [Action Steps](#06-steps) |
 | 作った動きを複数保存・管理し、ランダムに実行する | [Action Patterns](#07-patterns) |
@@ -760,7 +761,8 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 
 - `Looped Playback`・`Random Start Wait`・`Reset Distance Each Loop` は、通常の再生と同じように効きます。
 - 再生中に `P1 Coin` を押すと、再生を止めて新しい記録を始めます。再生中の `Volume Down` は再生を止めます（止まっているときの `Volume Down` は、`Playback Slot` のスロットを再生します）。
-- 記録は、ダミーのキャラクターごとの専用の枠に入ります。`Slot 1`～`Slot 5` は上書きしません。
+- 記録は、ダミーのキャラクターごとの専用の枠に入ります。初期設定（`Coin Saves To = Own Slot`）では、`Slot 1`～`Slot 5` は上書きしません。
+- `Coin Saves To = Playback Slot` にすると、記録を終えたときに `Playback Slot` で選んでいるスロットにも同じ記録を書きます。**そのスロットの記録は確認なしで置き換わります。** `Copy to Slot` を使わずに、すぐスロットへ残したいときに使います。
 - `Auto Trim = yes`（初期設定）では、最初の入力の前と最後の入力の後を切ります。`Reset Distance Each Loop` は、最初に入力した時点の間合いへ戻します。途中の待ちや押しっぱなしは残ります。
 - 開始・終了の `P1 Coin` は記録に入りません。何も入力しなかったときは保存せず、前の記録を残します。
 - 記録中に `Quick Recording = no` にした、ダミーのキャラクターを変えた、Recording Wizardを始めた、試合が終わった、エミュレーターのステートを読み込んだ場合は、その記録を捨てて自分（P1）に戻ります。
@@ -769,6 +771,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 | `Quick Recording` の下の項目 | 内容 |
 |---|---|
 | `Auto Trim` | 前後の無入力を切る（初期設定 `yes`） |
+| `Coin Saves To` | 記録の保存先。`Own Slot`（初期設定）は専用の枠だけ、`Playback Slot` は `Playback Slot` のスロットにも確認なしで書く |
 | `Play Quick Recording` | 記録した動きを再生する。もう一度で停止 |
 | `Copy to Slot` | 記録した動きを `Slot 1`～`Slot 5` へコピーする。開いた窓でスロットを上下で選び、右またはLPで決定（そのスロットの記録は置き換わる）、左で戻る |
 
@@ -818,19 +821,21 @@ Recording Wizardは、操作の開始から終了までを自動で記録する�
 
 **`Volume Up` を2回続けて押すと、その場の状態を保存します。1回押すと、少し後（約0.25秒）に保存した状態へ戻します。** 同じ場面から何度も練習したいときに使います。
 
-メニューからも使えます。試合中はメニューを開いている間ゲームが止まるので、止めた場面を保存できます。ただし、記録の再生中など、保存できない場面もあります（下記）。
+メニューからも使えます。試合中はメニューを開いている間ゲームが止まるので、止めた場面を保存できます。記録の再生中やAction Stepsの途中でも保存できます（下記）。
 
 | 項目 | 操作 |
 |---|---|
 | `Recording > Save State` | 右またはLPで確認が開く。`Yes`（最初に選ばれている）を右またはLPで保存、`No` か左でやめる |
 | `Recording > Restore State` | 右またはLPで、メニューを閉じてから保存した状態へ戻す |
+| `Recording > Play After Restore` | `yes` にすると、戻した直後に、最後に自分で再生した記録を最初から再生する（初期設定 `no`） |
 
 - 保存は1つだけです。キャラクターを選び直すと、前の保存は使えなくなります（同じ組み合わせを選び直しても）。キャラクターやゲーム速度が違う保存も戻しません。
-- 記録の再生中、Action StepsやSpecifiedの続きが残っている間、Auto Mashでつかまれている間は保存しません。再生の途中まで含めた保存には、まだ対応していません。
-- 戻すときは、再生やAction Stepsなど、動いているものを止めてから戻します。
+- 記録の再生中、Action StepsやSpecifiedの途中、Auto Mashでつかんでいる間も保存できます。動いているものは止めずに続けます。保存されるのはその時点のゲームの状態だけで、再生やステップがどこまで進んでいたかは入りません。ダミーが動きの途中なら、その姿勢のまま保存されます。
+- 戻すときは、再生やAction Stepsなど、動いているものを止めてから戻します。Action Stepsは、戻した後の次の反撃のきっかけで、また最初から始まります。
+- `Play After Restore = yes` で再生するのは、最後に自分で再生したもの（`Playback Slot` のスロットか、Coinで記録した動き）です。`Volume Down`・`Play Recording`・`Play Quick Recording`・Coinで記録した後の再生が対象で、ダミーのRecording系の反撃は含みません。キャラクターを選び直した後は、何かを再生するまで何も始めません。`Random Start Wait` と `Looped Playback` は通常の再生と同じく効き、ループの各回では状態を戻しません。
 - 記録中、Recording Wizard中、Action Stepsのエディターを開いている間、位置の移動中、試合外は、保存も復元もしません。
 - メニューを開いている間に `Volume Up` を1回押したときも、メニューを閉じてから戻します。保存がないときは、メニューを閉じません。
-- 保存・復元しなかったときは、エミュレーターのメッセージ欄に理由が出ます。
+- `Display > Recording GUI = yes` のとき、保存・復元の結果（しなかったときは理由）が、画面左上の記録状態の枠のすぐ下に約2秒出ます。Quick Recordingの結果も同じ場所に出ます。慣れたら `no` にして消せます。
 
 v11.7.27まであった `Use Savestate Upon Recording`（記録の開始時に保存し、再生のたびに戻す機能）は廃止しました。`Volume Up` で記録を始めることもできなくなりました。記録は `P1 Coin`（[5.1](#quick-recording)）かRecording Wizard（[5.2](#recording-wizard)）で行います。
 
@@ -1752,7 +1757,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | `Display Pushbox X Center` | 押し合い判定の中心表示。HitboxesをONにすると選べる |
 | `Pushbox Distance` | 二人の距離。横方向のみ／縦横・三角形の表示 |
 | `Show Damage Calc (on P2)` | P2が受けたダメージの表示 |
-| `Recording GUI` | 記録状態の表示 |
+| `Recording GUI` | 左上に記録・再生の状態。その下に、状態の保存・復元とQuick Recordingの結果を約2秒（[5.5](#save-state)） |
 | `Show Scrolling Input` | 画面下の自分の入力履歴 |
 | `Scrolling Input History` | 過去の入力を見る位置。0が最新。ゲームを停止する設定ではない |
 | `Show Button Releases` | ボタンを離した印を表示 |
@@ -1869,7 +1874,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新：2026-10-11。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.29.1。項目名は2026-10-21に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.30。項目名は2026-10-21に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

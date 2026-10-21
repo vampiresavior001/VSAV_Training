@@ -140,6 +140,14 @@ local function draw_rec()
 		gui.rect(mid_width - 2, mid_height - 1, mid_width + 65, mid_height + 7, "#000000")
 		gui.text( mid_width, mid_height, name..": Paused")
 	end 
+	-- THE LAST STATE / QUICK RECORDING MESSAGE, under the box for about two
+	-- seconds (macro.lua hold_message; user, 2026-10-21: "Recoding Guiと一緒にし
+	-- て"). The emulator's own message line did not show in play.
+	local _held = globals.macroLua.held_message ~= nil and globals.macroLua.held_message() or nil
+	if _held ~= nil then
+		gui.rect(mid_width - 2, mid_height + 9, mid_width + #_held * 4 + 1, mid_height + 17, "#000000")
+		gui.text(mid_width, mid_height + 10, _held)
+	end
 end
 
 local last_tech_success = false

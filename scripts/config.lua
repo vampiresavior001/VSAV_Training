@@ -86,6 +86,11 @@ local default_training_settings = {
   -- own. Both on by default (handoff, 2026-10-15).
   quick_recording = true,
   quick_auto_trim = true,
+  -- Coin Saves To (quickRecording.lua): 1 Own Slot, 2 Playback Slot (the take
+  -- is written over it too). Play After Restore (trainingState.lua). Both off
+  -- by default (user, 2026-10-21).
+  coin_saves_to = 1,
+  play_after_restore = false,
   pb_type_rec = 1,   -- 1 is None; 0 was out of range for the list
   anak_projectile = 1,
   lei_lei_stun_item = 0,

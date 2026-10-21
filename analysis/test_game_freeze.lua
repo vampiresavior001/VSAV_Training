@@ -20,6 +20,8 @@
 --   [8] the menu's hold on the players ($3B4 / $200) is off while the game
 --       stands, on while it runs under the menu (v11.7.28.1: with $3B4 set the
 --       game skips the dash recognizer, ROM 0223AC)
+--   [9] the give-up notice goes to macro.lua's hold_message too (drawn under
+--       Display > Recording GUI's box), once the menu has closed
 local fails = 0
 local function eq(what, got, want)
 	if got == want then print("  ok " .. what .. " = " .. tostring(got))
@@ -375,6 +377,31 @@ do
 	eq("最初の return より前", h ~= nil and first_return ~= nil and h < first_return, true)
 	eq("$3B4 を書くのは controller.lua だけ",
 	   (slurp("controller.lua"):find("player_addr + 0x3B4", 1, true) ~= nil) and ms:find("0x3B4", 1, true) == nil, true)
+end
+
+-- ---------------------------------------------------------------------------
+print("[9] やめた知らせは、メニューを閉じてから Recording GUI の枠の下へも (hold_message)")
+do
+	local held = {}
+	globals.macroLua = { hold_message = function(t) held[#held + 1] = t end }
+	F._reset()
+	messages = {}
+	globals.show_menu = true
+	ram[0xFF8081] = 30
+	frame()
+	frame()
+	frame(function() ram[0xFF8081] = 31 end)
+	eq("やめた: メッセージ欄へはその場で", #messages, 1)
+	frame()
+	eq("  メニュー中は枠の下へはまだ渡さない", #held, 0)
+	globals.show_menu = false
+	frame()
+	eq("  閉じたら 1 回渡す", #held, 1)
+	eq("  文", held[1], "Menu: the game could not be stopped - it runs under the menu this session")
+	frame()
+	eq("  それ以上は渡さない", #held, 1)
+	globals.macroLua = nil
+	ram[0xFF8081] = nil
 end
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))

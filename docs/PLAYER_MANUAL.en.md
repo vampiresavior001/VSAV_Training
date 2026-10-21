@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.29.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.30 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -277,7 +277,7 @@ What was running when the menu opened does this once it closes:
 - Change the counter's settings during a knockdown and that wake-up uses the new ones (opened just before the wake-up, the old ones may still be used).
 - While a position reset (`Dummy > Position` and the like) is moving the characters, the game runs until they are in place, then pauses again.
 - `Recording > Save State` from the menu saves the paused scene ([5.5](#save-state)).
-- If the game cannot stay paused (the Tick or a character moves), menu pausing is turned off for the rest of the session, and the emulator's message area says so.
+- If the game cannot stay paused (the Tick or a character moves), menu pausing is turned off for the rest of the session. With `Display > Recording GUI = yes`, a notice appears for about two seconds under the box at the top left once the menu closes (the same place as in [5.5](#save-state)).
 
 ### 2.2 Controlled side and character select
 
@@ -741,6 +741,7 @@ Choose how to prepare and manage the dummy's actions based on your goal.
 | Start practicing with a ready-made sequence | [Import an included Action Pattern](#sasquatch-pb-tutorial) |
 | Have the dummy do something you just did, right away | Record with `P1 Coin` ([5.1](#quick-recording)) |
 | Keep a Quick Recording in a slot | Use `Copy to Slot` under Quick Recording ([5.1](#quick-recording)) |
+| Put every Coin recording straight into a slot as well | Set `Coin Saves To = Playback Slot` under Quick Recording ([5.1](#quick-recording)) |
 | Automatically detect when recording starts and stops, then review and save | Use Recording Wizard ([5.2](#recording-wizard)) |
 | Build a sequence by specifying actions and timing | [Action Steps](#06-steps) |
 | Save and manage multiple sequences, then run them at random | [Action Patterns](#07-patterns) |
@@ -762,7 +763,8 @@ Recording and playback operate in displayed frames, so they do not reproduce inp
 
 - `Looped Playback`, `Random Start Wait` and `Reset Distance Each Loop` apply as they do to normal playback.
 - Pressing `P1 Coin` during playback stops it and starts a new recording. `Volume Down` during playback stops it (while nothing plays, `Volume Down` plays the `Playback Slot` slot).
-- The recording is saved in a dedicated recording slot for each dummy character. It does not overwrite `Slot 1`–`Slot 5`.
+- The recording is saved in a dedicated recording slot for each dummy character. By default (`Coin Saves To = Own Slot`) it does not overwrite `Slot 1`–`Slot 5`.
+- With `Coin Saves To = Playback Slot`, finishing a recording also writes it to the slot chosen in `Playback Slot`. **That slot's recording is replaced without asking.** Use it to keep each recording in a slot without `Copy to Slot`.
 - With `Auto Trim = yes` (default), the time before the first input and after the last input is cut. `Reset Distance Each Loop` returns to the spacing at the moment of the first input. Waits and holds in the middle are kept.
 - The `P1 Coin` presses that start and finish a recording are not recorded. A recording with no input is not saved, and the previous one stays.
 - If, during a recording, you set `Quick Recording = no`, change the dummy character, start Recording Wizard, the match ends or an emulator savestate is loaded, the recording is discarded and you are back on P1.
@@ -771,6 +773,7 @@ Recording and playback operate in displayed frames, so they do not reproduce inp
 | Under `Quick Recording` | What it does |
 |---|---|
 | `Auto Trim` | Cuts the idle time before and after (default `yes`) |
+| `Coin Saves To` | Where a recording goes. `Own Slot` (default): the dedicated slot only. `Playback Slot`: the `Playback Slot` slot too, replaced without asking |
 | `Play Quick Recording` | Plays the recording. Activate again to stop |
 | `Copy to Slot` | Copies the recording to `Slot 1`–`Slot 5`. In the window that opens, choose a slot with Up/Down and confirm with Right or LP (that slot's recording is replaced); Left goes back |
 
@@ -820,19 +823,21 @@ Enable at least one slot and make sure it contains a recording. With `Use Charac
 
 **Press `Volume Up` twice in a row to save the current state. Press it once to return to the saved state a moment later (about 0.25 seconds).** Use it to practice from the same situation again and again.
 
-You can also save and restore states from the Recording menu. During a match, opening the menu pauses the game so you can save the paused state. Saving is unavailable during recording playback and certain other operations listed below.
+You can also save and restore states from the Recording menu. During a match, opening the menu pauses the game so you can save the paused state. You can save during recording playback and during Action Steps too (see below).
 
 | Item | Controls |
 |---|---|
 | `Recording > Save State` | Right or LP opens a confirmation. Right or LP on `Yes` (selected first) saves; `No` or Left leaves it |
 | `Recording > Restore State` | Right or LP closes the menu, then returns to the saved state |
+| `Recording > Play After Restore` | With `yes`, a restore is followed by the recording you played last, from its start (default `no`) |
 
 - There is one saved state. Choosing characters again makes the previous one unusable (even if you pick the same pair). A state saved with other characters or at another game speed is not restored either.
-- Nothing is saved during recording playback, while Action Steps or Specified actions are still to come, or while Auto Mash has the dummy grabbed. Saving partway through a playback is not supported yet.
-- Restoring first stops whatever is running, such as playback or Action Steps.
+- You can save during recording playback, partway through Action Steps or Specified actions, and while Auto Mash holds a grab. Whatever runs keeps running. Only the game as it stands is saved, not how far a playback or the steps had got. A dummy in the middle of a move is saved in that pose.
+- Restoring first stops whatever is running, such as playback or Action Steps. Action Steps start again from the beginning on the next trigger after the restore.
+- With `Play After Restore = yes`, what plays is what you played last: the `Playback Slot` slot or the Coin recording. That covers `Volume Down`, `Play Recording`, `Play Quick Recording` and the playback after a Coin recording, not the dummy's Recording counters. After choosing characters again, nothing starts until you play something. `Random Start Wait` and `Looped Playback` apply as usual, and loops do not restore the state.
 - Neither saving nor restoring happens while recording, during Recording Wizard, with the Action Steps editor open, during a position move or outside a match.
 - Pressing `Volume Up` once with the menu open also closes the menu, then restores. With nothing saved, the menu stays open.
-- When nothing is saved or restored, the emulator's message line shows why.
+- With `Display > Recording GUI = yes`, the result of a save or restore (or why it did not happen) appears for about two seconds just under the recording status box at the top left. Quick Recording results appear there too. Set it to `no` once you no longer need them.
 
 `Use Savestate Upon Recording` (save at the start of recording and restore on every playback), available up to v11.7.27, has been removed. `Volume Up` no longer starts recording. Record with `P1 Coin` ([5.1](#quick-recording)) or Recording Wizard ([5.2](#recording-wizard)).
 
@@ -1754,7 +1759,7 @@ Enable only the readouts you need under `Display`.
 | `Display Pushbox X Center` | Pushbox center; available when Hitboxes is enabled |
 | `Pushbox Distance` | Character spacing: horizontal only, or horizontal/vertical/triangle |
 | `Show Damage Calc (on P2)` | Damage taken by P2 |
-| `Recording GUI` | Recording status |
+| `Recording GUI` | Recording and playback status at the top left. Under it, for about two seconds, the result of a state save or restore and of Quick Recording ([5.5](#save-state)) |
 | `Show Scrolling Input` | Your input history at the bottom |
 | `Scrolling Input History` | How far back to view; 0 is newest. Does not pause the game |
 | `Show Button Releases` | Marks button releases |
@@ -1871,7 +1876,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-11. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.29.1. On 2026-10-21 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.30. On 2026-10-21 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

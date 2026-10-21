@@ -16,13 +16,17 @@
 --
 -- The state is the game's. What the scripts were doing is not in it yet
 -- (stage 3: a playback's place), so:
---   * saving is refused while anything runs that it would not carry: a
---     playback (its start wait, the gap between loops), Action Steps or
---     Specified steps still to come, a queued dummy input or Character
---     Specific wait, Auto Mash in a grab
+--   * saving leaves whatever runs alone: a playback (its start wait, the gap
+--     between loops), Action Steps or Specified steps still to come, a queued
+--     dummy input or Character Specific wait, Auto Mash in a grab. They used
+--     to refuse the save; a restore stops them all anyway, so the refusal kept
+--     nothing safe (user, 2026-10-21: "止めるのは必須なの？", then "アクション
+--     ステップでも保存したい"). The game as it stands is what is saved, the
+--     dummy in the middle of a move included
 --   * restoring stops all that first - the state was saved with none of it -
 --     and the load handler (master script) clears the rest: unfinished trainer
---     lines, GC Stats' attempt in progress (not counted), the runner
+--     lines, GC Stats' attempt in progress (not counted), the runner. Play
+--     After Restore then starts the last playback from its first frame
 --   * both are refused during a recording (Quick or not), the Recording Wizard,
 --     the Action Steps editor, a position / camera move, or outside a match
 --   * a restore asked for with the menu open closes the menu first, then loads
@@ -35,7 +39,16 @@
 --
 -- Use Savestate Upon Recording is gone with this: nothing saves or loads a state
 -- on its own any more - not at a record, a playback or a loop (handoff 1, 7).
--- Messages go to the emulator's line (emu.message): gui.text draws ASCII only.
+-- Messages go to the emulator's line (emu.message), which did not show in play,
+-- and under Display > Recording GUI's box (macro.lua hold_message, hud.lua).
+--
+-- PLAY AFTER RESTORE (Recording tab, off by default; user, 2026-10-21, from a
+-- player's request). On, a restore starts what the player played last (the
+-- quick take or the Playback Slot, macro.lua replay_last) from its first frame
+-- - the way Volume Down starts it, Random Start Wait and Looped Playback
+-- included. A loop restores no state: only this restore does. The start waits
+-- for the next frame's end, so it is counted from the loaded game, not from
+-- the frame the load was asked on.
 
 local M = {}
 local actionSequenceRunner = require "./scripts/actionSequenceRunner"
@@ -49,9 +62,15 @@ local hold = false         -- after a save or a restore, until the key is let go
 local saved = nil          -- { gen, p1, p2, speed }
 local asked = false        -- the menu's Restore State row, waiting for the frame's end
 local session = 0          -- the character selects since start-up
+local replay_due = false   -- Play After Restore, waiting for the next frame's end
 
+-- Through macro.lua's hold_message when it is there: a playback writes its
+-- progress to the same line every frame, and a refusal used to be gone the
+-- frame after it was said (user, 2026-10-21: Volume Up seemed to do nothing).
 local function say(text)
-	if emu ~= nil and emu.message ~= nil then emu.message(text) end
+	local mac = globals ~= nil and globals.macroLua or nil
+	if mac ~= nil and mac.hold_message ~= nil then mac.hold_message(text)
+	elseif emu ~= nil and emu.message ~= nil then emu.message(text) end
 	print(text)
 end
 local function chars()
@@ -75,23 +94,7 @@ function M.blocked()
 	return nil
 end
 
--- What runs that a state does not carry (nil: nothing).
-function M.running()
-	local mac = globals.macroLua
-	if mac ~= nil then
-		local st = mac.get_recording_status ~= nil and mac.get_recording_status() or {}
-		if mac.playing == true or mac.starting == true or st.loop_pending == true then return "playback" end
-	end
-	if actionSequenceRunner.pending_count() > 0 then return "Action Steps" end
-	local p = player_objects ~= nil and player_objects[2] or nil
-	if p ~= nil and p.pending_input_sequence ~= nil then return "queued input" end
-	if guard_action_input ~= nil and guard_action_input.csp_due ~= nil then return "reversal waiting" end
-	local gm = package.loaded["./scripts/grabMashing"]
-	if type(gm) == "table" and gm._run ~= nil and gm._run() ~= nil then return "Auto Mash" end
-	return nil
-end
-
--- All of it stops (a restore).
+-- What runs that a state does not carry stops (a restore).
 local function stop_running()
 	local mac = globals.macroLua
 	if mac ~= nil and mac.stop_all_playback ~= nil then mac.stop_all_playback() end
@@ -109,7 +112,7 @@ local function stop_running()
 end
 
 function M.save()
-	local why = M.blocked() or M.running()
+	local why = M.blocked()
 	if why ~= nil then say("State not saved: " .. why) return false end
 	local ok = pcall(function()
 		local st = savestate.create(M.NAME)
@@ -151,7 +154,14 @@ function M.restore()
 	stop_running()
 	savestate.load(M.NAME)
 	say("State restored")
+	replay_due = globals.options.play_after_restore == true
 	return true
+end
+
+local function replay()
+	local mac = globals.macroLua
+	if mac == nil or mac.replay_last == nil then return end
+	if mac.replay_last() then say("State restored, playing from the start") end
 end
 
 -- Volume Up (controller.lua), every frame: edge = pressed this frame, up = not held.
@@ -173,6 +183,10 @@ function M.request_restore() asked = true end
 
 function M.registerAfter()
 	frame = frame + 1
+	if replay_due then
+		replay_due = false
+		replay()
+	end
 	if asked then
 		asked = false
 		M.restore()
@@ -189,6 +203,9 @@ end
 function M.new_session()
 	session = session + 1
 	first_at = nil
+	replay_due = false
+	local mac = globals ~= nil and globals.macroLua or nil
+	if mac ~= nil and mac.forget_user_play ~= nil then mac.forget_user_play() end
 end
 
 -- For analysis/test_training_state.lua.
