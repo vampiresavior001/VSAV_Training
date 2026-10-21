@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.29 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.29.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -266,7 +266,7 @@ An indented row is a setting of the nearest less-indented row above it, its pare
 
 - Only the game's own processing is stopped, not FBNeo, so the menu still works from an arcade stick or controller.
 - Recording playback and recording (Quick Recording in [5.1](#quick-recording) and the like) pause too, and so do the `Loop Interval (Frames)` wait and the `Refill Timer (seconds)` life refill. All of them carry on when the menu closes.
-- A counter the dummy is waiting to make after a wake-up, hit stun or block is kept: it comes out as usual once the menu closes. Change the counter's settings during a knockdown and that wake-up uses the new ones (opened just before the wake-up, the old ones may still be used).
+- A counter the dummy is waiting to make after a wake-up, hit stun or block is kept: it comes out as usual once the menu closes. The same goes while its start waits out `Random Start Wait` and the like: neither the wait nor the chosen action changes. Change the counter's settings during a knockdown and that wake-up uses the new ones (opened just before the wake-up, the old ones may still be used).
 - Action Steps or Action Patterns into their second step or later, or repeats by `Loop Steps` or Specified's `Loop`, end when the menu opens. Closing it does not resume them; they start again on the next trigger. Recording playback, `Looped Playback` included, does not end: it carries on as above.
 - While a position reset (`Dummy > Position` and the like) is moving the characters, the game runs until they are in place, then pauses again.
 - `Recording > Save State` from the menu saves the paused scene ([5.5](#save-state)).
@@ -602,11 +602,9 @@ Ordinary throws and ordinary hitstun are not covered. In special hit reactions i
 | `Fast` | Switches between PPP + up and KKK + down every 4 Ticks |
 | `Fastest` | Switches between PPP + up and KKK + down every Tick |
 
-- `Display > Show Mash Meter` shows the remaining mash count over the character who is grabbed (`Mash Escape`) or in a hit that mashing shortens (`Mash Recovery`). A fixed-width cyan bar and the count the game is using - not seconds left. It also works with `Auto Mash = Off`. The old `Analysis > Show Mash Timer` setting is kept and now appears here.
-- A grab meter reads the grabber's count and appears over the grabbed character. That is the escape count, not the grabber's own attack progress; a move can end the grab with some count left.
-- The timer type reads the same count the move's end branch clears. The motion type counts the 120 updates before the end record through its section table; an unknown motion position shows `Mash Recovery -` and no bar.
-- The meter follows the grabbed side for a grab and the character taking the hit for a hit. It is the game's escape or motion count, not a promise of how many Ticks remain.
-- If the meter is switched on partway through a grab or hit, the bar starts from the first value it sees; it does not guarantee progress from the move's start.
+- `Display > Show Mash Meter` shows the count over the character's head: `Mash Escape` over a grabbed character, `Mash Recovery` over one in a hit that mashing shortens. A cyan bar and the count the game is using - not seconds or Ticks. It also works with `Auto Mash = Off`. The old `Analysis > Show Mash Timer` setting carries over.
+- A grab's count is what the grabbed character has left to break free; some moves end the grab with count left. A hit whose position cannot be read shows just `Mash Recovery -`, with no bar.
+- Switched on partway through, the bar takes the first count it sees as full.
 - Auto Mash does not input while you control P2, while a recording plays or is being made, during the Recording Wizard, or while the menu is open. `Show Mash Meter` still observes and displays those states.
 - When the dummy is grabbed, previously queued counteractions (Action Steps, Specified and so on) are canceled, so an old one does not come out after it is let go.
 - When the dummy grabs, its own action keeps running; only its input during the grab is replaced.
@@ -1865,7 +1863,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-11. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.29. On 2026-10-18 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.29.1. On 2026-10-21 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

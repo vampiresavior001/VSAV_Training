@@ -1482,6 +1482,7 @@ function M.wait_log_lines(cols)
 end
 
 function M.cancel()
+	M.first_waiting = false
 	rd_head = nil
 	prepicked = false
 	if pending ~= nil then
@@ -1698,8 +1699,16 @@ local function start_steps(src, o)
 	return { a, b }
 end
 
+-- STEP ONE DEFERRED AND NOT YET OUT (v11.7.29.1; review of bbe8bfe). A Random
+-- Start Wait (or step one's Random Delay) parks the first run in `pending`
+-- instead of the delivery slot, so the slot test in M.menu_open read it as a
+-- run in progress and the menu dropped it. True from the deferred arm until
+-- its first segment is handed out.
+M.first_waiting = false
+
 -- The per-run state M.arm resets, for the two entries below.
 local function start_reset()
+	M.first_waiting = false
 	rd_head = nil
 	anchor = nil
 	arm_hold = nil
@@ -1725,6 +1734,7 @@ function M.arm_deferred(which, o)
 	start_reset()
 	inputOrientation.steps_begin()
 	pending = first
+	M.first_waiting = true
 	for i = 2, #sched do pending[#pending + 1] = sched[i] end
 	loop_sched = sched
 	loop_which = which
@@ -1746,6 +1756,7 @@ function M.arm_oneshot(owner, list, o, build)
 	start_reset()
 	inputOrientation.steps_begin()
 	pending = first
+	M.first_waiting = true
 	loop_sched = nil
 	loop_which = nil
 	loop_build = (type(build) == "function" and M.specified_loop_on()) and build or nil
@@ -2494,6 +2505,7 @@ local function service_body(defender)
 	log_wait(step, ((now - anchor) % 256) + (step.lead or 0))
 
 	table.remove(pending, 1)
+	M.first_waiting = false
 	if #pending == 0 then pending = nil end
 	anchor = nil
 	gate_busy_seen = false
@@ -2849,6 +2861,10 @@ function M.menu_open(defender)
 	if defender == nil or not loop_blocked() then return end
 	local _s = defender.pending_input_sequence
 	if _s ~= nil and not _s.seq_tick then return end
+	-- Nor a first run the arm deferred: it waits in `pending`, the slot empty,
+	-- and its wait is on the Tick clock, which stands behind the menu - kept,
+	-- it goes out on close at the Tick it would have, its draw unchanged.
+	if M.first_waiting and pending ~= nil then return end
 	drop_for_menu(defender)
 end
 

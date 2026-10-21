@@ -6,20 +6,42 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.29.1
+
+`Random Start Wait` などで開始を待っている反撃が、メニューを開くと消えていたのを直しました。v11.7.29のリリース
+ノートとマニュアルのMash Meterの説明を、分かりやすく書き直しました。
+
+### 修正：開始を待っている反撃が、メニューで消えていた
+
+- Specifiedの `Random Start Wait`、Action Steps・Action Patternsの `Random Start Wait`、Action Stepsの1つ目の
+  `Random Delay` で開始を待っている間にメニューを開くと、その反撃が出なくなっていました
+- 待っている反撃は、メニューを開いても消さないようにしました。待ち時間も選ばれた動きも変わらず、閉じた後、
+  開かなかったときと同じTickに出ます。動き始めた後のAction Steps・Action Patternsは、これまでどおりメニューで
+  終わります
+- 実機ではまだ確かめていません
+
+### マニュアル
+
+- 2.1に、開始を待っている間も反撃が消えないことを書きました
+- 4.1のMash Meterの説明を、短く分かりやすくしました
+
+---
+
 ## v11.7.29
 
-つかまれている側・特殊やられを受けている側の頭上に、脱出・早送り用の残量を表示するMash Meterを追加しました。`Grab Mashing`は`Auto Mash`に改名し、`Show Mash Timer`はAnalysisからDisplayへ移して`Show Mash Meter`にしました。
+やられ・つかみの残量を頭上に出すMash Meterを追加しました。`Grab Mashing` は `Auto Mash` に名前を変えました。
 
 ### 新機能：Mash Meter
 
-- `Display > Show Mash Meter` で、つかまれている側に `Mash Escape`、特殊やられを受けている側に `Mash Recovery` を表示します
-- つかみは、つかんだ側の `$15C` を読み、つかまれた側の頭上に表示します。タイマー短縮型は本人の `$15C` を読みます。モーション型は終了レコード `0x0285AC` の手前の120更新を区間表で数え、終了レコードの6は加えません
-- 固定幅の水色バーと、ゲームが使っている残量の整数値を表示します。Tick・秒の単位は付けません。0は技の終了処理まで表示します。不明なモーション位置・カウントでは `Mash Recovery -` だけを表示し、バーは描きません
-- Auto MashがOFFでも、P2を操作している間・記録の再生中・記録中・メニュー中も観測します。メニュー中は表示を保持し、勝手に減らしません。キャラクター選択・ステート復元・次の試行で初期化します
-- `Auto Mash` と `Show Mash Meter` は旧設定キー `grab_mashing` / `show_mash_timer` を維持します。旧Analysisの設定はDisplayに引き継がれます
-- 実機で表示を確認しました。モーション区間表は実機メモリでも確認しています（16, 10, 10, 3, 10, 10, 3, 10, 10, 3, 10, 10, 3, 8, 4 = 120、終了レコード `0x0285AC` = 06 FF）
-- 模擬テストは89本すべて通過
+- `Display > Show Mash Meter` で、つかまれている側に `Mash Escape`、レバガチャで短くなるやられを受けている側に
+  `Mash Recovery` を出します。水色のバーと、ゲームが使っている残りの数です
+- `Auto Mash` がOFFでも、P2を操作している間・記録の再生中・メニュー中も表示します。メニュー中は減りません
+- 実機で表示を確かめました
 
+### 変更：Grab MashingをAuto Mashに、Show Mash TimerをDisplayへ
+
+- `Dummy > Grab Mashing` は `Auto Mash` になりました。`Analysis > Show Mash Timer` は `Display > Show Mash Meter`
+  になりました。どちらも以前の設定がそのまま引き継がれます
 ---
 
 ## v11.7.28.6

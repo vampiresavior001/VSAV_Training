@@ -6,20 +6,47 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.29.1
+
+A counter waiting out `Random Start Wait` and the like no longer disappears
+when the menu opens. The v11.7.29 notes and the manual's Mash Meter text are
+rewritten more plainly.
+
+### Fix: a counter waiting to start was lost at the menu
+
+- Opening the menu while a counter waited out Specified's `Random Start Wait`,
+  Action Steps' or Action Patterns' `Random Start Wait`, or the first step's
+  `Random Delay` lost that counter
+- A waiting counter is now kept. Neither the wait nor the chosen action
+  changes, and it comes out on the same Tick as without the menu. Action Steps
+  and Action Patterns that have started still end at the menu
+- Not checked in play yet
+
+### Manual
+
+- Section 2.1 says a counter waiting to start is kept too
+- The Mash Meter text in 4.1 is shorter and plainer
+
+---
+
 ## v11.7.29
 
-A Mash Meter now shows the remaining escape or motion count over the character being grabbed or in a hit that mashing shortens. `Grab Mashing` is renamed `Auto Mash`, and `Show Mash Timer` moves from Analysis to Display as `Show Mash Meter`.
+A Mash Meter shows the remaining count over a grabbed character or one in a
+hit that mashing shortens. `Grab Mashing` is renamed `Auto Mash`.
 
 ### New: Mash Meter
 
-- `Display > Show Mash Meter` draws `Mash Escape` over the grabbed character or `Mash Recovery` over the character in a special hit reaction
-- A grab reads the grabber's `$15C` and draws over the grabbed side. A timer-type hit reads its own `$15C`. The motion type counts the 120 updates before the end record at `0x0285AC`; the end record's 6 is not added
-- A fixed-width cyan bar and the count the game is using - no Tick or second suffix. 0 stays up until the move's own end. An unknown motion pointer or count shows `Mash Recovery -` without a bar
-- It works with Auto Mash Off, with P2 in your hands, during playback/recording, and while the menu is open. The menu holds the display and does not count it down; character select, a state load and the next attempt reset it
-- Auto Mash and Show Mash Meter keep the old settings keys (`grab_mashing`, `show_mash_timer`). The old Analysis setting now appears on Display
-- Checked in play; the motion section table was also read from the running ROM: 16, 10, 10, 3, 10, 10, 3, 10, 10, 3, 10, 10, 3, 8, 4 (120), end record `0x0285AC` = 06 FF
-- Offline tests: 89/89
+- `Display > Show Mash Meter` draws `Mash Escape` over a grabbed character and
+  `Mash Recovery` over one in a hit that mashing shortens: a cyan bar and the
+  count the game is using
+- It shows with `Auto Mash` off, with P2 in your hands, during playback and
+  under the menu, where it does not count down
+- Checked in play
 
+### Change: Grab Mashing is Auto Mash, Show Mash Timer moves to Display
+
+- `Dummy > Grab Mashing` is now `Auto Mash`, and `Analysis > Show Mash Timer`
+  is now `Display > Show Mash Meter`. Both keep their earlier settings
 ---
 
 ## v11.7.28.6

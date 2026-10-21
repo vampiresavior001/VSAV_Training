@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.29／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.29.1／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [守りを練習する：AG・GC](#sasquatch-ag-tutorial) · [攻めを調べる：起き攻め](#wakeup-pressure-drill) · [対象環境・確認範囲](#verification-scope)
 
@@ -266,7 +266,7 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 
 - 止めているのはゲームの処理だけで、FBNeoは止めません。そのため、アーケードコントローラーなどでメニューを操作できます。
 - 記録の再生、記録（[5.1](#quick-recording) のQuick Recordingなど）、`Loop Interval (Frames)` の待ち、`Refill Timer (seconds)` による体力の回復も止まり、閉じるとその続きから進みます。
-- 起き上がり・やられ・ガードの後に出す反撃は、メニューを開いても消えず、閉じた後にそのまま出ます。ダウン中にメニューで反撃の設定を変えると、その起き上がりから新しい設定で出ます（起き上がりの直前に開いた場合は、前の設定のまま出ることがあります）。
+- 起き上がり・やられ・ガードの後に出す反撃は、メニューを開いても消えず、閉じた後にそのまま出ます。`Random Start Wait` などで開始を待っている間も同じで、待ち時間も選ばれた動きも変わりません。ダウン中にメニューで反撃の設定を変えると、その起き上がりから新しい設定で出ます（起き上がりの直前に開いた場合は、前の設定のまま出ることがあります）。
 - Action Steps・Action Patternsの2つ目以降のステップや、`Loop Steps`・Specifiedの `Loop` による繰り返しの途中でメニューを開くと、そこで終わります。閉じても続きからは出ず、次の反撃のきっかけでまた始まります。記録の再生（`Looped Playback` を含む）は終わらず、上のとおり続きから進みます。
 - 位置を戻す操作（`Dummy > Position` など）をしている間は、配置が終わるまでゲームを動かし、その後また止めます。
 - メニュー中に `Recording > Save State` で保存すると、止まっている場面がそのまま保存されます（[5.5](#save-state)）。
@@ -600,11 +600,9 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 | `Fast` | 4 Tickごとに、PPP＋上とKKK＋下を切り替える |
 | `Fastest` | 毎Tick、PPP＋上とKKK＋下を切り替える |
 
-- 残量は `Display > Show Mash Meter` で、つかまれている側（`Mash Escape`）または特殊やられを受けている側（`Mash Recovery`）の頭上に表示します。固定幅の水色のバーと、ゲームが使っている残量の整数値で、残り秒数ではありません。`Auto Mash = Off` でも使えます。旧 `Analysis > Show Mash Timer` の設定は引き継がれ、この位置に表示されます。
-- つかみでは、つかんだ側の残量を読み、つかまれている側の頭上に表示します。脱出判定用の残量で、つかんだ側の攻撃促進を含む進捗ではありません。技側の終了条件で、残量が残ったまま拘束が終わる場合もあります。
-- タイマー短縮型は、その技の終了分岐が0にする残量です。モーション早送り型は、終了レコードの手前までの120更新を区間表で数えます。不明なモーション位置では `Mash Recovery -` と表示し、バーは描きません。
-- 表示先は、つかみではつかまれている側、特殊やられでは受けている側です。ゲームの脱出・早送り用の残量で、残りTick数を保証するものではありません。
-- 途中から表示した場合、バーは最初に観測した残量を基準にするため、技の開始からの進捗率を保証しません。
+- 残量は `Display > Show Mash Meter` で頭上に表示できます。つかまれている側に `Mash Escape`、レバガチャで短くなるやられを受けている側に `Mash Recovery` が出ます。水色のバーと、ゲームが使っている残りの数で、秒数やTick数ではありません。`Auto Mash = Off` でも使えます。以前の `Analysis > Show Mash Timer` の設定は、そのまま引き継がれます。
+- つかみの残量は、つかまれた側が抜けるまでの数です。技によっては、残量が残ったままつかみが終わることがあります。残りの位置が分からないやられでは `Mash Recovery -` とだけ表示し、バーは描きません。
+- 途中から表示を ON にした場合、バーは最初に見えた残量を満タンとして描きます。
 - `Auto Mash` は、P2を操作している間、記録の再生中・記録中、Recording Wizardの間、メニューを開いている間は入力しません。`Show Mash Meter` の観測と表示はこれらの間も行えます。
 - つかまれたときは、それまでの反撃の予定（Action Steps・Specifiedなど）を取り消します。離された後に、古い予定が出ないようにするためです。
 - つかんだときは、ダミー自身の行動はそのまま続け、つかんでいる間の入力だけを置き換えます。
@@ -1863,7 +1861,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新：2026-10-11。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.29。項目名は2026-10-18に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.29.1。項目名は2026-10-21に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。
