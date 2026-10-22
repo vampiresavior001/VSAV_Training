@@ -25,6 +25,13 @@
 --  [12] a message said through hold_message (a state saved, a take saved)
 --       stays on the line while a playback writes its progress; named states
 --       hand no macro data to the save
+--  [13] a playback of the player's own (user_play, play_quick, replay_last)
+--       owns P2 until it stops, the gaps between loops included: the dummy's
+--       Guard Action reads 'none' and its plans go when it starts. A
+--       Reversal - Recording start (playcontrol) is not one
+--  [14] a Reversal / Counter Attack / Push Block - Recording playback stops the
+--       frame P2 goes into hit or block stun, and the dummy's own settings
+--       run from there: the take starts over on the next trigger
 local fails = 0
 local function eq(what, got, want)
 	if got == want then print("  ok " .. what .. " = " .. tostring(got))
@@ -410,6 +417,101 @@ do
 	eq("名前付きの状態の保存には再生の位置を渡さない (registerSave)",
 	   ms:find('["registerSave"] = function(slot)', 1, true) ~= nil
 	   and ms:find('if type(slot) ~= "number" then return end\n\t\tif mame then return emu.framecount() end', 1, true) ~= nil, true)
+end
+
+-- ---------------------------------------------------------------------------
+print("[13] 自分で始めた再生のあいだは、ダミーの Guard Action を止める (user_playback)")
+do
+	fresh()
+	files[FAKE .. "Felicia/slot_1.mis"] = take_text()
+	eq("何も再生していない: false", api().user_playback(), false)
+	api().user_play()                                  -- Volume Down / Play Recording
+	eq("Volume Down の再生: true", api().user_playback(), true)
+	api().user_play()                                  -- stop
+	eq("  止めたら false", api().user_playback(), false)
+	api().play_quick()
+	eq("Quick の再生: true", api().user_playback(), true)
+	api().stop_all_playback()
+	eq("  止めたら false", api().user_playback(), false)
+	api().replay_last()
+	eq("状態の復元の後の再生 (replay_last): true", api().user_playback(), true)
+	api().stop_all_playback()
+	-- The dummy's own start (Reversal / Counter Attack - Recording) comes in
+	-- through the table's playcontrol.
+	api().playcontrol(true)
+	eq("ダミーの反撃の再生 (playcontrol): false", api().get_recording_status().playing == true
+	   and api().user_playback() == false, true)
+	api().stop_all_playback()
+	-- Between loops, and waiting to start: still the player's.
+	-- In a match (a pending loop is dropped outside one), with the gap long
+	-- enough to be seen.
+	globals.options.looped_playback = true
+	globals.options.loop_interval_after_frames = 5
+	globals.hotkeys_armed = true
+	api().setloop()
+	api().user_play()
+	local gaps, all_true = 0, true
+	for _ = 1, 30 do
+		frame({}, {}, 1, 1)
+		macroLuaModule.registerBefore()
+		if api().get_recording_status().loop_pending == true then gaps = gaps + 1 end
+		if api().user_playback() ~= true then all_true = false end
+	end
+	eq("ループの合間を通った", gaps > 0, true)
+	eq("  合間も含めてずっと true", all_true, true)
+	api().stop_all_playback()
+	globals.hotkeys_armed, globals.options.loop_interval_after_frames = nil, nil
+	eq("  止めたら false", api().user_playback(), false)
+	globals.options.looped_playback = false
+	api().setloop()
+	-- The hook-up: Guard Action reads 'none' while it holds, and what the
+	-- dummy had planned goes the moment it starts.
+	local ds = slurp("dummyState.lua")
+	local ga = ds:match("local function get_guard_action%(%)(.-)\nend\n")
+	eq("dummyState: その間の Guard Action は 'none'", ga ~= nil
+	   and ga:find("if mac ~= nil and mac.user_playback ~= nil and mac.user_playback() then\n        return 'none'", 1, true) ~= nil
+	   and ga:find("if mac ~= nil", 1, true) < ga:find("globals.options.guard_action == 0x2", 1, true), true)
+	local ms = slurp("vsav_training_master_script.lua")
+	-- Called, not only looked for: defined before its local, it was a nil
+	-- global and stopped the script on the first playback (v11.7.31 test).
+	cancels = 0
+	guard_action_input.csp_due = 4
+	player_objects[2].pending_input_sequence = { 1 }
+	local ok = pcall(Q.drop_automation)
+	eq("Q.drop_automation を呼べる", ok, true)
+	eq("  ダミーの予定を消す (runner.cancel、待ち、送る前の入力)",
+	   cancels .. "/" .. tostring(guard_action_input.csp_due) .. "/" .. tostring(player_objects[2].pending_input_sequence), "1/nil/nil")
+	eq("master: 始まった瞬間にダミーの予定を消す (Quick の記録と同じ)",
+	   ms:find("if _up and not globals.user_playback_was then quickRecordingModule.drop_automation() end", 1, true) ~= nil, true)
+	eq("  ダミーの状態を作った直後", ms:find('globals["dummy"]   \t\t = dummyStateModule.registerBefore().get_dummy_state()\n\t-- A PLAYBACK OF THE PLAYER', 1, true) ~= nil, true)
+end
+
+-- ---------------------------------------------------------------------------
+print("[14] Recording 系の反撃は、やられ・ガード硬直に入ったら止めて、次のきっかけで最初から")
+do
+	local ms = slurp("vsav_training_master_script.lua")
+	local blk = ms:match("\tglobals%.rec_counter_cut = false\n(.-)\n\tif globals%.recordingWizard ~= nil and globals%.recordingWizard%.is_active%(%) then")
+	eq("master: その判定がある (Wizard の分岐の直前)", blk ~= nil, true)
+	blk = blk or ""
+	eq("  $05 が 0 から 0 以外になったフレーム", blk:find("globals.rec_counter_st == 0 and _st ~= 0", 1, true) ~= nil
+	   and blk:find("local _st = memory.readbyte(0xFF8805)", 1, true) ~= nil
+	   and blk:find("globals.rec_counter_st = _st", 1, true) ~= nil, true)
+	eq("  対象は Recording 系の 3 つだけ (自分の再生は Guard Action が 'none')",
+	   blk:find("_ga == 'recording on reversal' or _ga == 'recording on counter'", 1, true) ~= nil
+	   and blk:find("or _ga == 'recording on pushblock'", 1, true) ~= nil, true)
+	eq("  再生を止める", blk:find("globals.macroLua.stop_all_playback()", 1, true) ~= nil, true)
+	eq("  そのフレームは再生のキーを送らず、ダミーの設定の処理へ",
+	   ms:find("\telseif globals.macroLua.playing == true and not globals.rec_counter_cut then\n", 1, true) ~= nil, true)
+	-- The take starts again from its first frame: the stop leaves nothing to
+	-- resume, and the next start is a fresh one.
+	fresh()
+	files[FAKE .. "Felicia/slot_1.mis"] = take_text()
+	api().playcontrol(true)
+	for _ = 1, 3 do macroLuaModule.registerBefore() end
+	api().stop_all_playback()
+	api().playcontrol(true)
+	eq("止めた後の次の再生は 1 フレーム目から", api().get_recording_status().playing == true, true)
+	api().stop_all_playback()
 end
 
 -- ---------------------------------------------------------------------------

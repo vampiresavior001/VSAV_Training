@@ -406,7 +406,43 @@ function dummy_guard(cur_keys,player_objects)
     return {}
 end
 
+-- RECORDING P1 GUARD (Recording tab, off by default; user, 2026-10-22,
+-- from a player's request: a take against a P1 that is hit records the chain
+-- for a hit, and some characters' hurtboxes change when hit, so it no longer
+-- works on block). While a take records (Quick Recording or the Recording
+-- Wizard) the dummy's own automation does not run at all (master script), so
+-- nobody guarded. This puts P1 under the game's Auto Guard instead: the same
+-- two bytes Guard = Auto Guard writes for P2 above, at P1's +$3B2 / +$3E2. The
+-- game sets both per player at the same offsets (ROM 0x925E, A0 = $400 then
+-- $800 off A5). No input is sent, so none goes into the take - a held back
+-- would, and the playback would press it for the player.
+--
+-- What was there is kept and put back when the take ends. A state load or the
+-- match ending forgets it instead: that game is not the one it was read from.
+local P1_AUTO_GUARD_1 = 0xFF8400 + 0x3B2
+local P1_AUTO_GUARD_2 = 0xFF8400 + 0x3E2
+local p1_guard_saved = nil
+
+local function p1_guard_while_recording(recording)
+    local want = recording == true and globals.options.p1_guard_while_recording == 2
+    if want then
+        if p1_guard_saved == nil then
+            p1_guard_saved = { memory.readbyte(P1_AUTO_GUARD_1), memory.readbyte(P1_AUTO_GUARD_2) }
+        end
+        memory.writebyte(P1_AUTO_GUARD_1, 0x1)
+        memory.writebyte(P1_AUTO_GUARD_2, 0x1)
+    elseif p1_guard_saved ~= nil then
+        if globals.match_running == nil or globals.match_running() then
+            memory.writebyte(P1_AUTO_GUARD_1, p1_guard_saved[1])
+            memory.writebyte(P1_AUTO_GUARD_2, p1_guard_saved[2])
+        end
+        p1_guard_saved = nil
+    end
+end
+
 autoguardModule = {
+    ["p1_guard_while_recording"] = p1_guard_while_recording,
+    ["after_load"] = function() p1_guard_saved = nil end,
     ["registerBefore"] = function(cur_keys, player_objects)
         if globals.options.guard == 0x3 then
             memory.writebyte(auto_guard_addr_1, 0x1)

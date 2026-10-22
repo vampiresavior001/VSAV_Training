@@ -718,6 +718,15 @@ emu.registerbefore(function()
 	globals["pushboxes"]     = cps2HitboxModule.getPushboxes()
 	globals["char_moves"]    = charMovesModule.registerBefore()
 	globals["dummy"]   		 = dummyStateModule.registerBefore().get_dummy_state()
+	-- A PLAYBACK OF THE PLAYER'S OWN STARTED (macro.lua user_playback): what the
+	-- dummy had planned goes, as for a quick take - Guard Action reads 'none'
+	-- from now until it stops (dummyState.lua), so nothing would ever finish it.
+	do
+		local _up = globals.macroLua ~= nil and globals.macroLua.user_playback ~= nil
+		            and globals.macroLua.user_playback() or false
+		if _up and not globals.user_playback_was then quickRecordingModule.drop_automation() end
+		globals.user_playback_was = _up
+	end
 	-- globals["skip_frame"] 	 = frameskipHandlerModule.registerBefore()
 	globals["timers"] 		 = timersModule.registerBefore()
 	positionModule.registerBefore()
@@ -801,6 +810,31 @@ emu.registerbefore(function()
 	-- modules are skipped while a macro playback runs. Macro playback keys
 	-- are NOT merged either: a stale keytable would hold P2 keys down and
 	-- the wizard would never see a neutral frame.
+	-- A RECORDING COUNTER THAT IS HIT GOES, AND ARMS AGAIN (user, 2026-10-22:
+	-- "リバーサルーレコーディング中に攻撃をくらうと再生が止まる、アクションステップス
+	-- にあわせるべき"). While the dummy's Reversal / Counter Attack / Push Block
+	-- - Recording plays, nothing of the dummy's own runs (the branch below), so
+	-- a hit in the middle left the take pressing into hit stun, and nothing
+	-- armed after it. Action Steps start over on the next trigger instead; so
+	-- does this now: the frame P2 goes into hit or block stun ($05 from zero,
+	-- the byte macro.lua's loop waits on), the playback stops and the dummy's
+	-- own settings run again from this frame - the stun it is in is the next
+	-- trigger, and the take starts from its first frame when it ends. A
+	-- playback of the player's own reads Guard Action 'none' (dummyState.lua)
+	-- and is left alone.
+	globals.rec_counter_cut = false
+	do
+		local _st = memory.readbyte(0xFF8805)
+		local _ga = globals.dummy ~= nil and globals.dummy.guard_action or nil
+		if globals.macroLua.playing == true and globals.rec_counter_st == 0 and _st ~= 0
+		   and (_ga == 'recording on reversal' or _ga == 'recording on counter'
+		        or _ga == 'recording on pushblock') then
+			globals.macroLua.stop_all_playback()
+			globals.rec_counter_cut = true
+		end
+		globals.rec_counter_st = _st
+	end
+
 	if globals.recordingWizard ~= nil and globals.recordingWizard.is_active() then
 		-- Wizard: the swapped pad is the only P2 input source - except during
 		-- the confirmation playback, where the macro drives P2 and the user
@@ -820,7 +854,8 @@ emu.registerbefore(function()
 	elseif quickRecordingModule.recording() then
 		-- A quick take: your pad is P2's only input, as in the wizard. Nothing
 		-- of the dummy's own (Pose, Guard, Guard Action, autoguard, throw tech).
-	elseif globals.macroLua.playing == true then
+		-- P1 may guard, though (Recording P1 Guard, just below).
+	elseif globals.macroLua.playing == true and not globals.rec_counter_cut then
 		-- Normal slot playback. Nothing records which side the take was made
 		-- from, so the standing convention is used: recordings are made with
 		-- P2 on the right, and the playback is mirrored once the sides have
@@ -838,6 +873,11 @@ emu.registerbefore(function()
 		local gc_keys = guardCancelModule.registerBefore()
 		throwTechModule.registerBefore(globals._input)
 	end
+
+	-- RECORDING P1 GUARD (autoguard.lua): through a take, Quick or the
+	-- wizard's, P1 stands under the game's Auto Guard; after it, as before.
+	autoguardModule.p1_guard_while_recording(quickRecordingModule.recording()
+		or (globals.recordingWizard ~= nil and globals.recordingWizard.is_active()))
 
 	debugKnockdownModule.registerBefore()
 	airGuardLogModule.registerBefore(debugKnockdownModule.script_version)
@@ -992,6 +1032,7 @@ if savestate.registersave and savestate.registerload then --registersave/registe
 		grabMashingModule.reset("load")
 		grabMashingModule.reset_meter()
 		quickRecordingModule.reset("load")
+		autoguardModule.after_load()
 		macroLuaModule.registerLoad(slot)
 		globals.dmg_calc.red_life = 0
 		globals.dmg_calc.white_life = 0

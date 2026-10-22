@@ -55,7 +55,8 @@ local function to_side(side)
 end
 
 -- What a savestate load drops (vsav_training_master_script.lua): planned
--- before, for a dummy you are about to play yourself.
+-- before, for a dummy you are about to play yourself - or that a playback of
+-- the player's own is about to drive (master script, M.drop_automation).
 local function drop_automation()
 	actionSequenceRunner.cancel()
 	if guard_action_input ~= nil then guard_action_input.csp_due = nil end
@@ -69,6 +70,9 @@ local function drop_automation()
 		end
 	end
 end
+-- After the local above: defined before it, the name was a nil global and the
+-- first playback of the player's own stopped the script (v11.7.31 test).
+function M.drop_automation() drop_automation() end
 
 function M.start()
 	local mac = globals.macroLua

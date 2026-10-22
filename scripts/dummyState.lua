@@ -104,6 +104,12 @@ local function setShouldRoll()
 end
 
 local function get_guard_action()
+    -- None while the player's own playback owns P2 (macro.lua user_playback;
+    -- user, 2026-10-22): the counter it is set to would mix into the take.
+    local mac = globals.macroLua
+    if mac ~= nil and mac.user_playback ~= nil and mac.user_playback() then
+        return 'none'
+    end
     if globals.options.guard_action == 0x2 then
         return 'gc'
     elseif globals.options.guard_action == 0x3 then

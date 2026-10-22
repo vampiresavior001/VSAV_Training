@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.30／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.31／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [守りを練習する：AG・GC](#sasquatch-ag-tutorial) · [攻めを調べる：起き攻め](#wakeup-pressure-drill) · [対象環境・確認範囲](#verification-scope)
 
@@ -277,7 +277,7 @@ LP＝弱P、MP＝中P、HP＝強P、LK＝弱K、MK＝中K、HK＝強Kです。
 - ダウン中にメニューで反撃の設定を変えると、その起き上がりから新しい設定で出ます（起き上がりの直前に開いた場合は、前の設定のまま出ることがあります）。
 - 位置を戻す操作（`Dummy > Position` など）をしている間は、配置が終わるまでゲームを動かし、その後また止めます。
 - メニュー中に `Recording > Save State` で保存すると、止まっている場面がそのまま保存されます（[5.5](#save-state)）。
-- 止まらなかったとき（止めている間にTickかキャラクターが動いたとき）は、その起動中は止めるのをやめます。`Display > Recording GUI = yes` なら、メニューを閉じた後、画面左上の枠のすぐ下に約2秒知らせます（[5.5](#save-state)と同じ場所）。
+- 止まらなかったとき（止めている間にTickかキャラクターが動いたとき）は、その起動中は、メニューを開いてもゲームを止めなくなります。`Display > Recording GUI = yes` なら、メニューを閉じた後、画面左上の枠のすぐ下に約2秒知らせます（[5.5](#save-state)と同じ場所）。
 
 ### 2.2 操作側とキャラクター選択
 
@@ -767,6 +767,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 - 開始・終了の `P1 Coin` は記録に入りません。何も入力しなかったときは保存せず、前の記録を残します。
 - 記録中に `Quick Recording = no` にした、ダミーのキャラクターを変えた、Recording Wizardを始めた、試合が終わった、エミュレーターのステートを読み込んだ場合は、その記録を捨てて自分（P1）に戻ります。
 - 記録中は、ダミーのガードや反撃などの自動操作を行いません。
+- `Recording > Recording P1 Guard = Auto Guard` にすると、記録中はP1（操作していない側）がゲームのAuto Guardでガードします（初期設定 `Off`）。相手にガードさせた状態で連係を記録したいときに使います。レバー入力を送らないので、P1の入力は記録に入りません。Recording Wizardでの記録にも効きます。記録が終わると、P1のガードも終わります。Auto Guardは、通常はガードできない状況も防ぎます。投げは防ぎません。
 
 | `Quick Recording` の下の項目 | 内容 |
 |---|---|
@@ -806,6 +807,10 @@ Recording Wizardは、操作の開始から終了までを自動で記録する�
 `Random Start Wait`（Tick、0〜60）を設定すると、再生の開始を毎回0からその値までの乱数だけ遅らせます。`Play Recording`、`Volume Down`、`Looped Playback` の各回（`Loop Interval` の後）、Recording系の反撃が対象です。待っている間にもう一度押すと止まります。Recording Wizardの確認用の再生は遅らせません。Dummyタブの `Random Start Wait` と同じ設定です。
 
 `Reset Distance Each Loop = yes` は、各ループで記録時の間合いへ戻します。対応する距離情報が入ったv11.4.1以降の記録で使えます。左右が入れ替わったときの再生方向も補正されますが、間合いや状況まで自動的に同一になるとは限りません。`Auto-Flip Inputs on Side Switch = no` のときは、再生の途中の入れ替わりでは補正しません（[10章F](#side-switch-os)）。
+
+**自分で始めた再生の間は、ダミーの反撃（Guard Action）を行いません。** ループの合間と開始待ちの間も同じです。再生を止めると、反撃も元に戻ります。ループの合間のガード（`Guard`）は、これまでどおり行います。ここでの「自分で始めた再生」は、`Volume Down`・`Play Recording`・`Play Quick Recording`・Coinでの記録の直後・`Play After Restore` で始まった再生のことです。
+
+**Recording系の反撃（`Reversal - Recording`・`Counter Attack - Recording`・`PB Recording`）は、再生中にダミーがやられ・ガード硬直に入ると、その再生を止めます。** 次の反撃のきっかけ（その硬直が明けたとき）に、記録を最初から再生し直します。Action Stepsと同じ動きです。
 
 ### 5.4 複数の記録をランダムに出す
 
@@ -1874,7 +1879,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新：2026-10-11。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.30。項目名は2026-10-21に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.31。項目名は2026-10-22に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

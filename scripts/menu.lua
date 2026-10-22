@@ -1926,6 +1926,10 @@ return {
               return "Plays this dummy's quick take, the way it plays after Coin. Press again\nto stop it. Volume Down stops it too."
             end }),
           child_of("quick_recording", copy_quick_item()),
+          -- RECORDING P1 GUARD (autoguard.lua; user, 2026-10-22, from a player's
+          -- request; named shorter than proposed to fit the first column). Not under Quick Recording: the wizard's take
+          -- uses it too.
+          list_menu_item("Recording P1 Guard", training_settings, "p1_guard_while_recording", { "Off", "Auto Guard" }, 1, "While you record P2 (Coin or the Recording Wizard), P1 guards with the game's\nown Auto Guard, as Dummy > Guard = Auto Guard does for P2. No input is sent,\nso nothing of P1 goes into the take. It ends with the take.\nAuto Guard also blocks what normally cannot be blocked. Not throws."),
           -- SAVE A STATE BY HAND (trainingState.lua, v11.7.28): what Volume Up twice
           -- does. It asks first, Yes / No, landing on Yes (user, 2026-10-16: "右を
           -- 選んでYesで保存とかにしたい"): the game stands under the menu now

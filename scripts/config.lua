@@ -91,6 +91,9 @@ local default_training_settings = {
   -- by default (user, 2026-10-21).
   coin_saves_to = 1,
   play_after_restore = false,
+  -- Recording P1 Guard (autoguard.lua): 1 Off, 2 Auto Guard (user,
+  -- 2026-10-22). Off by default.
+  p1_guard_while_recording = 1,
   pb_type_rec = 1,   -- 1 is None; 0 was out of range for the list
   anak_projectile = 1,
   lei_lei_stun_item = 0,

@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.30 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.31 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -769,6 +769,7 @@ Recording and playback operate in displayed frames, so they do not reproduce inp
 - The `P1 Coin` presses that start and finish a recording are not recorded. A recording with no input is not saved, and the previous one stays.
 - If, during a recording, you set `Quick Recording = no`, change the dummy character, start Recording Wizard, the match ends or an emulator savestate is loaded, the recording is discarded and you are back on P1.
 - While recording, the dummy's automatic actions such as guarding and counters are off.
+- With `Recording > Recording P1 Guard = Auto Guard`, P1 (the side you are not controlling) guards with the game's Auto Guard while you record (default `Off`). Use it to record strings against a blocking opponent. It sends no input, so P1's inputs stay out of the recording. It also works with Recording Wizard, and P1 stops guarding when the recording ends. Auto Guard also blocks what normally cannot be blocked. It does not block throws.
 
 | Under `Quick Recording` | What it does |
 |---|---|
@@ -809,6 +810,10 @@ Use `Before / After` in `Loop Interval (Frames)` to adjust pauses. `After` waits
 
 `Reset Distance Each Loop = yes` restores recorded spacing each pass. It works with recordings made from v11.4.1 onward that contain distance information. Playback directions are also mirrored when sides switch, but this alone does not guarantee identical spacing or game state. With `Auto-Flip Inputs on Side Switch = no`, a switch during a playback is not mirrored ([10.F](#side-switch-os)).
 
+**During a playback you started, the dummy does not perform its Guard Action.** This includes the gaps between loops and any start wait. Stopping the playback brings it back. The dummy still guards (`Guard`) between loops as before. A playback you started means one started with `Volume Down`, `Play Recording` or `Play Quick Recording`, right after a Coin recording, or by `Play After Restore`.
+
+**A Recording counter (`Reversal - Recording`, `Counter Attack - Recording`, `PB Recording`) stops when the dummy goes into hit or block stun during it.** On the next trigger (when that stun ends), the recording restarts from the beginning, as Action Steps do.
+
 ### 5.4 Randomize recordings
 
 1. Save different actions in multiple slots.
@@ -829,10 +834,10 @@ You can also save and restore states from the Recording menu. During a match, op
 |---|---|
 | `Recording > Save State` | Right or LP opens a confirmation. Right or LP on `Yes` (selected first) saves; `No` or Left leaves it |
 | `Recording > Restore State` | Right or LP closes the menu, then returns to the saved state |
-| `Recording > Play After Restore` | With `yes`, a restore is followed by the recording you played last, from its start (default `no`) |
+| `Recording > Play After Restore` | With `yes`, restoring also plays the recording you played last, from the beginning (default `no`) |
 
 - There is one saved state. Choosing characters again makes the previous one unusable (even if you pick the same pair). A state saved with other characters or at another game speed is not restored either.
-- You can save during recording playback, partway through Action Steps or Specified actions, and while Auto Mash holds a grab. Whatever runs keeps running. Only the game as it stands is saved, not how far a playback or the steps had got. A dummy in the middle of a move is saved in that pose.
+- You can save during recording playback, partway through Action Steps or Specified actions, and while Auto Mash holds a grab. Whatever runs keeps running. Only the game as it stands is saved, not how far the playback or the steps had progressed. A dummy in the middle of a move is saved in that pose.
 - Restoring first stops whatever is running, such as playback or Action Steps. Action Steps start again from the beginning on the next trigger after the restore.
 - With `Play After Restore = yes`, what plays is what you played last: the `Playback Slot` slot or the Coin recording. That covers `Volume Down`, `Play Recording`, `Play Quick Recording` and the playback after a Coin recording, not the dummy's Recording counters. After choosing characters again, nothing starts until you play something. `Random Start Wait` and `Looped Playback` apply as usual, and loops do not restore the state.
 - Neither saving nor restoring happens while recording, during Recording Wizard, with the Action Steps editor open, during a position move or outside a match.
@@ -1876,7 +1881,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-11. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.30. On 2026-10-21 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.31. On 2026-10-22 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

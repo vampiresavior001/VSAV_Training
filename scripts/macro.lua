@@ -1113,6 +1113,7 @@ local QUICK_NAME = "quick_recording.mis"
 local NON_PLAY = "[SC@~]"            -- Start, Coin, Diagnostic, Reset
 local quick_rec = nil                -- the take in progress: { trim, first, pos, facing, prev_pos, prev_facing }
 local last_user_play = nil           -- "quick" / "slot": what the player started last (replay_last)
+local user_owned = false             -- what plays now was started by the player (user_playback)
 
 -- MESSAGES THAT STAY (user, 2026-10-21). While a macro plays or records,
 -- registerAfter writes its progress to the emulator's message line every
@@ -1240,7 +1241,7 @@ function play_quick()
 	if not quick_file_exists() then return false end
 	slot_override = quick_file()
 	playcontrol()
-	if playing or start_wait ~= nil then last_user_play = "quick" end
+	if playing or start_wait ~= nil then last_user_play, user_owned = "quick", true end
 	return playing or start_wait ~= nil
 end
 
@@ -1256,6 +1257,7 @@ function user_play()
 	playcontrol()
 	if playing or start_wait ~= nil then
 		last_user_play = (slot_override ~= nil) and "quick" or "slot"
+		user_owned = true
 	end
 end
 
@@ -1267,10 +1269,23 @@ function replay_last()
 	stop_macro_playback()
 	inputstream = nil
 	playcontrol()
+	if playing or start_wait ~= nil then user_owned = true end
 	return playing or start_wait ~= nil
 end
 
 function forget_user_play() last_user_play = nil end
+
+-- THE PLAYER'S OWN PLAYBACK OWNS P2 (user, 2026-10-22: Action Steps came out in
+-- the middle of a playback, mixed into it; "止める" for the gaps between loops
+-- too). True from a start of the player's own - user_play, play_quick,
+-- replay_last - until it stops: playing, waiting out its Random Start Wait, or
+-- between loops. dummyState.lua answers Guard Action 'none' through it, so
+-- nothing of the dummy's own counter arms or runs; the guard itself stays.
+-- A start from anywhere else (Reversal / Counter Attack - Recording, through
+-- the table's playcontrol below) is the dummy's and is not one.
+function user_playback()
+	return user_owned and (playing or start_wait ~= nil or loop_pending)
+end
 
 -- The quick take is what plays (or waits to start, or waits between loops).
 function quick_playing()
@@ -1614,7 +1629,9 @@ macroLuaModule = {
 			globals.playing = playing
 			globals.recording = recording
 			return {
-				["playcontrol"] = playcontrol,
+				-- From outside (guardCancel.lua's Recording counters, tests): not
+				-- the player's own start. user_play is that one.
+				["playcontrol"] = function(silent) user_owned = false ; playcontrol(silent) end,
 				["reccontrol"] = reccontrol,  
 				["toggleloop"] = toggleloop,
 				["setloop"] = setloop,
@@ -1667,6 +1684,7 @@ macroLuaModule = {
 				["replay_last"] = replay_last,
 				["forget_user_play"] = forget_user_play,
 				["hold_message"] = hold_message,
+				["user_playback"] = user_playback,
 				["held_message"] = held_message,
 				["last_user_play"] = last_user_play,
 				["begin_temporary_recording"] = begin_temporary_recording,

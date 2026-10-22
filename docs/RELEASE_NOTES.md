@@ -6,6 +6,48 @@ Newest first. Older releases are kept below.
 
 ---
 
+## v11.7.31
+
+P1 can now guard while you record. During your own playback the dummy no
+longer counters, and a Recording counter starts over when the dummy is hit.
+
+### New: P1 guards while you record
+
+- With `Recording > Recording P1 Guard = Auto Guard`, P1 (the side you are not
+  controlling) guards with the game's Auto Guard while you record with Coin
+  (Quick Recording) or Recording Wizard
+- You can record strings against a blocking opponent, including against
+  characters whose hurtboxes change when they are hit
+- It sends no input, so P1's inputs stay out of the recording. P1 stops
+  guarding when the recording ends
+- The default is `Off`, as before
+- Checked in play
+
+### Fix: the dummy's counters mixed into your playback
+
+- When the dummy blocked or was hit during a playback you started, Action Steps
+  and other counters ran and mixed into the playback's inputs
+- During a playback you started, including the gaps between loops and any
+  start wait, the dummy no longer performs its Guard Action. Stopping the
+  playback brings it back. Guarding is unchanged
+- Checked in play
+
+### Change: a Recording counter starts over when it is hit
+
+- When the dummy was hit during `Reversal - Recording`, `Counter Attack -
+  Recording` or `PB Recording`, the rest of its inputs were lost in hit stun and
+  no further counter came out
+- The playback now stops when the dummy is hit, and the recording restarts from
+  the beginning on the next trigger, as Action Steps do
+- Checked in play
+
+### Manual
+
+- Section 5.1 covers `Recording P1 Guard`; 5.3 covers counters during your
+  playback and Recording counters starting over
+
+---
+
 ## v11.7.30
 
 A setting that plays the recording from its start after a state restore, and
