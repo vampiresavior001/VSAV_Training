@@ -16,7 +16,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 ![左はAG、右はGCを練習中の画面。番号は表示の種類](docs/images/screen_map.png)
 
-左：受付時間内に何回、どのTickで押したか、どの押しでAGが成立したか（`TECH HIT`）を確認。右：GCの方向入力やボタンが、どこまで受け付けられたかを確認。各表示の読み方は[画面の見方](docs/PLAYER_MANUAL.ja.md#screen-map)へ。
+左：遅らせAGでも6回入力できたかを確認。右：GCの方向入力やボタンが、どこまで受け付けられたかを確認。各表示の読み方は[画面の見方](docs/PLAYER_MANUAL.ja.md#screen-map)へ。
 
 ## 再現して、練習して、改善する
 

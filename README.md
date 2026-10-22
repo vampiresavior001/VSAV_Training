@@ -16,7 +16,7 @@ This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Tr
 
 ![Practicing PB (left) and GC (right), with each display numbered](docs/images/screen_map.png)
 
-Left: see how many presses fit in the window, on which Ticks, and which press made the PB (`TECH HIT`). Right: see which GC directions and button presses the game accepted. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
+Left: check whether you still fit six presses when delaying PB. Right: see which GC directions and button presses the game accepted. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
 
 ## Reproduce, practice and improve
 
