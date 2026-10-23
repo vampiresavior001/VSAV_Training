@@ -85,6 +85,11 @@ AGの成立やGCの入力受付には乱数が関わるため、一度成功し�
 1. **取り込む。** ダミーをサスカッチにし、`Dummy > Guard Action Type = Reversal - Action Patterns`にします。`Reversal Action Patterns`を開き、`Import from a File`で、配布物の`scripts/patterns/Sasquatch_Short_LP.json`を取り込みます。`Short LP`だけを使用する設定にします。
 2. **AGする。** こちらの技をガードさせてショートダッシュ小Pを出させ、これにAGします。PB Counter／PB Stats（英語UIのPBはAGのこと）で、例えば遅らせAGで受付内に6回入力できたか確認します。
 3. **GCも試す。** 同じ小Pに自キャラのGCを入力し、成功表示と、受け付けられた方向・ボタン・入力間隔を確認します。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右それぞれの成功率も確認できます。
+
+   ![デミトリがサスカッチのショートダッシュ小PをGCする。トレースは→ 4t、↓ 4t、↘ 4t、ボタン 0t、Success 11t](docs/images/gc_demo.gif)
+
+   デミトリでGCが成立した例です。トレースには、ゲームが受け付けた方向とボタン、その間隔と `Success 11t` が出ます。
+
 4. **連続で練習する。** `Loop Steps = yes`、`Loop Wait = Auto (Landing)`にして、着地からショートダッシュ小Pを繰り返させます。
 5. **自分の練習へ広げる。** 取り込んだパターンは次回も使えます。慣れたらAction Stepsで別の攻めを作り、Action Patternsに保存して、複数候補のランダム練習へ発展させられます。
 

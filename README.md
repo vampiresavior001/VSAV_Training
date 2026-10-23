@@ -86,6 +86,11 @@ Start by trying either PB or GC; looping and building your own actions can wait 
 1. **Import it.** Choose Sasquatch as the dummy and set `Dummy > Guard Action Type = Reversal - Action Patterns`. Open `Reversal Action Patterns` and use `Import from a File` to load `scripts/patterns/Sasquatch_Short_LP.json` from the release. Select only `Short LP` for use.
 2. **Practice PB.** Make the dummy block your attack to trigger short-dash LP, then use PB against it. Use PB Counter and PB Stats to check, for example, whether you delayed your first press and still fit six valid presses within the window.
 3. **Try GC too.** Block the same LP and enter your character's GC command. Check the success indicator, accepted directions and buttons, and input intervals. Use [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) to compare your success rate on the left and right sides.
+
+   ![Demitri guard-cancels Sasquatch's short-dash LP. The trace reads → 4t, ↓ 4t, ↘ 4t, button 0t, Success 11t](docs/images/gc_demo.gif)
+
+   A successful GC with Demitri. The trace shows the directions and button the game accepted, the intervals between them and `Success 11t`.
+
 4. **Repeat it.** Set `Loop Steps = yes` and `Loop Wait = Auto (Landing)` to repeat short-dash LP as soon as the dummy lands.
 5. **Expand your practice.** The imported pattern is ready to use next time. When comfortable, build other attacks in Action Steps and save them in Action Patterns to practice against randomly selected sequences.
 
