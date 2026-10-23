@@ -12,6 +12,8 @@
 
 機能の概要は[README](../README.ja.md)へ。本書では、練習の手順と結果の読み方を説明します。
 
+**初めての方は、[1章の導入](#02-install)を済ませたら、[3章のチュートリアル](#sasquatch-ag-tutorial)へ進んでください。** この後の比較表と「練習の選び方」は、必要になったときに読めば十分です。
+
 <a id="fork-comparison"></a>
 <details>
 <summary>Tick制御の特徴とフォーク元との比較</summary>
@@ -571,6 +573,8 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 - **技を1つ指定する：** `Reversal / Counter Attack - Specified`（[4.3](#dummy-normal-response)、[4.4](#dummy-button-timing)）
 - **記録を再生する：** `Reversal / Counter Attack - Recording`（[5章](#05-recording)）
 - **一連の動きを組む：** `Reversal - Action Steps`、`Reversal - Action Patterns`（[6章](#06-steps)、[7章](#07-patterns)）
+
+**迷ったら、次の順に広げます。** まず `P1 Coin` で記録してすぐ再生し（[5.1](#quick-recording)）、Tick単位の正確さが必要になったらAction Steps、複数の攻めを混ぜたくなったらAction Patternsへ進みます。技を1つ出させるだけなら、Specifiedが手軽です。
 
 行動を作っただけでは動かず、きっかけが来たときに始まります。Steps・Patternsを続けて繰り返すには `Loop Steps` を使います。記録だけは、きっかけを待たずに `Recording > Play Recording` ですぐ再生でき、`Looped Playback` で繰り返せます。
 

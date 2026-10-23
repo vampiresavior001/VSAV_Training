@@ -6,77 +6,50 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 English | [日本語](README.ja.md)
 
-**Make expert-level execution your training partner.** This training mode for Fightcade 2 / FBNeo lets you define dummy actions with precise internal-frame (Tick) timing to practice your defense and test your offense. Reproduce your opponent's actions precisely, then review your inputs and attack timing to find what to improve on your next attempt.
+**Make expert-level execution your training partner.** This Vampire Savior training mode for Fightcade 2 / FBNeo makes the dummy reproduce your opponent's actions precisely, then shows your own inputs and timing on screen so you can see what to improve.
 
 This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.31**.
 
-**[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [Practice defense](#first-pb-drill) · [Test wake-up pressure](docs/PLAYER_MANUAL.en.md#wakeup-pressure-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
+**[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [First drill](#first-pb-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
 
-**Start practicing PB and GC with the included Sasquatch pattern—no need to build a sequence first.** Follow the [illustrated tutorial](docs/PLAYER_MANUAL.en.md#sasquatch-pb-tutorial).
+## What this training mode does
+
+- **Reproduce the earliest possible actions, even at Turbo 3.** The dummy's inputs are controlled on internal frames ([Ticks](#why-ticks)). Make it perform reversals on wake-up, after blocking and after landing, attacks out of the earliest possible dash, and light-attack or throw challenges exactly when you want them.
+- **See whether your PB fit six presses inside the window.** The display shows where and how many times you pressed within the 14-Tick window, flags simultaneous presses and presses after the window, and tracks your success rate ([PB practice](docs/PLAYER_MANUAL.en.md#08-pb)).
+- **See which GC input broke off, and where.** The tool follows the directions and buttons the game accepted and the intervals between them, and shows where an attempt failed. It also tracks your success rate on each side ([GC practice](docs/PLAYER_MANUAL.en.md#09-gc)).
+
+Randomness affects PB activation and GC input windows, so one successful attempt does not mean your inputs are consistent. This tool shows what to improve even when you succeed.
 
 ![Practicing PB (left) and GC (right), with each display numbered](docs/images/screen_map.png)
 
 Left: check whether you still fit six presses when delaying PB. Right: see which GC directions and button presses the game accepted. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
 
-## Reproduce, practice and improve
+**Start practicing PB and GC with the included Sasquatch pattern—no need to build a sequence first.** After [installation](#windows-installation), go to the [first drill](#first-pb-drill).
 
-1. **Reproduce the opponent's actions.** Define actions and timing in Action Steps to repeatedly reproduce precise sequences, such as the earliest possible dash into an attack or crouching medium kick canceled into Tenraiha. On wake-up, after blocking and after landing, the dummy can use **light attacks, throws, jumps and dashes** as well as special-move reversals.
-2. **Practice your defense and test your offense.** Have the dummy repeat the same offense to practice PB, GC or interrupts after air guarding, or test your own wake-up pressure and strings against a fixed response.
-3. **Use the results to improve.** Check when your inputs registered within the input window and on which Tick your attack connected, then adjust your inputs or timing on the next attempt. PB Stats and GC Stats track your success rate and input time.
+## Build your training opponent
 
-**See what to improve—even when you succeed.** Randomness affects PB activation and GC input windows, so one successful attempt does not mean your inputs are consistent. Check which inputs the game accepted and when to decide what to adjust next.
+The dummy performs the action you set when something triggers it, such as blocking, being hit or waking up ([how the dummy works](docs/PLAYER_MANUAL.en.md#dummy-model)). Expand your options in this order as you need them:
 
-**Opening the menu pauses the game.** Change settings on the paused scene, then close the menu to carry on from where you stopped. A counter the dummy was waiting to make and recording playback carry on too ([menu pausing](docs/PLAYER_MANUAL.en.md#menu-pause)).
+1. **Start by recording with Coin.** Press `P1 Coin`, control the dummy, then press it again. The dummy plays back what you did right away ([Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording)).
+2. **Use Action Steps when you need precision.** Define actions and timing in Ticks to reproduce sequences such as the earliest possible dash into an attack, or crouching medium kick canceled into Tenraiha, the same way every time ([Action Steps](docs/PLAYER_MANUAL.en.md#06-steps)). Recording and playback operate in displayed frames, so build actions that need Tick-level precision here.
+3. **Use Action Patterns to mix several attacks.** Save sequences by name and have the dummy pick one at random from those you select ([Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns)).
 
-## What you can test and practice
+To have the dummy perform a single move, [Specified](docs/PLAYER_MANUAL.en.md#dummy-guard-action) sets it by command and button.
 
-### Practice defense
-
-| Goal | How to use the tool |
-|---|---|
-| **Improve your PB execution** | Use [PB Counter](docs/PLAYER_MANUAL.en.md#08-pb) to check when you pressed within the input window and how many presses counted. PB Stats shows your success rate, average press count and average input timing |
-| **Find out why a GC failed** | Use [GC Command Trainer](docs/PLAYER_MANUAL.en.md#09-gc) to see which directions and buttons the game accepted and where the input broke off. Compare the left and right sides with [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) |
-| **Practice defense with varied attacks** | Randomize attacks or their timing to practice PB and GC without relying on a fixed rhythm. See [which setting to use](docs/PLAYER_MANUAL.en.md#dummy-button-timing) |
-| **Explore situations after air guarding** | Use [Air Guard Gaps](docs/PLAYER_MANUAL.en.md#air-guard-gaps) to check gaps in air chains, interrupt timing and landing advantage |
-| **Practice escaping grabs and shortened hit reactions** | Set [Auto Mash](docs/PLAYER_MANUAL.en.md#grab-mashing) for the dummy, then read the count over the grabbed or hit character with `Display > Show Mash Meter`. It works with Auto Mash off, for manual practice |
-
-### Test your offense
+## Test your offense and measure moves
 
 | Goal | How to use the tool |
 |---|---|
-| **Test wake-up pressure and attack strings** | Set the dummy to use the same response each time, then use [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) to compare contact timing with the actual outcome |
-| **Build setups** | Use [Action Timeline](docs/PLAYER_MANUAL.en.md#action-timeline) to measure time spent setting up wake-up pressure or walking into throw range |
-| **Retry the same situation** | [Save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) with `Volume Up` or the menu to practice from the same situation. The menu pauses the game, so you can save the paused scene too. Saving is unavailable during recording playback and certain other operations |
-| **Check chain and link timing** | Use [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) to review the result and compare your button timing with the displayed input window |
-| **Study option selects on a cross-up** | Set [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.en.md#side-switch-os) to `no` so the dummy keeps sending the same input after a cross-up, and see what comes out |
+| **Check wake-up pressure** | [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) shows how many Ticks after the opponent's reversal Tick your attack connected, and on which of its active Ticks |
+| **See move data in numbers and colored bars** | [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data) measures startup, active time, recovery and advantage in internal frames; [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) lays out both players' states, one tile per Tick |
+| **Check chain and link timing** | [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) compares when you pressed with the input window |
+| **Retry the same situation** | [Save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) with `Volume Up` or the menu. Opening the menu pauses the game, so you can save the paused scene too |
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's in-place wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-**Check your attack timing, too.** In this example, Demitri's jumping LP meets Morrigan's wake-up, and he lands in time to block a reversal special. See the [setup and verification steps](docs/PLAYER_MANUAL.en.md#safe-jump-example).
+Example: Demitri's jumping LP meets Morrigan's wake-up, and he lands in time to block a reversal special ([setup and verification steps](docs/PLAYER_MANUAL.en.md#safe-jump-example)).
 
-### Practice command inputs
-
-| Goal | How to use the tool |
-|---|---|
-| **Practice sequence commands** | Use [Seq. Command Trainer](docs/PLAYER_MANUAL.en.md#command-trainer) to see where an input sequence failed and which gaps between inputs are too long to succeed consistently |
-
-### Examine moves
-
-| Goal | How to use the tool |
-|---|---|
-| **In numbers** | [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data) measures startup, active time, recovery and advantage in internal frames, with counting conventions aligned with [the frame data tables](http://darkstalkers.web.fc2.com/savior/savior.html) |
-| **As colored bars** | [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) lays out startup, active frames, recovery, invulnerability and other states for both players, one tile per Tick |
-
-### Set up your training opponent
-
-The dummy performs the action you build here when something triggers it, such as blocking, being hit or waking up ([how the dummy works](docs/PLAYER_MANUAL.en.md#dummy-model)). Recordings can also be played back right away.
-
-| Goal | How to use the tool |
-|---|---|
-| **Have the dummy do one action** | [Specified](docs/PLAYER_MANUAL.en.md#dummy-guard-action) sets one counter action by command and button. You can also delay or vary when the button is pressed ([4.4](docs/PLAYER_MANUAL.en.md#dummy-button-timing)) or repeat it ([4.5](docs/PLAYER_MANUAL.en.md#dummy-specified-loop)) |
-| **Use actions you can perform yourself** | Press Coin to record, then press it again to play back immediately with [Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording). Copy recordings you want to keep to a slot, or use [Recording Wizard](docs/PLAYER_MANUAL.en.md#recording-wizard) for automatic start and stop detection |
-| **Reproduce precise sequences** | [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) defines actions and their timing in Ticks |
-| **Run several sequences at random** | [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns) saves sequences by name and picks one at random from those you select |
+You can also practice [interrupts after air guarding](docs/PLAYER_MANUAL.en.md#air-guard-gaps), [sequence supers](docs/PLAYER_MANUAL.en.md#command-trainer), [mashing out of grabs](docs/PLAYER_MANUAL.en.md#grab-mashing) and [option selects on a cross-up](docs/PLAYER_MANUAL.en.md#side-switch-os). To find a feature by goal, see [Choose what to practice](docs/PLAYER_MANUAL.en.md#01-purpose) in the manual.
 
 ## Windows installation
 
@@ -91,38 +64,15 @@ The target game is **Vampire Savior - the lord of vampire (970519 Japan / `vsavj
 3. Download and extract the [latest release zip](https://github.com/vampiresavior001/VSAV_Training/releases/latest). Put `run_vsav_training.bat` and the entire `scripts` folder in the **copied fbneo folder**, with the batch file next to `fcadefbneo.exe`.
 4. Launch the copied batch file and select **`Video > Runahead > Disabled`** in FBNeo itself. Copying the folder also copies settings; it does not disable Runahead by itself.
 5. Fully close FBNeo and relaunch through the same batch file. Confirm that `Disabled` is selected under `Video > Runahead`. If `RUN-AHEAD DETECTED` appears during a match, recheck the setting and which FBNeo installation you launched.
-6. Use `Input > Map Game Inputs` to configure game controls and the functions below. Configure P2 game inputs too.
+6. Use `Input > Map Game Inputs` to configure game controls and the training functions. Configure P2 game inputs too.
+
+**Always assign `Lua Hotkey 1` (open/close the menu) and `P1 Coin` (start/finish a recording): neither has a menu equivalent.** The other shortcuts and their menu alternatives are listed in [manual 1.2](docs/PLAYER_MANUAL.en.md#02-install).
+
+Open the menu with `Lua Hotkey 1`. With a tab name selected, use Left/Right to switch tabs, then Up/Down to select an item. LP means light punch. `>` means “tab > item.”
 
 To play in full screen, check `Video > Blitter options > Windowed Fullscreen` first. The older full-screen mode cannot show the windows used to name, export and import patterns.
 
 Use a short path without Japanese characters; spaces are fine. Before updating an existing installation, make a [backup](#updates-and-backups).
-
-### Basic controls
-
-**Always assign `Lua Hotkey 1` and `P1 Coin`: neither has a menu equivalent.** The other shortcuts can be replaced by the menu operations below.
-
-<details>
-<summary>Show shortcuts and their menu alternatives</summary>
-
-| FBNeo input entry | Function | Menu alternative |
-|---|---|---|
-| `Lua Hotkey 1` | Open/close the training menu | No alternative — **required** |
-| `Lua Hotkey 2` | Restore positions by holding a direction and pressing the hotkey | In `Dummy > Position`, use Left/Right to choose a layout. LP restores it again; HP also closes the menu |
-| `Lua Hotkey 3` | Toggle looping for recorded inputs | In `Recording > Looped Playback`, use Left/Right to switch between `yes` and `no` |
-| `Lua Hotkey 4` | Return to character select | Select `Game > Return to Character Select` and press Right or LP |
-| `Volume Up` | Save the state (press twice) / restore it (press once) | Save with `Recording > Save State` (Right or LP, then `Yes`). Restore with `Recording > Restore State` (the menu closes first) |
-| `Volume Down` | Start/stop playback | Select `Recording > Play Recording` and press Right or LP. Activate it again to stop |
-| `P1 Coin` | During a match, start/finish a recording (Quick Recording); with `Quick Recording = no`, switch which character you control. Choose a stage at character select | No alternative — **required** |
-
-Open the menu with `Lua Hotkey 1`. With a tab name selected, use Left/Right to switch tabs, then Up/Down to select an item. LP means light punch. `>` means “tab > item.”
-
-**To record through the menu:** choose a slot in the wizard, release all inputs, then start moving to begin recording. Finish your action and release the controls. Recording ends automatically after about two seconds of no input while the dummy is free to act. On the confirmation screen, select the save option and press LP. Use `P1 Coin` if you want to decide when recording starts and stops ([Quick Recording](docs/PLAYER_MANUAL.en.md#quick-recording)).
-
-Recording's `Looped Playback` and Action Steps' `Loop Steps` are separate settings. See the [recording instructions](docs/PLAYER_MANUAL.en.md#05-recording) for details.
-
-`Volume Up / Down` are FBNeo input entries. You can assign them to arcade-stick or controller buttons.
-
-</details>
 
 <a id="first-ag-drill"></a>
 <a id="first-pb-drill"></a>
@@ -150,15 +100,11 @@ A Tick is an internal game frame. At Turbo 3, four Ticks pass in three displayed
 | Normal | One displayed frame = one Tick |
 | Turbo 3 | Three displayed frames = four Ticks |
 
-See [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps) for the conditions required to act at the earliest possible moment.
-
-**Recording and playback operate in displayed frames.** Define actions that need precise Tick-level timing in Action Steps. Measurement such as **Tick Data**, by contrast, is in Ticks, which avoids the turbo-frame variation of the original display-frame measurements. See [manual Section 11](docs/PLAYER_MANUAL.en.md#10-data) for measurement conditions and how to read the results.
-
-Some older readouts, such as the dash trainers, still count displayed frames. See the list in [manual 11.1](docs/PLAYER_MANUAL.en.md#ticks-and-frames) for which unit each display uses.
+Action Steps and measurements such as Tick Data use Ticks; recording and playback use displayed frames. Some older readouts, such as the dash trainers, still count displayed frames. See the list in [manual 11.1](docs/PLAYER_MANUAL.en.md#ticks-and-frames) for which unit each display uses.
 
 ## Manual
 
-The **[English player manual](docs/PLAYER_MANUAL.en.md)** covers controls, settings and how to interpret the readouts.
+The **[English player manual](docs/PLAYER_MANUAL.en.md)** covers controls, settings and how to interpret the readouts. If you are new, start with the [Section 3 tutorial](docs/PLAYER_MANUAL.en.md#sasquatch-pb-tutorial).
 
 - **Set up your training opponent:** [Dummy defense, recovery and counter actions](docs/PLAYER_MANUAL.en.md#04-dummy), [Recording and looping](docs/PLAYER_MANUAL.en.md#05-recording), [Action Steps](docs/PLAYER_MANUAL.en.md#06-steps), [Action Patterns](docs/PLAYER_MANUAL.en.md#07-patterns), [Auto Mash and Mash Meter](docs/PLAYER_MANUAL.en.md#grab-mashing)
 - **Practice:** [PB practice](docs/PLAYER_MANUAL.en.md#08-pb), [GC practice](docs/PLAYER_MANUAL.en.md#09-gc), [Practice recipes](docs/PLAYER_MANUAL.en.md#11-drills), [Save and restore states](docs/PLAYER_MANUAL.en.md#save-state)
@@ -183,7 +129,7 @@ Update the separate training installation. The downloaded files may include reco
 
 ## Release history and reports
 
-- [Release notes](docs/RELEASE_NOTES.md)
+- [Release notes](docs/RELEASE_NOTES.md) (starting with a summary of recent highlights)
 - [日本語リリースノート](docs/RELEASE_NOTES.ja.md)
 - [This fork's Issues](https://github.com/vampiresavior001/VSAV_Training/issues)
 

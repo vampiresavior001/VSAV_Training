@@ -12,6 +12,8 @@ For **v11.7.31 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Instal
 
 See the [README](../README.md) for a feature overview. This manual explains how to set up drills and interpret the results.
 
+**New here? Complete [Section 1: Installation](#02-install), then go to the [Section 3 tutorial](#sasquatch-pb-tutorial).** The comparison and “Choose what to practice” below can wait until you need them.
+
 <a id="fork-comparison"></a>
 <details>
 <summary>Tick control and comparison with the original</summary>
@@ -573,6 +575,8 @@ Set up the dummy's actions for the situation you want to practice.
 - **Specify one move:** `Reversal / Counter Attack - Specified` ([4.3](#dummy-normal-response), [4.4](#dummy-button-timing))
 - **Play a recording:** `Reversal / Counter Attack - Recording` ([Section 5](#05-recording))
 - **Build a sequence:** `Reversal - Action Steps`, `Reversal - Action Patterns` ([Section 6](#06-steps), [Section 7](#07-patterns))
+
+**Not sure where to start? Expand in this order.** First record with `P1 Coin` and play it back at once ([5.1](#quick-recording)). Move to Action Steps when you need Tick-level precision, and to Action Patterns when you want to mix several attacks. To have the dummy perform a single move, Specified is the simplest.
 
 Building an action does not start it; it starts when a trigger comes. To repeat Steps or Patterns continuously, use `Loop Steps`. Recordings alone can also be played right away with `Recording > Play Recording`, without waiting for a trigger, and repeated with `Looped Playback`.
 

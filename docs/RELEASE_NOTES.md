@@ -4,6 +4,17 @@
 
 Newest first. Older releases are kept below.
 
+## Recent highlights (v11.7 series)
+
+See each release for details. Features are listed by their current menu names.
+
+- **Quick Recording and state save/restore** ([v11.7.28](#v11728)): record with `P1 Coin` and play it back at once, and retry the same situation with `Volume Up`. Opening the menu pauses the game
+- **Frame Meter** ([v11.7.22](#v11722)) and **Meaty Timing** ([v11.7.23](#v11723)): lay out both players' states one Tick at a time, and see when and on which active Tick your wake-up attack connected
+- **Chain Trainer** ([v11.7.26](#v11726)) and **Seq. Command Trainer** ([v11.7.25](#v11725)): check chain and link timing, and sequence-super inputs one step at a time
+- **GC Stats** ([v11.7.20](#v11720)): GC success rate and input time, tracked separately for the 1P and 2P sides
+- **Random Start Wait and Random Delay** ([v11.7.21](#v11721)–[v11.7.21.2](#v117212)): vary when the dummy starts its offense and presses its button
+- **Auto Mash and Mash Meter** ([v11.7.27](#v11727)–[v11.7.29](#v11729)): have the dummy mash during grabs and certain hit reactions, with the remaining count shown overhead
+
 ---
 
 ## v11.7.31

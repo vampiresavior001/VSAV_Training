@@ -6,77 +6,50 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 [English](README.md) | 日本語
 
-**達人の精密な動きを、練習相手に。** 内部フレーム（Tick）単位でダミーの動きを指定し、守りの練習と攻めの検証ができる、Fightcade 2／FBNeo用のトレーニングモードです。相手の動きを正確に再現し、自分の入力と攻撃のタイミングを見ながら、改善点を見つけられます。
+**達人の精密な動きを、練習相手に。** 『ヴァンパイア セイヴァー』のFightcade 2／FBNeo用トレーニングモードです。ダミーに相手の動きを正確に再現させ、自分の入力とタイミングを画面で振り返れます。
 
 [VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.31** です。
 
-**[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [守りを練習する](#first-ag-drill) · [起き攻めを調べる](docs/PLAYER_MANUAL.ja.md#wakeup-pressure-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
+**[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [最初の練習](#first-ag-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
 
-**同梱のサスカッチ用パターンで、動きを自分で作らずにAG・GC練習を始められます。** [画像付きチュートリアル](docs/PLAYER_MANUAL.ja.md#sasquatch-ag-tutorial)に沿って進めてください。
+## このトレーニングモードでできること
+
+- **ターボ3でも、最速の行動をダミーに再現させる。** ダミーの入力を内部フレーム（[Tick](#なぜtick単位なのか)）で制御します。起き上がり・ガード後・着地後のリバーサル、最速ダッシュからの攻撃、小技や投げの暴れを、狙ったタイミングで出させられます。
+- **AGで、受付内に6回押せたかが分かる。** 14 Tickの受付のどこで何回押したか、同時押しや受付後の押し遅れがないかを表示し、成功率も集計します（[AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)）。
+- **GCで、どの入力がどこで切れたかが分かる。** ゲームが受け付けた方向・ボタンと入力間隔を追い、失敗した箇所を示します。左右それぞれの成功率も集計します（[GC練習](docs/PLAYER_MANUAL.ja.md#09-gc)）。
+
+AGの成立やGCの入力受付には乱数が関わるため、一度成功しただけでは入力が安定しているとは限りません。成功した入力の改善点まで見えるのが、このツールの特長です。
 
 ![左はAG、右はGCを練習中の画面。番号は表示の種類](docs/images/screen_map.png)
 
 左：遅らせAGでも6回入力できたかを確認。右：GCの方向入力やボタンが、どこまで受け付けられたかを確認。各表示の読み方は[画面の見方](docs/PLAYER_MANUAL.ja.md#screen-map)へ。
 
-## 再現して、練習して、改善する
+**同梱のサスカッチ用パターンで、動きを自分で作らずにAG・GCの練習を始められます。** [導入](#windowsでの導入)の後、[最初の練習](#first-ag-drill)へ進んでください。
 
-1. **相手の動きを再現する。** Action Stepsで動作とタイミングを指定し、最速ダッシュからの攻撃や中足払いキャンセル天雷破など、精密な操作を要する動きを繰り返し再現します。起き上がり・ガード後・着地後には、必殺技のリバーサルだけでなく、**小技・投げによる暴れ、ジャンプ、ダッシュ**もダミーに出させることができます。
-2. **対処を練習し、攻めを検証する。** 同じ攻めを繰り返させてAG・GC・空中ガード後の割り込みを練習したり、相手の反撃を固定して、自分の起き攻めや連係が通用するかを検証したりします。
-3. **結果を見て改善する。** 受付時間内のどのタイミングで入力したか、攻撃が何Tick目に当たったかを画面で確かめ、次の練習で入力やタイミングを調整します。PB Stats（英語UIのPBはAGのこと）とGC Statsで、成功率と入力時間の変化も追えます。
+## 練習相手の動きを作る
 
-**成功した入力にも、改善点があります。** AGの成立判定やGCの入力受付には乱数が関わるため、一度成功しただけでは入力が安定しているとは限りません。受け付けられた入力とタイミングを確認し、次に何を変えるか判断できます。
+ダミーは、ガードした後・攻撃を受けた後・起き上がりなどのきっかけで、設定した動きを出します（[ダミーが動くしくみ](docs/PLAYER_MANUAL.ja.md#dummy-model)）。作り方は、必要に応じて次の順に広げるのがおすすめです。
 
-**メニューを開くと、ゲームが止まります。** 止めた場面のまま設定を変え、閉じればその続きから練習を再開できます。待っていた反撃や記録の再生も、続きから進みます（[メニュー中の一時停止](docs/PLAYER_MANUAL.ja.md#menu-pause)）。
+1. **まずはCoinで記録する。** `P1 Coin`を押してダミーを操作し、もう一度押すと、その動きをダミーがすぐ再生します（[Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)）。
+2. **正確さが必要になったらAction Steps。** 動作とタイミングをTick単位で指定し、最速ダッシュからの攻撃や中足払いキャンセル天雷破などを、毎回同じように再現します（[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)）。記録・再生は表示フレーム単位なので、Tick単位の正確さが必要な動きはこちらで作ります。
+3. **複数の攻めを混ぜるならAction Patterns。** 作った動きを名前を付けて保存し、使う候補からランダムに出させます（[Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)）。
 
-## 何を調べ、練習できるか
+技を1つ出させるだけなら、コマンドとボタンを指定する[Specified](docs/PLAYER_MANUAL.ja.md#dummy-guard-action)が手軽です。
 
-### 守りを練習する
+## 攻めを調べる・技を測る
 
-| 目的 | 使い方 |
+| 目的 | 使う機能 |
 |---|---|
-| **AGの入力を改善する** | [PB Counter](docs/PLAYER_MANUAL.ja.md#08-pb)で、受付時間内のいつ、何回入力したかを確認する。PB Statsで成功率や入力回数・タイミングの平均も確認できる |
-| **GCの失敗原因を見つける** | [GC Command Trainer](docs/PLAYER_MANUAL.ja.md#09-gc)で、どの方向・ボタンが受け付けられ、どこで切れたかを見る。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右の成功率を比べる |
-| **実戦に近い守りを練習する** | 複数の攻めや入力タイミングをランダムにし、固定のリズムに頼らずAG・GCする。[設定の使い分け](docs/PLAYER_MANUAL.ja.md#dummy-button-timing) |
-| **空中ガード後の攻防を調べる** | [Air Guard Gaps](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)で、空中チェーンの隙間、割り込みタイミング、着地後の有利不利を確認する |
-| **つかみ・短縮やられからの脱出を練習する** | ダミーを[Auto Mash](docs/PLAYER_MANUAL.ja.md#grab-mashing)にし、つかまれている側・特殊やられを受けている側の頭上で`Display > Show Mash Meter`の残量を確認する。Auto MashがOffでも手動練習に使える |
-
-### 攻めを調べる
-
-| 目的 | 使い方 |
-|---|---|
-| **起き攻め・連係を検証する** | 相手の反撃を固定し、[Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で当たったタイミングと実際の結果を比べる |
-| **セットプレイを組み立てる** | [Action Timeline](docs/PLAYER_MANUAL.ja.md#action-timeline)で、起き攻めのフレーム消費や歩き投げまでの所要時間を調べる |
-| **同じ場面から繰り返し試す** | `Volume Up`かメニューで[状態を保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)し、同じ状況から練習する。メニュー中はゲームが止まるので、止めた場面も保存できる。記録の再生中など、保存できない場面もある |
-| **チェーンや目押しの入力タイミングを確認する** | [Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)で、成立結果と、ボタンを押した位置を受付・猶予の表示と比べる |
-| **めくりのオプションセレクトを調べる** | [Auto-Flip Inputs on Side Switch](docs/PLAYER_MANUAL.ja.md#side-switch-os)を`no`にし、めくられた後も同じ入力を送り続けて、何が出るかを確かめる |
+| **起き攻めの重なりを確かめる** | [Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で、相手のリバーサルTickから何Tick後に、持続の何Tick目で当たったかを見る |
+| **技の性能を数値と帯で見る** | [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)で発生・持続・戻り・有利不利を内部フレーム単位で測り、[Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)で両プレイヤーの状態を1 Tickごとのマスで並べる |
+| **チェーンや目押しの猶予を確かめる** | [Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)で、押したタイミングと受付・猶予を比べる |
+| **同じ場面から繰り返す** | `Volume Up`かメニューで[状態を保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)する。メニューを開くとゲームが止まるので、止めた場面も保存できる |
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンのその場起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 
-**攻撃を重ねるタイミングも確認できます。** この例では、デミトリのジャンプ小Pをモリガンの起き上がりに重ね、リバーサル必殺技には着地してガードします。[設定と確認手順はこちら](docs/PLAYER_MANUAL.ja.md#safe-jump-example)。
+例：デミトリのジャンプ小Pをモリガンの起き上がりに重ね、リバーサル必殺技には着地してガードする詐欺飛び（[設定と確認手順](docs/PLAYER_MANUAL.ja.md#safe-jump-example)）。
 
-### コマンド入力を練習する
-
-| 目的 | 使い方 |
-|---|---|
-| **順押しコマンドを安定させる** | [Seq. Command Trainer](docs/PLAYER_MANUAL.ja.md#command-trainer)で、入力の失敗箇所と、乱数に左右される入力間隔を確認する |
-
-### 技の性能を見る
-
-| 目的 | 使い方 |
-|---|---|
-| **数値で見る** | [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)で、発生・持続・戻り・有利不利を内部フレーム単位で測る。数え方・考え方は[技表](http://darkstalkers.web.fc2.com/savior/savior.html)に合わせている |
-| **色の帯で見る** | [Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)で、発生・攻撃判定・戻り・無敵などを、両プレイヤーとも1 Tickごとのマスで並べて見る |
-
-### 練習相手を設定する
-
-ダミーは、ガードした後・攻撃を受けた後・起き上がりなどのきっかけで、ここで設定した行動を実行します（[ダミーが動くしくみ](docs/PLAYER_MANUAL.ja.md#dummy-model)）。記録は、きっかけを待たずに再生することもできます。
-
-| 目的 | 使い方 |
-|---|---|
-| **1つの行動を出させる** | [Specified](docs/PLAYER_MANUAL.ja.md#dummy-guard-action)で、コマンドとボタンを指定して反撃させる。ボタンを押す時期を遅らせる・ばらつかせる設定（[4.4](docs/PLAYER_MANUAL.ja.md#dummy-button-timing)）や、繰り返し（[4.5](docs/PLAYER_MANUAL.ja.md#dummy-specified-loop)）もできる |
-| **自分で操作できる動きを使う** | [Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)でCoinを押して記録し、もう一度押してすぐ再生。残したい動きはスロットへコピーできる。開始・終了を自動で検出する[Recording Wizard](docs/PLAYER_MANUAL.ja.md#recording-wizard)も使える |
-| **精密な動きを再現する** | [Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)で、動作とタイミングをTick単位で指定する |
-| **複数の動きをランダムに出す** | [Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)で、作った動きを名前付きで保存し、使う候補からランダムに実行する |
+ほかにも、[空中ガード後の割り込み](docs/PLAYER_MANUAL.ja.md#air-guard-gaps)、[順押しの超必殺技](docs/PLAYER_MANUAL.ja.md#command-trainer)、[レバガチャ](docs/PLAYER_MANUAL.ja.md#grab-mashing)、[めくりのオプションセレクト](docs/PLAYER_MANUAL.ja.md#side-switch-os)などの練習に使えます。目的からの探し方は、マニュアルの[練習の選び方](docs/PLAYER_MANUAL.ja.md#01-purpose)を参照してください。
 
 ## Windowsでの導入
 
@@ -91,38 +64,15 @@ See what the Warlord sees, and practice what the Warlord practices.
 3. [最新版のzip](https://github.com/vampiresavior001/VSAV_Training/releases/latest)をダウンロードして展開し、`run_vsav_training.bat`と`scripts`フォルダー全体を、**複製先のfbneoフォルダー**へ配置します。バッチファイルは`fcadefbneo.exe`と同じ階層に置きます。
 4. 複製先の`run_vsav_training.bat`を起動し、FBNeo本体の **`Video > Runahead > Disabled`** を選びます。元の設定もコピーされるため、複製するだけでは無効になりません。
 5. FBNeoを完全終了して同じバッチから再起動します。`Video > Runahead`で`Disabled`が選ばれていることを確認します。試合中に`RUN-AHEAD DETECTED`の警告が出たら、設定と起動先を再確認してください。
-6. `Input > Map Game Inputs`でゲーム操作と下表の機能を割り当てます。P2側のゲーム入力も設定してください。
+6. `Input > Map Game Inputs`でゲーム操作とトレーニング用の機能を割り当てます。P2側のゲーム入力も設定してください。
+
+**`Lua Hotkey 1`（メニューの開閉）と`P1 Coin`（記録の開始・終了）は、メニューで代用できないため必ず割り当ててください。** ほかのボタンと、メニューでの代用操作は[マニュアル1.2](docs/PLAYER_MANUAL.ja.md#02-install)の表にあります。
+
+メニューは`Lua Hotkey 1`で開き、上端のタブ名で左右を押してタブを切り替え、上下で項目を選びます。LPは弱Pです。`>`は「タブ > 項目」の順を表します。
 
 全画面で遊ぶときは、先に`Video > Blitter options > Windowed Fullscreen`にチェックを入れてください。古い形式の全画面では、パターンの名前入力やExport・Importのウィンドウを表示できません。
 
 配置先は、日本語を含まない短いパスを使用してください（空白は含んでも構いません）。既存環境を更新する場合は、先に[バックアップ](#更新とバックアップ)を行います。
-
-### 基本操作
-
-**`Lua Hotkey 1`と`P1 Coin`はメニューで代用できないため、必ず割り当ててください。** ほかの項目は、下表のメニュー操作で代用できます。
-
-<details>
-<summary>ボタン一覧とメニューでの代用操作を開く</summary>
-
-| FBNeoの入力項目 | 機能 | メニューでの代用操作 |
-|---|---|---|
-| `Lua Hotkey 1` | トレーニングメニューを開閉 | 代用不可・**必須** |
-| `Lua Hotkey 2` | レバーとの組み合わせで位置を戻す | `Dummy > Position`で左右を押して配置を選ぶ。LPで同じ配置に戻す。HPなら戻してメニューも閉じる |
-| `Lua Hotkey 3` | 記録のループ再生を切り替える | `Recording > Looped Playback`を左右で`yes`／`no`に切り替える |
-| `Lua Hotkey 4` | キャラクター選択へ戻る | `Game > Return to Character Select`で右またはLP |
-| `Volume Up` | 状態の保存（2回押し）・復元（1回押し） | 保存は`Recording > Save State`で右またはLP（確認で`Yes`）。復元は`Recording > Restore State`（メニューを閉じてから戻す） |
-| `Volume Down` | 記録の再生・停止 | `Recording > Play Recording`で右またはLP。もう一度実行すると停止 |
-| `P1 Coin` | 試合中は記録（Quick Recording）の開始・終了。`Quick Recording = no`なら操作側の切り替え。キャラ選択中はステージ選択 | 代用不可・**必須** |
-
-メニューは`Lua Hotkey 1`で開き、上端のタブ名で左右を押してタブを切り替え、上下で項目を選びます。LPは弱Pです。`>`は「タブ > 項目」の順を表します。
-
-**記録をメニューで代用する場合：** ウィザードでスロットを選び、いったん入力を離してから操作すると記録が始まります。操作を終えて入力を離し、ダミーが動ける状態で約2秒待つと自動終了します。確認画面で保存を選び、LPで決定してください。自分で開始・終了を決めたい場合は`P1 Coin`を使います（[Quick Recording](docs/PLAYER_MANUAL.ja.md#quick-recording)）。
-
-記録の`Looped Playback`と、Action Stepsの`Loop Steps`は別の設定です。[記録の詳しい手順](docs/PLAYER_MANUAL.ja.md#05-recording)も参照してください。
-
-`Volume Up / Down`はFBNeoの入力項目名です。アーケードコントローラーなどのボタンにも割り当てられます。
-
-</details>
 
 <a id="first-ag-drill"></a>
 
@@ -133,7 +83,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 最初はAGかGCのどちらかを試せれば十分です。連発や自分で動きを作る操作は、慣れてから進めてください。以下は流れです。実際の設定は[画像付きチュートリアル](docs/PLAYER_MANUAL.ja.md#sasquatch-ag-tutorial)に沿って進めてください。
 
 1. **取り込む。** ダミーをサスカッチにし、`Dummy > Guard Action Type = Reversal - Action Patterns`にします。`Reversal Action Patterns`を開き、`Import from a File`で、配布物の`scripts/patterns/Sasquatch_Short_LP.json`を取り込みます。`Short LP`だけを使用する設定にします。
-2. **AGする。** こちらの技をガードさせてショートダッシュ小Pを出させ、これにAGします。PB Counter／PB Statsで、例えば遅らせAGで受付内に6回入力できたか確認します。
+2. **AGする。** こちらの技をガードさせてショートダッシュ小Pを出させ、これにAGします。PB Counter／PB Stats（英語UIのPBはAGのこと）で、例えば遅らせAGで受付内に6回入力できたか確認します。
 3. **GCも試す。** 同じ小Pに自キャラのGCを入力し、成功表示と、受け付けられた方向・ボタン・入力間隔を確認します。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右それぞれの成功率も確認できます。
 4. **連続で練習する。** `Loop Steps = yes`、`Loop Wait = Auto (Landing)`にして、着地からショートダッシュ小Pを繰り返させます。
 5. **自分の練習へ広げる。** 取り込んだパターンは次回も使えます。慣れたらAction Stepsで別の攻めを作り、Action Patternsに保存して、複数候補のランダム練習へ発展させられます。
@@ -149,15 +99,11 @@ Tickはゲームの内部フレームです。ターボ3では表示3フレー�
 | ノーマル | 表示1フレーム＝1 Tick |
 | ターボ3 | 表示3フレーム＝4 Tick |
 
-行動ごとの最速入力の条件は[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)を参照してください。
-
-**記録・再生は表示フレーム単位です。** Tick単位の正確なタイミングが必要な動きは、Action Stepsで定義してください。一方、**Tick Data**などの測定はTick単位で、従来の表示フレーム単位の測定で生じていたターボによる数値の揺れを抑えています。測定条件と読み方は[マニュアル11章](docs/PLAYER_MANUAL.ja.md#10-data)で説明しています。
-
-ただし、ダッシュ系の既存トレーナーなど、表示フレームで数える表示も残っています。どの表示がどちらの単位かは、[マニュアル11.1](docs/PLAYER_MANUAL.ja.md#ticks-and-frames)の一覧を確認してください。
+Action StepsとTick Dataなどの測定はTick単位、記録・再生は表示フレーム単位です。ダッシュ系の既存トレーナーなど、表示フレームで数える表示も残っています。どの表示がどちらの単位かは[マニュアル11.1](docs/PLAYER_MANUAL.ja.md#ticks-and-frames)の一覧を確認してください。
 
 ## マニュアル
 
-**[日本語プレイヤーマニュアル](docs/PLAYER_MANUAL.ja.md)** に、操作・設定・表示の読み方をまとめています。
+**[日本語プレイヤーマニュアル](docs/PLAYER_MANUAL.ja.md)** に、操作・設定・表示の読み方をまとめています。初めての方は、[3章のチュートリアル](docs/PLAYER_MANUAL.ja.md#sasquatch-ag-tutorial)から読み始めてください。
 
 - **練習相手を設定する：** [ダミーのガード・受け身・反撃](docs/PLAYER_MANUAL.ja.md#04-dummy)、[記録とループ再生](docs/PLAYER_MANUAL.ja.md#05-recording)、[Action Steps](docs/PLAYER_MANUAL.ja.md#06-steps)、[Action Patterns](docs/PLAYER_MANUAL.ja.md#07-patterns)、[Auto Mash・Mash Meter](docs/PLAYER_MANUAL.ja.md#grab-mashing)
 - **練習する：** [AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)、[GC練習](docs/PLAYER_MANUAL.ja.md#09-gc)、[目的別の練習レシピ](docs/PLAYER_MANUAL.ja.md#11-drills)、[状態の保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)
@@ -182,7 +128,7 @@ FBNeoを終了する前に編集内容を保存し、次のファイルをバッ
 
 ## 変更履歴・不具合報告
 
-- [日本語リリースノート](docs/RELEASE_NOTES.ja.md)
+- [日本語リリースノート](docs/RELEASE_NOTES.ja.md)（冒頭に最近の主な追加機能のまとめがあります）
 - [Release notes (English)](docs/RELEASE_NOTES.md)
 - [このフォークのIssues](https://github.com/vampiresavior001/VSAV_Training/issues)
 
