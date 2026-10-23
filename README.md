@@ -20,9 +20,9 @@ This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Tr
 
 Randomness affects PB activation and GC input windows, so one successful attempt does not mean your inputs are consistent. This tool shows what to improve even when you succeed.
 
-![Practicing PB (left) and GC (right), with each display numbered](docs/images/screen_map.png)
+![Pushblocking Sasquatch's short-dash LP twice. The second fits six presses inside the window and PB activates. PB Count and PB Stats update](docs/images/pb_demo.gif)
 
-Left: check whether you still fit six presses when delaying PB. Right: see which GC directions and button presses the game accepted. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
+Pushblocking Sasquatch's short-dash LP twice. The second fits six presses inside the window and PB activates. Where you pressed, how many times and your success rate appear on screen at once.
 
 **Start practicing PB and GC with the included Sasquatch pattern—no need to build a sequence first.** After [installation](#windows-installation), go to the [first drill](#first-pb-drill).
 
@@ -88,6 +88,10 @@ Start by trying either PB or GC; looping and building your own actions can wait 
 3. **Try GC too.** Block the same LP and enter your character's GC command. Check the success indicator, accepted directions and buttons, and input intervals. Use [GC Stats](docs/PLAYER_MANUAL.en.md#gc-stats) to compare your success rate on the left and right sides.
 4. **Repeat it.** Set `Loop Steps = yes` and `Loop Wait = Auto (Landing)` to repeat short-dash LP as soon as the dummy lands.
 5. **Expand your practice.** The imported pattern is ready to use next time. When comfortable, build other attacks in Action Steps and save them in Action Patterns to practice against randomly selected sequences.
+
+![Practicing PB (left) and GC (right), with each display numbered](docs/images/screen_map.png)
+
+Left: check whether you still fit six presses when delaying PB. Right: see which GC directions and button presses the game accepted. See [how to read the screen](docs/PLAYER_MANUAL.en.md#screen-map) for each display.
 
 See [PB practice](docs/PLAYER_MANUAL.en.md#08-pb) and [GC practice](docs/PLAYER_MANUAL.en.md#09-gc) for how to read the input displays and decide what to adjust.
 

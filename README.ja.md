@@ -20,9 +20,9 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 AGの成立やGCの入力受付には乱数が関わるため、一度成功しただけでは入力が安定しているとは限りません。成功した入力の改善点まで見えるのが、このツールの特長です。
 
-![左はAG、右はGCを練習中の画面。番号は表示の種類](docs/images/screen_map.png)
+![サスカッチのショートダッシュ小Pに2回AGする。2回目は受付内に6回押し切り、AGも成立。PB CountとPB Statsが更新される](docs/images/pb_demo.gif)
 
-左：遅らせAGでも6回入力できたかを確認。右：GCの方向入力やボタンが、どこまで受け付けられたかを確認。各表示の読み方は[画面の見方](docs/PLAYER_MANUAL.ja.md#screen-map)へ。
+サスカッチのショートダッシュ小Pに2回AG。2回目は受付内に6回押し切り、AGも成立しています。押した位置と回数、成功率がすぐ画面に出ます。
 
 **同梱のサスカッチ用パターンで、動きを自分で作らずにAG・GCの練習を始められます。** [導入](#windowsでの導入)の後、[最初の練習](#first-ag-drill)へ進んでください。
 
@@ -87,6 +87,10 @@ AGの成立やGCの入力受付には乱数が関わるため、一度成功し�
 3. **GCも試す。** 同じ小Pに自キャラのGCを入力し、成功表示と、受け付けられた方向・ボタン・入力間隔を確認します。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右それぞれの成功率も確認できます。
 4. **連続で練習する。** `Loop Steps = yes`、`Loop Wait = Auto (Landing)`にして、着地からショートダッシュ小Pを繰り返させます。
 5. **自分の練習へ広げる。** 取り込んだパターンは次回も使えます。慣れたらAction Stepsで別の攻めを作り、Action Patternsに保存して、複数候補のランダム練習へ発展させられます。
+
+![左はAG、右はGCを練習中の画面。番号は表示の種類](docs/images/screen_map.png)
+
+左：遅らせAGでも6回入力できたかを確認。右：GCの方向入力やボタンが、どこまで受け付けられたかを確認。各表示の読み方は[画面の見方](docs/PLAYER_MANUAL.ja.md#screen-map)へ。
 
 入力表示の読み方と、結果に応じた調整方法は、[AG練習](docs/PLAYER_MANUAL.ja.md#08-pb)と[GC練習](docs/PLAYER_MANUAL.ja.md#09-gc)を参照してください。
 
