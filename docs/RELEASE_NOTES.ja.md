@@ -1832,7 +1832,9 @@ PB Count: 6   Guard|----1-1-1-1-1-1|Expired   at:9-14t   MultiPush: 0
 Player タブの中身は、Position も Pose も Guard も Action Steps も
 すべてダミーの挙動です。名前を **Dummy** にしました。
 
----## v11.7.8
+---
+
+## v11.7.8
 
 ### Position の行に再配置の近道
 

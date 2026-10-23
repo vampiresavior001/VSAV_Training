@@ -2103,7 +2103,9 @@ A number there means this tool delivered a simultaneous press - a bug.
 Everything on the Player tab is the DUMMY's behavior. It is now called
 **Dummy**.
 
----## v11.7.8
+---
+
+## v11.7.8
 
 ### A shortcut to re-place, on the Position row
 

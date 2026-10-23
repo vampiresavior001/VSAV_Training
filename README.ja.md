@@ -132,7 +132,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 最初はAGかGCのどちらかを試せれば十分です。連発や自分で動きを作る操作は、慣れてから進めてください。以下は流れです。実際の設定は[画像付きチュートリアル](docs/PLAYER_MANUAL.ja.md#sasquatch-ag-tutorial)に沿って進めてください。
 
-1. **取り込む。** ダミーをサスカッチにし、`Reversal - Action Patterns`の`Import from a File`で、配布物の`scripts/patterns/Sasquatch_Short_LP.json`を取り込みます。`Short LP`だけを使用する設定にします。
+1. **取り込む。** ダミーをサスカッチにし、`Dummy > Guard Action Type = Reversal - Action Patterns`にします。`Reversal Action Patterns`を開き、`Import from a File`で、配布物の`scripts/patterns/Sasquatch_Short_LP.json`を取り込みます。`Short LP`だけを使用する設定にします。
 2. **AGする。** こちらの技をガードさせてショートダッシュ小Pを出させ、これにAGします。PB Counter／PB Statsで、例えば遅らせAGで受付内に6回入力できたか確認します。
 3. **GCも試す。** 同じ小Pに自キャラのGCを入力し、成功表示と、受け付けられた方向・ボタン・入力間隔を確認します。[GC Stats](docs/PLAYER_MANUAL.ja.md#gc-stats)で左右それぞれの成功率も確認できます。
 4. **連続で練習する。** `Loop Steps = yes`、`Loop Wait = Auto (Landing)`にして、着地からショートダッシュ小Pを繰り返させます。
