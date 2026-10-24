@@ -43,7 +43,7 @@ To have the dummy perform a single move, [Specified](docs/PLAYER_MANUAL.en.md#du
 | **Check wake-up pressure** | [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) shows how many Ticks after the opponent's reversal Tick your attack connected, and on which of its active Ticks |
 | **See move data in numbers and colored bars** | [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data) measures startup, active time, recovery and advantage in internal frames; [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) lays out both players' states, one tile per Tick |
 | **Check chain and link timing** | [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) compares when you pressed with the input window |
-| **Retry the same situation** | [Save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) with `Volume Up` or the menu. Opening the menu pauses the game, so you can save the paused scene too |
+| **Retry the same situation** | [Save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) with `Volume Up` (an FBNeo input entry) or the menu. Opening the menu pauses the game, so you can save the paused scene too |
 
 ![After Demitri's heavy Demon Cradle, a jumping LP from a forward jump meets Morrigan's in-place wake-up. Meaty Timing reads Wake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 

@@ -12,7 +12,7 @@ For **v11.7.31 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Instal
 
 See the [README](../README.md) for a feature overview. This manual explains how to set up drills and interpret the results.
 
-**New here? Complete [Section 1: Installation](#02-install), then go to the [Section 3 tutorial](#sasquatch-pb-tutorial).** The comparison and “Choose what to practice” below can wait until you need them.
+**New here? Complete [Section 1: Installation](#02-install) and [Section 2: Controls](#03-controls), then go to the [Section 3 tutorial](#sasquatch-pb-tutorial).** The comparison and “Choose what to practice” below can wait until you need them.
 
 <a id="fork-comparison"></a>
 <details>
@@ -128,8 +128,6 @@ The distinction is **the precision of reproduced actions and the detail availabl
 | Repeat offense seen in matches | Recording and looping | `P1 Coin` ([5.1](#quick-recording)), `Recording > Recording Wizard` |
 | Specify a dash into an attack precisely | Action Steps | [Section 6](#06-steps) |
 | Randomize several offensive sequences | Recording slots, Action Patterns | [Section 5](#05-recording), [Section 7](#07-patterns) |
-
-Start with [installation](#02-install) and [basic controls](#03-controls), then [practice PB and GC against Sasquatch](#sasquatch-pb-tutorial).
 
 <a id="screen-map"></a>
 ### The screen
@@ -1238,7 +1236,7 @@ The screenshot shows a forward-jump LP after Demitri hits Morrigan with a heavy 
 
 2. **Set up light Shadow Blade.** Select `Guard Action Type = Reversal - Action Steps` and open `Reversal Action Steps`. Use only one step, with `Wait = Auto (Fastest)`, `Special : Shadow Blade + LP` and that step's `Random Delay = 0`, then select `Save`. Set `Random Guard Action % = 100%`, `Random Start Wait = 0` and `Loop Steps = no`. Leave `Wakeup = None` as it is.
 
-   For single responses configured with `Reversal - Specified`, see [Section 4](#dummy-normal-response). This example uses the Action Steps setup shown in the screenshot in step 3.
+   For single responses configured with `Reversal - Specified`, see [4.3](#dummy-normal-response). This example uses the Action Steps setup shown in the screenshot in step 3.
 
 3. **Check that you can land and block.** Repeat the setup. After pressing jumping LP, switch to a blocking direction for landing. Confirm that the dummy performs its reversal and that you land and block it.
 
@@ -1322,7 +1320,7 @@ The result depends on how the game reads the input, so `no` does not guarantee a
 
    ![The Darkness Illusion command expired. An orange F on row 2, a red x and HP on row 3, Expired 17t](images/command_trainer_expired.png)
 
-   In this example, the input window expired. Forward was pressed while the game was waiting for the second LP (the `F` on row 2) and held from then on, so the third step, forward, was never accepted and the command expired after 17 Ticks (the red `x` on row 3). **On your next attempt, press forward again after the second LP.**
+   In this example, the input window expired. Forward was pressed while the game was waiting for the second LP (the `F` on row 2) and held from then on, so the third step, forward, was never accepted and the command expired after 17 Ticks (the red `x` on row 3). The red `HP` beside it is the last input that was not accepted while the game waited for forward. **On your next attempt, press forward again after the second LP.**
 
 | What you see | Meaning |
 |---|---|
@@ -1724,7 +1722,7 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 | Option | What it measures |
 |---|---|
 | `Show Frame Trap Trainer` | Gap from P2 leaving hitstun/blockstun to the next contact |
-| `Show Jump In Trainer` | Displayed frames from contact with P2 to your landing |
+| `Show Jump In Trainer` | Displayed frames from contact with P2 to your landing. Known bug: landing without hitting anything can still record a gap |
 | `Show IAD Trainer` | Air-dash height, not time |
 | `Show Dashes Interval` | Displayed frames between dashes |
 | `Show Dash Time` | Dash duration in displayed frames |
@@ -1882,7 +1880,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 
 > This manual was checked against the target version's source code and release notes. The procedures in it were not run through in an emulator as a whole. What was confirmed in the game is noted in each release-notes entry. Example drills do not guarantee success with every character or setup.
 
-- Documentation updated: 2026-10-22. This does not include running the procedures in an emulator.
+- Documentation updated: 2026-10-24. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
 - Fork version: v11.7.31. On 2026-10-22 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).

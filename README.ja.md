@@ -43,7 +43,7 @@ AGの成立やGCの入力受付には乱数が関わるため、一度成功し�
 | **起き攻めの重なりを確かめる** | [Meaty Timing](docs/PLAYER_MANUAL.ja.md#meaty-timing)で、相手のリバーサルTickから何Tick後に、持続の何Tick目で当たったかを見る |
 | **技の性能を数値と帯で見る** | [Tick Data](docs/PLAYER_MANUAL.ja.md#tick-data)で発生・持続・戻り・有利不利を内部フレーム単位で測り、[Frame Meter](docs/PLAYER_MANUAL.ja.md#frame-meter)で両プレイヤーの状態を1 Tickごとのマスで並べる |
 | **チェーンや目押しの猶予を確かめる** | [Chain Trainer](docs/PLAYER_MANUAL.ja.md#chain-trainer)で、押したタイミングと受付・猶予を比べる |
-| **同じ場面から繰り返す** | `Volume Up`かメニューで[状態を保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)する。メニューを開くとゲームが止まるので、止めた場面も保存できる |
+| **同じ場面から繰り返す** | `Volume Up`（FBNeoの入力項目）かメニューで[状態を保存・復元](docs/PLAYER_MANUAL.ja.md#save-state)する。メニューを開くとゲームが止まるので、止めた場面も保存できる |
 
 ![デミトリの強デモンクレイドルの後、前ジャンプからのジャンプ小Pがモリガンのその場起き上がりに重なった画面。Meaty TimingはWake-up Reversal +0t Active 2t](docs/images/meaty_safe_jump.png)
 

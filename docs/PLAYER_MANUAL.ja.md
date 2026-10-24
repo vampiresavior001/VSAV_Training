@@ -12,7 +12,7 @@
 
 機能の概要は[README](../README.ja.md)へ。本書では、練習の手順と結果の読み方を説明します。
 
-**初めての方は、[1章の導入](#02-install)を済ませたら、[3章のチュートリアル](#sasquatch-ag-tutorial)へ進んでください。** この後の比較表と「練習の選び方」は、必要になったときに読めば十分です。
+**初めての方は、[1章の導入](#02-install)と[2章の基本操作](#03-controls)を済ませたら、[3章のチュートリアル](#sasquatch-ag-tutorial)へ進んでください。** この後の比較表と「練習の選び方」は、必要になったときに読めば十分です。
 
 <a id="fork-comparison"></a>
 <details>
@@ -128,8 +128,6 @@
 | 実戦で見かける攻めを繰り返させる | 記録とループ | `P1 Coin`（[5.1](#quick-recording)）、`Recording > Recording Wizard` |
 | ダッシュ→攻撃などを正確に指定する | Action Steps | [6章](#06-steps) |
 | 複数の攻めをランダムに出す | 記録スロット、Action Patterns | [5章](#05-recording)、[7章](#07-patterns) |
-
-初めてなら、[導入](#02-install)と[基本操作](#03-controls)を確認してから、[サスカッチでAG・GCを練習](#sasquatch-ag-tutorial)してみてください。
 
 <a id="screen-map"></a>
 ### 画面の見方
@@ -1236,7 +1234,7 @@ GCコマンドの入力受付猶予には乱数が関わるため、同じつも
 
 2. **弱シャドウブレイドを設定する。** `Guard Action Type = Reversal - Action Steps` にし、`Reversal Action Steps`を開きます。ステップを1つだけにして、`Wait = Auto (Fastest)`、`Special : Shadow Blade + LP`、そのステップの`Random Delay = 0`を設定し、`Save`します。`Random Guard Action % = 100%`、`Random Start Wait = 0`、`Loop Steps = no`にします。`Wakeup = None` はそのままにします。
 
-   単発の反撃を`Reversal - Specified`で設定する方法は[4章](#dummy-normal-response)を参照してください。ここでは、手順3の画像で確認したAction Stepsの設定を使います。
+   単発の反撃を`Reversal - Specified`で設定する方法は[4.3](#dummy-normal-response)を参照してください。ここでは、手順3の画像で確認したAction Stepsの設定を使います。
 
 3. **着地ガードを確認する。** 同じ重ね方を試し、ジャンプ小Pを押した後、着地に向けてガード方向へ切り替えます。相手のリバーサルが出て、自分が着地してガードできるか確認してください。
 
@@ -1320,7 +1318,7 @@ AGを `Guard` 側で設定することで、`Guard Action Type` を反撃用に�
 
    ![Darkness Illusionの受付が切れた表示。2行目にオレンジのF、3行目に赤いxとHP、Expired 17t](images/command_trainer_expired.png)
 
-   上の画像は受付が切れた例です。2回目の弱Pを待つ間に前を押し（2行目の `F`）、そのまま押し続けました。押し始めしか数えないため、3ステップ目の前が受け付けられず、17tで切れています（3行目の赤い `x`）。**次は2回目の弱Pを押した後に、前を入れ直しましょう。**
+   上の画像は受付が切れた例です。2回目の弱Pを待つ間に前を押し（2行目の `F`）、そのまま押し続けました。押し始めしか数えないため、3ステップ目の前が受け付けられず、17tで切れています（3行目の赤い `x`）。その横の赤い `HP` は、前を待つ間に受け付けられなかった最後の入力です。**次は2回目の弱Pを押した後に、前を入れ直しましょう。**
 
 | 表示 | 意味 |
 |---|---|
@@ -1722,7 +1720,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | 項目 | 確認するもの |
 |---|---|
 | `Show Frame Trap Trainer` | P2のヒット・ガード硬直が解けてから、次の接触までの隙間 |
-| `Show Jump In Trainer` | P2への接触から、自分の着地までの表示フレーム |
+| `Show Jump In Trainer` | P2への接触から、自分の着地までの表示フレーム。既知の不具合として、当てずに着地しただけでも差が記録されることがある |
 | `Show IAD Trainer` | 空中ダッシュの高さ。時間の表示ではない |
 | `Show Dashes Interval` | ダッシュ間の表示フレーム |
 | `Show Dash Time` | ダッシュの継続表示フレーム |
@@ -1880,7 +1878,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 
 > 本書は対象版のソースコードとリリースノートを照合して作成しています。本書の手順そのものを、エミュレーター上で通して確かめたわけではありません。実機で確かめた内容は、リリースノートの各項目に記しています。練習レシピは、特定のキャラクター・組み合わせでの成功を保証するものではありません。
 
-- 文書更新：2026-10-22。エミュレーター上での手順の確認は含みません。
+- 文書更新：2026-10-24。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
 - 対象：v11.7.31。項目名は2026-10-22に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
