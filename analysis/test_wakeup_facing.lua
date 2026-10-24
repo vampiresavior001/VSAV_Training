@@ -89,8 +89,12 @@ want("the cancel's reverse is re-aimed",
 	src:find("local _rv = GA.fast_press_aim(fast_press_rev)", 1, true) ~= nil, true)
 want("the press is re-aimed",
 	src:find("local _pl = GA.fast_press_aim(fast_press_lev)", 1, true) ~= nil, true)
-want("Specified dashes are queued raw",
-	src:find("if (_ga0 == 'reversal' or _ga0 == 'counter') and GA.RAW_DASH_STICK[GA.stick()] then\n\t\t\t_q.raw_dir = true", 1, true) ~= nil, true)
+want("Specified and Action Steps / Patterns dashes are queued raw",
+	src:find("if (_ga0 == 'reversal' or _ga0 == 'counter' or _ga0 == 'sequence')\n\t\t   and GA.RAW_DASH_STICK[GA.stick()] then\n\t\t\t_q.raw_dir = true", 1, true) ~= nil, true)
+-- For Action Steps / Patterns GA.stick() is step one's motion (2026-10-25,
+-- Gallon's wake-up dash on a turn).
+want("  for 'sequence' GA.stick() is step one's motion",
+	src:find("function GA.stick()\n\tif globals.dummy.guard_action == 'sequence' then\n\t\tlocal _m = actionSequenceRunnerModule.first_motion(\"reversal\")", 1, true) ~= nil, true)
 for _, st in ipairs({ "forward dash", "back dash", "forward dash cancel", "back dash cancel" }) do
 	want("  " .. st .. " is one of them", src:find('["' .. st .. '"] = true', 1, true) ~= nil, true)
 end
@@ -136,6 +140,33 @@ want("now: raw - forward, forward twice, back, forward", run(true), "F F F B F")
 B = { [-3] = 0, [-2] = 0, [-1] = 0, [0] = 0, [1] = 0, [7] = 0 }
 want("no turn, before", run(false), "F F F B F")
 want("no turn, now", run(true), "F F F B F")
+
+-- AUTO-FLIP OFF DOES NOT FIX A RUN'S FACING WHILE THE DUMMY IS STILL TURNING
+-- (2026-10-25, Gallon's wake-up dash after Demitri's punch throw: 11 of 11
+-- turning wake-ups gave no dash with Auto-Flip off, 9 of 9 that did not turn
+-- dashed). The side switch came before the run; only one inside it is held.
+want("facing_for_input fixes the facing only once $b agrees with the side",
+	src:find("_press ~= false and not facing_unsettled())", 1, true) ~= nil
+	and src:find("local function facing_unsettled()", 1, true) < src:find("local function facing_for_input(_press)", 1, true), true)
+do
+	local IO = dofile("inputOrientation.lua")
+	local keep = training_settings
+	training_settings = { auto_flip_inputs = false }
+	-- Wake-up turn: the first tap while turning (not fixed), the second after.
+	local id = IO.steps_begin()
+	local f1 = IO.steps_face(0, id, false)     -- tap 1: $b 0 still, turning: press passed as false
+	local f2 = IO.steps_face(1, id, true)      -- tap 2: turned, $b 1: fixed now
+	local f3 = IO.steps_face(0, id, true)      -- later: held at 1
+	want("Auto-Flip off, wake-up turn: tap 1 by the old facing, tap 2 by the new", f1 .. "," .. f2, "0,1")
+	want("  fixed from tap 2 on", f3, 1)
+	-- A switch inside the run: the first press is fixed and held.
+	id = IO.steps_begin()
+	local g1 = IO.steps_face(0, id, true)
+	local g2 = IO.steps_face(1, id, true)
+	want("Auto-Flip off, switch inside the run: held at the first press", g1 .. "," .. g2, "0,0")
+	IO.steps_end()
+	training_settings = keep
+end
 
 print(fails == 0 and "REP_OK" or (fails .. " REP_NG"))
 os.exit(fails == 0 and 0 or 1)

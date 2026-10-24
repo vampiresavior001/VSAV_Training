@@ -8,7 +8,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 **達人の精密な動きを、練習相手に。** 『ヴァンパイア セイヴァー』のFightcade 2／FBNeo用トレーニングモードです。ダミーに相手の動きを正確に再現させ、自分の入力とタイミングを画面で振り返れます。
 
-[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.32** です。
+[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.32.1** です。
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [最初の練習](#first-ag-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md) · [Discord](https://discord.gg/5fwSewN33p)
 

@@ -109,6 +109,7 @@ for _, piece in ipairs({
 	slice("local BUTTON_BITS = {", "\n}\n"),
 	slice("local function bor8(a, b)", "\nend\n"),
 	slice("local function side_flag_now()", "\nend\n"),
+	slice("local function facing_unsettled()", "\nend\n"),
 	slice("function GA.af_live()", "\nend\n"),
 	slice("function GA.af_run_now()", "\nend\n"),
 	slice("local function facing_for_input(_press)", "\nend\n"),
@@ -154,6 +155,24 @@ eq("OFF: 最初の入力の前の入れ替わりは、開始の向きに反映 (
 	select(1, entry_to_bits({})), 0)
 eq("  → 最初に押した入力は、そのときの向き (0x01)", forward_bits(rec, true), 0x01)
 eq("  → 戻っても 0x01", forward_bits(rec, false), 0x01)
+-- OFF and a wake-up that turns the dummy (2026-10-25): the side ($120) has
+-- moved during the knockdown, $b turns on the free tick. A dash (raw) tap
+-- while it is still turning goes by $b and fixes nothing; the one after the
+-- turn fixes the new facing - forward both times, so the dash comes out.
+training_settings.auto_flip_inputs = false
+id = O.steps_begin()
+rec = { orient_run = id, raw_dir = true }
+local function turning(turned)
+	ram[0xFF8810] = 0x200
+	ram[0xFF8410] = 0x300            -- P1 on the right: the side is "left" already
+	ram[0xFF8920] = 1
+	ram[0xFF880B] = turned and 1 or 0
+	player_objects[2].pending_input_sequence = rec
+	return (entry_to_bits({ "forward" }))
+end
+eq("OFF・起き上がりで振り向く: 振り向く前の 1 回目は $b のまま (0x02)", turning(false), 0x02)
+eq("  振り向いた後の 2 回目は新しい向き (0x01)", turning(true), 0x01)
+eq("  その後は新しい向きに固定 (0x01)", turning(true), 0x01)
 O.reset()
 training_settings.auto_flip_inputs = true
 

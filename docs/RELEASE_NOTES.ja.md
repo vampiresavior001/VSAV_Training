@@ -17,6 +17,25 @@ English: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
+## v11.7.32.1
+
+`Auto-Flip Inputs on Side Switch = no` のとき、振り向きながら起き上がると、Action Steps・Action Patternsの最速
+ダッシュが出なかったのを直しました。
+
+### 修正：振り向きながらの起き上がりで、最速ダッシュが出なかった
+
+- 例：デミトリのパンチ投げの後のガロン（キック投げの後は振り向かないので出ていました）
+- 振り向きの途中に入力を始めると、振り向く前の向きで左右が決まり、2回目の前が後ろになっていました
+- 振り向いている途中に入力を始めたときは、振り向き終わってから向きを決めるようにしました。Action Steps・
+  Action Patterns・`Reversal / Counter Attack - Specified` が対象です
+- 実機で確かめました
+
+### マニュアル
+
+- 10章Fの「左右を決めるタイミングと対象」に、振り向きの途中に入力を始めたときのことを書きました
+
+---
+
 ## v11.7.32
 
 ダミーのガードに `After Hit Guard` と `First Guard Only` を追加し、ガードした方向を頭上に出す表示を追加しました。

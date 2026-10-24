@@ -8,7 +8,7 @@ English | [日本語](README.ja.md)
 
 **Make expert-level execution your training partner.** This Vampire Savior training mode for Fightcade 2 / FBNeo makes the dummy reproduce your opponent's actions precisely, then shows your own inputs and timing on screen so you can see what to improve.
 
-This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.32**.
+This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.32.1**.
 
 **[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [First drill](#first-pb-drill) · [English manual](docs/PLAYER_MANUAL.en.md) · [Discord](https://discord.gg/5fwSewN33p)
 

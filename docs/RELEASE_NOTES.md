@@ -17,6 +17,29 @@ See each release for details. Features are listed by their current menu names.
 
 ---
 
+## v11.7.32.1
+
+With `Auto-Flip Inputs on Side Switch = no`, an Action Steps or Action
+Patterns fastest dash now comes out on a wake-up that turns the dummy round.
+
+### Fix: no fastest dash on a wake-up that turns the dummy round
+
+- For example Gallon after Demitri's punch throw (after the kick throw the
+  dummy does not turn, and the dash came out)
+- An input started during the turn locked the orientation the dummy had
+  before it, so the second forward tap became back
+- An input that starts while the dummy is still turning now locks the
+  orientation once the turn is over. This applies to Action Steps, Action
+  Patterns and `Reversal / Counter Attack - Specified`
+- Checked in play
+
+### Manual
+
+- Section 10F, "When the orientation is locked", covers an input that starts
+  during a turn
+
+---
+
 ## v11.7.32
 
 `After Hit Guard` and `First Guard Only` for the dummy's guard, and a display

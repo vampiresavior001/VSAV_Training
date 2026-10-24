@@ -1396,7 +1396,12 @@ function GA.af_queue(_defender, _list, _hold_last)
 	if _q ~= nil and _q ~= _before and _list ~= nil and _list == GA.af_list then
 		_q.orient_run = GA.af_run
 		local _ga0 = globals and globals.dummy and globals.dummy.guard_action
-		if (_ga0 == 'reversal' or _ga0 == 'counter') and GA.RAW_DASH_STICK[GA.stick()] then
+		-- Action Steps / Patterns too ('sequence': GA.stick() is step one's
+		-- motion). Left out, their wake-up dash on a turn went in by $120 and
+		-- did not come out (user, 2026-10-25, Gallon; logs v11.7.32: 8 of 8
+		-- turning wake-ups failed, the ones after Demon Cradle dashed).
+		if (_ga0 == 'reversal' or _ga0 == 'counter' or _ga0 == 'sequence')
+		   and GA.RAW_DASH_STICK[GA.stick()] then
 			_q.raw_dir = true
 		end
 		-- A SPECIFIED FIRST RUN HAS JUST GONE INTO THE SLOT: WITH THE LOOP ROW
@@ -2245,8 +2250,21 @@ end
 
 -- _press: false when resolving an entry that presses nothing (a neutral).
 -- The first resolution that presses something fixes the run's facing.
+--
+-- NOT FIXED WHILE THE DUMMY IS STILL TURNING (user, 2026-10-25: Gallon's
+-- wake-up dash after Demitri's punch throw, not after the kick throw - "ダウン
+-- 時の頭の向き"). A wake-up that turns the dummy keeps $b the way it lay until
+-- the free tick, while the side ($120) has moved already. Auto-Flip off fixed
+-- the run's facing at the first tap, before the turn, so the second went in by
+-- the old facing - back by the new one: 11 of 11 turning wake-ups gave no dash,
+-- 9 of 9 that did not turn dashed (logs v11.7.32, v11.7.32_3). That side
+-- switch happened before the run, not in it, so the facing is fixed only once
+-- $b agrees with the side; until then the live one is used. A switch in the
+-- middle of a run - what Auto-Flip off is for - comes after the first press
+-- was fixed and is held as before.
 local function facing_for_input(_press)
-	return actionSequenceRunnerModule.orientation.steps_face(GA.af_live(), GA.af_run_now(), _press ~= false)
+	return actionSequenceRunnerModule.orientation.steps_face(GA.af_live(), GA.af_run_now(),
+		_press ~= false and not facing_unsettled())
 end
 
 -- THE LEVER AT THE MOMENT THE BUTTON GOES IN.
