@@ -409,6 +409,53 @@ function collisionbox(adr,playerx,playery,color,flip)
 end
 
 -- Box data from Jed's VSAV script
+-- SHOW BLOCKING DIRECTION (Display tab; user, 2026-10-24: the same as the
+-- 3rd Strike training mode's "Display Blocking Direction", then "やはりガードした
+-- 方向を出す", up a little longer). When a guard lands on either player, the
+-- lever that player held is kept - added only when it differs from the last
+-- one kept - and drawn over their head as the input viewer's arrow, stacked,
+-- each for BLOCK_DIR_SHOW frames (3rd: 90). The lever is the one sent on the
+-- frame before (globals._input: this runs before the frame's own is built),
+-- so the dummy's guard, a playback and the player's own pad all count; Auto
+-- Guard holds no lever and shows none. A guard lands: $05 = 2 with $54 = 0xFF,
+-- or $158 (the GC window, 14 at contact, one less each Tick) up again within a
+-- string.
+local BLOCK_DIR_SHOW = 120
+local block_dir = {
+    [0xFF8400] = { pre = "P1 ", was = false, g158 = 0, dirs = {} },
+    [0xFF8800] = { pre = "P2 ", was = false, g158 = 0, dirs = {} },
+}
+local function block_dir_update(me)
+    local b = block_dir[me]
+    local blocking = memory.readbyte(me + 0x05) == 2 and memory.readbyte(me + 0x54) == 0xFF
+    local g158 = memory.readbyte(me + 0x158)
+    local new = blocking and (not b.was or g158 > b.g158)
+    b.was, b.g158 = blocking, g158
+    local keys = globals ~= nil and globals._input or nil
+    if not new or keys == nil then return end
+    local l, r = keys[b.pre .. "Left"] == true, keys[b.pre .. "Right"] == true
+    local d, u = keys[b.pre .. "Down"] == true, keys[b.pre .. "Up"] == true
+    local col = l and 1 or (r and 3 or 2)
+    local dir = d and col or (u and col + 6 or col + 3)
+    if dir == 5 then return end
+    local last = b.dirs[#b.dirs]
+    if last ~= nil and last.dir == dir then return end
+    b.dirs[#b.dirs + 1] = { dir = dir, at = emu.framecount() }
+end
+local function draw_block_dir(me, coords)
+    local b = block_dir[me]
+    local now = emu.framecount()
+    local i = 1
+    while i <= #b.dirs do
+        local age = now - b.dirs[i].at
+        if age < 0 or age > BLOCK_DIR_SHOW then table.remove(b.dirs, i) else i = i + 1 end
+    end
+    if img_dir == nil then return end
+    for k, e in ipairs(b.dirs) do
+        gui.image(coords.base.x - 5, coords.base.y - 100 - (#b.dirs - k) * 10, img_dir[e.dir])
+    end
+end
+
 function getHeadBoxTopXY(adr)
 
     local CamADR = 0xFF8280
@@ -720,6 +767,10 @@ local timerModule = {
       draw_mash_meter( 0xFF8400, p1_coords)
       draw_mash_meter( 0xFF8800, p2_coords)
     end
+    if globals.options.show_blocking_direction then
+      draw_block_dir( 0xFF8400, p1_coords)
+      draw_block_dir( 0xFF8800, p2_coords)
+    end
     if globals.options.show_invuln_timer then
       draw_invuln_timer( 0xFF8400, p1_coords)
       draw_invuln_timer( 0xFF8800, p2_coords)
@@ -755,7 +806,17 @@ local timerModule = {
     pb_publish()
     om_publish()
   end,
+  -- For analysis/test_guard_hits.lua.
+  ["_block_dir_update"] = function(me) block_dir_update(me) end,
+  ["_block_dirs"] = function(me) return block_dir[me].dirs end,
+  ["_block_dir_reset"] = function()
+    for _, b in pairs(block_dir) do b.was, b.g158, b.dirs = false, 0, {} end
+  end,
   ["registerBefore"] = function()
+    if globals ~= nil and globals.options ~= nil and globals.options.show_blocking_direction then
+      block_dir_update(0xFF8400)
+      block_dir_update(0xFF8800)
+    end
     -- SUBSCRIBED ONCE, LAZILY. This module is required before globals.truth
     -- exists, so it cannot be done at load; registerBefore runs every frame
     -- and the flag keeps it to one subscription.

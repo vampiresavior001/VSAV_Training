@@ -17,6 +17,46 @@ See each release for details. Features are listed by their current menu names.
 
 ---
 
+## v11.7.32
+
+`After Hit Guard` and `First Guard Only` for the dummy's guard, and a display
+of the direction a player blocked in. `All Guard` no longer misses some jump
+attacks that cross over.
+
+### New: block only after the first hit, or only the first hit
+
+- Two new `Dummy > Guard` values. Both pick standing or crouching for each
+  attack, as `All Guard` does
+- `After Hit Guard`: takes the first hit, then blocks. A gap in a combo gets
+  blocked, so you can check whether it really connects
+- `First Guard Only`: blocks only the first attack, then takes the rest
+- They start over 12 Ticks after the dummy can act again (waiting while the
+  attacker is still in an attack)
+- Checked in play
+
+### New: the blocking direction over a player's head
+
+- `Display > Show Blocking Direction` shows, as an arrow over the head of the
+  player who blocked, the lever direction they held. For P1 and P2 both
+- A new arrow stacks on top when the direction changes; each disappears after
+  about two seconds. `Auto Guard` holds no lever and shows none
+- Checked in play
+
+### Fix: All Guard could miss a jump attack that crossed over
+
+- When the dummy turned round right after the attacker jumped over it, the
+  back it held became forward and it did not block
+- The dummy's back is now re-aimed every Tick by its facing. The same goes
+  for `Stand Block`, `Push Block` and the two new values (with the dummy on P2)
+- Checked in play
+
+### Manual
+
+- Section 4.1 covers `After Hit Guard` and `First Guard Only`; 12.1 covers
+  `Show Blocking Direction`
+
+---
+
 ## v11.7.31
 
 P1 can now guard while you record. During your own playback the dummy no

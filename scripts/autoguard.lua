@@ -282,6 +282,61 @@ local block_started_frame = nil
 local is_blocking = false
 local current_block_chance = nil
 
+-- GUARD HITS (Dummy > Guard = After Hit Guard / First Guard Only; user,
+-- 2026-10-24: the same as the 3rd Strike training mode 3rd_training_lua, whose
+-- Blocking row has "after first hit" and "first hit").
+--   After Hit Guard   does not guard until an attack has connected, then
+--                     guards - a gap in what was meant to be a combo is guarded
+--   First Guard Only  guards the first attack that connects, then not
+-- Both guard as All Guard does (guard >= 4: heights included).
+-- What is counted is a connection, guarded or not - 3rd's received_connection.
+-- Counting hits only, First Hit guarded the first attack and so was never hit:
+-- it guarded for good (user, 2026-10-24: "ずっとガードされる").
+-- THE COUNT STARTS OVER GUARD_HITS_IDLE TICKS AFTER THE DUMMY CAN ACT AGAIN
+-- (user, 2026-10-24: "リバーサルフレームの次から12tickにすべきでは。歩き続けて近寄っても
+-- 前の状況をすぎてる"). Counted from its reversal Tick - $05 back to 0 - for
+-- as long as it neither is hit or blocks again nor attacks itself ($105); it
+-- starts over then unless the attacker is in an attack ($105) at that moment,
+-- which would still be the same string. Walking, jumping, standing: counted.
+-- The 3rd Strike training mode does the same with 10 frames of the dummy
+-- idle, at a moment the player is idle too - walking is idle there. Counted
+-- before this only while both stood still, so walking up held it.
+-- Connected: $05 non-zero - hit or block stun, a knockdown, a throw.
+local GUARD_HITS_IDLE = 12
+local hit_taken = false             -- an attack has connected
+local idle_ticks, idle_tick_at = 0, nil
+-- Every frame: the Ticks since the last call count when the dummy is free and
+-- not attacking now (idle_tick_at is the Tick of that last call).
+local function guard_hits_update(me, foe)
+    local tick = memory.readbyte(0xFF8081)
+    if memory.readbyte(me + 0x05) ~= 0 then
+        hit_taken = true
+        idle_ticks = 0
+    elseif memory.readbyte(me + 0x105) ~= 0 then
+        idle_ticks = 0
+    else
+        if idle_tick_at ~= nil then idle_ticks = idle_ticks + (tick - idle_tick_at) % 256 end
+        if idle_ticks >= GUARD_HITS_IDLE and memory.readbyte(foe + 0x105) == 0 then
+            hit_taken = false
+        end
+    end
+    idle_tick_at = tick
+end
+
+-- nil: another Guard, the Random Guard % roll decides. true / false: whether
+-- After Hit Guard (8) or First Guard Only (9) lets the dummy guard now.
+local GH_AFTER, GH_FIRST = 8, 9
+local function guard_hits_mode()
+    local v = globals.options.guard
+    return v == GH_AFTER or v == GH_FIRST
+end
+local function guard_hits_allow()
+    local v = globals.options.guard
+    if v == GH_AFTER then return hit_taken end
+    if v == GH_FIRST then return not hit_taken end
+    return nil
+end
+
 function dummy_guard(cur_keys,player_objects)
     -- A per-frame get_block_chance() sat here, assigned to a local nothing
     -- ever read. The real roll is current_block_chance below, latched once per
@@ -310,13 +365,15 @@ function dummy_guard(cur_keys,player_objects)
     -- doing the blocking, so it is A6 in the routine this ports.
     local me   = globals.controlling_p1 and 0xFF8800 or 0xFF8400
     local foe  = globals.controlling_p1 and 0xFF8400 or 0xFF8800
+    if guard_hits_mode() then guard_hits_update(me, foe) end
+    local gh_allow = guard_hits_allow()
     prox_dx = math.abs(p1_x_pos - p2_x_pos)
     local prox = proximity_guard(me, foe)
     local close_enough
     if prox == nil then
         -- Nothing readable this frame: the old behaviour, unchanged, including
         -- its unconditional hold.
-        if proj ~= 0 or p1_initiating_proj
+        if gh_allow ~= false and (proj ~= 0 or p1_initiating_proj)
            or p1_supers_that_activate_proxy_block_check then
             prox_why = "early"
             cur_keys[ away_btn ] = true
@@ -352,7 +409,10 @@ function dummy_guard(cur_keys,player_objects)
         current_block_chance = nil
         return cur_keys
     end
-    if current_block_chance == false then
+    -- After Hit Guard / First Guard Only decide instead of the roll.
+    local chance = current_block_chance
+    if gh_allow ~= nil then chance = gh_allow end
+    if chance == false then
         return cur_keys
     end
 
@@ -374,7 +434,7 @@ function dummy_guard(cur_keys,player_objects)
     -- v246 also moved the press into guardCancel.lua's tick hook. Removed: the
     -- press does not need tick precision, it needs to still be held when the
     -- thing arrives.
-    if current_block_chance == true and attack_flag and close_enough then
+    if chance == true and attack_flag and close_enough then
         cur_keys[ away_btn ] = true
         -- All Guard, and the Push Block entries that guard like it: the height
         -- the hit needs, over the Pose. A crouching Pose stands for an
@@ -441,6 +501,9 @@ local function p1_guard_while_recording(recording)
 end
 
 autoguardModule = {
+    -- For analysis/test_guard_hits.lua.
+    ["_gh_update"] = function(me, foe) guard_hits_update(me, foe) end,
+    ["_gh_allow"] = function() return guard_hits_allow() end,
     ["p1_guard_while_recording"] = p1_guard_while_recording,
     ["after_load"] = function() p1_guard_saved = nil end,
     ["registerBefore"] = function(cur_keys, player_objects)
@@ -470,6 +533,20 @@ autoguardModule = {
                and (cur_keys[_away] == true
                     or (_r ~= nil and _r[_away] == true)) then _held = true end
             ag_record(prox_why, _held, nil)
+            -- BACK, RE-AIMED EACH TICK (guardCancel.lua GA.ag_reaim; user,
+            -- 2026-10-25, logs v11.7.31_4). The Back above is the dummy's back
+            -- by its facing as this frame began. A jump-in that crosses it
+            -- turns it round inside the frame - $0B flipped one Tick before
+            -- the hit in both misses - and that same lever is then forward:
+            -- $125 = 02 on the hit Tick, hit. So the frame's decision is left
+            -- here, and the Tick hook writes Back by the facing of each Tick.
+            -- P2 only: the hook is P2's input word. The frame it was made on
+            -- goes with it, so a frame that does not run this leaves none.
+            if _held and globals.controlling_p1 then
+                globals.ag_back = { down = cur_keys["P2 Down"] == true, f = emu.framecount() }
+            else
+                globals.ag_back = nil
+            end
             ag_flush()
             return _r
         else

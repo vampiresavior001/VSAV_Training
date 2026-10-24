@@ -17,7 +17,8 @@ local actionSequenceRunnerModule = require './scripts/actionSequenceRunner'
 -- mark_write diagnostics came back empty. Read it live instead: the walk-back
 -- is visible on screen at the same moment as the reason for it.
 local function draw_ag_why()
-	if globals.options.guard ~= 2 and globals.options.guard ~= 4 then return end
+	-- After Hit Guard / First Guard Only (8, 9) guard as All Guard does.
+	if globals.options.guard ~= 2 and globals.options.guard ~= 4 and globals.options.guard < 8 then return end
 	-- A debugging readout, so it rides on the logger checkbox rather than
 	-- showing up for everyone who turns All Guard on.
 	if debugKnockdownModule == nil or debugKnockdownModule.enabled == nil then return end

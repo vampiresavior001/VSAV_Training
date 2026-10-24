@@ -94,6 +94,9 @@ local default_training_settings = {
   -- Recording P1 Guard (autoguard.lua): 1 Off, 2 Auto Guard (user,
   -- 2026-10-22). Off by default.
   p1_guard_while_recording = 1,
+  -- Show Blocking Direction (Display; timers.lua). Off by default (user,
+  -- 2026-10-24). Guard 8 / 9 are After Hit Guard / First Guard Only (autoguard.lua).
+  show_blocking_direction = false,
   pb_type_rec = 1,   -- 1 is None; 0 was out of range for the list
   anak_projectile = 1,
   lei_lei_stun_item = 0,

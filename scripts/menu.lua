@@ -998,7 +998,13 @@ guard = {
     -- on three values.
     "Push Block (All Light)",
     "Push Block (All Medium)",
-    "Push Block (All Heavy)"
+    "Push Block (All Heavy)",
+    -- AFTER HIT GUARD / FIRST GUARD ONLY (autoguard.lua; user, 2026-10-24:
+    -- the names, and "ガード行に入れるべき" - how the dummy guards, not a roll).
+    -- Both guard as All Guard does, heights included. The 3rd Strike training
+    -- mode has them as "after first hit" / "first hit" on its Blocking row.
+    "After Hit Guard",
+    "First Guard Only"
 }
 input_event_type = {
   "None",
@@ -1319,7 +1325,8 @@ local p2_block_chance_menu_item = list_menu_item("Random Guard %", training_sett
 -- guard is 0" (user, 2026-09-12). Hiding the row did not remove the
 -- dependency, it only hid it.
 p2_block_chance_menu_item.is_disabled = function()
-	return training_settings.guard ~= 2 and training_settings.guard < 4
+	-- After Hit Guard / First Guard Only (8, 9) guard by the hit, not a roll.
+	return (training_settings.guard ~= 2 and training_settings.guard < 4) or training_settings.guard >= 8
 end
 
 -- A 0% THAT STOPS WHAT ANOTHER ROW PICKED IS SAID, NOT CHANGED
@@ -2067,7 +2074,19 @@ return {
             list_menu_item("Random Throw Tech %", training_settings, "p2_throw_tech", p2_throw_tech_chance, 5, "How often the dummy escapes a throw.\nRolled once per throw, not per frame - a roll every frame would come out as\n100% whatever this said, which is what Random Guard Action % used to do.\n0% leaves the throw alone."),
             -- AUTO MASH (grabMashing.lua, user 2026-10-19; was Grab Mashing).
             list_menu_item("Auto Mash", training_settings, "grab_mashing", { "Off", "Normal", "Fast", "Fastest" }, 1, "Mashes while grabbing, grabbed, or in a special hit reaction that mashing\nshortens: PPP + up and KKK + down by turns, never forward or back, so it\ndoes not tech the throw. Normal every 7 Ticks, Fast every 4, Fastest every\nTick: the most the game counts, not the fastest escape (random).\nNot while you control P2, a recording plays or records, in the wizard, or in\nthe menu. Show Mash Meter on the Display tab works even with this Off."),
-            with_warning(list_menu_item("Guard", training_settings, "guard", guard,1, "Push Block (All ...) guards like All Guard and pushes, at that strength,\nwithout needing Guard Action Type - so that stays free for what you test next.\nAuto Guard writes the game's own guard flag and blocks even unblockable setups.\nStand Block holds Back while an attack is in range, by the game's own proximity\ncheck - projectiles too. All Guard also picks the height each hit needs: down\nfor lows, standing for overheads and jump attacks, the Pose for everything else."), block_rate_warning),
+            with_warning(list_menu_item("Guard", training_settings, "guard", guard,1, {
+              -- One line set per value (2026-10-24): with After Hit Guard and First
+              -- Guard Only the one text for all of them ran past the help box.
+              "The dummy does not guard.",
+              "Stand Block holds Back while an attack is in range, by the game's own\nproximity check - projectiles too. Standing only.",
+              "Auto Guard writes the game's own guard flag and blocks even unblockable\nsetups. Not throws.",
+              "All Guard holds Back while an attack is in range and picks the height each\nhit needs: down for lows, standing for overheads and jump attacks, the Pose\nfor everything else.",
+              "Push Block (All ...) guards like All Guard and pushes, at that strength,\nwithout needing Guard Action Type - so that stays free for what you test next.",
+              "Push Block (All ...) guards like All Guard and pushes, at that strength,\nwithout needing Guard Action Type - so that stays free for what you test next.",
+              "Push Block (All ...) guards like All Guard and pushes, at that strength,\nwithout needing Guard Action Type - so that stays free for what you test next.",
+              "After Hit Guard takes the first hit, then guards as All Guard does - a gap in\na combo is guarded. It starts over 12 Ticks after the dummy can act (later\nwhile the attacker is still in an attack).",
+              "First Guard Only guards the first attack as All Guard does, then takes the\nrest. It starts over 12 Ticks after the dummy can act (later while the\nattacker is still in an attack).",
+            }), block_rate_warning),
             -- integer_menu_item("# Guard Frames", training_settings, "p2_refill_timer", 0, 20, false, 0, nil, "This timer controls when the life meter will be refilled.\nOccurs this many seconds after being hit"),
 
             indent(1, p2_block_chance_menu_item),
@@ -2190,6 +2209,7 @@ return {
         child_of("display_frame_meter", checkbox_menu_item("Show Throw Invulnerability", training_settings, "fm_no_throw", true, "Marks the Ticks a character cannot be thrown ($143): red and white stripes on\nthe lower half of the tile, over its own colour. Display only - the numbers\ndo not change, and the meter keeps recording while it lasts either way.\nA fully invulnerable Tick shows solid white instead; neither while hit or down.")),
         child_of("display_frame_meter", checkbox_menu_item("Include Jumps / Dashes", training_settings, "fm_movement_data", true, "Puts jumps and dashes on the Frame Meter, as light blue tiles. Off: attacks and\nreactions only. Walking is not shown either way.")),
         child_of("display_frame_meter", checkbox_menu_item("Show P1 Inputs", training_settings, "fm_input_p1", false, "Draws YOUR inputs over the P1 row of the Frame Meter, one icon per change.\nHitstop Ticks and the AG window are shown with them: inputs are taken during\nhitstop, and this is for seeing when they went in. A gray top marks a Tick a\ncharacter spent frozen - it is not counted, so the numbers stay the same.")),
+        checkbox_menu_item("Show Blocking Direction", training_settings, "show_blocking_direction", false, "Over a player's head, the lever they held when a guard landed - added when it\ndiffers from the last, stacked, each up for about two seconds. Either player.\nAuto Guard holds no lever and shows none."),
         checkbox_menu_item("Show Mash Meter", training_settings, "show_mash_timer", false, "The remaining mash count over the character who is grabbed (Mash Escape)\nor in a hit that mashing shortens (Mash Recovery). A fixed-width cyan bar\nand the count the game is using - not seconds left. Works with Auto Mash Off.\nMoved here from Analysis; the old setting is kept."),
         reset_tab_item("Display"),
       }

@@ -2503,6 +2503,23 @@ local function assert_input_bits(_lev, _btn)
 
 end
 
+-- ALL GUARD'S BACK BY THIS TICK'S FACING (autoguard.lua leaves globals.ag_back;
+-- user, 2026-10-25). The guard's Back went in once a frame by the facing the
+-- frame began with; a jump-in that turned the dummy round inside the frame met
+-- that lever as forward, and was not guarded (logs v11.7.31_4: $0B 01 -> 00
+-- one Tick before the hit, $125 = 02 on it). Here, every Tick, Back is the
+-- raw bit the facing swap at 0x022194 turns into back: bit0 while $0B = 0,
+-- bit1 while set (as entry_to_bits). Down is kept as the guard chose it.
+-- Called first in the Tick hook, so a reversal's own input that Tick still
+-- goes in after it and wins. Only a decision from this frame or the one
+-- before counts: a frame that ran no guard (a playback, the menu) leaves none.
+function GA.ag_reaim()
+	local _g = globals ~= nil and globals.ag_back or nil
+	if _g == nil or emu.framecount() - (_g.f or 0) > 1 then return end
+	local _back = (memory.readbyte(0xFF880B) == 0) and 0x01 or 0x02
+	assert_input_bits(_back + (_g.down and 0x04 or 0), 0)
+end
+
 memory.registerwrite(P2_INPUT_WORD, 2, function()
 	if inject_guard then return end
 	-- TEMPORARY diagnostic: prove the hook fires at all, and that it is not
@@ -4723,6 +4740,8 @@ memory.registerexec(0x02211A, function()
 	-- per-tick state adds a call at the top of this hook rather than a hook of
 	-- its own, and makes it a global so it costs no upvalue here.
 	kd_capture_start_07()
+	-- All Guard's Back by this Tick's facing (GA.ag_reaim, above).
+	GA.ag_reaim()
 
 	-- Hit counter, maintained here so it is per TICK and cannot miss a short
 	-- freeze the way a once-per-frame check would.

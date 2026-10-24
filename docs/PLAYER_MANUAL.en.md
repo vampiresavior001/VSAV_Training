@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.31 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.32 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -638,8 +638,12 @@ Ordinary throws and ordinary hitstun are not covered. In special hit reactions i
 | `All Guard` | Crouches for lows, stands for overheads/jump attacks and follows `Pose` for attacks blockable either way |
 | `Auto Guard` | Directly uses the game's guard flag, including in normally unblockable situations. Do not use it to validate unblockables |
 | `Push Block (All Light / Medium / Heavy)` | Blocks like `All Guard` and performs a push block of the selected strength |
+| `After Hit Guard` | Takes the first hit, then blocks like `All Guard`. A gap in a combo gets blocked, so you can check whether it really connects |
+| `First Guard Only` | Blocks only the first attack like `All Guard`, then takes the rest |
 
 For consistent testing with `Stand Block`, `All Guard` or `Push Block (All …)`, set `Random Guard % = 100%`. PB selected under `Guard` can be combined with the counter-action settings below.
+
+`After Hit Guard` and `First Guard Only` count an attack that connects, blocked or not. They start over 12 Ticks after the dummy can act again and treat the next attack as the first one (waiting while the attacker is still in an attack). While either is selected, the `Random Guard %` row is hidden.
 
 **A probability setting turns orange when 0% prevents the selected action from running.** While `Guard` is `Stand Block`, `All Guard` or `Push Block (All …)` and `Random Guard %` is `0%`, the `Random Guard %` row turns orange. With the cursor on `Guard` or `Random Guard %`, the right side of the bottom line reads `Random Guard % is 0%: the dummy never blocks.` The value is not changed for you, because 0% can be intentional.
 
@@ -1774,6 +1778,7 @@ Enable only the readouts you need under `Display`.
 | `Show P2 Inputs` | Dummy inputs on the right |
 | `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Enabling it displays three additional settings beneath it ([11.4](#frame-meter)) |
 | `Show Mash Meter` | The remaining mash count over a grabbed character, or one in a hit that mashing shortens ([4.1](#grab-mashing)) |
+| `Show Blocking Direction` | The lever direction a player held when they blocked, as an arrow over that player's head (P1 or P2). A new arrow stacks on top when the direction changes; each disappears after about two seconds. `Auto Guard` holds no lever and shows none |
 
 Child options are hidden when their parent is OFF. The GC input bar requires `Show Scrolling Input`; some other readouts require `HUD (Life / Meter)`.
 
@@ -1883,7 +1888,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-24. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.31. On 2026-10-22 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.32. On 2026-10-25 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).
