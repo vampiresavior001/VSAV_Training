@@ -10,7 +10,7 @@ English | [日本語](README.ja.md)
 
 This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). This README covers **v11.7.31**.
 
-**[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [First drill](#first-pb-drill) · [English manual](docs/PLAYER_MANUAL.en.md)
+**[Download the latest release](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [Installation](#windows-installation) · [First drill](#first-pb-drill) · [English manual](docs/PLAYER_MANUAL.en.md) · [Discord](https://discord.gg/5fwSewN33p)
 
 ## What this training mode does
 
@@ -141,6 +141,7 @@ Update the separate training installation. The downloaded files may include reco
 - [Release notes](docs/RELEASE_NOTES.md) (starting with a summary of recent highlights)
 - [日本語リリースノート](docs/RELEASE_NOTES.ja.md)
 - [This fork's Issues](https://github.com/vampiresavior001/VSAV_Training/issues)
+- [Discord](https://discord.gg/5fwSewN33p): questions, bug reports and feature requests are welcome here too
 
 When reporting a problem, include the version, P1/P2 characters, which character is on each side, screenshots of your settings and steps to reproduce the problem. Confirm that `Disabled` is selected under `Video > Runahead`, and mention any red Runahead warning in your report.
 
@@ -149,6 +150,8 @@ When reporting a problem, include the version, P1/P2 characters, which character
 This project is based on [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Training/tree/fc2). The original already includes recording, reversal settings, a PB counter and a GC-window display. This fork builds on them with more precise action reproduction and more detailed feedback; see the [feature comparison](docs/PLAYER_MANUAL.en.md#fork-comparison). Thanks to the creators and contributors of the original training mode and its scripts, and to the VSAV community.
 
 The Frame Meter comes from tirsod's [VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter).
+
+Reverse engineering of the game (disassembling the ROM) was guided by VMP_MBD's [CPS2 research notes](https://publish.obsidian.md/mbd/Projects/CPS2/CPS2+Projects), which include notes on Vampire Savior. The earliest-possible reversals and this fork's other improvements grew out of analysis that started from these notes. Many thanks. Tick Data counts frames the same way as the [Darkstalkers Frame Data](http://darkstalkers.web.fc2.com/savior/savior.html) tables.
 
 <details>
 <summary>Credits from the original README</summary>

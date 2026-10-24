@@ -10,7 +10,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 [VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.31** です。
 
-**[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [最初の練習](#first-ag-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md)
+**[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [最初の練習](#first-ag-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md) · [Discord](https://discord.gg/5fwSewN33p)
 
 ## このトレーニングモードでできること
 
@@ -140,6 +140,7 @@ FBNeoを終了する前に編集内容を保存し、次のファイルをバッ
 - [日本語リリースノート](docs/RELEASE_NOTES.ja.md)（冒頭に最近の主な追加機能のまとめがあります）
 - [Release notes (English)](docs/RELEASE_NOTES.md)
 - [このフォークのIssues](https://github.com/vampiresavior001/VSAV_Training/issues)
+- [Discord](https://discord.gg/5fwSewN33p)：質問・不具合の報告・要望はこちらでも受け付けています
 
 不具合を報告する際は、バージョン、P1／P2キャラクター、左右配置、設定画面、再現手順を添えてください。`Video > Runahead`で`Disabled`を確認し、赤いRunaheadの警告が出た場合はその旨も添えてください。
 
@@ -148,6 +149,8 @@ FBNeoを終了する前に編集内容を保存し、次のファイルをバッ
 本プロジェクトは、[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基にしています。フォーク元にも記録・反撃設定・AGカウンター・GC受付表示があります。本フォークはそれらを土台に、動作再現の精度と振り返りの詳しさを拡張しています。[機能比較](docs/PLAYER_MANUAL.ja.md#fork-comparison)も参照してください。基盤となるトレーニングモードと、各スクリプトを作成・改善してきた貢献者、VSAVコミュニティに感謝します。
 
 Frame Meterは、tirsod氏の[VSAV_FrameMeter](https://github.com/tirsod/VSAV_FrameMeter)から取り込みました。
+
+ゲーム内部の解析（ROMの逆アセンブル）は、VMP_MBD氏の[CPS2の解析資料](https://publish.obsidian.md/mbd/Projects/CPS2/CPS2+Projects)（ヴァンパイア セイヴァーの解析ノートを含む）を道しるべに進めました。最速リバーサルをはじめとする本フォークの改良は、この資料を手がかりにした解析から生まれました。深く感謝します。Tick Dataの数え方は、[Darkstalkers Frame Data（ヴァンパイアセイヴァー データ）](http://darkstalkers.web.fc2.com/savior/savior.html)の技表に合わせています。
 
 <details>
 <summary>フォーク元READMEのクレジット</summary>
