@@ -20,7 +20,8 @@ See each release for details. Features are listed by their current menu names.
 ## v11.7.31
 
 P1 can now guard while you record. During your own playback the dummy no
-longer counters, and a Recording counter starts over when the dummy is hit.
+longer counters, and a Recording counter starts over after the dummy is hit
+or blocks.
 
 ### New: P1 guards while you record
 
@@ -43,13 +44,14 @@ longer counters, and a Recording counter starts over when the dummy is hit.
   playback brings it back. Guarding is unchanged
 - Checked in play
 
-### Change: a Recording counter starts over when it is hit
+### Change: a Recording counter starts over after a hit or block
 
 - When the dummy was hit during `Reversal - Recording`, `Counter Attack -
   Recording` or `PB Recording`, the rest of its inputs were lost in hit stun and
   no further counter came out
-- The playback now stops when the dummy is hit, and the recording restarts from
-  the beginning on the next trigger, as Action Steps do
+- The playback now stops when the dummy is hit or blocks, and the recording
+  restarts from the beginning when that stun ends (the next trigger), as Action
+  Steps do
 - Checked in play
 
 ### Manual
