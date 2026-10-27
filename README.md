@@ -42,6 +42,7 @@ To have the dummy perform a single move, [Specified](docs/PLAYER_MANUAL.en.md#du
 |---|---|
 | **Check wake-up pressure** | [Meaty Timing](docs/PLAYER_MANUAL.en.md#meaty-timing) shows how many Ticks after the opponent's reversal Tick your attack connected, and on which of its active Ticks |
 | **See move data in numbers and colored bars** | [Tick Data](docs/PLAYER_MANUAL.en.md#tick-data) measures startup, active time, recovery and advantage in internal frames; [Frame Meter](docs/PLAYER_MANUAL.en.md#frame-meter) lays out both players' states, one tile per Tick |
+| **Check whether a combo connects** | With `Dummy > Guard` set to [After Hit Guard](docs/PLAYER_MANUAL.en.md#dummy-guard-mode), the dummy blocks from the second hit on, so any gap in the combo gets blocked |
 | **Check chain and link timing** | [Chain Trainer](docs/PLAYER_MANUAL.en.md#chain-trainer) compares when you pressed with the input window |
 | **Retry the same situation** | [Save and restore a state](docs/PLAYER_MANUAL.en.md#save-state) with `Volume Up` (an FBNeo input entry) or the menu. Opening the menu pauses the game, so you can save the paused scene too |
 

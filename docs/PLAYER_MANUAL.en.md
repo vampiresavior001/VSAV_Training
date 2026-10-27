@@ -100,7 +100,7 @@ The distinction is **the precision of reproduced actions and the detail availabl
 
 | Goal | Feature | Where to start |
 |---|---|---|
-| Test combos and pressure strings | Dummy stance, blocking and health recovery | `Dummy`, `Gauge` |
+| Test combos and pressure strings | Dummy stance, blocking and health recovery; `Guard = After Hit Guard` to check that a combo connects | `Dummy`, `Gauge`, [4.1](#dummy-guard-mode) |
 | Check whether chains and links connected, and their windows | Chain Trainer | [11.7](#chain-trainer) |
 | Check the timing of wake-up pressure | Dummy counter actions, Meaty Timing | [Wake-up pressure drill](#wakeup-pressure-drill) |
 | Measure how long a setup takes | Action Timeline | [11.5](#action-timeline) |
@@ -631,6 +631,8 @@ Ordinary throws and ordinary hitstun are not covered. In special hit reactions i
 
 </details>
 
+<a id="dummy-guard-mode"></a>
+
 | `Guard` value | Behavior and use |
 |---|---|
 | `None` | No automatic guard. A backward `Pose` can still cause blocking through that held input |
@@ -643,7 +645,7 @@ Ordinary throws and ordinary hitstun are not covered. In special hit reactions i
 
 For consistent testing with `Stand Block`, `All Guard` or `Push Block (All …)`, set `Random Guard % = 100%`. PB selected under `Guard` can be combined with the counter-action settings below.
 
-`After Hit Guard` and `First Guard Only` count an attack that connects, blocked or not. They start over 12 Ticks after the dummy can act again and treat the next attack as the first one (waiting while the attacker is still in an attack). While either is selected, the `Random Guard %` row is hidden.
+`After Hit Guard` and `First Guard Only` count an attack that connects, blocked or not. They start over 12 Ticks after the dummy can act again and treat the next attack as the first one (the dummy's own attacks do not count toward them, and they wait while the attacker is still in an attack). While either is selected, the `Random Guard %` row is hidden.
 
 **A probability setting turns orange when 0% prevents the selected action from running.** While `Guard` is `Stand Block`, `All Guard` or `Push Block (All …)` and `Random Guard %` is `0%`, the `Random Guard %` row turns orange. With the cursor on `Guard` or `Random Guard %`, the right side of the bottom line reads `Random Guard % is 0%: the dummy never blocks.` The value is not changed for you, because 0% can be intentional.
 
@@ -1778,8 +1780,8 @@ Enable only the readouts you need under `Display`.
 | `Hide Negative Edge Inputs` | Omits columns with no new input; does not remove dedicated release markers |
 | `Show P2 Inputs` | Dummy inputs on the right |
 | `Frame Meter` | Both players' states, one tile per Tick, along the bottom. Enabling it displays three additional settings beneath it ([11.4](#frame-meter)) |
+| `Show Blocking Direction` | The lever direction a player held when they blocked, as an arrow over that player's head (P1 or P2). A new arrow stacks on top when the direction changes; each disappears after about two seconds. `Auto Guard` holds no lever and shows none, and neither does a guard with the lever in neutral (such as during guard-pose persistence after you let go of back) |
 | `Show Mash Meter` | The remaining mash count over a grabbed character, or one in a hit that mashing shortens ([4.1](#grab-mashing)) |
-| `Show Blocking Direction` | The lever direction a player held when they blocked, as an arrow over that player's head (P1 or P2). A new arrow stacks on top when the direction changes; each disappears after about two seconds. `Auto Guard` holds no lever and shows none |
 
 Child options are hidden when their parent is OFF. The GC input bar requires `Show Scrolling Input`; some other readouts require `HUD (Life / Meter)`.
 
@@ -1886,7 +1888,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 
 > This manual was checked against the target version's source code and release notes. The procedures in it were not run through in an emulator as a whole. What was confirmed in the game is noted in each release-notes entry. Example drills do not guarantee success with every character or setup.
 
-- Documentation updated: 2026-10-24. This does not include running the procedures in an emulator.
+- Documentation updated: 2026-10-27. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
 - Fork version: v11.7.32.1. On 2026-10-25 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).

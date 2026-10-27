@@ -8,6 +8,7 @@ Newest first. Older releases are kept below.
 
 See each release for details. Features are listed by their current menu names.
 
+- **After Hit Guard and First Guard Only** ([v11.7.32](#v11732)): have the dummy block only after the first hit, or only the first hit, to check whether a combo really connects. `Show Blocking Direction` shows the direction a player blocked in, over their head
 - **Quick Recording and state save/restore** ([v11.7.28](#v11728)): record with `P1 Coin` and play it back at once, and retry the same situation with `Volume Up`. Opening the menu pauses the game
 - **Frame Meter** ([v11.7.22](#v11722)) and **Meaty Timing** ([v11.7.23](#v11723)): lay out both players' states one Tick at a time, and see when and on which active Tick your wake-up attack connected
 - **Chain Trainer** ([v11.7.26](#v11726)) and **Seq. Command Trainer** ([v11.7.25](#v11725)): check chain and link timing, and sequence-super inputs one step at a time
@@ -53,8 +54,8 @@ attacks that cross over.
 - `After Hit Guard`: takes the first hit, then blocks. A gap in a combo gets
   blocked, so you can check whether it really connects
 - `First Guard Only`: blocks only the first attack, then takes the rest
-- They start over 12 Ticks after the dummy can act again (waiting while the
-  attacker is still in an attack)
+- They start over 12 Ticks after the dummy can act again (the dummy's own
+  attacks do not count, and they wait while the attacker is still in an attack)
 - Checked in play
 
 ### New: the blocking direction over a player's head

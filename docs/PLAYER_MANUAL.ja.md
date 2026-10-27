@@ -100,7 +100,7 @@
 
 | やりたいこと | 使う機能 | 最初に見るところ |
 |---|---|---|
-| コンボや連係を試す | ダミーの姿勢・ガード、体力回復 | `Dummy`、`Gauge` |
+| コンボや連係を試す | ダミーの姿勢・ガード、体力回復。つながっているかは `Guard = After Hit Guard` | `Dummy`、`Gauge`、[4.1](#dummy-guard-mode) |
 | チェーンと目押しがつながったか、猶予を確かめる | Chain Trainer | [11.7](#chain-trainer) |
 | 起き攻めを重ねるタイミングを調べる | ダミーの反撃、Meaty Timing | [起き攻めの練習レシピ](#wakeup-pressure-drill) |
 | セットプレイの所要時間を測る | Action Timeline | [11.5](#action-timeline) |
@@ -629,6 +629,8 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 
 </details>
 
+<a id="dummy-guard-mode"></a>
+
 | `Guard` の値 | 動作・使い分け |
 |---|---|
 | `None` | 自動ガードをしない。`Pose` が後ろ方向なら、その入力によるガードは起こり得る |
@@ -641,7 +643,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 
 `Stand Block`、`All Guard`、`Push Block (All …)` を確実に試すときは、`Random Guard % = 100%` にします。`Guard` 側のAGは、次の反撃設定と併用できます。
 
-`After Hit Guard` と `First Guard Only` は、ガードした攻撃も食らった攻撃も1回と数えます。ダミーが動けるようになってから12 Tick経つと数え直し、次の攻めをまた1発目として扱います（相手が攻撃中なら、その攻撃が終わるまで待ちます）。この2つを選んでいる間は、`Random Guard %` の行は出ません。
+`After Hit Guard` と `First Guard Only` は、ガードした攻撃も食らった攻撃も1回と数えます。ダミーが動けるようになってから12 Tick経つと数え直し、次の攻めをまた1発目として扱います（ダミー自身が攻撃している間は数えません。相手が攻撃中なら、その攻撃が終わるまで待ちます）。この2つを選んでいる間は、`Random Guard %` の行は出ません。
 
 **選んだガードを0%が止めているときは、オレンジ色で知らせます。** `Guard` が `Stand Block`、`All Guard`、`Push Block (All …)` で `Random Guard %` が `0%` のとき、`Random Guard %` の行がオレンジ色になります。`Guard` か `Random Guard %` にカーソルを合わせると、最下行の右側に `Random Guard % is 0%: the dummy never blocks.` と表示されます。0%を意図して使うこともあるため、値は自動では変えません。
 
@@ -1776,8 +1778,8 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | `Hide Negative Edge Inputs` | 新しい入力のない列を省略。ボタンを離した専用の印は消さない |
 | `Show P2 Inputs` | 右側のダミー入力表示 |
 | `Frame Meter` | 両プレイヤーの状態を1 Tickごとに並べる帯。ONにすると下に3つの設定項目が表示される（[11.4](#frame-meter)） |
+| `Show Blocking Direction` | ガードしたときに入れていたレバーの方向を、ガードした側（P1・P2どちらも）の頭上に矢印で出す。方向が変わるたびに上へ積み重なり、約2秒で消える。`Auto Guard` はレバーを入れないので出ない。レバーがニュートラルのガード（後ろを離した後のガード持続中など）も出ない |
 | `Show Mash Meter` | つかまれている側や、レバガチャで短くなるやられを受けている側の頭上に、レバガチャの残量を表示する（[4.1](#grab-mashing)） |
-| `Show Blocking Direction` | ガードしたときに入れていたレバーの方向を、ガードした側（P1・P2どちらも）の頭上に矢印で出す。方向が変わるたびに上へ積み重なり、約2秒で消える。`Auto Guard` はレバーを入れないので出ない |
 
 親項目がOFFのときは、その子項目が隠れます。GC入力帯は `Show Scrolling Input`、一部の補助表示は `HUD (Life / Meter)` も必要です。
 
@@ -1884,7 +1886,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 
 > 本書は対象版のソースコードとリリースノートを照合して作成しています。本書の手順そのものを、エミュレーター上で通して確かめたわけではありません。実機で確かめた内容は、リリースノートの各項目に記しています。練習レシピは、特定のキャラクター・組み合わせでの成功を保証するものではありません。
 
-- 文書更新：2026-10-24。エミュレーター上での手順の確認は含みません。
+- 文書更新：2026-10-27。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
 - 対象：v11.7.32.1。項目名は2026-10-25に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
