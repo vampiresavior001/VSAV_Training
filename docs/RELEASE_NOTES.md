@@ -18,6 +18,44 @@ See each release for details. Features are listed by their current menu names.
 
 ---
 
+## v11.7.33
+
+A Gallon dummy can now turn the Beast Cannon that comes out of its guard
+cancel. `Guard Action Type = Guard Cancel` works again: since v11.7.32 the
+guard cancel did not come out.
+
+### New: Gallon's Beast Cannon turns
+
+- When the dummy is Gallon (Dark Gallon included) and `Guard Action Type =
+  Guard Cancel`, `Beast Cannon Turn 1` to `Turn 4`, each with its own
+  `Delay (Ticks)`, appear under `GC Input Delay (Ticks)`
+- Any of eight directions. One turn with `Guard Cancel Button = Punch`, four
+  with `Three Punch` (ES)
+- Turn 1's delay counts from the Tick the cannon came out; each later turn's
+  from the Tick the previous turn came out
+- Nothing goes in unless a Beast Cannon is out: not during other moves, and
+  not after the cannon has ended
+- LP is pressed afresh on a Tick the game takes it; LP held down did not turn
+  the cannon
+- Checked in play (the normal cannon and the ES cannon)
+
+### Fix: no guard cancel
+
+- While the dummy blocked with `All Guard` and the like, its guard cancel
+  motion did not register
+- v11.7.32 re-aims the dummy's back every Tick (the fix for jump attacks that
+  cross over), and that re-aim also turned the guard cancel's lever into back
+- The back is no longer re-aimed while the dummy is inputting a motion
+- Checked in play (the guard cancel comes out, and `All Guard` still blocks
+  jump attacks that cross over)
+
+### Manual
+
+- After the table of counter-action types in 4.2: the Beast Cannon turn rows
+  and their settings
+
+---
+
 ## v11.7.32.1
 
 With `Auto-Flip Inputs on Side Switch = no`, an Action Steps or Action

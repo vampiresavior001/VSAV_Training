@@ -6,6 +6,10 @@ local default_training_settings = {
   stage_position = 1,   -- 1 = Off; 2..7 place the two on the stage
   counter_attack_lever = 1,   -- 1 = As Is; 2 = Neutral; 3..10 = the eight directions
   gc_input_delay = 0,
+  -- Gallon's Beast Cannon turns after a Guard Cancel (guardCancel.lua
+  -- GA.bc_turn_tick): 1 = None, 2..9 the eight directions; delays in Ticks.
+  bc_turn1 = 1, bc_turn2 = 1, bc_turn3 = 1, bc_turn4 = 1,
+  bc_turn1_delay = 10, bc_turn2_delay = 10, bc_turn3_delay = 10, bc_turn4_delay = 10,
   roll_direction = 1,
   guard_action = 1,
   pb_type = 1,

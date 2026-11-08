@@ -1219,6 +1219,55 @@ local gc_input_delay_menu_item = integer_menu_item(
     )
 gc_input_delay_menu_item.is_disabled = check_for_gc_disabled
 
+-- GALLON'S BEAST CANNON TURNS AFTER A GUARD CANCEL (user, 2026-11-08).
+--
+-- Gallon's guard cancel is a Beast Cannon, which turns on any direction + P:
+-- once for the normal one, four times for ES (user). Each turn is a direction
+-- and a wait in Ticks - turn 1 from the Tick the cannon came out, each later
+-- one from the Tick the turn before came out. guardCancel.lua GA.bc_turn_tick
+-- puts them in, and only while the cannon is out. Rows for Gallon only, and
+-- only as many as the
+-- Guard Cancel Button allows; a turn set to None closes the ones after it.
+local _bc_turn_dirs = {
+  "None", "Up", "Up Forward", "Forward", "Down Forward",
+  "Down", "Down Back", "Back", "Up Back",
+}
+local function bc_turns_allowed()
+  if training_settings.guard_action ~= 2 then return 0 end
+  local _c = memory.readbyte(0xFF8B82)
+  if _c ~= 0x02 and _c ~= 0x12 then return 0 end
+  -- 2 is Punch (one P), 4 Three Punch (the ES): dummyState.lua get_gc_button.
+  if training_settings.gc_button == 2 then return 1 end
+  if training_settings.gc_button == 4 then return 4 end
+  return 0
+end
+local function bc_turn_disabled(_n)
+  if _n > bc_turns_allowed() then return true end
+  for _k = 1, _n - 1 do
+    if (training_settings["bc_turn" .. _k] or 1) == 1 then return true end
+  end
+  return false
+end
+local bc_turn_items = {}
+for _n = 1, 4 do
+  local _turn = list_menu_item(_n == 1 and "Beast Cannon Turn 1" or ("Turn " .. _n), training_settings,
+    "bc_turn" .. _n, _bc_turn_dirs, 1,
+    "Gallon's Beast Cannon after the guard cancel turns this way: the direction\n+ LP, put in only while the cannon is out. Forward is the way Gallon faces\nthen. One turn for the normal cannon (Punch), four for ES (Three Punch).")
+  _turn.is_disabled = function() return bc_turn_disabled(_n) end
+  local _delay = integer_menu_item("Turn " .. _n .. " Delay (Ticks)", training_settings,
+    "bc_turn" .. _n .. "_delay", 1, 60, false, 10, 0,
+    _n == 1 and "Ticks from the Tick the Beast Cannon came out to this turn."
+      or "Ticks from the Tick the turn before came out to this turn.")
+  _delay.is_disabled = function()
+    return bc_turn_disabled(_n) or (training_settings["bc_turn" .. _n] or 1) == 1
+  end
+  -- The field indent() sets; indent() itself is defined further down.
+  _turn.indent = 2
+  _delay.indent = 3
+  bc_turn_items[#bc_turn_items + 1] = _turn
+  bc_turn_items[#bc_turn_items + 1] = _delay
+end
+
 local guard_action_frequency_menu_item = list_menu_item("Random Guard Action %", training_settings, "gc_freq", gc_freq,1, "How often the dummy does what Guard Action Type is set to, rolled once per\nchance. 0% never does it: while a Guard Action Type is set, this row is\norange when the cursor is on another row, and the bottom line says why.")
 guard_action_frequency_menu_item.is_disabled = function() return training_settings.guard_action == 1 end
 
@@ -2130,6 +2179,8 @@ return {
             indent(2, button_random_delay_item),
             indent(1, specified_loop_item),
             indent(1, gc_input_delay_menu_item),
+            bc_turn_items[1], bc_turn_items[2], bc_turn_items[3], bc_turn_items[4],
+            bc_turn_items[5], bc_turn_items[6], bc_turn_items[7], bc_turn_items[8],
             indent(1, p2_reversal_list_menu_item),
             indent(1, p2_reversal_strength_menu_item),
             indent(1, reversal_action_patterns_item),

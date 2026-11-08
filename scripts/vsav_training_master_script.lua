@@ -900,6 +900,9 @@ emu.registerbefore(function()
 	local _p2preseq = _p2pre and _p2pre.pending_input_sequence
 	if _p2preseq ~= nil then
 		_p2preseq.inject_idx = _p2preseq.current_frame
+		-- A sequence owns P2's lever this frame (a Guard Cancel's motion among
+		-- them): All Guard's per-Tick Back (GA.ag_reaim) must not replace it.
+		globals.ag_back = nil
 	end
 
 	globals.controllerModule.process_pending_input_sequence(player_objects[2], globals._input)

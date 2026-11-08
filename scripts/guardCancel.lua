@@ -2538,6 +2538,91 @@ function GA.ag_reaim()
 	assert_input_bits(_back + (_g.down and 0x04 or 0), 0)
 end
 
+-- GALLON'S BEAST CANNON TURNS AFTER A GUARD CANCEL (menu.lua bc_turn_items;
+-- user, 2026-11-08). The cannon turns on any direction + P: once normal, four
+-- times ES.
+--
+-- HOW THE GAME TAKES A TURN (invuln_log, turns done by hand, normal and ES): a
+-- P pressed while the cannon flies ($07 = 0x04) stops Gallon - $07 goes to
+-- 0x08 for 18 Ticks - and the lever on the Tick that stop ends picks the next
+-- cannon: $106 changed with it (0x0A on up-forward, 0x10 on down). LP and HP
+-- both turn it (user). Every stop came on a fresh press, on a Tick $23 was 0;
+-- every press that did not stop it came on a Tick $23 was 1 - 10 against 22,
+-- by hand and by the dummy (logs v11.7.32.2, v11.7.32.2_2, 2026-11-08). LP held
+-- on through the flight never stopped it: a held button is no fresh press.
+-- So a turn puts the direction in, presses LP + the direction on a Tick $07 is
+-- 0x04 and $23 is 0, lets go the Tick after if it did not stop and presses
+-- again on the next such Tick, then holds the direction alone through the stop.
+--
+-- WHEN: turn 1 its delay after the Tick the cannon came out, each later turn
+-- its delay after the Tick the turn before came out (the stop ended); the press
+-- goes in on the first Tick after that the game can take it.
+--
+-- ONLY WHILE THE CANNON IS OUT (user). Nothing goes in unless $06 is a special
+-- (0x0E) or an ES (0x10) and $106, the special's id, is one of the five Beast
+-- Cannons (charMoves.lua get_moves_Gallon) - a cannon that did not come out,
+-- or has ended, gets no stray LP. A turn the game does not take is tried until
+-- the cannon ends; whether it turns is the game's to decide.
+--
+-- Forward is by $0B on the Tick the turn is due, as Guard Cancel follows a
+-- side switch (Auto-Flip Inputs on Side Switch leaves it alone).
+GA.BC_IDS = { [0x08] = true, [0x0A] = true, [0x0C] = true, [0x0E] = true, [0x10] = true }
+-- 2..9 as menu.lua _bc_turn_dirs: { up/down bits, 'f' / 'b' / nil }.
+GA.BC_DIRS = {
+	[2] = { 0x08 }, [3] = { 0x08, 'f' }, [4] = { 0, 'f' }, [5] = { 0x04, 'f' },
+	[6] = { 0x04 }, [7] = { 0x04, 'b' }, [8] = { 0, 'b' }, [9] = { 0x08, 'b' },
+}
+GA.BC_FLY, GA.BC_STOP = 0x04, 0x08
+function GA.bc_turn_tick()
+	local _o = globals.options
+	local _st = memory.readbyte(0xFF8806)
+	local _c = memory.readbyte(0xFF8B82)
+	if _o == nil or _o.guard_action ~= 2 or (_c ~= 0x02 and _c ~= 0x12)
+	   or (_st ~= 0x0E and _st ~= 0x10) then
+		GA.bc = nil
+		return
+	end
+	if not GA.BC_IDS[memory.readbyte(0xFF8906)] then return end
+	local _lg = memory.readbyte(0xFF8081)
+	local _ph = memory.readbyte(0xFF8807)
+	local _b = GA.bc
+	if _b == nil then GA.bc = { lg = _lg, n = 1 } return end
+	-- The stop: the direction alone, all through it.
+	if _ph == GA.BC_STOP then
+		if _b.lev ~= nil then
+			_b.stopped = true
+			assert_input_bits(_b.lev, 0)
+		end
+		return
+	end
+	-- The stop has ended: that turn is out, and the next one counts from here.
+	if _b.stopped then
+		_b.stopped, _b.lev, _b.pressed, _b.n, _b.lg = nil, nil, nil, _b.n + 1, _lg
+	end
+	if _b.lev == nil then
+		local _max = (_o.gc_button == 2) and 1 or (_o.gc_button == 4) and 4 or 0
+		if _b.n > _max then return end
+		local _d = GA.BC_DIRS[_o["bc_turn" .. _b.n] or 1]
+		if _d == nil then return end
+		if (_lg - _b.lg) % 256 < (_o["bc_turn" .. _b.n .. "_delay"] or 10) then return end
+		local _lev = _d[1]
+		if _d[2] ~= nil then
+			local _fwd = (memory.readbyte(0xFF880B) == 0) and 0x02 or 0x01
+			_lev = _lev + ((_d[2] == 'f') and _fwd or (3 - _fwd))
+		end
+		_b.lev = _lev
+		debugKnockdownModule.mark_write("bc_turn", _b.n, _lev)
+	end
+	-- A fresh press on a Tick the game takes one, the direction alone between.
+	if not _b.pressed and _ph == GA.BC_FLY and memory.readbyte(0xFF8823) == 0 then
+		_b.pressed = true
+		assert_input_bits(_b.lev, 0x01)
+	else
+		_b.pressed = nil
+		assert_input_bits(_b.lev, 0)
+	end
+end
+
 memory.registerwrite(P2_INPUT_WORD, 2, function()
 	if inject_guard then return end
 	-- TEMPORARY diagnostic: prove the hook fires at all, and that it is not
@@ -4760,6 +4845,8 @@ memory.registerexec(0x02211A, function()
 	kd_capture_start_07()
 	-- All Guard's Back by this Tick's facing (GA.ag_reaim, above).
 	GA.ag_reaim()
+	-- Gallon's Beast Cannon turns after a Guard Cancel (GA.bc_turn_tick, above).
+	GA.bc_turn_tick()
 
 	-- Hit counter, maintained here so it is per TICK and cannot miss a short
 	-- freeze the way a once-per-frame check would.

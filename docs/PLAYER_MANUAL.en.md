@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.32.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.33 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -678,6 +678,17 @@ The row is hidden for `None`, `Guard Cancel` and `Push Block`. It shares its set
 | `Reversal - Action Patterns` | Selects and runs a checked saved pattern |
 | `Reversal - Character Specific` | Activates a character-specific move through internal state changes, rather than normal command input |
 | `Counter Attack - Character Specific` | Legacy character-specific response with an on-screen crash warning; prefer Specified or Steps for ordinary practice |
+
+<a id="beast-cannon-turn"></a>
+**Gallon's Beast Cannon turns.** When the dummy is Gallon (Dark Gallon included) and `Guard Action Type = Guard Cancel`, the rows `Beast Cannon Turn 1` to `Turn 4` appear under `GC Input Delay (Ticks)`. They turn the Beast Cannon that came out of the guard cancel, with the chosen direction (any of eight) and LP.
+
+| Row | Setting |
+|---|---|
+| `Beast Cannon Turn 1` to `Turn 4` | Which way each turn goes. The list ends at the first `None`. Forward is the way Gallon faces at the time |
+| `Turn n Delay (Ticks)` | Ticks counted from the Tick the cannon came out (turn 1), or from the Tick the previous turn came out (later turns); 1 to 60 |
+
+- With `Guard Cancel Button = Punch` there is one turn; with `Three Punch` (the ES cannon), four. `Kick` and `Three Kick` get none
+- Nothing goes in unless the cannon is out. Once the delay has passed, LP is pressed afresh on a Tick the game takes it, and the direction is held while Gallon stops. Whether the cannon turns is up to the game
 
 `Reversal` is also the name of a response mode in this tool. It does not mean the game will show `REVERSAL` for every normal attack performed at the earliest possible moment.
 
@@ -1891,7 +1902,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-27. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.32.1. On 2026-10-25 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.33. On 2026-11-08 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

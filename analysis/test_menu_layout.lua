@@ -214,6 +214,31 @@ do
 		check_widths(dummy, "Dummy (" .. tostring(gat.list[ga]) .. ")")
 	end
 	training_settings.guard_action, training_settings.guard = keep_ga, keep_g
+
+	-- Gallon's Beast Cannon turns (2026-11-08): the most rows they open - ES,
+	-- all four turns set - with All Guard's Random Guard % drawn as well.
+	local keep_rb = memory.readbyte
+	memory.readbyte = function(a) if a == 0xFF8B82 then return 0x02 end return keep_rb(a) end
+	local keep = {}
+	local set = { guard_action = 2, guard = 4, gc_button = 4,
+		bc_turn1 = 9, bc_turn2 = 9, bc_turn3 = 9, bc_turn4 = 9 }
+	for k, v in pairs(set) do keep[k] = training_settings[k] ; training_settings[k] = v end
+	local shown = 0
+	for _, e in ipairs(dummy.entries) do
+		if e.is_disabled == nil or not e.is_disabled() then shown = shown + 1 end
+	end
+	print(("  -- Dummy (Gallon, ES, Turn 4 まで) %d 行"):format(shown))
+	want("Gallon の Beast Cannon Turn を全部出しても収まる", shown <= capacity, true)
+	-- These rows are only there with Guard Cancel, so Guard Action Type is
+	-- measured holding that value, not its widest one.
+	local keep_list = gat.list
+	local gc_only = {}
+	for i = 1, #keep_list do gc_only[i] = (i == 2) and keep_list[i] or "" end
+	gat.list = gc_only
+	check_widths(dummy, "Dummy (Gallon, ES, Turn 4 まで)")
+	gat.list = keep_list
+	for k, _ in pairs(set) do training_settings[k] = keep[k] end
+	memory.readbyte = keep_rb
 end
 print(("  -- 幅を測れた行 %d 件"):format(measured))
 want("ほとんどの行を測れた", measured >= 60, true)

@@ -15,6 +15,7 @@
 --   [3] the hook-up: autoguard leaves the decision only when it holds Back
 --       and the dummy is P2; the Tick hook calls it first, before anything
 --       else injects that Tick
+--   [4] a frame a sequence feeds P2 (a Guard Cancel's motion) leaves none
 local fails = 0
 local function eq(what, got, want)
 	if got == want then print("  ok " .. what .. " = " .. tostring(got))
@@ -94,6 +95,24 @@ do
 	   src:sub(f0, e0):find("assert_input_bits(_back + (_g.down and 0x04 or 0), 0)", 1, true) ~= nil, true)
 	eq("  assert_input_bits と GA はそれより前に定義されている",
 	   src:find("local function assert_input_bits(", 1, true) < f0 and src:find("local GA = guard_action_input", 1, true) < f0, true)
+end
+
+-- ---------------------------------------------------------------------------
+-- 2026-11-08: Guard Action Type = Guard Cancel が出なくなった。ガードの後ろが
+-- Tick ごとにレバーを置き換え、ガードキャンセルのコマンド (前・下・前下) を消していた。
+print("[4] P2 に入力列が流れるフレームは、後ろを入れ直さない")
+do
+	local ms = slurp("vsav_training_master_script.lua")
+	local a = ms:find("if _p2preseq ~= nil then", 1, true)
+	local b = ms:find("process_pending_input_sequence(player_objects[2]", 1, true)
+	local blk = (a and b and a < b) and ms:sub(a, b) or ""
+	eq("入力列があるフレームは判断を消す (P2 に入力列を配る直前)",
+	   blk:find("globals.ag_back = nil", 1, true) ~= nil, true)
+	local ag = ms:find("autoguardModule.registerBefore(", 1, true)
+	eq("  ガードの判断 (autoguard) より後で消す", ag ~= nil and a ~= nil and ag < a, true)
+	globals = { ag_back = nil }
+	wrote = nil ; reaim()
+	eq("  消した Tick は書かない (コマンドがそのまま届く)", wrote, nil)
 end
 
 print(fails == 0 and "\n全て通った" or ("\n" .. fails .. " 件 NG"))

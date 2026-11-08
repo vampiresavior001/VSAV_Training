@@ -181,6 +181,12 @@ local TREE = {
 			"Reversal Action Steps", "Loop Steps" } },
 		{ "Button Wait", { "Random Delay" } },
 		{ "Loop Steps", { "Loop Wait" } },
+		-- Gallon's Beast Cannon turns (2026-11-08).
+		{ "GC Input Delay (Ticks)", { "Beast Cannon Turn 1", "Turn 2", "Turn 3", "Turn 4" } },
+		{ "Beast Cannon Turn 1", { "Turn 1 Delay (Ticks)" } },
+		{ "Turn 2", { "Turn 2 Delay (Ticks)" } },
+		{ "Turn 3", { "Turn 3 Delay (Ticks)" } },
+		{ "Turn 4", { "Turn 4 Delay (Ticks)" } },
 	},
 	Display = {
 		{ "HUD (Life / Meter)", { "Show Tech Hit Mash", "Show Character Specific" } },
