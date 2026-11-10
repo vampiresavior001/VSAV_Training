@@ -8,7 +8,7 @@ See what the Warlord sees, and practice what the Warlord practices.
 
 **達人の精密な動きを、練習相手に。** 『ヴァンパイア セイヴァー』のFightcade 2／FBNeo用トレーニングモードです。ダミーに相手の動きを正確に再現させ、自分の入力とタイミングを画面で振り返れます。
 
-[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。本書の対象は **v11.7.33** です。
+[VSAV_Trainingのfc2ブランチ](https://github.com/NBeing/VSAV_Training/tree/fc2)を基に拡張したフォークです。このREADMEの対象は **v11.7.33** です。
 
 **[ダウンロード（最新版）](https://github.com/vampiresavior001/VSAV_Training/releases/latest)** · [導入](#windowsでの導入) · [最初の練習](#first-ag-drill) · [日本語マニュアル](docs/PLAYER_MANUAL.ja.md) · [Discord](https://discord.gg/5fwSewN33p)
 
@@ -121,7 +121,7 @@ Action StepsとTick Dataなどの測定はTick単位、記録・再生は表示�
 
 ### 対応範囲
 
-このREADMEの導入手順はWindows向けです。Linux用の起動スクリプトも同梱していますが、本フォークの全機能についてLinux／macOSで動作することは、このREADMEの作成時には確認していません。Action Patternsの名前入力・ファイル選択はWindows向けの実装です。
+このREADMEの導入手順はWindows向けです。Linux用の起動スクリプトも同梱していますが、Linux／macOSでは全機能の動作を確認できていません。Action Patternsの名前入力・ファイル選択はWindows向けの実装です。
 
 ## 更新とバックアップ
 
@@ -143,7 +143,7 @@ FBNeoを終了する前に編集内容を保存し、次のファイルをバッ
 - [このフォークのIssues](https://github.com/vampiresavior001/VSAV_Training/issues)
 - [Discord](https://discord.gg/5fwSewN33p)：質問・不具合の報告・要望はこちらでも受け付けています
 
-不具合を報告する際は、バージョン、P1／P2キャラクター、左右配置、設定画面、再現手順を添えてください。`Video > Runahead`で`Disabled`を確認し、赤いRunaheadの警告が出た場合はその旨も添えてください。
+不具合を報告する際は、バージョン、P1／P2キャラクター、左右配置、設定画面のスクリーンショット、再現手順を添えてください。`Video > Runahead`で`Disabled`を確認し、赤いRunaheadの警告が出た場合はその旨も添えてください。
 
 ## フォーク元・クレジット
 

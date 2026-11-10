@@ -37,7 +37,7 @@ For PB, you can check whether you delayed your input while still fitting six pre
 | GC practice | GC window in the input viewer | Tracks accepted commands, input intervals, expiry and contact during guard-pose persistence |
 | Air-guard analysis | Frame Trap and Jump In readouts, among others | Dedicated Air Guard Gaps for gaps in air chains, actual interrupts, guard timing and landing advantage |
 
-The distinction is **the precision of reproduced actions and the detail available to review your responses**, rather than the mere presence of features the original already had. `Runahead` must be set to `Disabled`. After does not enter motions in advance, and Landing's advance input depends on certain conditions; not every setting guarantees the earliest possible action in every situation. See [installation](#02-install) and [Action Steps](#06-steps).
+The distinction is **the precision of reproduced actions and the detail available to review your responses**, rather than the mere presence of features the original already had. `Runahead` must be set to `Disabled`. The `After` wait does not enter motions in advance, and the `Landing` wait's advance input depends on certain conditions; not every setting guarantees the earliest possible action in every situation. See [installation](#02-install) and [Action Steps](#06-steps).
 
 </details>
 
@@ -205,7 +205,7 @@ If Runahead is still enabled, this red warning flashes at the top of the screen 
 
 Launch matches through your usual Fightcade installation and training through the copied batch file. A shortcut named “VSAV Training” helps distinguish the two.
 
-For a fresh installation, use a short path without Japanese characters to avoid problems with Lua file access. Spaces in the path are fine. Before updating, follow the [backup instructions](#13-save).
+For a fresh installation, use a short path with no non-ASCII characters (such as Japanese) to avoid problems with Lua file access. Spaces in the path are fine. Before updating, follow the [backup instructions](#13-save).
 
 **Always assign `Lua Hotkey 1` and `P1 Coin`: neither has a menu equivalent.** The other shortcuts can be replaced by the menu operations below.
 
@@ -265,19 +265,19 @@ An indented row is a setting of the nearest less-indented row above it, its pare
 <a id="menu-pause"></a>
 **While the menu is open during a match, the game is paused.** Characters, projectiles, the round timer and stun do not advance; closing the menu resumes game processing. The music keeps playing.
 
-What was running when the menu opened does this once it closes:
+Anything in progress when the menu opens is handled as follows once it closes:
 
 | When the menu opens | After it closes |
 |---|---|
-| The dummy is waiting to make a counter after a wake-up, hit stun or block (a `Random Start Wait` wait and the like included) | Kept: it comes out as usual. Neither the wait nor the chosen action changes |
-| Action Steps or Action Patterns are into their second step or later, or `Loop Steps` or Specified's `Loop` is repeating | Ended: not resumed. They start again on the next trigger |
-| Recording (Quick Recording in [5.1](#quick-recording) and the like), recording playback (`Looped Playback` included), the `Loop Interval (Frames)` wait, the `Refill Timer (seconds)` life refill | Carry on from where they stopped |
+| The dummy is waiting to perform a counter action after waking up, being hit or blocking (including waits such as `Random Start Wait`) | Kept: it comes out as usual. Neither the wait nor the chosen action changes |
+| Action Steps or Action Patterns have reached their second step or later, or `Loop Steps` or Specified's `Loop` is mid-repeat | Ended: not resumed. They start again on the next trigger |
+| Recording (such as Quick Recording, [5.1](#quick-recording)), recording playback (including `Looped Playback`), the `Loop Interval (Frames)` wait and the `Refill Timer (seconds)` life refill | Resume from where they stopped |
 
 - Only the game's own processing is stopped, not FBNeo, so the menu still works from an arcade stick or controller.
-- Change the counter's settings during a knockdown and that wake-up uses the new ones (opened just before the wake-up, the old ones may still be used).
-- While a position reset (`Dummy > Position` and the like) is moving the characters, the game runs until they are in place, then pauses again.
+- If you change the counter-action settings during a knockdown, that wake-up uses the new settings (if you open the menu just before the wake-up, the old ones may still be used).
+- While a position reset (such as `Dummy > Position`) is moving the characters, the game runs until they are in place, then pauses again.
 - `Recording > Save State` from the menu saves the paused scene ([5.5](#save-state)).
-- If the game cannot stay paused (the Tick or a character moves), menu pausing is turned off for the rest of the session. With `Display > Recording GUI = yes`, a notice appears for about two seconds under the box at the top left once the menu closes (the same place as in [5.5](#save-state)).
+- If the game fails to stay paused (the Tick counter or a character moves while paused), menu pausing is turned off for the rest of the session. With `Display > Recording GUI = yes`, a notice appears for about two seconds under the box at the top left once the menu closes (the same place as in [5.5](#save-state)).
 
 ### 2.2 Controlled side and character select
 
@@ -588,22 +588,22 @@ Building an action does not start it; it starts when a trigger comes. To repeat 
 | `Pose` | Direction held normally: `None`, crouching, forward/back or jumping directions |
 | `Wakeup` | Movement on recovery from knockdown: `None`, `Towards`, `Away` or random choices |
 | `Random Throw Tech %` | Throw-tech probability: `0% / 25% / 50% / 75% / 100%` |
-| `Auto Mash` | Mashing while grabbing, grabbed, or in a hit that mashing shortens: `Off / Normal / Fast / Fastest` |
+| `Auto Mash` | Mashing during grabs (either side) and during hit reactions that mashing shortens: `Off / Normal / Fast / Fastest` |
 | `Guard` | Blocking method |
 | `Random Guard %` | Probability of blocking with the applicable guard methods: `0% / 25% / 50% / 75% / 100%` |
 
 `Random Throw Tech %` defaults to `100%`. Set it to `0%` when examining throws without automatic techs.
 
 <a id="grab-mashing"></a>
-**`Auto Mash` recreates an opponent who mashes.** Use it to check a grab's damage, how long an escape takes, or how long a hit that mashing shortens lasts. It works with the dummy grabbing, being grabbed, or taking such a hit.
+**`Auto Mash` recreates an opponent who mashes.** Use it to check a grab's damage, how long an escape takes, or the duration of a hit reaction that mashing shortens. It works whether the dummy is grabbing, being grabbed or in such a hit reaction.
 
-Select it at `Dummy > Auto Mash` (default `Off`). It works only where the game reads mashing. ROM analysis confirmed three routines that do:
+Select it at `Dummy > Auto Mash` (default `Off`). It works only in situations where the game reads mashing. ROM analysis confirmed three routines that do:
 
-- Grabs: the escape of the one grabbed, and the extra input of the one grabbing
-- A routine that takes time off a hit: special hit reactions, such as from projectiles
-- A routine that plays a hit reaction's motion further: special hit reactions as well
+- Grabs: the grabbed character's escape and the grabbing character's extra inputs
+- A routine that shortens the remaining time of a hit reaction: special hit reactions, such as those caused by projectiles
+- A routine that advances a hit reaction's animation: also special hit reactions
 
-Ordinary throws and ordinary hitstun are not covered. In special hit reactions it has been confirmed to work against Demitri's Chaos Flare, Bishamon's Karame Dama, Sasquatch's Big Branch, Aulbath's Water Jail and Q-Bee's `QJ` (developer's recordings). Aulbath's poison gas is not shortened by mashing: in the developer's recordings, neither routine that reads mashing ran during its hit reaction, and the dummy does not mash there. Other moves are not checked yet.
+Ordinary throws and ordinary hitstun are not covered. Among special hit reactions, it has been confirmed to work against Demitri's Chaos Flare, Bishamon's Karame Dama, Sasquatch's Big Branch, Aulbath's Water Jail and Q-Bee's `QJ` (developer's recordings). The hit reaction from Aulbath's poison gas is not shortened by mashing: in the developer's recordings, neither routine that reads mashing ran during it, so the dummy does not mash there. Other moves have not been checked yet.
 
 | Value | Input |
 |---|---|
@@ -611,15 +611,15 @@ Ordinary throws and ordinary hitstun are not covered. In special hit reactions i
 | `Fast` | Switches between PPP + up and KKK + down every 4 Ticks |
 | `Fastest` | Switches between PPP + up and KKK + down every Tick |
 
-- `Display > Show Mash Meter` shows the count over the character's head: `Mash Escape` over a grabbed character, `Mash Recovery` over one in a hit that mashing shortens. A cyan bar and the count the game is using - not seconds or Ticks. It also works with `Auto Mash = Off`. The old `Analysis > Show Mash Timer` setting carries over.
-- A grab's count is what the grabbed character has left to break free; some moves end the grab with count left. A hit whose position cannot be read shows just `Mash Recovery -`, with no bar.
-- Switched on partway through, the bar takes the first count it sees as full.
+- `Display > Show Mash Meter` shows the remaining count over the character's head: `Mash Escape` over a grabbed character and `Mash Recovery` over one in a hit reaction that mashing shortens. It is drawn as a cyan bar with the game's own remaining count, not seconds or Ticks. It also works with `Auto Mash = Off`. The old `Analysis > Show Mash Timer` setting carries over.
+- A grab's count is what the grabbed character has left to break free; some moves end the grab with count left. A hit reaction whose remaining amount cannot be read shows only `Mash Recovery -`, with no bar.
+- If the display is turned on partway through, the bar treats the first count it sees as full.
 - Auto Mash does not input while you control P2, while a recording plays or is being made, during the Recording Wizard, or while the menu is open. `Show Mash Meter` still observes and displays those states.
-- When the dummy is grabbed, previously queued counteractions (Action Steps, Specified and so on) are canceled, so an old one does not come out after it is let go.
+- When the dummy is grabbed, previously queued counter actions (Action Steps, Specified and so on) are canceled, so that a stale one does not come out after the dummy is released.
 - When the dummy grabs, its own action keeps running; only its input during the grab is replaced.
-- In a special hit reaction, queued counteractions are kept. While a counteraction's input for getting out is being sent, or Action Steps are still to come, mashing pauses and the counteraction goes first.
+- In a special hit reaction, queued counter actions are kept. While a counter action's inputs are being sent after the dummy recovers, or while Action Steps remain to be run, mashing pauses and the counter action takes priority.
 - The throw-tech input from `Random Throw Tech %` is also replaced by the mashing during the grab.
-- Mashing starts once the grab or hit is detected, so it misses the first check.
+- Mashing starts once the grab or hit is detected, so it misses the game's first check.
 
 <details>
 <summary>How the inputs are chosen</summary>
@@ -627,7 +627,7 @@ Ordinary throws and ordinary hitstun are not covered. In special hit reactions i
 - `Fastest` gives the most presses the game counts. The grab's remaining time goes down by random amounts, so it is not always the fastest escape.
 - The directions are up and down only. Forward or back pressed with a medium or heavy button can tech the grab.
 - Each time the game checks, it counts one new direction press and one new button press. Three buttons at once count the same as one.
-- The amount taken each time is random, from tables in the ROM. For grabs it averages 1.66 for a direction and for a button. For the time left in a special hit reaction it averages 4.25 for a direction and 7.09 for a button, so buttons take more.
+- The amount removed each time is random, taken from tables in the ROM. For grabs it averages 1.66 for both directions and buttons. For the time left in a special hit reaction it averages 4.25 per direction and 7.09 per button, so buttons remove more.
 
 </details>
 
@@ -645,7 +645,7 @@ Ordinary throws and ordinary hitstun are not covered. In special hit reactions i
 
 For consistent testing with `Stand Block`, `All Guard` or `Push Block (All …)`, set `Random Guard % = 100%`. PB selected under `Guard` can be combined with the counter-action settings below.
 
-`After Hit Guard` and `First Guard Only` count an attack that connects, blocked or not. They start over 12 Ticks after the dummy can act again and treat the next attack as the first one (the dummy's own attacks do not count toward them, and they wait while the attacker is still in an attack). While either is selected, the `Random Guard %` row is hidden.
+`After Hit Guard` and `First Guard Only` count every attack that connects, whether it hits or is blocked. The count resets 12 Ticks after the dummy can act again, and the next attack is treated as the first one (the dummy's own attacks do not count toward them, and they wait while the attacker is still in an attack). While either is selected, the `Random Guard %` row is hidden.
 
 **A probability setting turns orange when 0% prevents the selected action from running.** While `Guard` is `Stand Block`, `All Guard` or `Push Block (All …)` and `Random Guard %` is `0%`, the `Random Guard %` row turns orange. With the cursor on `Guard` or `Random Guard %`, the right side of the bottom line reads `Random Guard % is 0%: the dummy never blocks.` The value is not changed for you, because 0% can be intentional.
 
@@ -680,15 +680,15 @@ The row is hidden for `None`, `Guard Cancel` and `Push Block`. It shares its set
 | `Counter Attack - Character Specific` | Legacy character-specific response with an on-screen crash warning; prefer Specified or Steps for ordinary practice |
 
 <a id="beast-cannon-turn"></a>
-**Gallon's Beast Cannon turns.** When the dummy is Gallon (Dark Gallon included) and `Guard Action Type = Guard Cancel`, the rows `Beast Cannon Turn 1` to `Turn 4` appear under `GC Input Delay (Ticks)`. They turn the Beast Cannon that came out of the guard cancel, with the chosen direction (any of eight) and LP.
+**Turning Gallon's Beast Cannon.** When the dummy is Gallon (Dark Gallon included) and `Guard Action Type = Guard Cancel`, the rows `Beast Cannon Turn 1` to `Turn 4` appear under `GC Input Delay (Ticks)`. They steer the Beast Cannon performed as the guard cancel by entering the chosen direction (any of eight) plus LP.
 
 | Row | Setting |
 |---|---|
-| `Beast Cannon Turn 1` to `Turn 4` | Which way each turn goes. The list ends at the first `None`. Forward is the way Gallon faces at the time |
+| `Beast Cannon Turn 1` to `Turn 4` | The direction of each turn. The sequence ends at the first `None`. Forward is the direction Gallon is facing at that moment |
 | `Turn n Delay (Ticks)` | Ticks counted from the Tick the cannon came out (turn 1), or from the Tick the previous turn came out (later turns); 1 to 60 |
 
-- With `Guard Cancel Button = Punch` there is one turn; with `Three Punch` (the ES cannon), four. `Kick` and `Three Kick` get none
-- Nothing goes in unless the cannon is out. Once the delay has passed, LP is pressed afresh on a Tick the game takes it, and the direction is held while Gallon stops. Whether the cannon turns is up to the game
+- With `Guard Cancel Button = Punch` there is one turn; with `Three Punch` (the ES cannon), four. `Kick` and `Three Kick` offer none.
+- Inputs are sent only while the cannon is out. Once the delay has passed, LP is pressed again on a Tick when the game accepts it, and the direction is held while Gallon pauses. Whether the cannon actually turns is decided by the game.
 
 `Reversal` is also the name of a response mode in this tool. It does not mean the game will show `REVERSAL` for every normal attack performed at the earliest possible moment.
 
@@ -708,24 +708,24 @@ For a crouching normal, select the appropriate downward direction. For a special
 <a id="dummy-button-timing"></a>
 ### 4.4 Delay the button press or vary it
 
-With `Reversal - Specified` and `Counter Attack - Specified`, three rows decide the moment the button goes in, on top of the motion and the button.
+With `Reversal - Specified` and `Counter Attack - Specified`, three rows, in addition to the motion and the button, decide when the button is pressed.
 
 | Option | What it does |
 |---|---|
-| `Button Lever` | The lever at the moment of the press. `As Is` keeps the motion's final direction (on a dash, the dash attack); `Neutral` releases it. With `Button = None` it replaces the motion's final direction instead, except `Neutral`, which is then ignored so the motion goes in as it is (`Up` still jumps) |
+| `Button Lever` | The lever direction at the moment of the press. `As Is` keeps the motion's final direction (after a dash, this gives the dash attack); `Neutral` releases it. With `Button = None`, the chosen direction replaces the motion's final direction instead (`Up` makes the dummy jump, for example); `Neutral` is ignored in that case, and the motion is entered unchanged |
 | `Button Wait` | The wait between the motion and the button press, in Ticks, up to 60. `Auto` is offered only for a dash and uses character-specific attack timing |
 | `Random Delay` | The indented row under `Button Wait`. Every reversal or counter draws a fresh number from 0 up to the setting and adds it to `Button Wait` (0–60; 0 is off) |
 
 `Button Wait` and `Random Delay` delay only the button press: for a dash into an attack, the dash itself is not delayed. `Random Start Wait` ([4.2](#dummy-guard-action)) delays the whole response instead, and the two can be combined.
 
 - Dash attack: `Forward Dash` + `HP` with `Button Wait = Auto` and `Random Delay` at `0-5` adds a newly drawn 0–5 Ticks to the Auto timing.
-- Jump attack: with `Up Forward` + a button, put the Tick to start pressing in `Button Wait` and the spread in `Random Delay`, and you can vary the height at which the jump attack comes out.
+- Jump attack: with `Up Forward` + a button, set `Button Wait` to the Tick on which the press may begin and `Random Delay` to the spread, to vary the height at which the jump attack comes out.
 
-What happens when the press comes too late is up to the game. A special's command is kept for only 14–19 Ticks, so a normal comes out instead. Once a dash or jump is over, there is no dash attack or jump attack. The direction stays held while the button waits, so the character may jump again after landing.
+What happens when the press comes too late is up to the game. A special's command is retained for only 14–19 Ticks; after that, a normal comes out instead. Once a dash or jump has ended, the press no longer produces a dash attack or jump attack. The direction stays held while the button waits, so the character may jump again after landing.
 
 A timing measured after blocking may not also work after being hit. Changing the `Button Lever` direction on a dash cancel can overwrite the reverse direction needed for the cancel.
 
-With `Guard Action Type` set to `Push Block` or `PB Recording`, the same setting is the wait before the presses start. Its former name is `Guard Action Delay (Ticks)`, and saved values carry over.
+With `Guard Action Type` set to `Push Block` or `PB Recording`, the same setting acts as the wait before the presses start. It was formerly named `Guard Action Delay (Ticks)`, and saved values carry over.
 
 **Choose which part of the timing to vary.**
 
@@ -742,7 +742,7 @@ Change one setting at a time at first, and check that the intended attack still 
 
 `Reversal - Specified` and `Counter Attack - Specified` have a `Loop` row (below `Random Delay`). Set it to `yes` and the dummy performs the same action again each time it ends. Use it to repeat offense such as a dash and attack for PB and GC practice without rebuilding it in Action Steps.
 
-- The first one still starts on the usual trigger (after blocking, being hit or waking up). Turning the row on or closing the menu does not start it.
+- The first action still starts on the usual trigger (after blocking, being hit or waking up). Turning the row on or closing the menu does not start it.
 - After that, airborne actions repeat on landing (the same as Action Steps' `Auto (Landing)`), and ground actions repeat once the dummy can act again.
 - `Button Wait`, `Random Delay` and `Random Start Wait` apply to every repeat, drawn again each time.
 - Set `Loop = no` to stop repeating the action. Opening the menu partway through the repeats stops them too; they start again on the next trigger (see [2.1](#03-controls)).
@@ -776,24 +776,24 @@ Recording and playback operate in displayed frames, so they do not reproduce inp
 
 **Press `P1 Coin` to record what you want the dummy to do, and practice against it right away.** It is on by default (`Recording > Quick Recording = yes`).
 
-1. During a match, press `P1 Coin`. Any dummy playback or planned counter stops, control moves to P2 (the dummy) and recording begins.
+1. During a match, press `P1 Coin`. Any dummy playback or pending counter action stops, control moves to P2 (the dummy) and recording begins.
 2. Perform the action you want the dummy to do.
-3. Press `P1 Coin` again. Recording ends, you are back on P1 and playback begins from the current game state.
+3. Press `P1 Coin` again. Recording ends, control returns to P1 and playback begins from the current game state.
 
 - `Looped Playback`, `Random Start Wait` and `Reset Distance Each Loop` apply as they do to normal playback.
-- Pressing `P1 Coin` during playback stops it and starts a new recording. `Volume Down` during playback stops it (while nothing plays, `Volume Down` plays the `Playback Slot` slot).
+- Pressing `P1 Coin` during playback stops it and starts a new recording. `Volume Down` during playback stops it (when nothing is playing, `Volume Down` plays the slot selected in `Playback Slot`).
 - The recording is saved in a dedicated recording slot for each dummy character. By default (`Coin Saves To = Own Slot`) it does not overwrite `Slot 1`–`Slot 5`.
 - With `Coin Saves To = Playback Slot`, finishing a recording also writes it to the slot chosen in `Playback Slot`. **That slot's recording is replaced without asking.** Use it to keep each recording in a slot without `Copy to Slot`.
 - With `Auto Trim = yes` (default), the time before the first input and after the last input is cut. `Reset Distance Each Loop` returns to the spacing at the moment of the first input. Waits and holds in the middle are kept.
 - The `P1 Coin` presses that start and finish a recording are not recorded. A recording with no input is not saved, and the previous one stays.
-- If, during a recording, you set `Quick Recording = no`, change the dummy character, start Recording Wizard, the match ends or an emulator savestate is loaded, the recording is discarded and you are back on P1.
+- A recording in progress is discarded, and control returns to P1, if you set `Quick Recording = no`, change the dummy character or start Recording Wizard, or if the match ends or an emulator savestate is loaded.
 - While recording, the dummy's automatic actions such as guarding and counters are off.
 - With `Recording > Recording P1 Guard = Auto Guard`, P1 (the side you are not controlling) guards with the game's Auto Guard while you record (default `Off`). Use it to record strings against a blocking opponent. It sends no input, so P1's inputs stay out of the recording. It also works with Recording Wizard, and P1 stops guarding when the recording ends. Auto Guard also blocks what normally cannot be blocked. It does not block throws.
 
 | Under `Quick Recording` | What it does |
 |---|---|
 | `Auto Trim` | Cuts the idle time before and after (default `yes`) |
-| `Coin Saves To` | Where a recording goes. `Own Slot` (default): the dedicated slot only. `Playback Slot`: the `Playback Slot` slot too, replaced without asking |
+| `Coin Saves To` | Where a recording goes. `Own Slot` (default): the dedicated slot only. `Playback Slot`: also the slot selected in `Playback Slot`, overwritten without asking |
 | `Play Quick Recording` | Plays the recording. Activate again to stop |
 | `Copy to Slot` | Copies the recording to `Slot 1`–`Slot 5`. In the window that opens, choose a slot with Up/Down and confirm with Right or LP (that slot's recording is replaced); Left goes back |
 
@@ -802,7 +802,7 @@ With `Quick Recording = no`, `P1 Coin` only switches which character you control
 <a id="recording-wizard"></a>
 ### 5.2 Record with Recording Wizard
 
-Recording Wizard, added in this fork, captures an input sequence from start to finish automatically. It saves you starting and ending the recording yourself; the recording itself is in displayed frames, as with Quick Recording.
+Recording Wizard, added in this fork, captures an input sequence from start to finish automatically. It saves you from starting and stopping the recording yourself; the recording itself is in displayed frames, as with Quick Recording.
 
 1. Choose the desired dummy character as P2 and arrange the starting position.
 2. Open `Recording > Recording Wizard` with Right or LP.
@@ -825,13 +825,13 @@ Saving returns to the slot list so you can record another action. `Lua Hotkey 1`
 
 Use `Before / After` in `Loop Interval (Frames)` to adjust pauses. `After` waits after the previous playback and recovery, before positions are restored. `Before` waits after that restoration and before the next playback. These values use **displayed frames**, unlike the Ticks used by Action Steps.
 
-`Random Start Wait` (Ticks, 0–60) delays the start of playback by a fresh random number from 0 up to the setting each time: `Play Recording`, `Volume Down`, each `Looped Playback` pass (after `Loop Interval`) and the Recording responses. Pressing again while it waits stops it. The Recording Wizard's check playback does not wait. It is the same setting as `Random Start Wait` on the Dummy tab.
+`Random Start Wait` (Ticks, 0–60) delays the start of playback by a fresh random number from 0 up to the setting each time. It applies to `Play Recording`, `Volume Down`, each `Looped Playback` pass (after `Loop Interval`) and the Recording counter actions. Pressing again during the wait cancels the playback. The Recording Wizard's review playback is not delayed. It is the same setting as `Random Start Wait` on the Dummy tab.
 
 `Reset Distance Each Loop = yes` restores recorded spacing each pass. It works with recordings made from v11.4.1 onward that contain distance information. Playback directions are also mirrored when sides switch, but this alone does not guarantee identical spacing or game state. With `Auto-Flip Inputs on Side Switch = no`, a switch during a playback is not mirrored ([10.F](#side-switch-os)).
 
 **During a playback you started, the dummy does not perform its Guard Action.** This includes the gaps between loops and any start wait. Stopping the playback brings it back. The dummy still guards (`Guard`) between loops as before. A playback you started means one started with `Volume Down`, `Play Recording` or `Play Quick Recording`, right after a Coin recording, or by `Play After Restore`.
 
-**A Recording counter (`Reversal - Recording`, `Counter Attack - Recording`, `PB Recording`) stops when the dummy goes into hit or block stun during it.** On the next trigger (when that stun ends), the recording restarts from the beginning, as Action Steps do.
+**A Recording counter (`Reversal - Recording`, `Counter Attack - Recording`, `PB Recording`) stops when the dummy goes into hitstun or blockstun during it.** On the next trigger (when that stun ends), the recording restarts from the beginning, as Action Steps do.
 
 ### 5.4 Randomize recordings
 
@@ -851,15 +851,15 @@ You can also save and restore states from the Recording menu. During a match, op
 
 | Item | Controls |
 |---|---|
-| `Recording > Save State` | Right or LP opens a confirmation. Right or LP on `Yes` (selected first) saves; `No` or Left leaves it |
+| `Recording > Save State` | Right or LP opens a confirmation. Right or LP on `Yes` (selected first) saves; `No` or Left cancels |
 | `Recording > Restore State` | Right or LP closes the menu, then returns to the saved state |
 | `Recording > Play After Restore` | With `yes`, restoring also plays the recording you played last, from the beginning (default `no`) |
 
-- There is one saved state. Choosing characters again makes the previous one unusable (even if you pick the same pair). A state saved with other characters or at another game speed is not restored either.
-- You can save during recording playback, partway through Action Steps or Specified actions, and while Auto Mash holds a grab. Whatever runs keeps running. Only the game as it stands is saved, not how far the playback or the steps had progressed. A dummy in the middle of a move is saved in that pose.
+- Only one state is kept. Choosing characters again makes the previous one unusable (even if you pick the same pair). A state saved with other characters or at another game speed is not restored either.
+- You can save during recording playback, partway through Action Steps or Specified actions, and while Auto Mash holds a grab. Whatever is running keeps running. Only the game state at that moment is saved, not how far the playback or the steps had progressed. A dummy in the middle of a move is saved in that pose.
 - Restoring first stops whatever is running, such as playback or Action Steps. Action Steps start again from the beginning on the next trigger after the restore.
 - With `Play After Restore = yes`, what plays is what you played last: the `Playback Slot` slot or the Coin recording. That covers `Volume Down`, `Play Recording`, `Play Quick Recording` and the playback after a Coin recording, not the dummy's Recording counters. After choosing characters again, nothing starts until you play something. `Random Start Wait` and `Looped Playback` apply as usual, and loops do not restore the state.
-- Neither saving nor restoring happens while recording, during Recording Wizard, with the Action Steps editor open, during a position move or outside a match.
+- Saving and restoring are unavailable while recording, during Recording Wizard, while the Action Steps editor is open, during a position reset or outside a match.
 - Pressing `Volume Up` once with the menu open also closes the menu, then restores. With nothing saved, the menu stays open.
 - With `Display > Recording GUI = yes`, the result of a save or restore (or why it did not happen) appears for about two seconds just under the recording status box at the top left. Quick Recording results appear there too. Set it to `no` once you no longer need them.
 
@@ -912,7 +912,7 @@ The extra wait is counted from the moment the Wait condition is met, whether it 
 | Display | Meaning |
 |---|---|
 | `Auto (Fastest)` | Earliest setting for step one |
-| `Auto (After)` | Starts command input once the dummy can act. A ground dash after the dummy's own move on the ground is the exception: its input starts as the move ends and the dash comes out on the first free Tick (from the second time: how the move ends is learnt once, for this session). Other dashes (after being hit, in the air and so on) get no advance input, so they start later than they could |
+| `Auto (After)` | Starts command input once the dummy can act. A ground dash after the dummy's own move on the ground is the exception: its input starts as the move ends and the dash comes out on the first actionable Tick (from the second time on: the tool has to see how the move ends once, and remembers it only for the current session). Other dashes (after being hit, in the air and so on) get no advance input, so they are not the earliest possible |
 | `Auto (N)` | Uses the measured timing for this combination; N is that value |
 | `Auto (Landing)` | Can enter the motion before landing so the action comes out on the landing Tick |
 | `Auto (Rapid Fire)` | Rapid-fire cancels an applicable light attack; no hit required |
@@ -1014,7 +1014,7 @@ Naming and file dialogs are implemented for Windows. These operations have not b
 
 # Part 3: Practice
 
-Try PB and GC against that opponent, read the results and adjust your input. Section 10 collects step-by-step recipes for both defense and offense.
+Try PB and GC against the opponent you set up, read the results and adjust your input. Section 10 collects step-by-step recipes for both defense and offense.
 
 <a id="08-pb"></a>
 ## 8. Practice PB
@@ -1315,7 +1315,7 @@ The result depends on how the game reads the input, so `no` does not guarantee a
 <summary>When the orientation is locked, and which inputs are affected</summary>
 
 - Each playback, response or loop pass locks its orientation **at the first direction or button input**, including buffered inputs. A side switch before that affects the initial orientation. Later switches do not change it; the next playback, response or pass locks its own orientation.
-- For Action Steps, Action Patterns and `Reversal / Counter Attack - Specified`, an input that starts while the dummy is still turning round (on a wake-up, for example) locks the orientation once the turn is over.
+- For Action Steps, Action Patterns and `Reversal / Counter Attack - Specified`, an input that starts while the dummy is still turning around (on a wake-up, for example) locks the orientation once the turn is over.
 - Applies to: recording playback (including the Recording guard actions), Action Steps, Action Patterns and `Reversal / Counter Attack - Specified`. The Recording Wizard's check playback, Guard Cancel, Push Block and the dummy's guard still follow the switch.
 - A change to the setting applies from the next playback or reversal.
 
@@ -1473,7 +1473,7 @@ Keep these limits in mind:
 <a id="meaty-timing"></a>
 ### 11.3 Meaty Timing: check when your attack connects
 
-**See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from block stun or hit stun, and air recovery. Test your setup against the dummy's response, then use this readout to review its timing.
+**See when your attack connected as the opponent recovered, and which active Tick made contact.** It covers wake-up, recovery from blockstun or hitstun, and air recovery. Test your setup against the dummy's response, then use this readout to review its timing.
 
 ![Meaty Timing: under the Tick Data rows, Wake-up  Reversal +0t  Active 2t. On the Frame Meter below, P2's magenta bar sits under the second of P1's three red tiles](images/meaty_timing.png)
 
@@ -1486,7 +1486,7 @@ In this example, Demitri's jumping LP connects on Morrigan's wake-up, on the sec
 | Meaty Timing: `Reversal +0t` | Contact occurs on the opponent's reversal Tick |
 | Meaty Timing: `Active 2t` | Contact occurs on the second active Tick |
 
-Frame Meter shows the same timing: P2's magenta bar sits directly below P1's second red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hit stun from the meaty; it is one color, so the number on the run (113) counts both.
+Frame Meter shows the same timing: P2's magenta bar sits directly below P1's second red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hitstun from the meaty; it is one color, so the number on the run (113) counts both.
 
 The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` (on by default) appears as an indented setting beneath `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
 
@@ -1513,7 +1513,7 @@ Against a jump, `+0t` targets the opponent **before the jump starts**, while `+2
 |---|---|
 | **`+0t`** | Only blocking and reversal specials are available. An opponent pressing a light normal while holding a guard direction blocks because the normal cannot start yet. Against up-back, a low hits; an attack that can be blocked standing is blocked |
 | **`+1t–+3t`** | Can catch a light normal or the start of a jump. However, Zabel's jump, Sasquatch's wake-up dash and Anakaris's float can avoid lows. The opponent can also activate Dark Force |
-| **`+4t`** | Can trade with a normal that starts in four Ticks. Watch especially for B.B. Hood's and Lilith's crouching normals. A jump started at the earliest opportunity can avoid lows |
+| **`+4t`** | Can trade with a normal that starts in four Ticks. Watch especially for Bulleta's and Lilith's crouching normals. A jump started at the earliest opportunity can avoid lows |
 | **`+5t`** | The boundary where throw invulnerability expires. At the same timing, a throw may succeed or fail depending on character processing order |
 | **`+6t`** | Can target the end of throw invulnerability without depending on processing order. The opponent must still be in throw range and must not be avoiding the throw by jumping or through another form of invulnerability |
 
@@ -1531,7 +1531,7 @@ Meaty Timing reports contact timing; it does not judge whether a setup worked or
 
 **Q-Bee's wake-up is counted differently.** She has no reversal Tick, and the row reads `Wake-up  Actionable +0t`. `Actionable +0t` is the first Tick she can start anything, specials and normals alike (other characters start specials on the reversal Tick and normals a Tick later).
 
-- If she does nothing, the last part of her wake-up (the head shake) lasts until `+1t` or `+2t`, and ordinary strikes are turned away during it (by the game's strike test in the ROM; the developer's logs from the game had no strike connecting during it either). A strike can reach an idle Q-Bee from `+2t` or `+3t`, depending on the turbo cycle. Frame Meter shows the head shake with a white lower half from `+0t` (the Tick she gets back up shows neither white nor stripes: nothing she does comes out on it yet, so in effect she is still down).
+- If she does nothing, the last part of her wake-up (the head shake) lasts until `+1t` or `+2t`, and ordinary strikes do not connect during it (per the game's strike test in the ROM; in the developer's in-game logs, no strike connected during it either). A strike can reach an idle Q-Bee from `+2t` or `+3t`, depending on the turbo cycle. Frame Meter shows the head shake with a white lower half from `+0t` (the Tick she gets back up shows neither white nor stripes: nothing she does comes out on it yet, so in effect she is still down).
 - An action at `+0t` ends the head shake there. Dark Force carries straight on with its own invulnerability.
 - A jump at `+0t` is airborne by `+3t`. To cover both an idle Q-Bee and a jump, a non-low around `+3t` is a reasonable target.
 - Her throw invulnerability lasts until `+3t` (the stripes on Frame Meter).
@@ -1541,7 +1541,7 @@ Meaty Timing reports contact timing; it does not judge whether a setup worked or
 <details>
 <summary>Measurement conditions and special readouts</summary>
 
-- The first word is the situation: `Wake-up` (after a knockdown), `After Guard` (block stun), `After Hit` (hit stun) or `Air Recovery` (recovering in the air from a hit).
+- The first word is the situation: `Wake-up` (after a knockdown), `After Guard` (blockstun), `After Hit` (hitstun) or `Air Recovery` (recovering in the air from a hit).
 - `Reversal +0t` is the contact Tick minus the opponent's reversal Tick. The reversal Tick is the first Tick the opponent can act again, when only blocking and special moves are available: the Tick Frame Meter marks with a magenta bar ([11.4](#frame-meter)). It is not the Tick an input was sent, nor the first Tick a normal can come out. Contact on that same Tick is `+0t`.
 - `Active 4t` means contact on the fourth active Tick, counted from 1 the way Tick Data counts `Active`: Ticks frozen in hitstop are not counted, and moves that keep animating through hitstop are. For a move with several active periods, `Active 2:3t` is the third Tick of the second one. `Active -` means a projectile or a throw made contact; which Tick of the move that was cannot be told. A projectile's contact reads `-` even while your own attack box is out.
 - For each recovery, the first hit or block from `+0t` to `+30t` is recorded; later hits of the same string do not change it. A contact before the reversal Tick, while the opponent is still in stun, is not recorded. If the opponent's attack struck you first (an invulnerable reversal, for example), the row ends with their side and `Hit First`, such as `P2 Hit First`, instead of `Active`.
@@ -1558,7 +1558,7 @@ Set `Frame Meter = yes` at the bottom of the `Display` tab to show both players'
 
 ![Frame Meter: the upper row is P1 (Demitri) with 3 green, 3 red and 7 blue tiles. The lower row is P2 (Morrigan): 14 yellow tiles, the first with a gray top (numbered 13), then 5 tiles striped on the lower half, the first with a magenta bar along the top](images/frame_meter.png)
 
-In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows block stun, followed by the reversal Tick and throw invulnerability. Compare both players' states on the same Tick.
+In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row shows startup, active time and recovery; the lower row shows blockstun, followed by the reversal Tick and throw invulnerability. Compare both players' states on the same Tick.
 
 ![On the Display tab, Frame Meter : yes displays three additional settings beneath it](images/frame_meter_menu.png)
 
@@ -1567,7 +1567,7 @@ In this example, P2 (Morrigan) blocks P1's (Demitri's) attack. The upper row sho
 | Green | Startup; also Dark Force activation |
 | Red | Attack box out, or a throw: a throw has no attack box, so the Ticks the game tries the grab (whiffs included) and the Tick the opponent is grabbed are shown |
 | Blue | Recovery, up to and including the Tick the move ends. For a jump normal that lasts until landing, the landing Tick is the last blue tile |
-| Yellow | Hit or block stun, or being thrown |
+| Yellow | Hitstun or blockstun, or being thrown |
 | Orange | Projectile out |
 | Solid white on the lower half | Invulnerable: neither strikes nor throws can touch the character. The tile keeps its own color, so you can see where invulnerability ends during startup. Not shown while hit, knocked down or getting up |
 | Red and white stripes on the lower half | Throw invulnerable (with `Show Throw Invulnerability` ON). Display only; the numbers do not change. Not shown while hit, knocked down or getting up |
@@ -1587,7 +1587,7 @@ When neither player has done anything for five Ticks, the meter stops. While it 
 | Related setting | What it does |
 |---|---|
 | `Show Throw Invulnerability` | Marks throw-invulnerable Ticks with stripes on the lower half of the tile (on by default). Display only; the numbers do not change |
-| `Include Jumps / Dashes` | Shows jumps and dashes too (on by default). Off: attacks and hit or block stun only. Walking is not shown either way |
+| `Include Jumps / Dashes` | Shows jumps and dashes too (on by default). Off: attacks and hitstun or blockstun only. Walking is not shown either way |
 | `Show P1 Inputs` | Draws P1's inputs above the meter on each Tick they change. While on, hitstop Ticks and the PB window are shown too: inputs are accepted during hitstop, and this is for seeing when yours went in |
 
 Frame Meter counts differently from [Tick Data](#tick-data). Switching the throw-invulnerability or P1-input display does not change the numbers. The developer checked the values using Demitri's 12 standing and crouching normals ([release notes](RELEASE_NOTES.md#v117223)). This does not cover every character or move.
@@ -1599,11 +1599,11 @@ The figures in the text rows count differently. `Startup` includes the first act
 
 **Black dots mark a pair of Ticks processed within the same displayed frame.** At Turbo 3, four Ticks pass in three displayed frames. The dots sit on either side of the shared border between the two tiles. Idle tiles get no dot. At Normal speed (`Game Speed = 0`), there are none.
 
-**A magenta bar along the top of a tile marks a reversal-only Tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, block stun, hit stun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
+**A magenta bar along the top of a tile marks a reversal-only Tick: only blocking and special moves are available.** It appears on the first Tick a character can act after a wake-up, blockstun, hitstun or an air recovery. A special move can start on that Tick; normals, dashes and jumps only from the next one. The tile keeps its own color under the bar (green if a special starts there). It shows for both P1 and P2, whatever the guard action settings and whether or not a move comes out. Q-Bee's wake-up has none: her specials start a Tick later, like everything else.
 
 **Invulnerability marks use hurtbox data and the game's invulnerability and strike-acceptance flags.** They do not exactly match the hitbox display: a character can have a visible hurtbox while rejecting ordinary strikes. Some moves are invulnerable only because their hurtboxes disappear, such as Bishamon's Kirisute Gomen (fully invulnerable on frames 1 to 13 in the frame data tables); these are shown too. `Show Invuln Timer` on the Analysis tab covers only some forms of invulnerability, so its coverage differs. Invulnerability keeps running out during hitstop, and with `Show P1 Inputs` OFF, hitstop Ticks in which neither attacking character advanced are omitted, so a move that hits can show fewer invulnerable Ticks than the same move whiffed (Morrigan's Shadow Blade: 7 on a whiff, 5 on a hit, the other 2 inside the hitstop). Turn `Show P1 Inputs` ON to see every Tick.
 
-**To make invulnerability during actionable periods easier to see, the meter omits white marks and throw-invulnerability stripes during hit stun, block stun, knockdown and wake-up.** This display rule applies on the ground and in the air; it does not mean those states are always invulnerable. Q-Bee's head shake at the end of her wake-up is shown white from `Actionable +0t`, the first Tick she can act: the hitbox display draws her hurtbox, but ordinary strikes are turned away and she is throw invulnerable.
+**To make invulnerability during actionable periods easier to see, the meter omits white marks and throw-invulnerability stripes during hitstun, blockstun, knockdown and wake-up.** This display rule applies on the ground and in the air; it does not mean those states are always invulnerable. Q-Bee's head shake at the end of her wake-up is shown white from `Actionable +0t`, the first Tick she can act: the hitbox display draws her hurtbox, but ordinary strikes do not connect and she is throw invulnerable.
 
 **Being in hitstop does not always mean an attack has stopped advancing.** Some moves keep animating through hitstop; excluding those Ticks would make their measured active duration too short.
 
@@ -1689,7 +1689,7 @@ Set `Trainer > Chain Trainer` to the attacking side, `P1` or `P2`, and land a co
 In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into LP, chained into LK, linked into LP again, and chained into LK and HK.
 
 - `LINK 3t/3t` on the first line: the LP was pressed on the 3rd Tick after D.LK ended and you could act, and it linked; a press up to Tick 3 would have linked. That was the last possible Tick. `=` marks the window.
-- `CHAIN 4t` on the second line: the LK pressed on the 4th Tick after the LP hit was taken as a chain. `-` is hit stop; a press there is held and judged on the Tick hit stop ends. `|` is the Tick the next move came out.
+- `CHAIN 4t` on the second line: the LK pressed on the 4th Tick after the LP hit was taken as a chain. `-` is hitstop; a press there is held and judged on the Tick hitstop ends. `|` is the Tick the next move came out.
 - `CHAIN 9t` on the last line: the HK pressed on Tick 9.
 
 | Example or symbol | Meaning |
@@ -1708,7 +1708,7 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 | `RAPID` | A rapid cancel came out |
 | `LATE 2t` | Two Ticks after the chain window's last Tick |
 | `EARLY 3t` (chain line) | Pressed before the move hit, 3 Ticks before Tick 1 |
-| `MULTI` | Two or more different buttons were waiting to be judged, so nothing chained. They need not be pressed together: pressing them on different Ticks of hit stop does it too |
+| `MULTI` | Two or more different buttons were waiting to be judged, so nothing chained. They need not be pressed together: pressing them on different Ticks of hitstop does it too |
 | `NO CHAIN` | The move does not chain into that button |
 | `?` | Inside the window, refused for another reason |
 | `HIT` | You were hit |
@@ -1718,12 +1718,12 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 | `EARLY 3t/1t` (link line) | Pressed 3 Ticks before the first move ended, so the next move never came out. A press on Tick 1 would have linked |
 | `SP 8t/10t` | Canceled into a special with the press on Tick 8; a press up to Tick 10 would have combo'd. Red means it did not combo. `ES`, `EX` and `DF` (Dark Force) read the same way |
 
-- One line per hit or per link. Up to six lines are kept; the oldest goes first.
+- One line per hit or per link. Up to six lines are kept; the oldest is removed first.
 - A hit that lands 10 Ticks or more after the opponent could act starts a new combo from the top line.
 - A chain into the same button (HK into HK, say) makes no line. Rapid cancels (`RAPID`) and link lines are shown for the same button.
 - A pursuit (an attack on a knocked-down opponent) makes no line.
-- A press after the chain window, while the first move is still running, is sorted like this: if that button could still have linked, it is a link line's `EARLY`; if not, the chain's `LATE`. Whether it could have linked comes from that move's startup, learned when you pressed it and it hit (standing and crouching are learned apart). Until that move has hit since start-up, the press reads as `LATE`. The same applies after you change the opponent's character, until the move hits again.
-- It is drawn at Air Guard Gaps' height, moved a little right so that it does not cover the hit count on the P1 side. With Air Guard Gaps also on, it goes below it. While Chain Trainer is on, GC Command Trainer and Seq. Command Trainer, which share that space, are not drawn.
+- A press after the chain window, while the first move is still running, is classified as follows: if that button could still have linked, it is a link line's `EARLY`; if not, the chain's `LATE`. Whether it could have linked comes from that move's startup, learned when you pressed it and it hit (standing and crouching versions are learned separately). Until that move has hit at least once since the script started, the press reads as `LATE`. The same applies after you change the opponent's character, until the move hits again.
+- It is drawn at the same height as Air Guard Gaps, shifted slightly to the right so that it does not cover the hit count on the P1 side. With Air Guard Gaps also on, it goes below it. While Chain Trainer is on, GC Command Trainer and Seq. Command Trainer, which share that space, are not drawn.
 
 <details>
 <summary>Supported cases and limitations</summary>
@@ -1752,18 +1752,18 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 <a id="bishamon-ubk"></a>
 #### Learn Bishamon's unblockable spacing from the shadows
 
-**`Show Bishamon UBK Trainer`** (while you play Bishamon) shows above P2 whether the spacing is unblockable for Karame Dama or Bricks: `Both` against standing and crouching, `Standing` (blue) against a standing opponent, `Crouching` (yellow) against a crouching one, `No UBK` (red) for neither. The spacing is the distance between the facing edges of the two push boxes; the ranges are a table per opponent.
+**`Show Bishamon UBK Trainer`** (while you play Bishamon) shows above P2 whether the spacing is unblockable for Karame Dama or Bricks: `Both` against standing and crouching, `Standing` (blue) against a standing opponent, `Crouching` (yellow) against a crouching one, `No UBK` (red) for neither. The spacing is the distance between the facing edges of the two push boxes; the ranges come from a per-opponent table.
 
-With it comes a line on the ground, at your own shadow's height, where the shadow's edge facing the opponent has to be. It is there while you are still far away, so it shows how close to come. The colours match the words: blue standing, yellow crouching, green both. While the tip of your shadow is on the line, the line's ends turn white. Walking does not move the line; your shadow moves onto it. The line is placed from your shadow and push box while you stand, and stays there while you walk or attack. It moves when the opponent moves.
+A line is also drawn on the ground at the height of your own shadow, marking where the edge of your shadow nearest the opponent needs to be. It is visible even from far away, so it shows how close you need to get. The colors match the text: blue for standing, yellow for crouching and green for both. While the tip of your shadow is on the line, the line's ends turn white. Walking does not move the line; your shadow moves toward it. The line's position is set from your shadow and push box while you are standing, and it stays there while you walk or attack. It moves when the opponent moves.
 
-1. Put the tip of your shadow on the line and look at the gap between the two shadows.
-2. Set `Show Bishamon UBK Trainer` to `no` (the words and the line go) and make the same gap from the shadows alone.
-3. Set it back to `yes` and check against the words and the line.
+1. Put the tip of your shadow on the line and memorize the gap between the two shadows.
+2. Set `Show Bishamon UBK Trainer` to `no` (the text and the line disappear) and recreate the same gap using the shadows alone.
+3. Set it back to `yes` and check your result against the text and the line.
 
-- No other shadow is drawn; only the tip of yours crosses the line, once it is in range. What you learn is the two shadows, which stay when the aid is off.
-- It shows whether the spacing is in the table's range. Whether the unblockable actually worked is not checked.
+- The line does not draw an extra shadow; it overlaps only the tip of your shadow once you are in range. What you memorize is the two characters' shadows, which remain when the aid is off.
+- It shows whether the spacing is within the table's range. It does not check whether the unblockable actually worked.
 - Morrigan and Lilith have no range in the table, so there is no line. Q-Bee's standing and crouching ranges are for different moves, so they are not merged into green: blue (upper) and yellow (lower) are drawn as two lines.
-- No line is drawn while either character is in the air, has no shadow or has no push box. The words and the white ends follow the push box distance of each frame, so during a move they can disagree with the line.
+- No line is drawn while either character is in the air, has no shadow or has no push box. The text and the white ends follow the push box distance on each frame, so during a move they can disagree with the line.
 
 # Appendix
 
@@ -1801,7 +1801,7 @@ Child options are hidden when their parent is OFF. The GC input bar requires `Sh
 - `Gauge`: separate P1/P2 `Max Life`, `Refill Timer (seconds)` and `Infinite Dark Force`. Turn infinite DF OFF to let it end.
 - `Game > Game Speed`: 0 is Normal; 1–3 are Turbo. Default is 3.
 - `Game > BGM On`: after changing it, return through character select for it to take effect.
-- `Game > Mute Idle Sounds`: stops the voice and sound effects a character repeats while idle, such as Gallon's growl and Jedah's dripping. The idle animation still plays, and attack, guard and hit sounds and BGM stay. Applies to both P1 and P2; off by default. It covers the idle sounds of Gallon, Dark Gallon, Jedah, Victor and B.B. Hood (crouching idle).
+- `Game > Mute Idle Sounds`: stops the voice and sound effects a character repeats while idle, such as Gallon's growl and Jedah's dripping. The idle animation still plays, and attack, guard and hit sounds and BGM stay. Applies to both P1 and P2; off by default. It covers the idle sounds of Gallon, Dark Gallon, Jedah, Victor and Bulleta (crouching idle).
 
 Character-specific options include `Anak Projectile`, `Gloomy Puppet Show` and `Lei-Lei Always Stun Item`. Some depend on the P1 character; settings under Dummy are not limited to P2.
 
@@ -1848,7 +1848,7 @@ When resetting settings for diagnosis, move the JSON aside instead of deleting i
 
 | Symptom | Check first |
 |---|---|
-| Does not start | Whether FBNeo alone runs `vsavj`; batch/EXE placement; complete `scripts` folder; Japanese characters in the path; whether antivirus software is blocking `fcadefbneo.exe` |
+| Does not start | Whether FBNeo alone runs `vsavj`; batch/EXE placement; complete `scripts` folder; non-ASCII characters (such as Japanese) in the path; whether antivirus software is blocking `fcadefbneo.exe` |
 | `gd.dll` error | Check that the entire FBNeo folder was copied. If the error persists, report the full message and the action that triggered it, such as launching the game or loading the script |
 | Dummy actions or readouts behave incorrectly | Whether you launched the separate training copy and selected `Video > Runahead > Disabled`. The absence of a warning does not confirm that Runahead is disabled. If a red warning appears, recheck the setting and installation, then restart |
 | Menu will not open | Whether the match has started and `Lua Hotkey 1` is assigned; do not rely on Start to open the menu |
@@ -1893,6 +1893,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 | 720 | Two full-circle stick motions, 720 degrees |
 | Hold | Maintain the direction until the next step |
 | Trigger | An event that starts a sequence ([how the dummy works](#dummy-model)) |
+| Character names | This guide and the tool's menus use the Japanese version's names: Gallon (J. Talbain), Aulbath (Rikuo), Zabel (Lord Raptor), Lei-Lei (Hsien-Ko) and Bulleta (B.B. Hood) |
 
 <a id="verification-scope"></a>
 ### Reference version and sources

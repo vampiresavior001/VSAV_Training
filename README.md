@@ -14,7 +14,7 @@ This fork extends [VSAV_Training's fc2 branch](https://github.com/NBeing/VSAV_Tr
 
 ## What this training mode does
 
-- **Reproduce the earliest possible actions, even at Turbo 3.** The dummy's inputs are controlled on internal frames ([Ticks](#why-ticks)). Make it perform reversals on wake-up, after blocking and after landing, attacks out of the earliest possible dash, and light-attack or throw challenges exactly when you want them.
+- **Reproduce the earliest possible actions, even at Turbo 3.** The dummy's inputs are controlled on internal frames ([Ticks](#why-ticks)). Make it perform reversals on wake-up, after blocking and after landing, attack out of the earliest possible dash, or challenge your pressure with a light attack or throw, exactly when you want.
 - **See whether your PB fit six presses inside the window.** The display shows where and how many times you pressed within the 14-Tick window, flags simultaneous presses and presses after the window, and tracks your success rate ([PB practice](docs/PLAYER_MANUAL.en.md#08-pb)).
 - **See which GC input broke off, and where.** The tool follows the directions and buttons the game accepted and the intervals between them, and shows where an attempt failed. It also tracks your success rate on each side ([GC practice](docs/PLAYER_MANUAL.en.md#09-gc)).
 
@@ -73,7 +73,7 @@ Open the menu with `Lua Hotkey 1`. With a tab name selected, use Left/Right to s
 
 To play in full screen, check `Video > Blitter options > Windowed Fullscreen` first. The older full-screen mode cannot show the windows used to name, export and import patterns.
 
-Use a short path without Japanese characters; spaces are fine. Before updating an existing installation, make a [backup](#updates-and-backups).
+Use a short path with no non-ASCII characters (such as Japanese); spaces are fine. Before updating an existing installation, make a [backup](#updates-and-backups).
 
 <a id="first-ag-drill"></a>
 <a id="first-pb-drill"></a>
