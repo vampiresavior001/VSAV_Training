@@ -643,7 +643,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 
 `Stand Block`、`All Guard`、`Push Block (All …)` を確実に試すときは、`Random Guard % = 100%` にします。`Guard` 側のAGは、次の反撃設定と併用できます。
 
-`After Hit Guard` と `First Guard Only` は、ガードした攻撃も食らった攻撃も1回と数えます。ダミーが動けるようになってから12 Tick経つと数え直し、次の攻めをまた1発目として扱います（ダミー自身が攻撃している間は数えません。相手が攻撃中なら、その攻撃が終わるまで待ちます）。この2つを選んでいる間は、`Random Guard %` の行は出ません。
+`After Hit Guard` と `First Guard Only` は、ガードした攻撃も食らった攻撃も1回と数えます。ダミーが動けるようになってから12 Tick経つと数え直し、次の攻めをまた1発目として扱います（ダミー自身が攻撃している間は、受けた攻撃を数えません。相手が攻撃中なら、その攻撃が終わるまで待ちます）。この2つを選んでいる間は、`Random Guard %` の行は出ません。
 
 **選んだガードを0%が止めているときは、オレンジ色で知らせます。** `Guard` が `Stand Block`、`All Guard`、`Push Block (All …)` で `Random Guard %` が `0%` のとき、`Random Guard %` の行がオレンジ色になります。`Guard` か `Random Guard %` にカーソルを合わせると、最下行の右側に `Random Guard % is 0%: the dummy never blocks.` と表示されます。0%を意図して使うこともあるため、値は自動では変えません。
 

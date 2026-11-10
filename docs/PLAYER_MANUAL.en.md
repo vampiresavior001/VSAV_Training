@@ -645,7 +645,7 @@ Ordinary throws and ordinary hitstun are not covered. Among special hit reaction
 
 For consistent testing with `Stand Block`, `All Guard` or `Push Block (All …)`, set `Random Guard % = 100%`. PB selected under `Guard` can be combined with the counter-action settings below.
 
-`After Hit Guard` and `First Guard Only` count every attack that connects, whether it hits or is blocked. The count resets 12 Ticks after the dummy can act again, and the next attack is treated as the first one (the dummy's own attacks do not count toward them, and they wait while the attacker is still in an attack). While either is selected, the `Random Guard %` row is hidden.
+`After Hit Guard` and `First Guard Only` count every attack that connects, whether it hits or is blocked. The count resets 12 Ticks after the dummy can act again, and the next attack is treated as the first one (attacks that connect while the dummy itself is attacking are not counted, and the reset waits while the attacker is still in an attack). While either is selected, the `Random Guard %` row is hidden.
 
 **A probability setting turns orange when 0% prevents the selected action from running.** While `Guard` is `Stand Block`, `All Guard` or `Push Block (All …)` and `Random Guard %` is `0%`, the `Random Guard %` row turns orange. With the cursor on `Guard` or `Random Guard %`, the right side of the bottom line reads `Random Guard % is 0%: the dummy never blocks.` The value is not changed for you, because 0% can be intentional.
 
