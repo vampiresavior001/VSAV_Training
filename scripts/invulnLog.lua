@@ -41,6 +41,15 @@
 -- opponent read Wakeup 14t though the jumping LP does not knock down. $1A7 is
 -- logged so when it is set, and for how long, can be read off.
 --
+-- THE TWO FACINGS (version 5, 2026-11-18). Gallon's Wild Circular from Action
+-- Steps, with its motion begun in the air before landing, turned into a normal
+-- throw when he jumped over the opponent. The special-move lever $12A is
+-- swapped by $0B in the air and by the side $120 on the ground (0x0221CC), so
+-- each row carries $0B, $120, X ($10) and $12B - the lever the recognizers
+-- read - to show which reference each Tick of the motion went in under. What
+-- they showed, with the recognizer blocks logged for a while (archive
+-- v11.7.33_5): VSAV_MEMORY_NOTES, the Tick a landing turns the character.
+--
 -- reversal_logs/invuln_log.jsonl: one JSON object per line, the first one the
 -- header. New rows are appended at most once a second from the frame callback;
 -- a start of FBNeo begins a new file. analysis/archive_logs.py archives it.
@@ -114,6 +123,10 @@ local function read(base, rev)
 		f3b4 = memory.readbyte(base + 0x3B4),
 		btn = memory.readbyte(base + 0x122),
 		dir = memory.readbyte(base + 0x125),
+		face = memory.readbyte(base + 0x0B),
+		side = memory.readbyte(base + 0x120),
+		x = memory.readword(base + 0x10),
+		sdir = memory.readbyte(base + 0x12B),
 		sb = sb,
 		sp = sp,
 		mt_rev = rev,
@@ -121,7 +134,8 @@ local function read(base, rev)
 end
 
 local FIELDS = { "char", "state", "atk", "move", "hurt", "f11e", "f134", "f145", "f1a4", "f147", "f143",
-	"cel", "f23", "c08", "c0b", "box", "kd", "hs", "blk", "air", "f3b4", "btn", "dir", "sb", "sp", "mt_rev" }
+	"cel", "f23", "c08", "c0b", "box", "kd", "hs", "blk", "air", "f3b4", "btn", "dir",
+	"face", "side", "x", "sdir", "sb", "sp", "mt_rev" }
 
 local function same(a, b)
 	if a == nil or b == nil then return false end
@@ -158,7 +172,7 @@ end
 
 local function hex(n, w) return string.format("0x%0" .. w .. "X", n) end
 
-local HEADER = '{"log": "invuln_log", "version": 4, '
+local HEADER = '{"log": "invuln_log", "version": 5, '
 	.. '"read_at": "tick clock (rawStateService ticker): once per game tick, mid-tick at the frameskip read, '
 	.. 'before framedata (Tick Data, Meaty Timing) handles the same tick", '
 	.. '"tick": "the ticker count; mt_rev is in the same ticks but as of the previous tick", '
@@ -166,6 +180,7 @@ local HEADER = '{"log": "invuln_log", "version": 4, '
 	.. '"box": "the attack box id at the cel\'s +$0A, as Tick Data and Frame Meter read it; 0 is no box", '
 	.. '"kd": "$1A7, the knockdown flag Tick Data reads for Wakeup", '
 	.. '"sb_sp": "running totals of strikes the game confirmed at 0x018230 by this player\'s body / projectiles on the other player", '
+	.. '"face_side_x_sdir": "$0B the facing, $120 the side, $10 the X position, $12B the special-move lever (swapped by $0B in the air, by $120 on the ground)", '
 	.. '"mt_rev": "the reversal tick Meaty Timing is waiting on (the opponent of Tick Data Side), -1 if none"}\n'
 
 local function row_text(r)
@@ -173,11 +188,13 @@ local function row_text(r)
 		'{"seq": %d, "tick": %d, "p": %d, "char": "%s", "state": "%s", "atk": %d, "move": "%s", '
 		.. '"hurt": "%s", "f11e": %d, "f134": %d, "f145": %d, "f1a4": %d, "f147": %d, "f143": %d, '
 		.. '"cel": "%s", "cnt": %d, "f23": "%s", "c08": %d, "c0b": "%s", "box": %d, "kd": %d, "hs": %d, "blk": %d, '
-		.. '"air": %d, "f3b4": %d, "btn": "%s", "dir": "%s", "sb": %d, "sp": %d, "mt_rev": %d}\n',
+		.. '"air": %d, "f3b4": %d, "btn": "%s", "dir": "%s", '
+		.. '"face": %d, "side": %d, "x": %d, "sdir": "%s", "sb": %d, "sp": %d, "mt_rev": %d}\n',
 		r.seq, r.tick, r.p, hex(r.char, 2), hex(r.state, 8), r.atk, hex(r.move, 2),
 		hex(r.hurt, 6), r.f11e, r.f134, r.f145, r.f1a4, r.f147, r.f143,
 		hex(r.cel, 6), r.cnt, hex(r.f23, 2), r.c08, hex(r.c0b, 2), r.box, r.kd, r.hs, r.blk,
-		r.air, r.f3b4, hex(r.btn, 2), hex(r.dir, 2), r.sb, r.sp, r.mt_rev)
+		r.air, r.f3b4, hex(r.btn, 2), hex(r.dir, 2),
+		r.face, r.side, r.x, hex(r.sdir, 2), r.sb, r.sp, r.mt_rev)
 end
 
 -- Once a second at most, and only when something new came in.

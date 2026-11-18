@@ -18,6 +18,34 @@ See each release for details. Features are listed by their current menu names.
 
 ---
 
+## v11.7.33.1
+
+A special move right after landing from a jump over the opponent in Action
+Steps (for example Gallon's Wild Circular) now comes out instead of a normal
+throw.
+
+### Fix: no special move right after landing from a jump over the opponent
+
+- For example Gallon's Wild Circular (`Special : Wild Circular + HK`) on
+  `Auto (Landing)` after a jump: jumping over the opponent gave a normal throw
+- After landing, the game turns the dummy round. A button pressed on the Tick
+  of that turn was taken by the game as a normal throw, not as the command's
+  move
+- On that Tick, the special move's button alone now waits one or two Ticks and
+  is pressed after the turn. A dummy that lands in front waits for nothing, as
+  before
+- With `Auto-Flip Inputs on Side Switch = no` the input keeps the jump's left
+  and right, so the move does not come out here. Use `yes`
+- Checked in play (with `yes`, 14 of 14 jumps over the opponent gave Wild
+  Circular)
+
+### Manual
+
+- Section 10F: use `yes` for Steps that jump over the opponent and do a
+  special move right after landing
+
+---
+
 ## v11.7.33
 
 A Gallon dummy can now turn the Beast Cannon that comes out of its guard

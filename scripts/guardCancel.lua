@@ -5812,6 +5812,27 @@ memory.registerexec(0x02211A, function()
 			end
 			if _i <= #_s0.sequence then
 				local _pl, _pb = entry_to_bits(_s0.sequence[_i])
+				-- A SPECIAL'S BUTTON WAITS OUT THE TURN AFTER A CROSSOVER (user,
+				-- 2026-11-18). Gallon's Wild Circular on Auto (Landing) after a jump
+				-- over the opponent: the motion's last entry, back + HK, went in on
+				-- the Tick the game turned him round ($0B flipped), and the game took
+				-- that HK as a normal throw ($05 = 04, the opponent's 06) while the
+				-- motion's own block ($338) was cleared - 24 of 24 crossovers; 5 of
+				-- the 6 that landed in front did not turn and threw with Wild
+				-- Circular (invuln_log v5, archive v11.7.33_5). With this, 14 of 14
+				-- crossovers threw with it (Auto-Flip on, v11.7.33_6). On the ground with $0B not
+				-- yet the side the opponent is on, that turn is still to come: the
+				-- lever goes in, the button waits for the Tick after (two at most).
+				if _pb ~= 0 and _s0.seq_through_freeze
+				   and memory.readbyte(0xFF8838) == 0 and facing_unsettled() then
+					_s0.turn_hold = (_s0.turn_hold or 0) + 1
+					if _s0.turn_hold <= 2 then
+						assert_input_bits(_pl, 0)
+						return
+					end
+				else
+					_s0.turn_hold = 0
+				end
 				-- Every tick this entry has been asserted, frozen ones too -
 				-- the game's command clock does not stop for hit stop.
 				_s0.entry_ticks = (_s0.entry_ticks or 0) + 1
