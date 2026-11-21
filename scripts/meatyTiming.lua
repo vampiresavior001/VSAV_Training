@@ -68,6 +68,30 @@
 -- Recovery when the reversal tick is in the air). A recovery that began before
 -- measuring did is not measured - nothing is guessed.
 --
+-- LANDED (user, 2026-11-21). After a wake-up only: the tick your jump landed,
+-- counted from the opponent's reversal tick, so a safe jump can be read
+-- against their reversal's startup ("Landed Rev+2t"). Asked for because in
+-- VSAV a jump-in has no landing recovery to speak of: on the landing tick of
+-- a jump and of a jump attack the game runs its guard check (0x022ABA,
+-- 0x022C54 call 0x027694 right after $38 is cleared).
+--
+--   Wake-up  Reversal +0t  Active 3t  Landed Rev+2t   touched them, landed +2
+--   Wake-up  Landed Rev-3t  No Contact               landed before they woke
+--   Wake-up  Landed Rev+1t  No Contact               landed after, untouched
+--
+-- WITHOUT THE HITSTOP. A jump attack that touches them freezes you for its
+-- hitstop and lands that much later; against an invulnerable reversal it
+-- touches nothing and lands on time, which is the landing that matters. So
+-- after a contact the landing is the contact tick plus the ticks the game's
+-- own physics had left at that tick (tickDataVsav.lua, land_in) - exact for
+-- jumps that hit nothing (design_landing_prediction.md, 2026-09-18). Without
+-- a contact it is the tick $38 went to 0.
+--
+-- Not for air specials (0x0E / 0x10 / 0x12 seen in the air): their landing
+-- has recovery. A landing before the reversal tick counts only for a jump
+-- that took off after the knockdown, within 30 ticks of the reversal tick;
+-- one after it, within the same 30. A later contact keeps the landing.
+--
 -- Pure: no memory, no GUI, no globals. framedata.lua feeds it the same
 -- snapshot Tick Data gets, after Tick Data has taken it.
 
@@ -88,8 +112,13 @@ local last_tick = nil
 -- that is not known (measuring started in the middle of something).
 local latch = nil
 local marker_ticks = 0
-local pending = nil      -- { rev = tick, kind = latch value }
-local result = nil       -- { kind, delta, active, contact }
+local pending = nil      -- { rev = tick, kind = latch value, landed = ticks or nil }
+local result = nil       -- { kind, delta, active, contact, landed, no_contact }
+-- The attacker's jump in progress: { after_down, special, land = tick or nil }.
+local jump = nil
+-- A landing of a jump that took off after the knockdown, before the reversal
+-- tick came: the tick it landed.
+local early_land = nil
 
 function M.reset(reason, clear_result)
 	prev = nil
@@ -97,6 +126,8 @@ function M.reset(reason, clear_result)
 	latch = nil
 	marker_ticks = 0
 	pending = nil
+	jump = nil
+	early_land = nil
 	if clear_result then result = nil end
 end
 
@@ -137,6 +168,7 @@ function M.update(s, run)
 		block_clock = s.p2.block_clock or 0,
 		status = s.p2.status or 0,
 		cel_flag = s.p2.cel_flag or 0,
+		air = s.p1.airborne == true,
 	}
 	if prev ~= nil and s.tick == last_tick then return end
 	if prev == nil or s.tick ~= last_tick + 1 then
@@ -145,6 +177,8 @@ function M.update(s, run)
 		last_tick = s.tick
 		latch = nil
 		pending = nil
+		jump = nil
+		early_land = nil
 		marker_ticks = cur.marker and 1 or 0
 		return
 	end
@@ -184,20 +218,65 @@ function M.update(s, run)
 	else
 		marker_ticks = 0
 	end
+	-- A landing that came before the reversal tick (LANDED, at the top).
+	if pending ~= nil and not pending.seen then
+		pending.seen = true
+		if pending.kind == "down" and early_land ~= nil and pending.rev - early_land <= WINDOW then
+			pending.landed = early_land - pending.rev
+			result = { kind = LABEL.down, landed = pending.landed, no_contact = true }
+		end
+		early_land = nil
+	end
+
+	-- THE JUMP: takeoff, an air special in it, and the landing.
+	-- AFTER THE KNOCKDOWN HIT, NOT AFTER $1A7 (user, 2026-11-21: an early
+	-- landing showed nothing). All 33 jump-ins of the first play test took off
+	-- 9 to 28 ticks before the knockdown flag came on - it rises well after the
+	-- hit that knocks down - so a jump that took off after the last contact
+	-- counts, the flag or not.
+	if cur.air and not p.air then
+		jump = { after_down = latch ~= nil, special = false }
+	end
+	if jump ~= nil and cur.air and s.p1.special == true then jump.special = true end
+	if jump ~= nil and p.air and not cur.air then
+		local L = jump.land or s.tick
+		if not jump.special then
+			if pending ~= nil then
+				local d = L - pending.rev
+				if pending.kind == "down" and d <= WINDOW then
+					pending.landed = d
+					result = { kind = LABEL.down, landed = d, no_contact = true }
+				end
+			elseif latch ~= nil and jump.after_down then
+				-- Kept for the reversal tick, which uses it for a wake-up only.
+				early_land = L
+			end
+		end
+		jump = nil
+	end
 
 	if contact ~= nil then
+		-- Where this jump would have landed had it touched nothing: the first
+		-- contact's tick plus the physics left at it (LANDED, at the top).
+		local landed = pending and pending.landed or nil
+		local in_recovery = pending ~= nil
+		if jump ~= nil and cur.air and contact ~= "throw" and not theirs
+		   and not jump.special and s.p1.special ~= true and type(s.p1.land_in) == "number" then
+			jump.land = jump.land or (s.tick + s.p1.land_in)
+			if pending ~= nil and pending.kind == "down" then landed = jump.land - pending.rev end
+		end
 		if pending ~= nil then
 			local d = s.tick - pending.rev
 			if d >= 0 and d <= WINDOW then
 				if theirs then
 					-- Their attack struck you first: no meaty, and the row says so.
 					result = { kind = LABEL[pending.kind], base = pending.base, delta = d,
-						first = true, contact = contact }
+						first = true, contact = contact, landed = pending.landed }
 				else
 					local active = active_label(s, run, contact)
 					if active ~= false then
 						result = { kind = LABEL[pending.kind], base = pending.base, delta = d,
-							active = active, contact = contact }
+							active = active, contact = contact, landed = landed }
 					end
 				end
 			end
@@ -205,6 +284,11 @@ function M.update(s, run)
 			pending = nil
 		end
 		latch = (contact == "block") and "guard" or "hit"
+		early_land = nil
+		-- A contact outside a recovery (the hit that knocks down, say) comes
+		-- after the takeoff of any jump still in the air: that jump does not
+		-- count before the reversal tick.
+		if jump ~= nil and not in_recovery then jump.after_down = false end
 	end
 	-- Down only on top of a contact this module saw: a knockdown already
 	-- running when measuring began is a recovery it did not see start.
@@ -225,9 +309,15 @@ function M.waitingSince() return pending and pending.rev or nil end
 function M.formatResult(opponent)
 	local r = result
 	if r == nil then return "" end
+	local landed = ""
+	if r.landed ~= nil then
+		landed = "Landed Rev" .. (r.landed < 0 and "-" or "+") .. math.abs(r.landed) .. "t"
+	end
+	if r.no_contact then return r.kind .. "  " .. landed .. "  No Contact" end
 	local head = r.kind .. "  " .. (r.base or "Reversal") .. " +" .. r.delta .. "t  "
-	if r.first then return head .. (opponent or "P2") .. " Hit First" end
-	return head .. "Active " .. r.active
+	if landed ~= "" then landed = "  " .. landed end
+	if r.first then return head .. (opponent or "P2") .. " Hit First" .. landed end
+	return head .. "Active " .. r.active .. landed
 end
 
 return M

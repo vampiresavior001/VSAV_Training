@@ -6,7 +6,7 @@
 
 本書では **AG（アドバンシングガード）** と表記します。英語UIの **Push Block／PB** は同じ機能を指します。設定を探せるよう、`Show PB Counter` などの実際の項目名は変更せず記載します。
 
-対象：**v11.7.33.1／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
+対象：**v11.7.34／Fightcade 2 の FBNeo／日本版 `vsavj`（970519 Japan）**。導入手順は Windows 向けです。基本は自分が P1、ダミーが P2 の状態で説明します。
 
 [初めて使う方は導入から](#02-install) · [守りを練習する：AG・GC](#sasquatch-ag-tutorial) · [攻めを調べる：起き攻め](#wakeup-pressure-drill) · [対象環境・確認範囲](#verification-scope)
 
@@ -584,7 +584,7 @@ GCも同じ反復で練習できます。一回の試行ではAGかGCのどち�
 | 項目 | 内容 |
 |---|---|
 | `Pose` | 通常時に保持する方向。`None`、しゃがみ、前後移動、ジャンプ方向など |
-| `Wakeup` | ダウン後の移動起き上がり。`None`、`Towards`、`Away`、ランダムなど |
+| `Wakeup` | ダウン後の移動起き上がり。`None`、`Towards`（相手に近づく）、`Away`（相手から離れる）、ランダムなど。ダミーが相手に背を向けて倒れていても、相手の位置で方向が決まる |
 | `Random Throw Tech %` | 投げ抜けの確率。`0% / 25% / 50% / 75% / 100%` |
 | `Auto Mash` | つかみ中と、レバガチャで短くなるやられ中のレバガチャ。`Off / Normal / Fast / Fastest` |
 | `Guard` | ガード方法 |
@@ -1257,7 +1257,7 @@ GCコマンドの入力受付猶予には乱数が関わるため、同じつも
 
    ![モリガンのリバーサルのシャドウブレイドを、着地したデミトリがガードした画面。右にREVERSAL、入力の帯にG](images/safe_jump_guard.png)
 
-   開発側の実機で、モリガンにリバーサルを出させた画面です（Action Stepsの1ステップ目を `Auto (Fastest)` の `Special : Shadow Blade + LP`、つまり弱シャドウブレイド）。右に `REVERSAL` が出て、デミトリは着地してガードしています（入力の帯の `G`）。相手の攻撃が先に届いたので、Meaty Timingは `Reversal +4t  P2 Hit First` です。
+   開発側の実機で、モリガンにリバーサルを出させた画面です（Action Stepsの1ステップ目を `Auto (Fastest)` の `Special : Shadow Blade + LP`、つまり弱シャドウブレイド）。右に `REVERSAL` が出て、デミトリは着地してガードしています（入力の帯の `G`）。相手の攻撃が先に届いたので、Meaty Timingは `Reversal +4t  P2 Hit First` です。着地したTickは、Meaty Timingの `Landed Rev+Nt` で確かめられます（[11.3](#meaty-landed)）。
 
 小Pを押す正確なTickは、画像からは特定できません。比較するときは、開始位置・ダウンの取り方・相手の技の強度を固定します。
 
@@ -1487,6 +1487,24 @@ AGを `Guard` 側で設定することで、`Guard Action Type` を反撃用に�
 | Meaty Timingの `Active 2t` | 持続の2 Tick目で接触 |
 
 Frame Meterでも、P1の2つ目の赤いマスの真下にP2のマゼンタの線があり、同じタイミングを確認できます。線の下のマスが黄色なのは、そのTickに当たってやられになったためです。線より前の黄色はダウン、後ろの黄色は重ねを受けたやられ硬直です。同じ色が続くので、マスの数字（113）は両方を合わせて数えています。
+
+<a id="meaty-landed"></a>
+**ジャンプの着地：`Landed Rev+2t`**
+
+起き上がりのときは、自分のジャンプが相手のリバーサルTickから何Tick後に着地したかも出ます。詐欺飛びになっているかを、相手のリバーサルの発生と比べて確かめられます。
+
+| 表示 | 意味 |
+|---|---|
+| `Wake-up  Reversal +0t  Active 3t  Landed Rev+2t` | リバーサルTickちょうどに接触し、その2 Tick後に着地した |
+| `Wake-up  Landed Rev-3t  No Contact` | 相手のリバーサルTickの3 Tick前に着地した。ジャンプ攻撃は当たっていない |
+| `Wake-up  Landed Rev+1t  No Contact` | 当たらずに、リバーサルTickの1 Tick後に着地した |
+| `Wake-up  Reversal +3t  P2 Hit First  Landed Rev+1t` | 着地した後に、相手の攻撃が届いた（ガードした場合を含む） |
+
+- 当たったジャンプ攻撃の着地は、ヒットストップを除いて数えます。相手が無敵のリバーサルを出すとジャンプ攻撃は当たらず、ヒットストップも起きないので、そのときに着地するTickを出しています。
+- 着地したTickから、ガードできます。開発側の実機では、デミトリの強デモンクレイドル（Tick DataのStartup 4。リバーサルTickの3 Tick後に攻撃判定）に対し、後ろを入れたまま `Landed Rev+0t`〜`+3t` で着地した22回すべてでガードできました。目安として、`Landed Rev+N` のNが相手のリバーサルのStartupより小さければ、ガードが間に合います。
+- 確かめたのは、自分がP1の場合だけです。自分がP2のとき、着地と相手の攻撃判定が同じTickになった場合の結果は未確認です。
+- 空中必殺技（着地に硬直がある）と、相手をダウンさせたときに空中にいたジャンプは数えません。リバーサルTickの前後30 Tickを超えた着地も出しません。
+- ジャンプ攻撃をガードさせた場合の、相手のガードキャンセルについては判定しません。
 
 表示はTick Dataの基本データとAction Timelineの間に出ます。`Show Meaty Timing`（初期値はON）は、Tick DataがONのとき、`Trainer` タブの `Tick Data` の下に字下げして出ます。メニュー下部の説明文に、行の読み方の要約が出ます。
 
@@ -1740,7 +1758,6 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 | 項目 | 確認するもの |
 |---|---|
 | `Show Frame Trap Trainer` | P2のヒット・ガード硬直が解けてから、次の接触までの隙間 |
-| `Show Jump In Trainer` | P2への接触から、自分の着地までの表示フレーム。既知の不具合として、当てずに着地しただけでも差が記録されることがある |
 | `Show IAD Trainer` | 空中ダッシュの高さ。時間の表示ではない |
 | `Show Dashes Interval` | ダッシュ間の表示フレーム |
 | `Show Dash Time` | ダッシュの継続表示フレーム |
@@ -1814,6 +1831,8 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 `Random Guard Action % Check` は、ダミーが `Random Guard Action %` の設定どおりの割合で行動しているかを数えます。設定値、ダミーに来た機会の数（`opp`）、抽選で許可された数（`roll+`）などを表示します。機会が8回たまった後は、実測の割合が設定の±5ポイント以内なら緑、外れれば赤になります。
 
 `Knockdown Logger` をONにすると、`scripts/reversal_logs` に調査用ログを書きます。空中ガードも記録対象です。`Show Pursuit Indicator` は未完成と明記されているため、追い打ち可否の確定判定には使わないでください。
+
+`Show Jump In Trainer` は、P2への接触から自分の着地までを表示フレームで出します（v11.7.33.1まではTrainerタブ）。既知の不具合として、当てずに着地しただけでも差が記録されることがあります。起き上がりへのジャンプの着地をTickで見るときは、Meaty Timingの [`Landed`](#meaty-landed) を使ってください。
 
 <a id="13-save"></a>
 ## 13. 保存・バックアップ・更新
@@ -1902,7 +1921,7 @@ Action Steps側の `Auto (10)` が、この表示では `Dash > 12t` となる�
 - 文書更新：2026-10-27。エミュレーター上での手順の確認は含みません。
 - 比較対象のフォーク元：[`fc2`、92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6)。最速入力の制約と既存トレーナーは[元のmenu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua)、入力列の処理は[元のcontroller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua)と照合。
 - 比較はソースに基づく機能・制御方式の確認。両版の実機比較および上記の永久コンボ定義の実行は本書作成時には未実施。永久コンボの例は開発者から提供された用途説明に基づく。
-- 対象：v11.7.33.1。項目名は2026-11-18に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
+- 対象：v11.7.34。項目名は2026-11-21に、本書に出てくる名前が対象版のスクリプトにあることを照合。最初の確認：[351e310（v11.7.16）](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20)。
 - [README](../README.ja.md)／[日本語リリースノート](RELEASE_NOTES.ja.md)。
 - メニュー・設定：[menu.lua](../scripts/menu.lua)、[config.lua](../scripts/config.lua)。
 - 基本操作：[controller.lua](../scripts/controller.lua)、[position.lua](../scripts/position.lua)。

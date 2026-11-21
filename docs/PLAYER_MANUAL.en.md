@@ -6,7 +6,7 @@ This guide explains how to use VSAV_Training, a Vampire Savior training mode for
 
 This guide uses **PB (Push Block)**, matching the English UI. Menu options are shown by their on-screen names, such as `Show PB Counter`.
 
-For **v11.7.33.1 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
+For **v11.7.34 / Fightcade 2's FBNeo / Japanese `vsavj` (970519 Japan)**. Installation instructions are for Windows. Unless stated otherwise, you control P1 and the dummy is P2.
 
 [New here? Start with installation](#02-install) · [Practice defense: PB / GC](#sasquatch-pb-tutorial) · [Test offense: wake-up pressure](#wakeup-pressure-drill) · [Scope and verification](#verification-scope)
 
@@ -586,7 +586,7 @@ Building an action does not start it; it starts when a trigger comes. To repeat 
 | Option | Meaning |
 |---|---|
 | `Pose` | Direction held normally: `None`, crouching, forward/back or jumping directions |
-| `Wakeup` | Movement on recovery from knockdown: `None`, `Towards`, `Away` or random choices |
+| `Wakeup` | Movement on recovery from knockdown: `None`, `Towards` (towards you), `Away` (away from you) or random choices. The direction follows where you are, even when the dummy lies facing away from you |
 | `Random Throw Tech %` | Throw-tech probability: `0% / 25% / 50% / 75% / 100%` |
 | `Auto Mash` | Mashing during grabs (either side) and during hit reactions that mashing shortens: `Off / Normal / Fast / Fastest` |
 | `Guard` | Blocking method |
@@ -1259,7 +1259,7 @@ The screenshot shows a forward-jump LP after Demitri hits Morrigan with a heavy 
 
    ![Demitri lands and blocks Morrigan's reversal Shadow Blade. REVERSAL on the right, G on the input bar](images/safe_jump_guard.png)
 
-   This screenshot was captured on the developer's machine with Morrigan set to perform a light Shadow Blade reversal (Action Steps, step 1: `Auto (Fastest)` `Special : Shadow Blade + LP`). `REVERSAL` shows on the right, and Demitri has landed and blocked (`G` on the input bar). Her attack reached first, so Meaty Timing reads `Reversal +4t  P2 Hit First`.
+   This screenshot was captured on the developer's machine with Morrigan set to perform a light Shadow Blade reversal (Action Steps, step 1: `Auto (Fastest)` `Special : Shadow Blade + LP`). `REVERSAL` shows on the right, and Demitri has landed and blocked (`G` on the input bar). Her attack reached first, so Meaty Timing reads `Reversal +4t  P2 Hit First`. The Tick you landed on shows as `Landed Rev+Nt` in Meaty Timing ([11.3](#meaty-landed)).
 
 The screenshots do not identify the exact LP input Tick. Keep the starting position, knockdown and reversal strength fixed when comparing attempts.
 
@@ -1489,6 +1489,24 @@ In this example, Demitri's jumping LP connects on Morrigan's wake-up, on the sec
 | Meaty Timing: `Active 2t` | Contact occurs on the second active Tick |
 
 Frame Meter shows the same timing: P2's magenta bar sits directly below P1's second red tile. The tile under the bar is yellow because the hit landed on that Tick. The yellow before the bar is the knockdown and the yellow after it is the hitstun from the meaty; it is one color, so the number on the run (113) counts both.
+
+<a id="meaty-landed"></a>
+**Where your jump landed: `Landed Rev+2t`**
+
+On a wake-up, the row also shows how many Ticks after the opponent's reversal Tick your jump landed. Compare it with the startup of their reversal to check a safe jump.
+
+| Readout | Meaning |
+|---|---|
+| `Wake-up  Reversal +0t  Active 3t  Landed Rev+2t` | Contact on the reversal Tick, landing 2 Ticks after it |
+| `Wake-up  Landed Rev-3t  No Contact` | You landed 3 Ticks before their reversal Tick; the jump attack did not touch them |
+| `Wake-up  Landed Rev+1t  No Contact` | No contact; you landed 1 Tick after their reversal Tick |
+| `Wake-up  Reversal +3t  P2 Hit First  Landed Rev+1t` | Their attack reached you after you landed (also when you blocked it) |
+
+- When the jump attack touched them, the landing is counted without the hitstop. Against an invulnerable reversal the jump attack touches nothing and causes no hitstop, so the row gives the Tick you would land on then.
+- You can block from the Tick you land. On the developer's machine, against Demitri's heavy Demon Cradle (Tick Data Startup 4, attack box 3 Ticks after the reversal Tick), all 22 landings from `Landed Rev+0t` to `+3t` with back held were blocked. As a guide, if N in `Landed Rev+N` is smaller than the Startup of their reversal, you block in time.
+- This was checked only with you as P1. As P2, the result when your landing and their attack box come on the same Tick is unconfirmed.
+- Air specials (their landing has recovery) and a jump that was in the air when you knocked the opponent down are not counted. Landings more than 30 Ticks before or after the reversal Tick are not shown.
+- It says nothing about a guard cancel against a jump attack they blocked.
 
 The readout appears between the basic Tick Data and Action Timeline. `Show Meaty Timing` (on by default) appears as an indented setting beneath `Tick Data` on the `Trainer` tab when Tick Data is on. The help text at the bottom of the menu sums up how to read the row.
 
@@ -1742,7 +1760,6 @@ In this example P1's Anakaris hit Morrigan with a dash LK (`D.LK`), linked into 
 | Option | What it measures |
 |---|---|
 | `Show Frame Trap Trainer` | Gap from P2 leaving hitstun/blockstun to the next contact |
-| `Show Jump In Trainer` | Displayed frames from contact with P2 to your landing. Known bug: landing without hitting anything can still record a gap |
 | `Show IAD Trainer` | Air-dash height, not time |
 | `Show Dashes Interval` | Displayed frames between dashes |
 | `Show Dash Time` | Dash duration in displayed frames |
@@ -1816,6 +1833,8 @@ With Anakaris as the dummy, `Pit of Blame` offers `None / Normal / ES / Random`.
 `Random Guard Action % Check` checks how often `Random Guard Action %` allows the dummy to act. It shows the setting, the number of opportunities (`opp`) and how many passed the probability check (`roll+`). After eight chances it turns green when the measured rate is within five percentage points of the setting, and red otherwise.
 
 `Knockdown Logger` writes diagnostic logs under `scripts/reversal_logs`, including air-guard situations. `Show Pursuit Indicator` is explicitly marked incomplete; do not rely on it as a definitive OTG eligibility indicator.
+
+`Show Jump In Trainer` shows the displayed frames from contact with P2 to your landing (on the Trainer tab up to v11.7.33.1). Known bug: landing without hitting anything can still record a gap. For a jump on a wake-up, Meaty Timing's [`Landed`](#meaty-landed) gives the landing in Ticks.
 
 <a id="13-save"></a>
 ## 13. Saving, backups and updates
@@ -1905,7 +1924,7 @@ For reports, include version, P1/P2 characters, which character is on each side,
 - Documentation updated: 2026-10-27. This does not include running the procedures in an emulator.
 - Upstream comparison: [`fc2`, 92980a5](https://github.com/NBeing/VSAV_Training/tree/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6). Earliest-input limitations and existing trainers were checked in [upstream menu.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/menu.lua), and input delivery in [upstream controller.lua](https://github.com/NBeing/VSAV_Training/blob/92980a561a10f81fdaf7c8e8b4e4b956bd1316c6/scripts/controller.lua).
 - The comparison covers source-level features and control methods. An emulator A/B comparison and execution of the infinite-combo definitions were not performed while preparing this manual. The infinite-combo examples reflect use cases supplied by the developer.
-- Fork version: v11.7.33.1. On 2026-11-18 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
+- Fork version: v11.7.34. On 2026-11-21 the labels used in this manual were checked against the target version's scripts. First checked at [351e310 (v11.7.16)](https://github.com/vampiresavior001/VSAV_Training/tree/351e31034a3e4eb067e60c4f74f17ec59277ca20).
 - [English README](../README.md) / [English release notes](RELEASE_NOTES.md).
 - Menus/settings: [menu.lua](../scripts/menu.lua), [config.lua](../scripts/config.lua).
 - Controls: [controller.lua](../scripts/controller.lua), [position.lua](../scripts/position.lua).

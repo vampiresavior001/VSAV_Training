@@ -181,8 +181,26 @@ local function slide_allowed()
   return _status == 0 and (_state == 0x00 or _state == 0x04)
 end
 
+-- Set on a frame camera_restore_step moved the pair (see below).
+local restore_moved = false
+
 local function watch_round_start()
   local a, b = getx(P1), getx(P2)
+  -- A RESTORE IS NOT A ROUND STARTING EITHER (user, 2026-11-21: the slide to
+  -- the centre sometimes went somewhere else, the centre having been
+  -- overwritten). Its first step puts both characters near where a recording
+  -- began, in one frame - both_jumped below - so every playback of a
+  -- recording with a start position (macro.lua restore_playback_pos, before
+  -- each pass) and every wizard restore replaced the round's start spacing with
+  -- a position part-way through the restore. Reproduced offline: 553/727
+  -- became 499/... after one restore. Compare against where the restore put
+  -- them, the same as after_load.
+  if restore_moved then
+    restore_moved = false
+    prev[P1], prev[P2] = a, b
+    still = 0
+    return
+  end
   -- X reads 0 while the round is being set up. From there until the resting
   -- pair has been read back, start_l/start_r are last round's - and every
   -- arrangement is computed from them, so nothing may move on them yet.
@@ -615,6 +633,8 @@ end
 local function camera_restore_step()
   if restore == nil then return true end
   local r = restore
+  -- Every path below writes both X: not a round start (watch_round_start).
+  restore_moved = true
   -- The game moves the camera too, and if it ever pulled harder than this does
   -- the two would push against each other for ever - with the wizard waiting
   -- on a restore that never lands. Three frames is the real cost; this only

@@ -118,6 +118,25 @@ for _, tab in ipairs(menu) do
 	want(("%s: 新規インストールの %d 行が収まる"):format(tab.name, shown), shown <= capacity, true)
 end
 
+-- TRAINER WITH TICK DATA AND ACTION TIMELINE ON (user screenshot, 2026-11-21).
+-- A fresh install has Tick Data off, so its indented rows were never counted;
+-- with it and Action Timeline on, Timeline Cut made the tab one row too many
+-- and Reset This Tab was drawn over the help text.
+do
+	local trainer = nil
+	for _, tab in ipairs(menu) do if tab.name == "Trainer" then trainer = tab end end
+	local keep = {}
+	local set = { mo_enable_frame_data = true, display_meaty_timing = true, display_action_timeline = true }
+	for k, v in pairs(set) do keep[k] = training_settings[k] ; training_settings[k] = v end
+	local shown = 0
+	for _, e in ipairs(trainer.entries) do
+		if e.is_disabled == nil or not e.is_disabled() then shown = shown + 1 end
+	end
+	print(("  -- Trainer (Tick Data・Action Timeline ON) %d 行"):format(shown))
+	want("Trainer: Tick Data と Action Timeline を ON にしても収まる", shown <= capacity, true)
+	for k, _ in pairs(set) do training_settings[k] = keep[k] end
+end
+
 -- AND THE ROWS THEMSELVES, WHICH RUN OUT OF ROOM SIDEWAYS.
 --
 -- Height was only half of it: a row is drawn as one string and nothing stops

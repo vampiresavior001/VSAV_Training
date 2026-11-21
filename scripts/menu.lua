@@ -2272,7 +2272,7 @@ return {
         child_of("mo_enable_frame_data", list_menu_item("Tick Data Side", training_settings, "mo_frame_data_side", { "P1", "P2" }, 1, "WHICH PLAYER the rows above measure. P1 is you.\nP2 measures the DUMMY: its move gets Startup / Active / Recovery, the Action\nTimeline follows what the DUMMY did, and YOUR side supplies the hit or guard\nit ran into. This is how to see what a recorded Action Steps pattern really\ncame out as.\nOne side at a time. Both readouts say P2 while it is on.")),
         -- SHOW MEATY TIMING (user, 2026-10-07). Its row sits between the Tick
         -- Data rows and the Action Timeline on screen, so it sits there here.
-        child_of("mo_enable_frame_data", checkbox_menu_item("Show Meaty Timing", training_settings, "display_meaty_timing", true, "After a wake-up, guard, hit or air recovery: how many Ticks after the\nopponent's reversal Tick your attack touched them, and on which Tick of its\nactive frames. The first hit or guard from +0 to +30 Ticks is recorded.\nWake-up  Reversal +0t  Active 3t   2:3t = 3rd Tick of the 2nd active run.\nActive - : a projectile or a throw. Not a verdict on the setup.\nP2 Hit First: their attack landed first. Q-Bee's wake-up: Actionable +Nt.")),
+        child_of("mo_enable_frame_data", checkbox_menu_item("Show Meaty Timing", training_settings, "display_meaty_timing", true, "After a wake-up, guard, hit or air recovery: how many Ticks after the\nopponent's reversal Tick your attack touched them, and on which Tick of its\nactive frames (2:3t = 3rd Tick of the 2nd run; - : projectile or throw).\nWake-up only: Landed Rev+2t = your jump landed 2 Ticks after their reversal\nTick, hitstop left out. P2 Hit First: their attack landed first.\nFirst hit or guard from +0 to +30t. Q-Bee: Actionable +Nt. Not a verdict.")),
         -- SHOW ACTION TIMELINE (user, 2026-10-05). Off hides the green row
         -- only; framedata.lua stops handing it to the HUD. Same key as
         -- tirsod's fork, which has this switch too, so a setting carries
@@ -2311,7 +2311,6 @@ return {
         -- at the top of get_menu().
         _ct_item,
         checkbox_menu_item("Show Frame Trap Trainer", training_settings, "display_frame_trap_trainer", false,"Shows the gap between p2 recovering from hit or block stun\nand the next one, in game Ticks."),
-        checkbox_menu_item("Show Jump In Trainer", training_settings, "display_jump_in_trainer", false,"Displays the gap between p2 getting hit and your character landing,\nin DISPLAYED frames - not game Ticks."),
         checkbox_menu_item("Show IAD Trainer", training_settings, "display_airdash_trainer", 0,"This option shows the HEIGHT of your last few aidashes.\nGreen is best! Red is Worst!"),
         checkbox_menu_item("Show Dashes Interval", training_settings, "display_dash_interval_trainer", 0,"Shows how many DISPLAYED frames between dashes - not game Ticks.\nGreen is best! Red is Worst!"),
         checkbox_menu_item("Show Dash Time", training_settings, "display_dash_length_trainer", 0,"Shows how many DISPLAYED frames you dashed for - not game Ticks.\nIf Sas then Smileys describe short hop success.\nGreen is best! Red is Worst!"),
@@ -2336,6 +2335,12 @@ return {
         checkbox_menu_item("Show PB Timer", training_settings, "show_pb_timer", false,"The push block window ($1AB), over each character's head, labelled PB.\nA blocked hit sets it to 14 (ROM 0x023966) and it counts down from there;\npresses are only counted while it is above zero.\nA raw value read straight from the game, not a measurement."),
         checkbox_menu_item("Show PB PushBack Timer", training_settings, "show_pb_pushback_timer", false,"The push block pushback timer ($1B0), over each character's head, labelled\nPB PushBack.\nA raw value read straight from the game. Show Hit Strength + PB PushBack\nprints the same two numbers at the top left instead of over the heads."),
         checkbox_menu_item("Show Pursuit Indicator", training_settings, "show_pursuit_indicator", false,"Opponent OK at the top left, from the game's pursuit (OTG) state.\nINCOMPLETE. Two of its three lines have never been drawn - the option that\nguards them exists nowhere - and the labels on the other two disagree about\nwhich side they describe.\nSee analysis/ISSUE-PURSUIT-INDICATOR-001.md before trusting it."),
+        -- SHOW JUMP IN TRAINER, MOVED FROM TRAINER (user, 2026-11-21). With Tick
+        -- Data and Action Timeline on, Timeline Cut pushed the Trainer tab one
+        -- row past its room and Reset This Tab was drawn over the help text.
+        -- This one went: it counts displayed frames, has a known bug, and
+        -- Meaty Timing's Landed now reads a wake-up jump's landing in Ticks.
+        checkbox_menu_item("Show Jump In Trainer", training_settings, "display_jump_in_trainer", false,"Displays the gap between p2 getting hit and your character landing,\nin DISPLAYED frames - not game Ticks. Known bug: a landing without a hit\ncan still record a gap. For a jump on a wake-up, Meaty Timing's Landed\n(Trainer, under Tick Data) gives the landing in Ticks."),
         checkbox_menu_item("Show Hit Strength + PB PushBack", training_settings, "show_move_strength", false,"Four lines at the top left: the strength of the attack each character was last\nhit by ($59), and each one's push block pushback timer ($1B0).\nAdded while chasing a delayed-pushback bug. Raw values, no measurement."),
         checkbox_menu_item("Show Projectile Allocation", training_settings, "show_projectile_count_limiter", false,"The projectile allocation value ($FFF9BE) in hex, near the top of the screen.\nThe game's own budget for what can be on screen at once.\nA readout, not a limiter - nothing here changes the value."),
         -- A CHECK ON THE TOOL, NOT PRACTICE (user, 2026-09-28): it counts

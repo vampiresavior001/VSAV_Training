@@ -271,6 +271,31 @@ end
 
 function M.side() return ATK_KEY end
 
+-- TICKS UNTIL THIS PLAYER LANDS, BY THE GAME'S OWN PHYSICS (2026-11-21).
+-- The same arithmetic as guardCancel.lua ticks_to_landing(), which reads P2
+-- only: 0x0273E2 adds $4C to $44 and $44 to $14 (16.16 longs) and tests the
+-- floor $3A (a word) only while $44 is negative. Through a hitstop the game
+-- does not run it, so read on a contact tick this is the landing the jump
+-- would have had without the contact. nil when already on the floor or not
+-- landing within 120 ticks.
+function M.ticks_to_landing(base)
+  local function sdw(a)
+    local v = memory.readdword(a)
+    if v >= 2147483648 then v = v - 4294967296 end
+    return v
+  end
+  local y, vy, ay = sdw(base + 0x14), sdw(base + 0x44), sdw(base + 0x4C)
+  local g = memory.readword(base + 0x3A)
+  if g >= 32768 then g = g - 65536 end
+  if math.floor(y / 65536) < g then return nil end
+  for t = 1, 120 do
+    vy = vy + ay
+    y = y + vy
+    if vy < 0 and math.floor(y / 65536) < g then return t end
+  end
+  return nil
+end
+
 function M.capture(tick)
   snapshot.tick = tick
   -- Who struck whom since the last capture (STRIKES THE GAME CONFIRMED).
@@ -495,6 +520,9 @@ function M.capture(tick)
   -- dash LPs: +0x18, +0x18, then +0x102e onto the attack's own script.
   snapshot.p1.cel = _cel
   snapshot.p1.hitfreeze = memory.readbyte(ATK + 0x05C) ~= 0
+  -- For Meaty Timing's Landed: the ticks the game's physics has left before
+  -- this jump lands, nil when not falling towards the floor.
+  snapshot.p1.land_in = snapshot.p1.airborne and M.ticks_to_landing(ATK) or nil
 
   snapshot.p2.status = memory.readbyte(DEF + 0x005)
   -- $06 as well as $05, because a knockdown leaves $05 before the character can

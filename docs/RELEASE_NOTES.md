@@ -18,6 +18,65 @@ See each release for details. Features are listed by their current menu names.
 
 ---
 
+## v11.7.34
+
+Meaty Timing now shows how many Ticks after the opponent's reversal Tick your
+jump landed on a wake-up. The dummy's `Wakeup = Towards` / `Away` no longer
+goes the wrong way depending on how the dummy faces, and the move to the
+centre no longer goes off after playing a recording. `Show Jump In Trainer`
+moved to the Analysis tab.
+
+### New: where your jump landed (Meaty Timing's Landed)
+
+- On a wake-up, the Meaty Timing row shows how many Ticks after the
+  opponent's reversal Tick your jump landed, as in `Landed Rev+2t`
+- A landing before they wake up, or one without contact, shows too, as in
+  `Wake-up  Landed Rev-3t  No Contact`
+- A jump attack that touched them is counted without the hitstop (the Tick
+  you would land on against an invulnerable reversal)
+- You can block from the Tick you land. Checked in play: against Demitri's
+  heavy Demon Cradle (Startup 4), all 22 landings from `Landed Rev+0t` to
+  `+3t` were blocked. As a guide, if N in `Landed Rev+N` is smaller than the
+  Startup of their reversal, you block in time
+- As P2, the result when your landing and their attack box come on the same
+  Tick is unconfirmed
+
+### Fix: Wakeup Towards / Away sometimes went the wrong way
+
+- When the dummy lay facing away from you, `Towards` rolled away from you and
+  `Away` rolled towards you
+- The game decides the roll's direction by the dummy's own facing. The value
+  written is now reversed while the dummy faces away
+- Checked in play (9 of 9 with `Towards` and 9 of 9 with `Away` went the
+  intended way, including knockdowns facing away)
+
+### Fix: the move to the centre went off after playing a recording
+
+- Moving to the centre (`|---12---|` / `|---21---|`, with `Lua Hotkey 2` and
+  so on) sometimes put the pair somewhere other than the round's start
+  spacing
+- The step that puts both players back at a recording's start position,
+  before each playback, was taken for a round starting and overwrote the
+  centre position. The recording wizard's restore did the same
+- A move made by that step no longer changes the centre position
+- Checked in play
+
+### Changed: Show Jump In Trainer moved to the Analysis tab
+
+- With `Tick Data` and `Show Action Timeline` both on, the Trainer tab had one
+  row too many and `Reset This Tab` was drawn over the help text
+- `Show Jump In Trainer` counts displayed frames and has a known bug, so it
+  moved to the Analysis tab. For a jump on a wake-up, Meaty Timing's `Landed`
+  gives the landing in Ticks
+
+### Manual
+
+- Section 11.3: how to read `Landed`, and the guide for safe jumps
+- Section 4.1: `Towards` / `Away` follow where you are
+- The `Show Jump In Trainer` entry moved from Section 11.8 to 12.3
+
+---
+
 ## v11.7.33.1
 
 A special move right after landing from a jump over the opponent in Action

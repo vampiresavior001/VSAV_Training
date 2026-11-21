@@ -67,7 +67,7 @@ local function flush() fc = fc + 100 ; M.registerAfter() end
 -- Three ticks with nothing changing: one row per player for the first.
 step(3) ; flush()
 want("最初の書き込みは新しいファイル (w)", opens[1] and opens[1].mode, "w")
-want("1 行目は見出し (読む位相の説明つき)", all_text():match('^{"log": "invuln_log", "version": 5, "read_at": "tick clock') ~= nil, true)
+want("1 行目は見出し (読む位相の説明つき)", all_text():match('^{"log": "invuln_log", "version": 6, "read_at": "tick clock') ~= nil, true)
 want("最初の Tick だけ記録 (両プレイヤー)", rows_in(all_text()), 2)
 want("1 行 1 オブジェクト", select(2, all_text():gsub("\n", "")), 3)
 want("Tick の番号も", all_text():find('"seq": 1, "tick": 1, "p": 1', 1, true) ~= nil, true)

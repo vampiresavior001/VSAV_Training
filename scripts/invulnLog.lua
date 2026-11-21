@@ -50,6 +50,12 @@
 -- they showed, with the recognizer blocks logged for a while (archive
 -- v11.7.33_5): VSAV_MEMORY_NOTES, the Tick a landing turns the character.
 --
+-- WHERE A JUMP WOULD LAND (version 6, 2026-11-21). Meaty Timing's Landed takes
+-- the landing of a jump-in that touched the opponent as the contact tick plus
+-- the ticks the game's physics had left (tickDataVsav.ticks_to_landing), the
+-- hitstop left out. Each row in the air carries that count (lin, -1 when there
+-- is none), so the prediction can be held against the tick $38 went to 0.
+--
 -- reversal_logs/invuln_log.jsonl: one JSON object per line, the first one the
 -- header. New rows are appended at most once a second from the frame callback;
 -- a start of FBNeo begins a new file. analysis/archive_logs.py archives it.
@@ -87,6 +93,11 @@ local function strike_totals(base)
 	t = t and t[base]
 	if t == nil then return -1, -1 end
 	return t.body, t.proj
+end
+local function land_in(base)
+	local tdv = loaded("./scripts/tickDataVsav")
+	local n = type(tdv) == "table" and tdv.ticks_to_landing and tdv.ticks_to_landing(base) or nil
+	return n or -1
 end
 local function meaty_waiting()
 	local mt = loaded("./scripts/meatyTiming")
@@ -127,6 +138,7 @@ local function read(base, rev)
 		side = memory.readbyte(base + 0x120),
 		x = memory.readword(base + 0x10),
 		sdir = memory.readbyte(base + 0x12B),
+		lin = (memory.readbyte(base + 0x38) ~= 0) and land_in(base) or -1,
 		sb = sb,
 		sp = sp,
 		mt_rev = rev,
@@ -135,7 +147,7 @@ end
 
 local FIELDS = { "char", "state", "atk", "move", "hurt", "f11e", "f134", "f145", "f1a4", "f147", "f143",
 	"cel", "f23", "c08", "c0b", "box", "kd", "hs", "blk", "air", "f3b4", "btn", "dir",
-	"face", "side", "x", "sdir", "sb", "sp", "mt_rev" }
+	"face", "side", "x", "sdir", "lin", "sb", "sp", "mt_rev" }
 
 local function same(a, b)
 	if a == nil or b == nil then return false end
@@ -172,7 +184,7 @@ end
 
 local function hex(n, w) return string.format("0x%0" .. w .. "X", n) end
 
-local HEADER = '{"log": "invuln_log", "version": 5, '
+local HEADER = '{"log": "invuln_log", "version": 6, '
 	.. '"read_at": "tick clock (rawStateService ticker): once per game tick, mid-tick at the frameskip read, '
 	.. 'before framedata (Tick Data, Meaty Timing) handles the same tick", '
 	.. '"tick": "the ticker count; mt_rev is in the same ticks but as of the previous tick", '
@@ -181,6 +193,7 @@ local HEADER = '{"log": "invuln_log", "version": 5, '
 	.. '"kd": "$1A7, the knockdown flag Tick Data reads for Wakeup", '
 	.. '"sb_sp": "running totals of strikes the game confirmed at 0x018230 by this player\'s body / projectiles on the other player", '
 	.. '"face_side_x_sdir": "$0B the facing, $120 the side, $10 the X position, $12B the special-move lever (swapped by $0B in the air, by $120 on the ground)", '
+	.. '"lin": "in the air, the ticks the game\'s physics has left before landing (tickDataVsav.ticks_to_landing); -1 when none", '
 	.. '"mt_rev": "the reversal tick Meaty Timing is waiting on (the opponent of Tick Data Side), -1 if none"}\n'
 
 local function row_text(r)
@@ -189,12 +202,12 @@ local function row_text(r)
 		.. '"hurt": "%s", "f11e": %d, "f134": %d, "f145": %d, "f1a4": %d, "f147": %d, "f143": %d, '
 		.. '"cel": "%s", "cnt": %d, "f23": "%s", "c08": %d, "c0b": "%s", "box": %d, "kd": %d, "hs": %d, "blk": %d, '
 		.. '"air": %d, "f3b4": %d, "btn": "%s", "dir": "%s", '
-		.. '"face": %d, "side": %d, "x": %d, "sdir": "%s", "sb": %d, "sp": %d, "mt_rev": %d}\n',
+		.. '"face": %d, "side": %d, "x": %d, "sdir": "%s", "lin": %d, "sb": %d, "sp": %d, "mt_rev": %d}\n',
 		r.seq, r.tick, r.p, hex(r.char, 2), hex(r.state, 8), r.atk, hex(r.move, 2),
 		hex(r.hurt, 6), r.f11e, r.f134, r.f145, r.f1a4, r.f147, r.f143,
 		hex(r.cel, 6), r.cnt, hex(r.f23, 2), r.c08, hex(r.c0b, 2), r.box, r.kd, r.hs, r.blk,
 		r.air, r.f3b4, hex(r.btn, 2), hex(r.dir, 2),
-		r.face, r.side, r.x, hex(r.sdir, 2), r.sb, r.sp, r.mt_rev)
+		r.face, r.side, r.x, hex(r.sdir, 2), r.lin, r.sb, r.sp, r.mt_rev)
 end
 
 -- Once a second at most, and only when something new came in.

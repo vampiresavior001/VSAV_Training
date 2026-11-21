@@ -55,7 +55,7 @@ local function model(o)
 		d.cel_flag = 0
 		if o.qbee and t > o.E and t <= o.R + 2 then d.cel_flag = 0xFE end
 		if o.fe and t > o.E and t < o.R then d.cel_flag = 0xFE end
-		if o.kind == "down" and t > o.E and t < o.R - mlen then d.knockdown = true end
+		if o.kind == "down" and t > (o.kd_from or o.E) and t < o.R - mlen then d.knockdown = true end
 		if o.kind == "air" and t >= o.E and t <= o.R then d.airborne = true end
 		local function rise(at, peak, field)
 			if t >= at then d[field] = math.max(d[field], peak - (t - at)) end
@@ -88,11 +88,19 @@ local function model(o)
 	for _, s in ipairs(snaps) do
 		if not s.frozen then anim = anim + 1 end
 		if s.t ~= o.skip then
+			-- o.jump = { up, down, natural }: the attacker is in the air from up to
+			-- down - 1 and lands on down; natural is where its physics says it
+			-- lands (land_in), which a contact's hitstop pushes down past.
+			-- o.air_special: a special in the air.
+			local j = o.jump
+			local air = j ~= nil and s.t >= j[1] and s.t < j[2]
 			out[#out + 1] = {
 				tick = s.t,
 				p1 = { attack = s.attacking and 1 or 0, status = 0, hitfreeze = s.p1_hf,
 					attack_box = s.box, attack_box_id = s.id,
-					body_box = s.box and o.body ~= false, anim = anim, cel = 0x100000 },
+					body_box = s.box and o.body ~= false, anim = anim, cel = 0x100000,
+					airborne = air, special = air and o.air_special == true,
+					land_in = air and math.max(1, j[3] - s.t) or nil },
 				p2 = s.d,
 			}
 			out[#out].p2.hitfreeze = s.d.hitstop ~= 0
@@ -308,6 +316,52 @@ want("消えた Tick ちょうどの接触は採らない (復帰前と区別で
 want("接触が後なら採る",
 	run({ kind = "guard", E = 5, R = 30, marker = 2, attack = { 25, 40 }, runs = { { 31, 33 } },
 		contacts = { { 32, "block" } } }), "After Guard  Reversal +2t  Active 2t")
+
+-- ---------------------------------------------------------------------------
+print("-- Landed: 起き上がりから何 Tick で着地したか (2026-11-21)")
+want("重ねて当てた: 着地はヒットストップを除いた物理の着地 (62 - 60)",
+	run({ kind = "down", E = 5, R = 60, attack = { 54, 80 }, runs = { { 58, 62 } },
+		contacts = { { 60, "hit" } }, jump = { 40, 70, 62 } }),
+	"Wake-up  Reversal +0t  Active 3t  Landed Rev+2t")
+want("ガードさせても同じ",
+	run({ kind = "down", E = 5, R = 60, attack = { 54, 80 }, runs = { { 59, 62 } },
+		contacts = { { 61, "block" } }, jump = { 40, 72, 64 } }),
+	"Wake-up  Reversal +1t  Active 3t  Landed Rev+4t")
+want("起き上がる前に着地: Rev-3t、接触なし",
+	run({ kind = "down", E = 5, R = 60, jump = { 40, 57, 57 } }),
+	"Wake-up  Landed Rev-3t  No Contact")
+want("起き上がった後に着地、接触なし",
+	run({ kind = "down", E = 5, R = 60, jump = { 45, 61, 61 } }),
+	"Wake-up  Landed Rev+1t  No Contact")
+want("同じ Tick に着地: Rev+0t",
+	run({ kind = "down", E = 5, R = 60, jump = { 45, 60, 60 } }),
+	"Wake-up  Landed Rev+0t  No Contact")
+want("着地してから地上の技で重ねた: 着地も残る",
+	run({ kind = "down", E = 5, R = 60, jump = { 40, 58, 58 }, attack = { 58, 80 }, runs = { { 60, 63 } },
+		contacts = { { 61, "hit" } } }),
+	"Wake-up  Reversal +1t  Active 2t  Landed Rev-2t")
+want("着地の後に相手が先に当てた: P2 Hit First と着地",
+	run({ kind = "down", E = 5, R = 60, jump = { 45, 62, 62 }, contacts = { { 63, "theirs" } },
+		known = true, strikes = { [63] = { back = true } } }),
+	"Wake-up  Reversal +3t  P2 Hit First  Landed Rev+2t")
+-- 2026-11-21 play test: all 33 jump-ins took off 9-28 ticks before $1A7 rose.
+want("ダウンの旗より前でも、倒した当たりの後に跳んだなら数える",
+	run({ kind = "down", E = 5, kd_from = 30, R = 60, jump = { 10, 57, 57 } }),
+	"Wake-up  Landed Rev-3t  No Contact")
+want("倒した当たりのとき空中にいたジャンプは数えない",
+	run({ kind = "down", E = 20, kd_from = 30, R = 60, jump = { 10, 40, 40 } }), "")
+want("ダウンより前に跳んだジャンプは数えない",
+	run({ kind = "down", E = 20, R = 60, jump = { 15, 30, 30 } }), "")
+want("31 Tick 前の着地は数えない",
+	run({ kind = "down", E = 5, R = 60, jump = { 20, 29, 29 } }), "")
+want("30 Tick 前は数える",
+	run({ kind = "down", E = 5, R = 60, jump = { 20, 30, 30 } }), "Wake-up  Landed Rev-30t  No Contact")
+want("空中必殺技は数えない (着地に硬直がある)",
+	run({ kind = "down", E = 5, R = 60, jump = { 45, 61, 61 }, air_special = true }), "")
+want("起き上がり以外には付けない",
+	run({ kind = "guard", E = 5, R = 30, attack = { 28, 50 }, runs = { { 33, 36 } },
+		contacts = { { 34, "block" } }, jump = { 20, 45, 37 } }),
+	"After Guard  Reversal +4t  Active 2t")
 
 -- ---------------------------------------------------------------------------
 print("-- つなぎ込み")

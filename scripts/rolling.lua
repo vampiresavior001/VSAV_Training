@@ -48,8 +48,26 @@ local function getDirection()
 
 end
 
+-- TOWARDS AND AWAY ARE THE OPPONENT'S, NOT THE DUMMY'S FACING (user,
+-- 2026-11-21: "Towards" felt reversed depending on which way the dummy faced).
+-- The game reads $0A by the dummy's own facing: 0x024EB8 takes $0A > 0 to
+-- $40 = -6 and $0A < 0 to +6, and 0x024F2A negates $40 when $0B is set
+-- (facing right), so $0A > 0 rolls the way the dummy faces - a forward roll,
+-- not a roll towards the opponent. 8 of the 78 knockdowns in the version 5
+-- invuln logs (archive v11.7.33_3 to _6) lay facing away from the opponent;
+-- there +1 rolled away. So the sign is flipped while the dummy faces away from
+-- P1 ($10, the X word, compared; level X keeps the facing).
+local function faces_opponent()
+    local x, ox = memory.readword(0xFF8810), memory.readword(0xFF8410)
+    if x == ox then return true end
+    return (memory.readbyte(0xFF880B) ~= 0) == (ox > x)
+end
+
 local function rollToDirection( direction )
     if globals.dummy.enable_roll == true then
+        if direction ~= 0x0 and not faces_opponent() then
+            direction = (direction == roll_toward_value) and roll_away_value or roll_toward_value
+        end
         memory.writebyte(roll_address, direction)
     end
 end
